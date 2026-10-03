@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen",
+  "synthetic": true,
+  "prompt": "Photorealistic candid holiday snapshot for a fictional friend group's memory archive. Three adult friends sitting at end of a wooden jetty with feet in a calm green alpine lake, one friend swimming, forested mountain shore behind, late afternoon sunlight glancing on water. Natural unposed analog 35mm photo, warm nostalgic film colors, full bleed landscape 3:2. Fictional people, no typography, no UI, no collage, no watermark.",
+  "original": "exec-5043ea74-6204-410e-9e34-9e9f09a5b67d.png",
+  "delivery": "WebP quality 84; no compositional edits",
+  "purpose": "Fictional demo memory; not evidence of real events"
+}

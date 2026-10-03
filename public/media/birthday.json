@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen",
+  "synthetic": true,
+  "prompt": "Photorealistic candid photograph for a fictional friend group's memory archive. Five adult friends leaning together around a small birthday cake with lit candles in a warmly lit apartment kitchen at night. Laughter and motion in hands, quiet joyful intimacy, amber candlelight and dark navy shadows, natural 35mm film photographic grain. Fictional faces, full bleed landscape 3:2, no text, no UI, no border, no watermark.",
+  "original": "exec-a53f504c-cab6-4dcb-bdb7-10c59317d78f.png",
+  "delivery": "WebP quality 84; no compositional edits",
+  "purpose": "Fictional demo memory; not evidence of real events"
+}

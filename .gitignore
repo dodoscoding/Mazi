@@ -1,0 +1,9 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.tsbuildinfo
+.DS_Store
+.impeccable/config.local.json
+.impeccable/questions/*.state.json
+.impeccable/questions/*.log

@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen",
+  "synthetic": true,
+  "prompt": "Photorealistic close-up travel snapshot for a fictional friend group's memory archive. End of a long friendly dinner at a Greek island terrace, candles in glass holders, half-eaten mezze, a crumpled linen napkin, a hand reaching to pour water, distant out of focus sea at blue hour. Warm amber against blue dusk, natural 35mm analog film, intimate authentic imperfect composition. Full bleed landscape 3:2, no text, no UI, no borders, no watermark.",
+  "original": "exec-a1e2bae9-e206-4b3b-9849-c6a2a2327e9a.png",
+  "delivery": "WebP quality 84; no compositional edits",
+  "purpose": "Fictional demo memory; not evidence of real events"
+}
