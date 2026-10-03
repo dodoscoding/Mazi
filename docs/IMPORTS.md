@@ -1,6 +1,6 @@
 # Mazi import specification
 
-All imports enter private staging through the normalized contract in [Contracts](CONTRACTS.md). Adapters translate source data. They do not publish content or implement a separate downstream processing pipeline.
+All imports use the normalized contract in [Contracts](CONTRACTS.md). The shared ingestion pipeline makes each successfully ingested item visible to all active group members automatically under [D14](DECISIONS.md). Adapters translate source data; they do not implement a separate access policy or processing pipeline. Review and corrections follow sharing.
 
 No real user archive or device has been tested in this planning task. The matrix below distinguishes intended support from verified platform documentation. M0 fixtures determine the exact formats that M2 can promise.
 
@@ -33,21 +33,23 @@ ZIP processing rejects traversal paths, absolute paths, symlinks that escape ext
 
 File validation checks signatures, parser limits, dimensions, duration, codec support, and declared versus actual size. The worker uses restricted media tools with no unnecessary network access. Active source content is never rendered as trusted HTML. Captions and filenames are escaped in the UI.
 
-The M0 format matrix must publish maximum archive size, expanded size, per-file size, video duration, and supported containers/codecs. Proposed initial compatibility is JPEG, PNG, HEIC, and tested MP4/MOV codec combinations. Unsupported originals may be staged for owner export but cannot appear as successfully playable published media.
+The M0 format matrix must publish maximum archive size, expanded size, per-file size, video duration, and supported containers/codecs. Proposed initial compatibility is JPEG, PNG, HEIC, and tested MP4/MOV codec combinations. Unsupported files have an explicit outcome and cannot appear as successfully playable media. Temporary byte retention is an operational recovery detail, not contributor-private archive staging.
 
 ## Context and identity
 
 WhatsApp and other text-based exports can contain multiline messages, system notices, ambiguous date ordering, repeated participant names, and text that resembles an attachment marker. Parsers must preserve the source line/record location and report ambiguity.
 
-The proposed context window is up to two messages before and after a media message in the same conversation, capped at 2,000 characters. It stays private and reviewable. This is a product default to test, not a claim about the source format. The contributor can omit or narrow context before sharing.
+The proposed context window is up to two messages before and after a media message in the same conversation, capped at 2,000 characters. Successfully ingested context is automatically visible to the group. Explain that before submission. The exact extraction window remains a product default to test, not a claim about the source format. Later corrections and contribution removal follow the group lifecycle policy; there is no context-specific audience selector.
 
 A source display name does not establish a platform account, Mazi membership, attendance, or face identity. Mapping source participants to known people requires a reviewable assertion. Reactions preserve their source meaning and available author/count detail without inventing missing actors.
 
 ## Apple companion scope
 
+This is a deferred future proposal. The confirmed current product is website-only under D13; native work requires a new scope decision.
+
 The native companion requests authorization and presents the authorized library for selection. It inventories metadata before large transfers where APIs permit. It offers album, date, media-type, screenshot, and favorite filters when available. People-based selection is excluded until an actual supported API is demonstrated.
 
-The first supported native platform is a decision at M0. The proposed macOS-first approach supports bulk review and long foreground transfers. iOS behavior is designed and tested separately. The product does not promise unrestricted background synchronization.
+The first supported native platform is a decision if native work is later approved. The proposed macOS-first approach supports bulk review and long foreground transfers. iOS behavior is designed and tested separately. The product does not promise unrestricted background synchronization.
 
 Incremental sync records device/library/source asset identity and resource version. Library changes, edited assets, limited-library changes, permission withdrawal, and iCloud download failure each produce explicit outcomes. Deleting an item from Apple Photos does not automatically delete Mazi's retained copy; mirror deletion needs a separate user-selected policy.
 

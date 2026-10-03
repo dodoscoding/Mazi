@@ -1,6 +1,6 @@
 # Mazi privacy and access policy
 
-This is a proposed product policy for implementation and review. It is not a legal compliance assessment. Privacy decisions that affect data collection must be resolved before inviting the production cohort.
+The single group audience and immediate sharing are confirmed in [D14](DECISIONS.md) on 3 October 2026. Technical enforcement, lifecycle, retention, and later-feature policies below remain proposals; no safeguard is implemented. This document is not a legal compliance assessment.
 
 ## Trust boundary
 
@@ -10,57 +10,57 @@ If the product requires the service operator to be unable to read media, stop be
 
 ## Audience rules
 
-Private staging belongs to the contributor. Group ownership and administration do not grant access to another member's staging. Every read also requires the relevant current account and membership state. All group data is denied to outsiders.
+The initial audience is one invite-only friend group of 8-10 people. Every reader must sign in and have active membership. Imported content becomes available to all active members, including administrators, automatically as each item is successfully ingested. Private staging, selected recipients, and independent component audience controls are deferred. All group data is denied to outsiders and removed members.
 
-| Action or data | Contributor | Selected active recipients | Other active group members | Group administrator |
-| --- | --- | --- | --- | --- |
-| Read private staged media and context | Own content only | Denied | Denied | Denied unless contributor |
-| Read selected-member publication | Own content | Allowed component grants only | Denied | Only if selected |
-| Read group publication | Own content | Allowed component grants | Allowed component grants | Allowed component grants |
-| Publish or expand a contribution's audience | Own content only | Denied | Denied | Denied unless contributor |
-| Revoke/delete a contribution | Own content | Denied | Denied | May hide from group for moderation; cannot expose or claim it |
-| Manage invitations and membership | Only with admin role | Only with admin role | Only with admin role | Allowed with audit |
-| Edit shared memory title or organization | Creator or assigned editor | Only if assigned editor and authorized | Only if assigned editor and authorized | Allowed for shared organization; no access expansion |
+| Action or data | Contributor | Other active group members | Group administrator |
+| --- | --- | --- | --- |
+| Read available imported media, originals, context, location, and identity evidence | Allowed while an active member | Allowed | Allowed while an active member |
+| Import to the group | Allowed; successfully ingested items share automatically | Allowed for their own imports | Allowed for their own imports |
+| Correct or withdraw/delete a contribution | Own contribution under the proposed lifecycle policy | No ownership implied by read access | May hide from group for moderation; ownership is retained |
+| Manage invitations and membership | Only with admin role | Only with admin role | Allowed with audit |
+| Edit shared memory title or organization | Creator or assigned editor | Only if assigned editor | Allowed for shared organization |
 
-The initial roles are administrator and member. Memory editing permission is explicit. A group cannot lose its last administrator without transfer or group closure. Invitation tokens are stored as hashes, expire, and are consumed atomically.
+Read access does not grant mutation ownership. The initial roles are administrator and member. Memory editing permission remains an implementation proposal. A group cannot lose its last administrator without transfer or group closure. Invitation tokens are stored as hashes, expire, and are consumed atomically.
 
-## Independent sharing and processing controls
+## Sharing and processing
 
-Media preview, original download, source messages/reactions, location, and person associations each have a grant. Private is the import default. Group visibility includes future active members; selected-member visibility uses an explicit recipient list. The review UI states this distinction.
+Import selection is the sharing action. Explain before submission that imported media and available source context/metadata become visible to the whole group. There is no later Publish button, recipient selection, or per-component opt-in. Successful items become visible independently of failures or unfinished items in the same batch; subsequent review corrects history and organization.
 
-Context, original download, precise location, and person associations default to unshared even when the contributor shares a preview. Context selection shows exactly which nearby messages are included. More permissive media grants cannot widen metadata grants.
+The single group audience applies to previews, originals, source messages/reactions, locations, person associations, memory metadata, filenames, and origin details. Later active members receive the same archive access. No component may bypass the group boundary through a direct URL, cache, export, count, or derived output.
 
-A preview grant exposes its approved display date, media type/dimensions, and reviewed caption. Raw filenames, origin details, messages, location, and identities need the corresponding independent grants. The [contracts](CONTRACTS.md) define that field boundary.
+Private storage, temporary quarantine, validation, and safe rendering are technical boundaries. They do not create contributor-private archive staging. Unsafe or unsupported bytes are not presented as playable media; item availability and failures must be explained. Thumbnail sanitization remains a delivery measure, not a promise that imported originals or metadata are hidden from group members.
 
-Memory metadata has its own owner and grants. A shared parent does not publish a private sub-event or its title. Derived titles, dates, locations, and summaries disappear or are recomputed when their supporting evidence becomes inaccessible. A derived-only empty Memory is hidden from that viewer. Explicitly authored standalone text can remain under its own grant; copied source text cannot bypass the source permission.
+Memory and sub-event metadata use the same group audience. Parent links cannot restore deleted, withdrawn, cross-group, or otherwise inaccessible children. Derived fields are recomputed or removed when their supporting evidence is withdrawn. A derived-only empty Memory is omitted; independently authored text can remain under the group policy.
 
-Sanitized previews remove embedded private metadata. Original download requires explicit disclosure because a file can still contain GPS or device information. Visible landmarks cannot be reliably removed by metadata settings; the share preview must not imply that hiding GPS anonymizes the image.
+## Optional processing and future People features
 
-Optional AI analysis, external model processing, face detection/recognition, and identity display have separate purpose controls. Deterministic validation and thumbnail generation are necessary archive processing and are explained during import. If optional processing is off, the import and sharing loop still works.
+The following are later-feature proposals, not initial audience controls. Sharing with the friend group does not by itself select an external AI provider or enable recognition.
+
+Optional AI analysis, external model processing, face detection/recognition, have separate purpose controls. Deterministic validation and thumbnail generation are necessary archive processing and are explained during import. If optional processing is off, the import and automatic group-sharing loop still works.
 
 Face recognition is disabled by default. A member cannot authorize identification of another person merely by uploading a photo. Before enabling recognition, the product must define consent for participating members, nonmembers, and minors; supported opt-out/removal paths; and processing retention. Until then, People uses manual, reviewable associations and does not expose recurring unknown face clusters to the group.
 
-Every member can hide or unhide an accessible media item or memory from their own discovery views. Personal hiding also excludes it from that member's search results, AI answers, and recaps. It does not delete another member's contribution or revoke other members' access. A separate private report/request path covers removal from shared viewing; an authorized administrator may hide a shared item during review without opening private staging.
+For the later People/discovery scope, the proposed behavior lets a member hide or unhide an accessible media item or memory from their own discovery views. Personal hiding also excludes it from that member's search results, AI answers, and recaps. It does not delete another member's contribution or revoke other members' access. A separate private report/request path covers removal from shared viewing; an authorized administrator may hide a shared item during review under the group policy.
 
 A member with a verified association to a Person can remove themselves from a manual or recognized tag and from an attendance assertion. Disassociation removes that link from People, person-filtered search, and derived summaries, while preserving unrelated contributions. A suppression record prevents an importer, model retry, or another contributor from silently reinstating the disputed association. The subject can later opt back in. Disputed account/person mappings and nonmember requests use a private review path with minimal evidence disclosure. These controls are required before People launches, regardless of whether recognition is enabled.
 
 ## Enforcement points
 
-Database policies enforce membership, ownership, grants, and mutation limits. Object delivery enforces corresponding file permissions. APIs also authorize requests, but frontend checks alone never establish access. Privileged worker credentials stay server-side and do not make imported claims trustworthy.
+Database policies enforce current group membership, contribution state, ownership, and mutation limits. Object delivery enforces corresponding file permissions. APIs also authorize requests, but frontend checks alone never establish access. Privileged worker credentials stay server-side and do not make imported claims trustworthy.
 
 The same policy applies to thumbnails, original links, filenames, origin counts, participant counts, map points, date summaries, search facets, embeddings, captions, answers, exports, recaps, and notifications. A hidden relationship must not become visible through a count or a cached aggregate.
 
-Workers load the current scope and consent before each stage and before attaching results. Events and summaries derived from mixed-permission inputs need a matching restricted audience or fresh computation from eligible inputs. Publication never copies unrestricted metadata from a canonical asset into a shared row.
+Workers load current group scope, contribution state, and any required processing consent before each stage and before attaching results. Events and summaries use only eligible group inputs. Automatic sharing cannot attach data from another group or restore a withdrawn contribution.
 
 ## Revocation and membership changes
 
-Revocation increments the policy version and removes the grant from new reads immediately after commit. New signed links are denied. Existing signed URLs can remain usable for at most the configured expiry, proposed at 60 seconds. Already downloaded files cannot be recalled.
+Contribution withdrawal or membership revocation increments the policy version and denies affected new reads immediately after commit. New signed links are denied. Existing signed URLs can remain usable for at most the configured expiry, proposed at 60 seconds. Already downloaded files cannot be recalled.
 
 Revocation invalidates application caches, search results, materialized summaries, and pending answer delivery. Deletion/withdrawal queues purge obsolete embeddings and other derivatives. Queries deny access immediately through current policies while physical cleanup proceeds. Re-enabling a model must not resurrect withdrawn output accidentally.
 
 A member leaving or being removed loses group access immediately. Proposed default behavior also revokes that member's contributions from the group, pending confirmation in D06. The departure workflow offers an export beforehand where appropriate. An account-scoped export/delete flow remains available for owned data without restoring group browsing access.
 
-Another member's independently imported and authorized copy may remain visible. Removing one origin must remove its context, metadata grants, and identity assertions without deleting independent contributions. Object garbage collection occurs only when no retained contribution requires the bytes.
+Another member's independently imported and authorized copy may remain visible. Removing one origin must remove its context, dependent metadata, and identity assertions without deleting independent contributions. Object garbage collection occurs only when no retained contribution requires the bytes.
 
 ## Retention and deletion
 
@@ -70,14 +70,14 @@ The following are proposed operational targets. M0 must approve them against cos
 | --- | --- |
 | Unfinished temporary uploads | Remove after 7 days without activity. |
 | Raw source archives | Delete 30 days after completed import unless the owner explicitly retains them; normalized permitted provenance remains. |
-| Staged contributions | Retain until owner deletion or account closure, subject to quota and an explained inactivity policy. |
-| Revoked grants | Deny reads immediately; retain minimal change history needed for audit. |
+| Group contributions | Retain until deletion, withdrawal, or applicable account/group closure policy; subject to quota. There is no private staging retention class. |
+| Withdrawn contributions and revoked memberships | Deny affected reads immediately; retain minimal change history needed for audit. |
 | Deleted originals and derivatives | Purge live storage and indices within 7 days, subject to independent contribution references. |
 | Security audit metadata | Retain 180 days without message bodies or media. |
 | Backups | Proposed 30-day expiry; restored data must reapply deletion tombstones before access. |
 | External model inputs/outputs | Provider-specific terms must be recorded and accepted before enablement. No unverified zero-retention promise. |
 
-Account and group deletion report what was removed, what remains because of independent contributions, and when backups expire. Export includes authorized owned originals where available, normalized metadata, provenance, and machine-readable memory relationships. Export does not include another contributor's private origins.
+Account and group deletion report what was removed, what remains because of independent contributions, and when backups expire. Export includes authorized owned originals where available, normalized metadata, provenance, and machine-readable memory relationships. Export excludes cross-group and withdrawn origins. Ownership and export scope remain distinct from group read access.
 
 ## Production review
 

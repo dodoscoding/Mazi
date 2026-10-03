@@ -1,0 +1,6 @@
+when	decision	choice	evidence
+2026-10-02	playbook	figure-it-out, not orchestrate. One session can open the issues.	playbooks/orchestrate.md says a single-session task is not a program
+2026-10-02	unit size	13 issues, not one per roadmap checkbox and not one blob per milestone	docs/ROADMAP.md milestone exits and SPEC journeys
+2026-10-02	assignee	dodoscoding for every issue. User said dodo. Repo owner login is dodoscoding.	gh api users/dodoscoding
+2026-10-02	design home	Impeccable Operate briefs live on the issues. PRODUCT.md was not written. Init still needs dodo's answers.	impeccable context NO_PRODUCT_MD
+2026-10-02	verification	gh issue view on #3 through #15. Assignee dodoscoding. Bodies contain UI steps and the design discussion.	live GitHub JSON

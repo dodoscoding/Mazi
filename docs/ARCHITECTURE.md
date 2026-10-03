@@ -4,7 +4,7 @@ This is a proposed architecture for a small production team. No components have 
 
 ## One application and one worker deployment
 
-The proposed starting stack is a Next.js web application, PostgreSQL, Supabase Auth and private Storage, and a separate long-running worker. PostgreSQL holds application records and a durable job queue. Later milestones add pgvector and a Swift/SwiftUI companion.
+The proposed starting stack is a Next.js web application, PostgreSQL, Supabase Auth and private Storage, and a separate long-running worker. PostgreSQL holds application records and a durable job queue. Later proposals include pgvector and a native companion; [D13](DECISIONS.md) confirms website-only current scope and D07 defers native work.
 
 This keeps deployment and transactions manageable for a small team. It does not require microservices, a graph database, a separate search cluster, or an orchestration platform. The archive's relationships fit relational tables. Provider-specific calls stay at authentication, storage, and model boundaries without creating generic wrappers for every query.
 
@@ -13,7 +13,7 @@ Supabase supports database row policies and private object access. Those capabil
 ```mermaid
 flowchart TD
     Web[Web client] --> API[Web server and application API]
-    Native[Selective Apple companion] --> API
+    Native[Deferred Apple companion proposal] --> API
     API --> DB[(PostgreSQL and access policies)]
     API --> Store[(Private object storage)]
     DB --> Jobs[Durable jobs]
@@ -27,22 +27,22 @@ flowchart TD
 
 ## Request and import flow
 
-The server validates identity and current membership before accepting an upload manifest. It creates an owner-only import and issues narrowly scoped upload capabilities. The client transfers bytes directly to private quarantine storage and confirms completion. The server verifies size and checksum rather than trusting the client manifest.
+The server validates identity and current membership before accepting an upload manifest. It creates a contributor-owned, group-scoped import and issues narrowly scoped upload capabilities. Ownership controls mutation; successfully ingested content is readable by every active group member. The client transfers bytes directly to private quarantine storage and confirms completion. The server verifies size and checksum rather than trusting the client manifest.
 
 The worker claims a durable job and validates the file in a restricted process. It computes a cryptographic hash, extracts raw metadata, creates sanitized previews, and records the result. Unsupported media remains a visible item outcome. The worker can retry an item without replaying a whole archive.
 
-The staging interface reads the contributor's results. Publication creates explicit grants in a transaction and makes only approved content eligible for group discovery. A failed publication transaction leaves the items private. Search and presentation derive their data from eligible contributions, not directly from unrestricted canonical asset rows.
+Each item becomes available to the entire group automatically when ingestion completes its required validation and retention steps. Availability and discoverable records commit atomically; a failure remains an explicit processing outcome. There is no private archive staging, component grant, or manual publication gate. My Imports supports progress and post-import correction. Search and presentation derive results from available group contributions, excluding cross-group and withdrawn records.
 
 ## Pipeline dependencies
 
 The original survives processing. Metadata extraction, preview generation, and optional analysis create versioned derivatives. Hashing and basic metadata arrive in M1 because imports and timeline depend on them, even though richer intelligent processing arrives later in the source brief.
 
-| Stage | Inputs | Result | Required before publication |
+| Stage | Inputs | Result | Required before group availability |
 | --- | --- | --- | --- |
 | Validation and inventory | Manifest, bytes, bounded archive | Validated items, warnings, quarantine failures | Yes |
 | Exact identity | Validated bytes | SHA-256 and permitted duplicate match | Yes |
 | Original retention and metadata | Validated bytes | Immutable original, raw metadata assertions | Yes |
-| Preview and display date | Original, metadata assertions | Sanitized preview, date with confidence | Yes; unsupported items cannot publish |
+| Preview and display date | Original, metadata assertions | Sanitized preview, date with confidence | Yes; unsupported items retain an explicit failure outcome |
 | Perceptual matching | Eligible images | Reversible candidate pairs | No; M3 |
 | Place normalization | Permitted location evidence | Versioned place assertion | No; M3 |
 | Event suggestions | Permitted time/place/grouping | Reviewable memory candidates | No; M3 |
@@ -50,7 +50,7 @@ The original survives processing. Metadata extraction, preview generation, and o
 | Face recognition | Authorized images and required consent | Private candidate clusters and confirmed labels | No; optional M5 |
 | Memory AI | Authorized retrieval results | Cited answer with coverage limits | No; M6 |
 
-Private processing may use only the contributor's accessible inputs. A shared suggestion uses only inputs approved for that audience. An embedding or caption made from hidden context cannot enter the shared index. Model calls are optional and subject to the [privacy policy](PRIVACY.md).
+Processing uses available inputs from the authenticated group and any required processing consent. A group index cannot incorporate cross-group or withdrawn context. Model calls are optional and subject to the [privacy policy](PRIVACY.md).
 
 ## Jobs and recovery
 
@@ -66,13 +66,13 @@ The design target is up to hundreds of thousands of items per group. The launch 
 
 Timeline pages use a stable date-and-ID cursor and an undated partition. Thumbnails load on demand in a virtualized grid. APIs return bounded pages, not a whole archive. Candidate duplicate matching uses indexed hashes and constrained time/size buckets instead of comparing every pair. Approximate video matching remains deferred until its cost is justified.
 
-Indexes start with membership, contribution ownership, grant audience, origin identity, memory relationships, and timeline ordering. Full-text search precedes vector search. Embedding dimensions and model version live with each embedding so incompatible models cannot mix accidentally.
+Indexes start with membership, contribution ownership, group and availability, origin identity, memory relationships, and timeline ordering. Full-text search precedes vector search. Embedding dimensions and model version live with each embedding so incompatible models cannot mix accidentally.
 
 Permission filters apply within retrieval before text or media enters a model prompt. Counts, facets, map points, People associations, and memory summaries use the same filtered set. Approximate search must still fill a result page from authorized candidates without leaking rejected records.
 
 ## Original delivery and preview safety
 
-An original may contain GPS, device identifiers, or other private metadata even when the UI hides those fields. Default group viewing uses sanitized derivatives. Original download is a separate explicit grant, with a warning about embedded metadata. A private higher-resolution variant cannot become a shared rendition through a canonical asset update.
+An original may contain GPS, device identifiers, or other private metadata even when the UI hides those fields. Default group viewing uses sanitized derivatives, while original delivery uses the same active-membership policy. The UI must accurately describe that imported originals and metadata are shared with the group. A newly available higher-resolution contribution can improve the group rendition automatically; cross-group or withdrawn variants cannot be selected.
 
 The server authorizes every new download capability. Proposed signed URL expiry is at most 60 seconds. Revocation cannot retract already downloaded bytes or a valid bearer URL immediately. Sensitive content requiring strict current authorization uses a mediated endpoint, including locked capsules. Cache keys include viewer scope and policy version, and sensitive responses avoid public caches.
 
@@ -82,7 +82,7 @@ Development, staging, and production use separate databases, object buckets, sec
 
 Workers have limited concurrency, memory, CPU, archive-expansion, and runtime budgets. Import and model quotas apply per member and group. Provider failure pauses optional enrichment while manual archiving remains usable.
 
-Telemetry records opaque job IDs, stage duration, queue age, failure category, and byte/cost totals. Logs exclude raw messages, filenames with personal information, media, signed URLs, and tokens. Audit logs record publication, revocation, role changes, consent changes, exports, deletions, and privileged operations.
+Telemetry records opaque job IDs, stage duration, queue age, failure category, and byte/cost totals. Logs exclude raw messages, filenames with personal information, media, signed URLs, and tokens. Audit logs record automatic availability, withdrawal, membership revocation, role changes, consent changes, exports, deletions, and privileged operations.
 
 Backups cover both database state and objects. A database backup alone cannot reconstruct the archive. A restore drill must reconcile object references, consent state, and deletion tombstones before serving restored data. Rollback plans use backward-compatible migrations and a feature kill switch for optional analysis.
 

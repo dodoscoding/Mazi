@@ -1,0 +1,157 @@
+[
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/3",
+    "title": "[Design] Agree product context and the Operate interface with dodo",
+    "file": "00-design-kickoff.md",
+    "milestone": "M0 Validate scope and contracts",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 4537
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/4",
+    "title": "[M0] Confirm scope, privacy, fixtures, and experiments",
+    "file": "01-m0-scope.md",
+    "milestone": "M0 Validate scope and contracts",
+    "labels": [
+      "roadmap"
+    ],
+    "body_bytes": 3359
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/5",
+    "title": "[M1] Authenticate members and protect private staging",
+    "file": "02-m1-identity.md",
+    "milestone": "M1 Private memory pilot",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3226
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/6",
+    "title": "[M1] Store originals and accept resumable uploads",
+    "file": "03-m1-upload.md",
+    "milestone": "M1 Private memory pilot",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3382
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/7",
+    "title": "[M1] Review, publish, revoke, and revisit a memory",
+    "file": "04-m1-memory-loop.md",
+    "milestone": "M1 Private memory pilot",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 5106
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/8",
+    "title": "[M2] Import historical archives and report every item",
+    "file": "05-m2-import.md",
+    "milestone": "M2 Historical import beta",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3963
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/9",
+    "title": "[M3] Suggest duplicates and events, then scale discovery",
+    "file": "06-m3-discovery.md",
+    "milestone": "M3 Production archive launch",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3580
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/10",
+    "title": "[M3] Clear the production gate and launch the invite-only cohort",
+    "file": "07-m3-launch.md",
+    "milestone": "M3 Production archive launch",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3676
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/11",
+    "title": "[M4] Sync selected Apple media and Discord channels",
+    "file": "08-m4-sources.md",
+    "milestone": "M4 Continuous sources and places",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3841
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/12",
+    "title": "[M4] Explore authorized places on a map",
+    "file": "09-m4-map.md",
+    "milestone": "M4 Continuous sources and places",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3129
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/13",
+    "title": "[M5] Add People and semantic search under consent",
+    "file": "10-m5-people-search.md",
+    "milestone": "M5 People and semantic search",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 4111
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/14",
+    "title": "[M6] Answer questions from authorized archive evidence",
+    "file": "11-m6-memory-ai.md",
+    "milestone": "M6 Grounded Memory AI",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3777
+  },
+  {
+    "created": true,
+    "url": "https://github.com/dodoscoding/Mazi/issues/15",
+    "title": "[M7] Ship recaps, stories, capsules, and generated media separately",
+    "file": "12-m7-advanced.md",
+    "milestone": "M7 Advanced memories",
+    "labels": [
+      "roadmap",
+      "design"
+    ],
+    "body_bytes": 3910
+  }
+]
