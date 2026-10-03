@@ -1,0 +1,231 @@
+{
+  "title": "Mazi: a place for your shared memories",
+  "question": "Choose the experience to develop. All imagery and memory details are synthetic examples.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Screening Room",
+      "kicker": "THE ROLL",
+      "lineage": "Friends gathering around a projected holiday slide",
+      "thesis": "A shallow 3D arrangement of memories brings one shared moment into focus.",
+      "palette": [
+        "#211F1C",
+        "#F4EBDD",
+        "#CBA779",
+        "#9CADA4"
+      ],
+      "materials": [
+        "warm charcoal",
+        "matte photographic surfaces",
+        "soft amber light"
+      ],
+      "viewport": "Stable top navigation; one large front-facing photograph, two receding neighbors, a quiet title and Open memory control.",
+      "risk": "Atmosphere must not make browsing feel slow or require camera skills.",
+      "comp": ".impeccable/mocks/decision/screening-room.png",
+      "raised": [
+        {
+          "from": "The Memory Rail",
+          "raise": "Use one consistent alignment for titles, dates and selection."
+        },
+        {
+          "from": "The Shared Score",
+          "raise": "Group simultaneous contributions visibly within one event."
+        },
+        {
+          "from": "Journeys Together",
+          "raise": "Retain a visible way back and neighboring-memory context."
+        },
+        {
+          "from": "The Memory Mixtape",
+          "raise": "Give counts, memory order and source credits deliberate typography."
+        },
+        {
+          "from": "The Tabbed Archive",
+          "raise": "Keep navigation stable and show only one active layer."
+        }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "The Living Album",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Editorial travel journals and the album passed around a table",
+      "thesis": "A generous photographic spread with a tactile 3D stack that opens into the memory.",
+      "palette": [
+        "#F3EFE6",
+        "#262B27",
+        "#355347",
+        "#985038"
+      ],
+      "materials": [
+        "warm ivory",
+        "matte photo edges",
+        "quiet forest-green controls"
+      ],
+      "viewport": "Editorial title on the left, a dominant photo stack on the right, and an ordered strip of other memories below.",
+      "risk": "The album metaphor is familiar; composition and the opening transition must earn the bespoke feel.",
+      "comp": ".impeccable/mocks/decision/living-album.png"
+    },
+    {
+      "id": "challenger-emission",
+      "label": "The Memory Rail",
+      "verdict": "declined",
+      "lineage": "operate-c-emission-line-rail",
+      "thesis": "A calibrated date rail anchors open photograph plates.",
+      "palette": [
+        "#232323",
+        "#E8E3D9",
+        "#F5C85C"
+      ],
+      "materials": [
+        "graphite",
+        "hairline marks"
+      ],
+      "viewport": "An off-center rail aligns dates beneath a photo.",
+      "risk": "Line encodings feel analytical and require learning.",
+      "case": "Loses audience identification and clarity for casual rediscovery.",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-emission-line-rail-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/operate-c-emission-line-rail.webp",
+      "kept": "Use one consistent alignment for titles, dates and selection."
+    },
+    {
+      "id": "challenger-score",
+      "label": "The Shared Score",
+      "verdict": "declined",
+      "lineage": "notation-diagram-systems-labanotation",
+      "thesis": "Parallel columns show contributions to the same event.",
+      "palette": [
+        "#FFFFFF",
+        "#181818",
+        "#D5D5D5"
+      ],
+      "materials": [
+        "score stock",
+        "black notation"
+      ],
+      "viewport": "An upward chronological staff with images alongside.",
+      "risk": "Upward time and encoded blocks are unfamiliar.",
+      "case": "Loses audience identification and clarity by adding a notation language.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-labanotation-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-labanotation.webp",
+      "kept": "Group simultaneous contributions visibly within one event."
+    },
+    {
+      "id": "challenger-warm",
+      "label": "The Everyday Collection",
+      "verdict": "competitive",
+      "lineage": "digital-design-canon-warm-consumer-app-surface",
+      "thesis": "Comfortable photo cards make everyday browsing immediately familiar.",
+      "palette": [
+        "#FFF4E6",
+        "#FFFFFF",
+        "#2B241F",
+        "#BE482B"
+      ],
+      "materials": [
+        "warm ground",
+        "soft white cards"
+      ],
+      "viewport": "One featured photo card above smaller memories and labeled navigation.",
+      "risk": "Welcoming, but less distinctive; depth lives inside the featured stack.",
+      "case": "Holds product clarity; loses the Screening Room’s distinctive shared ritual.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-warm-consumer-app-surface-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/digital-design-canon-warm-consumer-app-surface.webp",
+      "comp": ".impeccable/mocks/decision/everyday-collection.png"
+    },
+    {
+      "id": "challenger-transit",
+      "label": "Journeys Together",
+      "verdict": "declined",
+      "lineage": "wayfinding-cartography-signage-midnight-transit-diagram",
+      "thesis": "Events become stops along the group’s shared history.",
+      "palette": [
+        "#14263B",
+        "#F5F2EA",
+        "#D95743"
+      ],
+      "materials": [
+        "midnight enamel",
+        "route lines"
+      ],
+      "viewport": "An event corridor beside the selected photo.",
+      "risk": "Routes can imply relationships the archive does not establish.",
+      "case": "Loses audience identification and clarity for ordinary moments without journeys.",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-midnight-transit-diagram-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-midnight-transit-diagram.webp",
+      "kept": "Retain a visible way back and neighboring-memory context."
+    },
+    {
+      "id": "challenger-mixtape",
+      "label": "The Memory Mixtape",
+      "verdict": "declined",
+      "lineage": "vernacular-ephemera-cassette-j-card",
+      "thesis": "A titled cover opens into an ordered list of moments.",
+      "palette": [
+        "#F5F0E5",
+        "#234D89",
+        "#AD4935"
+      ],
+      "materials": [
+        "inlay stock",
+        "blue ink"
+      ],
+      "viewport": "A folded cover, numbered list and selected photograph.",
+      "risk": "Audio cues and side A/B suggest the wrong product.",
+      "case": "Loses audience identification and clarity through arbitrary content halves.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card.webp",
+      "kept": "Give counts, memory order and source credits deliberate typography."
+    },
+    {
+      "id": "challenger-manual",
+      "label": "The Tabbed Archive",
+      "verdict": "declined",
+      "lineage": "rw-manual-acetate-tab-board",
+      "thesis": "Stable section tabs reveal layered photos and source context.",
+      "palette": [
+        "#D1A746",
+        "#F4EFDE",
+        "#292824"
+      ],
+      "materials": [
+        "divider boards",
+        "translucent leaves"
+      ],
+      "viewport": "Stepped tabs beside a photo and its context leaf.",
+      "risk": "Manual vocabulary feels administrative.",
+      "case": "Loses audience identification and clarity through unnecessary hierarchy.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp",
+      "kept": "Keep navigation stable and show only one active layer."
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "The familiar photo library",
+    "thesis": "A chronological photo grid with conventional album navigation.",
+    "palette": [
+      "#FAFAF8",
+      "#252525",
+      "#345C49"
+    ],
+    "materials": [
+      "flat white",
+      "precise thumbnails"
+    ],
+    "viewport": "Home navigation, a featured memory, and a clean chronological grid.",
+    "risk": "Efficient, but gives up much of the spatial identity you asked to explore.",
+    "comp": ".impeccable/mocks/decision/photo-library.png"
+  },
+  "steer": true
+}

@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T18:15:31Z",
+  "title": "Design System: Mazi — The Atlas of Us",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "tonalRamp": [
+          "oklch(15% 0.03661 244.17)",
+          "oklch(26% 0.03661 244.17)",
+          "oklch(37% 0.03661 244.17)",
+          "oklch(49% 0.03661 244.17)",
+          "oklch(60% 0.03661 244.17)",
+          "oklch(72% 0.03661 244.17)",
+          "oklch(84% 0.03661 244.17)",
+          "oklch(95% 0.03661 244.17)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.04182 241.18)",
+          "oklch(26% 0.04182 241.18)",
+          "oklch(37% 0.04182 241.18)",
+          "oklch(49% 0.04182 241.18)",
+          "oklch(60% 0.04182 241.18)",
+          "oklch(72% 0.04182 241.18)",
+          "oklch(84% 0.04182 241.18)",
+          "oklch(95% 0.04182 241.18)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.03294 79.27)",
+          "oklch(26% 0.03294 79.27)",
+          "oklch(37% 0.03294 79.27)",
+          "oklch(49% 0.03294 79.27)",
+          "oklch(60% 0.03294 79.27)",
+          "oklch(72% 0.03294 79.27)",
+          "oklch(84% 0.03294 79.27)",
+          "oklch(95% 0.03294 79.27)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.01679 227.04)",
+          "oklch(26% 0.01679 227.04)",
+          "oklch(37% 0.01679 227.04)",
+          "oklch(49% 0.01679 227.04)",
+          "oklch(60% 0.01679 227.04)",
+          "oklch(72% 0.01679 227.04)",
+          "oklch(84% 0.01679 227.04)",
+          "oklch(95% 0.01679 227.04)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.04263 239.21)",
+          "oklch(26% 0.04263 239.21)",
+          "oklch(37% 0.04263 239.21)",
+          "oklch(49% 0.04263 239.21)",
+          "oklch(60% 0.04263 239.21)",
+          "oklch(72% 0.04263 239.21)",
+          "oklch(84% 0.04263 239.21)",
+          "oklch(95% 0.04263 239.21)"
+        ]
+      },
+      "copper": {
+        "role": "primary",
+        "displayName": "Copper",
+        "tonalRamp": [
+          "oklch(15% 0.10639 58.23)",
+          "oklch(26% 0.10639 58.23)",
+          "oklch(37% 0.10639 58.23)",
+          "oklch(49% 0.10639 58.23)",
+          "oklch(60% 0.10639 58.23)",
+          "oklch(72% 0.10639 58.23)",
+          "oklch(84% 0.10639 58.23)",
+          "oklch(95% 0.10639 58.23)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Action",
+        "tonalRamp": [
+          "oklch(15% 0.12654 44.62)",
+          "oklch(26% 0.12654 44.62)",
+          "oklch(37% 0.12654 44.62)",
+          "oklch(49% 0.12654 44.62)",
+          "oklch(60% 0.12654 44.62)",
+          "oklch(72% 0.12654 44.62)",
+          "oklch(84% 0.12654 44.62)",
+          "oklch(95% 0.12654 44.62)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15% 0.08730 70.21)",
+          "oklch(26% 0.08730 70.21)",
+          "oklch(37% 0.08730 70.21)",
+          "oklch(49% 0.08730 70.21)",
+          "oklch(60% 0.08730 70.21)",
+          "oklch(72% 0.08730 70.21)",
+          "oklch(84% 0.08730 70.21)",
+          "oklch(95% 0.08730 70.21)"
+        ]
+      },
+      "action-hover": {
+        "role": "primary",
+        "displayName": "Action Hover",
+        "tonalRamp": [
+          "oklch(15% 0.12316 44.82)",
+          "oklch(26% 0.12316 44.82)",
+          "oklch(37% 0.12316 44.82)",
+          "oklch(49% 0.12316 44.82)",
+          "oklch(60% 0.12316 44.82)",
+          "oklch(72% 0.12316 44.82)",
+          "oklch(84% 0.12316 44.82)",
+          "oklch(95% 0.12316 44.82)"
+        ]
+      },
+      "action-ink": {
+        "role": "neutral",
+        "displayName": "Action Ink",
+        "tonalRamp": [
+          "oklch(15% 0.02197 74.10)",
+          "oklch(26% 0.02197 74.10)",
+          "oklch(37% 0.02197 74.10)",
+          "oklch(49% 0.02197 74.10)",
+          "oklch(60% 0.02197 74.10)",
+          "oklch(72% 0.02197 74.10)",
+          "oklch(84% 0.02197 74.10)",
+          "oklch(95% 0.02197 74.10)"
+        ]
+      },
+      "action-hover-ink": {
+        "role": "neutral",
+        "displayName": "Action Hover Ink",
+        "tonalRamp": [
+          "oklch(15% 0.01351 78.26)",
+          "oklch(26% 0.01351 78.26)",
+          "oklch(37% 0.01351 78.26)",
+          "oklch(49% 0.01351 78.26)",
+          "oklch(60% 0.01351 78.26)",
+          "oklch(72% 0.01351 78.26)",
+          "oklch(84% 0.01351 78.26)",
+          "oklch(95% 0.01351 78.26)"
+        ]
+      },
+      "action-active": {
+        "role": "primary",
+        "displayName": "Action Active",
+        "tonalRamp": [
+          "oklch(15% 0.08898 43.24)",
+          "oklch(26% 0.08898 43.24)",
+          "oklch(37% 0.08898 43.24)",
+          "oklch(49% 0.08898 43.24)",
+          "oklch(60% 0.08898 43.24)",
+          "oklch(72% 0.08898 43.24)",
+          "oklch(84% 0.08898 43.24)",
+          "oklch(95% 0.08898 43.24)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Detail title."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Home memory title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Context heading."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Memory description."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Source facts and utility text."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "control-feedback",
+        "value": "160ms ease-out",
+        "purpose": "Color and border state feedback."
+      },
+      {
+        "name": "photo-continuity",
+        "value": "360ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Interruptible browser photo continuity; bypassed for reduced motion or unsupported browsers."
+      },
+      {
+        "name": "chart-selection",
+        "value": "difference * (1 - exp(-12 * min(delta, 0.05)))",
+        "purpose": "Shallow selection rotation; snaps under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "370px"
+      },
+      {
+        "name": "phone",
+        "value": "800px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1150px"
+      },
+      {
+        "name": "wide",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Open the selected memory.",
+      "html": "<a class=\"ds-primary\" href=\"#/memory/last-ferry\">Open memory</a>",
+      "css": ".ds-primary{display:inline-flex;background:var(--action);color:#fff4e6;border:1px solid transparent;border-radius:3px;padding:13px 18px;min-height:50px;font:400 14px var(--serif);text-decoration:none;align-items:center;transition:color .16s ease-out,background-color .16s ease-out,border-color .16s ease-out;}.ds-primary:hover{background:#a8542b;color:#fff9f0}.ds-primary:active{background:#793f26}.ds-primary:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}"
+    },
+    {
+      "name": "Outline retry",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Recover a failed photograph or scene.",
+      "html": "<button class=\"ds-outline\">Retry photo</button>",
+      "css": ".ds-outline{background:transparent;color:var(--ink);border:1px solid var(--line);padding:12px 20px;font-family:var(--serif);cursor:pointer;transition:color .16s ease-out,background-color .16s ease-out,border-color .16s ease-out;}.ds-outline:hover{border-color:var(--copper)}.ds-outline:active{background:#793f26}.ds-outline:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}.ds-outline:disabled{opacity:.4;cursor:default}"
+    },
+    {
+      "name": "Photo control",
+      "kind": "button",
+      "refersTo": "photo-control",
+      "description": "Previous or next gallery photo.",
+      "html": "<button class=\"ds-photo\" aria-label=\"Next photo\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"m9 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-photo{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:color .16s ease-out,background-color .16s ease-out,border-color .16s ease-out;}.ds-photo:hover{border-color:var(--copper)}.ds-photo:active{background:#793f26}.ds-photo:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}"
+    },
+    {
+      "name": "Search input",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Search synthetic memories.",
+      "html": "<label class=\"ds-search\">Search demo memories<input placeholder=\"A moment, year or friend…\" /></label>",
+      "css": ".ds-search{display:flex;flex-direction:column;gap:10px;font-family:var(--sans);color:var(--muted)}.ds-search input{min-height:52px;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:12px 16px;font:18px var(--sans);caret-color:var(--copper)}.ds-search input::placeholder{color:var(--muted)}.ds-search input:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Three primary browsing routes.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#/\" aria-current=\"page\">Home</a><a href=\"#/timeline\">Timeline</a><a href=\"#/search\">Search</a></nav>",
+      "css": ".ds-nav{display:flex;gap:40px;font:16px var(--serif)}.ds-nav a{display:flex;align-items:center;min-height:44px;position:relative;text-decoration:none;color:var(--ink);transition:color .16s ease-out,background-color .16s ease-out,border-color .16s ease-out;}.ds-nav a:hover,.ds-nav a[aria-current]{color:var(--copper)}.ds-nav a[aria-current]:after{content:\"\";height:2px;position:absolute;bottom:7px;left:0;right:0;background:var(--copper)}.ds-nav a:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}"
+    },
+    {
+      "name": "Memory choice",
+      "kind": "card",
+      "refersTo": "memory-choice",
+      "description": "Dated list equivalent of chart selection.",
+      "html": "<button class=\"ds-memory\" aria-pressed=\"true\"><span>The last ferry</span><small>Summer 2024 · 3 photos · Added by Deniz</small></button>",
+      "css": ".ds-memory{display:flex;flex-direction:column;gap:6px;text-align:left;border:1px solid var(--line);border-radius:6px;background:transparent;padding:6px;color:var(--ink);font:17px var(--serif);transition:color .16s ease-out,background-color .16s ease-out,border-color .16s ease-out;}.ds-memory small{font-size:11px;color:var(--muted)}.ds-memory[aria-pressed=\"true\"]{border-color:var(--copper);outline:1px solid var(--copper)}.ds-memory:hover{border-color:var(--copper)}.ds-memory:active{background:#793f26}.ds-memory:focus-visible{outline:2px solid var(--focus);outline-offset:5px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Atlas of Us",
+    "overview": "The Atlas of Us pairs a midnight blue cartographic ground with warm ivory serif lettering and copper selection. Photography remains the dominant material; the dated curved chart gives memories a spatial index. Controls are restrained and readable.\n\nThis record describes the implemented local synthetic experiment, not an accepted production standard. The team selected Atlas; the finish verdict clears experiment readiness and three resolved fixes. Numerical comp gates remain incomplete in `.impeccable/build/REVIEW_STATUS.md`; no pixel-fidelity certification is claimed. The reported 20 passing Chromium desktop/phone-emulation contracts do not establish real-phone, browser-matrix, manual screen-reader, GPU or friend-study outcomes.",
+    "keyCharacteristics": [
+      "Midnight blue ground with warm photographic emphasis.",
+      "Ivory serif hierarchy; sans-serif source evidence and utility controls.",
+      "Copper marks selection, actions and chart accents.",
+      "Real procedural depth with equivalent dated HTML controls."
+    ],
+    "rules": [
+      {
+        "name": "The Selection Rule",
+        "body": "Copper identifies the current memory in the chart, dated controls and memory list.",
+        "section": "colors"
+      },
+      {
+        "name": "The Evidence Rule",
+        "body": "Keep photographs, dates and source context readable together; utility text uses the sans-serif where implemented.",
+        "section": "typography"
+      },
+      {
+        "name": "The Chart Rule",
+        "body": "Depth belongs to the procedural date chart; surrounding photographs and controls remain flat.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do retain visible synthetic provenance and truthful fixture photo counts.",
+      "Do preserve photo-first phone reflow and conventional dated selection controls.",
+      "Do preserve focus visibility, recovery controls and live reduced-motion behavior."
+    ],
+    "donts": [
+      "Don't replace photographic content with decorative chart density.",
+      "Don't require orbit or dragging to reach a memory.",
+      "Don't treat this experiment's tokens or review as production acceptance."
+    ]
+  }
+}
