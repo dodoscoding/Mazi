@@ -2,8 +2,8 @@ from pathlib import Path
 import re
 
 root = Path(__file__).resolve().parents[3]
-names = ['SPEC', 'ROADMAP', 'ARCHITECTURE', 'CONTRACTS', 'PRIVACY', 'IMPORTS', 'TEST_PLAN', 'DECISIONS', 'SOURCES']
-files = [root / 'README.md', *(root / 'docs' / f'{name}.md' for name in names)]
+names = ['SPEC', 'ROADMAP', 'TWO_DEVELOPER_PLAN', 'ARCHITECTURE', 'CONTRACTS', 'PRIVACY', 'IMPORTS', 'TEST_PLAN', 'DECISIONS', 'SOURCES', 'DESIGN_PROPOSAL', 'HOME_MEMORY_INTERACTIONS', 'PROTOTYPE_STACK']
+files = [root / 'README.md', root / 'PRODUCT.md', *(root / 'docs' / f'{name}.md' for name in names)]
 links = 0
 for path in files:
     body = path.read_text()

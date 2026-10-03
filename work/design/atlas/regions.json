@@ -1,0 +1,57 @@
+{
+  "regions": [
+    {
+      "id": "nav",
+      "kind": "chrome",
+      "grid": "A0:J0",
+      "note": "Header navigation strip"
+    },
+    {
+      "id": "atlas-heading",
+      "kind": "text",
+      "grid": "A1:C1",
+      "note": "The Atlas of Us"
+    },
+    {
+      "id": "atlas-chart",
+      "kind": "control",
+      "grid": "A2:E7",
+      "container": true,
+      "note": "Runtime WebGL date chart driven by memory records; selectable dated objects"
+    },
+    {
+      "id": "featured-photo",
+      "kind": "image",
+      "grid": "F1:J6",
+      "note": "Standalone dinner photograph",
+      "plate": "public/media/ferry.webp",
+      "bleed": true
+    },
+    {
+      "id": "memory-title",
+      "kind": "text",
+      "grid": "F7:H7",
+      "note": "The night we missed the last ferry"
+    },
+    {
+      "id": "memory-meta",
+      "kind": "text",
+      "grid": "F8:H8",
+      "note": "Summer 2024 \u00b7 photos \u00b7 Added by Deniz",
+      "codeDrawn": true
+    },
+    {
+      "id": "open-memory",
+      "kind": "control",
+      "grid": "I7:J7",
+      "note": "Open memory button"
+    },
+    {
+      "id": "memory-list",
+      "kind": "control",
+      "grid": "A8:J9",
+      "container": true,
+      "note": "Dated memory selection controls with fixture thumbnails"
+    }
+  ]
+}

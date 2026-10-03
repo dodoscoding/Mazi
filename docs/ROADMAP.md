@@ -1,12 +1,14 @@
 # Mazi roadmap
 
-Build a private archive that a small team can operate in production. Deliver a complete import, review, publication, and rediscovery loop before adding native synchronization and conversational AI.
+Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization and conversational AI remain later proposals.
 
-Status on 2 October 2026 is planning only. No milestone has started. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
+Status on 3 October 2026 is planning only. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. No milestone has started. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
 ## Use the planning assumptions
 
 Use three engineers as the estimating assumption. Assign one to web experience, one to backend and permissions, and one to imports and media processing. Share a product/design lead and part-time QA or security review. Budget a Swift specialist for M4 or replace another engineer's work during that milestone.
+
+The user confirmed two developers on 3 October 2026, with no phase started. Use the [two-developer delivery plan](TWO_DEVELOPER_PLAN.md) for task allocation and parallel handoffs. The ranges below retain their original three-engineer estimating basis; re-estimate for two developers at M0 exit before scheduling delivery.
 
 Treat durations as elapsed working-week ranges for that squad, including integration and review. These are planning estimates, not commitments or measured velocity. Re-estimate after M0 and after the first real archive. Do not convert these ranges to launch dates until capacity, supported formats, and infrastructure costs are agreed.
 
@@ -16,7 +18,7 @@ Use 15 to 23 working weeks for M0 through the M3 launch candidate. Reserve anoth
 
 ```mermaid
 flowchart LR
-    M0["M0 Validate scope and contracts"] --> M1["M1 Private memory pilot"]
+    M0["M0 Validate scope and contracts"] --> M1["M1 Shared group memory pilot"]
     M1 --> M2["M2 Historical import beta"]
     M2 --> M3["M3 Production archive launch"]
     M3 --> M4["M4 Apple sync, Discord server, Map"]
@@ -26,14 +28,14 @@ flowchart LR
     M6 --> M7
 ```
 
-Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Export-format research and a bounded PhotoKit feasibility experiment may start in M0. They do not imply early feature delivery.
+Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Export-format research starts in M0. Native research and delivery are deferred until a new scope decision; they are not current website launch gates. M4 native tasks below describe that conditional future path.
 
 ## Deliver each milestone
 
 | ID | Outcome | Dependencies | Estimate | Accountable role |
 | --- | --- | --- | --- | --- |
 | M0 | Validated scope, representative fixtures, privacy decisions, architecture experiment results. | None | 1 to 2 weeks | Technical lead with product lead |
-| M1 | Internal group can privately upload, review, share, and revisit a memory. | M0 gates | 5 to 7 weeks | Backend lead with web engineer |
+| M1 | Members import into the shared group archive automatically, correct it, and revisit memories. | M0 gates | 5 to 7 weeks | Backend lead with web engineer |
 | M2 | Closed beta can reconstruct history from supported archive exports. | M1 | 4 to 6 weeks | Import engineer |
 | M3 | Production launch with useful discovery, safe suggestions, recovery, and measured scale. | M2 | 5 to 8 weeks | Technical lead with QA |
 | M4 | Selective Apple synchronization, authorized Discord server intake, and map exploration. | M3; source-specific feasibility | 5 to 8 weeks | Native/integration lead |
@@ -46,22 +48,22 @@ Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 befor
 - [ ] Confirm the first production scope, format limits, group limits, capacity, cost ceiling, and supported browsers.
 - [ ] Accept or revise the proposed stack and the server-readable privacy model in [Decisions](DECISIONS.md).
 - [ ] Collect consented, redacted exports from each source and document missing fields. Store sensitive fixtures outside Git.
-- [ ] Exercise a small upload-to-private-preview experiment with database authorization and storage denial from a second account.
-- [ ] Exercise a PhotoKit selection and iCloud retrieval experiment on an actual supported device. Record permission and background limits.
+- [ ] Exercise per-item automatic group availability with a second active member allowed and an outsider/removed member denied at database and storage boundaries.
+- [ ] Establish the concept-first Home-to-memory prototype with synthetic content and feedback from 2-3 friends; record device and reduced-motion behavior separately from production acceptance.
 - [ ] Define each role's acceptance evidence and establish build, lint, type, and test commands when the app scaffold exists.
 
 Exit when the privacy decisions that affect storage are recorded, every promised importer has a fixture and a declared supported format, and the first denied-access experiment has evidence. If a source cannot meet the proposed scope, record the reduced scope before estimating its parser. These experiments have not run in this documentation task.
 
-### M1. Deliver the private memory loop
+### M1. Deliver the shared group memory loop
 
 - [ ] Implement authentication, group membership, single-use expiring invitations, and database authorization.
 - [ ] Implement private object storage and resumable manual image/video upload with per-item validation and progress.
 - [ ] Preserve originals, source appearances, capture-time evidence, and exact duplicate identity within the permitted scope.
-- [ ] Deliver private staging, audience selection, independent metadata controls, share preview, publication, revocation, and deletion.
-- [ ] Deliver manual memories and sub-events, basic Today, paged Timeline, media detail, and keyword search over titles and captions.
+- [ ] Deliver immediate per-item group sharing, clear import progress, post-import correction, contribution withdrawal/deletion, and membership revocation. Individual audience controls and private staging are deferred.
+- [ ] Deliver manual memories and sub-events, rediscovery Home, paged Timeline, media detail, and keyword search over titles and captions.
 - [ ] Add core audit events, migration checks, minimal export, error monitoring, and an internal recovery drill.
 
-Exit when two members and one outsider pass tests T01 through T06, T08, and T09 in [Test plan](TEST_PLAN.md). Demonstrate a ten-photo memory with one duplicate, one rejected file, a hidden location, and revoked access. Keep M1 restricted to an internal pilot.
+Exit when two members and one outsider pass tests T01 through T06, T08, and T09 in [Test plan](TEST_PLAN.md). Demonstrate a ten-photo memory with one duplicate, one rejected file, imported group-visible context/location, and revoked membership access. Keep M1 restricted to an internal pilot.
 
 ### M2. Import real history
 
@@ -70,9 +72,9 @@ Exit when two members and one outsider pass tests T01 through T06, T08, and T09 
 - [ ] Preserve bounded message context, reactions where supplied, source identities, archive coverage, and separate share dates.
 - [ ] Add checkpointed scans, queue leases, per-item retry, cancellation, import reconciliation, and human-readable outcome reports.
 - [ ] Test common image and video formats against the published format matrix. Reject unsupported codecs clearly.
-- [ ] Run a closed beta with at least three consented groups and the representative archive fixture set.
+- [ ] Run the closed beta with the confirmed friend group and the representative archive fixture set. Use separate synthetic groups for isolation tests; additional real groups need a new scope decision.
 
-Exit when T03, T04, T06, T07, and T09 pass, every discovered item has an outcome, and replaying a 20,000-item manifest adds no repeated appearances. Source integrations only claim fields demonstrated by fixtures. Complete the beta privacy walkthrough before expanding invitations.
+Exit when T03, T04, T06, T07, and T09 pass, every discovered item has an outcome, and replaying a 20,000-item manifest adds no repeated appearances. Source integrations only claim fields demonstrated by fixtures. Complete the beta group-access walkthrough before the production decision.
 
 ### M3. Launch the production archive
 
@@ -86,6 +88,8 @@ Exit when T03, T04, T06, T07, and T09 pass, every discovered item has an outcome
 Exit when T01 through T10 and T14 pass against the release candidate, the production checklist is complete, and no unresolved access leak or data-loss defect remains. Visual and event models remain optional. Launch can use reviewed deterministic time/place suggestions without cloud AI.
 
 ### M4. Add continuous sources and places
+
+This is a future proposal. Native work requires a new scope decision under D07/D13; it is outside the confirmed website-only work.
 
 - [ ] Ship one native platform first. The proposed default is macOS for bulk imports, followed by iOS after device validation.
 - [ ] Add metadata-first selection, album/date/type filters, foreground resumable uploads, change tracking, and permission-revocation handling.
@@ -133,12 +137,12 @@ Prioritize annual recaps and collaborative stories using approved memories. Foll
 
 | Workstream | Starts after | Owns | Coordination point |
 | --- | --- | --- | --- |
-| Identity and privacy | M0 decisions | Membership, grants, RLS, revocation | Blocks all shared reads. |
+| Identity and access | M0 decisions | Membership, group isolation, ownership, RLS, revocation | Blocks all shared reads. |
 | Web experience | M0 journeys | Review, timeline, memory detail, accessibility | Uses the same authorization contract as APIs. |
 | Media and jobs | M0 storage experiment | Validation, variants, queue, recovery | Manual import proves the pipeline before other adapters. |
 | Archive parsers | M0 fixtures; integration after M1 | Normalization and source compatibility | Can build independent fixture-driven parsers concurrently. |
 | Intelligence and retrieval | M2 normalized evidence | Dedupe suggestions, clustering, embeddings, AI | Cannot broaden source visibility or consent. |
-| Native Apple | M0 feasibility; full delivery M4 | Device authorization and selective sync | Shares the established import contract. |
+| Native Apple | New scope approval and feasibility; conditional M4 | Device authorization and selective sync | Shares the established import contract. |
 | Operations and QA | M0 | CI, isolation tests, backups, cost, release evidence | Work proceeds in every milestone. |
 
 Keep the shared specification, architecture, contracts, test plan, and decision register canonical. Create workstream-specific documents only when a contract grows beyond those files. Use one coherent behavior per implementation PR, with failing tests where appropriate, the smallest implementation, and relevant acceptance evidence. Do not create speculative PR numbers or empty workstream folders.

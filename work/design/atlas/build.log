@@ -1,0 +1,28 @@
+
+> mazi-atlas-prototype@0.1.0 build
+> tsc -b && vite build
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 36 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                  0.41 kB │ gzip:   0.29 kB
+dist/assets/source-sans-3-latin-600-normal-DeckBYAU.woff2       15.66 kB
+dist/assets/source-sans-3-latin-400-normal-DQi5PRDE.woff2       15.69 kB
+dist/assets/source-sans-3-latin-400-normal-AFMiCETP.woff        19.90 kB
+dist/assets/source-sans-3-latin-600-normal-BvDVuF-j.woff        19.90 kB
+dist/assets/libre-caslon-text-latin-400-normal-WtjoQ5sB.woff    21.40 kB
+dist/assets/libre-caslon-text-latin-400-italic-C1OAqZ6C.woff    24.46 kB
+dist/assets/libre-caslon-text-latin-400-normal-CfldDPV-.woff2   24.97 kB
+dist/assets/libre-caslon-text-latin-400-italic-snTzlHlN.woff2   28.02 kB
+dist/assets/index-B7ueCudX.css                                  16.63 kB │ gzip:   4.28 kB
+dist/assets/index-B4MIyP-p.js                                  206.66 kB │ gzip:  65.27 kB
+dist/assets/Atlas-D-_xSrp-.js                                  920.51 kB │ gzip: 244.93 kB
+
+✓ built in 156ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.

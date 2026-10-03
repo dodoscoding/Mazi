@@ -1,0 +1,9 @@
+# Atlas prototype review status
+
+The standing build preference remains comp. The owner explicitly selected bolder-atlas.png and requested implementation on 2026-10-03; this authorized implementing that composition without another choice round. It did not downgrade the concept's authority.
+
+The automated build-phase in state.json is **incomplete**. It was started with the selected comp. comp-spec's coarse semantic detection selected the wrong text pixels (metadata measured as 52.5px cap height), so its automatic region/font results are not valid fidelity evidence. Later automatic plate/hero/final gates were not claimed, forced or manually marked passed. The build proceeded under the owner's explicit prototype request, with direct visual comparison and an independent finish review. This is a disclosed deviation from the full comp automation, not a change to code-led preference.
+
+Visual authority remains .impeccable/mocks/decision/bolder-atlas.png. The independent review in work/design/atlas/FINISH_REVIEW.md assessed the actual four screenshots against it and accepted the three-fixture chart density, broader contour and phone composition as documented prototype adaptations. Its runtime review covers the local experiment; it cannot certify the catalog ceiling or pixel-perfect reproduction. The missing catalog QUALITY BAR is available by source identifier notation-diagram-systems-star-atlas in the earlier direction payload, but no new ceiling certification is claimed.
+
+Completion language must distinguish the runnable, tested experiment and manual visual review from the unfinished automated fidelity gates. Keep state.json unchanged as the truthful machine result. A future comp-fidelity pass must repair the measured regions against the actual selected composition and run the gates; do not reuse the invalid type sizes or invent pass records.

@@ -1,0 +1,173 @@
+{
+  "title": "Mazi: a bolder visual direction",
+  "question": "More ambitious structures, with the same clear Home-to-memory journey. Images will fill in as they render.",
+  "options": [
+    {
+      "id": "bolder-signal",
+      "label": "Memory Signal",
+      "kicker": "THE ROLL",
+      "lineage": "ikeda-datamatics",
+      "thesis": "A photographic time-field: select a dated column and its memory unfolds.",
+      "palette": [
+        "#0A0A0A",
+        "#FFFFFF",
+        "#F1EBDF"
+      ],
+      "materials": [
+        "precise mono labels",
+        "vertical photographic slices"
+      ],
+      "viewport": "A full-width wall of dated photo slices opens one generous image, with a stable index below.",
+      "risk": "The most experimental option; the data language can feel colder than the memories.",
+      "case": "Warmth comes from unchanged photographs; chrome stays monochrome, and strobing is removed.",
+      "comp": ".impeccable/mocks/decision/bolder-signal.png",
+      "hero": "https://impeccable.style/worlds/cards/ikeda-datamatics-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/ikeda-datamatics.webp"
+    },
+    {
+      "id": "bolder-panorama",
+      "label": "Our Panorama",
+      "lineage": "digital-design-canon-metro-typographic-tiles",
+      "thesis": "Giant type and an asymmetric photo panorama turn the archive into an explorable composition.",
+      "palette": [
+        "#171A18",
+        "#F5F0E7",
+        "#EB7856"
+      ],
+      "materials": [
+        "flat color fields",
+        "large photographic tiles",
+        "hinged depth"
+      ],
+      "viewport": "Oversized lowercase year and season, one dominant photo tile, smaller neighboring moments, visible next-pane control.",
+      "risk": "Large typography must leave enough room for photographs and usable controls.",
+      "verdict": "wins",
+      "case": "Beats the signal field on warmth and immediate recognition; coral translates the colder source accent.",
+      "comp": ".impeccable/mocks/decision/bolder-panorama.png",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-metro-typographic-tiles-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/digital-design-canon-metro-typographic-tiles.webp"
+    },
+    {
+      "id": "bolder-departures",
+      "label": "Return Tickets",
+      "lineage": "vernacular-ephemera-boarding-pass-and-gate-board",
+      "thesis": "A memory index and a dimensional photographic ticket make each return feel like a departure.",
+      "palette": [
+        "#EEEAE0",
+        "#202B29",
+        "#C94B34"
+      ],
+      "materials": [
+        "segmented ticket stock",
+        "tabular dates",
+        "cut edges"
+      ],
+      "viewport": "A precise archive board sits beside one large folded photographic ticket with Open memory.",
+      "risk": "The travel metaphor must also work for a quiet Sunday at home.",
+      "verdict": "competitive",
+      "case": "Holds clarity through a stable dated index, but the travel ritual is narrower.",
+      "comp": ".impeccable/mocks/decision/bolder-departures.png",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp"
+    },
+    {
+      "id": "bolder-lexicon",
+      "label": "An Index of Us",
+      "lineage": "rw-lexicon-shoulder-and-plate",
+      "thesis": "A personal lexicon gives ordinary moments the space and care of treasured specimens.",
+      "palette": [
+        "#F3EBDD",
+        "#1F211E",
+        "#953C2E"
+      ],
+      "materials": [
+        "cream leaves",
+        "marginal guide words",
+        "bordered photo plates"
+      ],
+      "viewport": "A narrow shoulder index, two readable text columns, and an oversized hinged photographic plate.",
+      "risk": "Deliberate and literary; less immediately playful.",
+      "verdict": "competitive",
+      "case": "Holds personal significance while demanding more reading than the signal field.",
+      "comp": ".impeccable/mocks/decision/bolder-lexicon.png",
+      "hero": "https://impeccable.style/worlds/cards/rw-lexicon-shoulder-and-plate-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-lexicon-shoulder-and-plate.webp"
+    },
+    {
+      "id": "bolder-garden",
+      "label": "The Memory Garden",
+      "lineage": "aww2-zoo-gardens-guide-map",
+      "thesis": "A sculptural collection of photo-bearing islands makes shared memories a place to explore.",
+      "palette": [
+        "#F5F1E4",
+        "#8ED462",
+        "#2C2E2A",
+        "#F5E211",
+        "#FF705D"
+      ],
+      "materials": [
+        "flat green landforms",
+        "cream negative space",
+        "photographic inlays"
+      ],
+      "viewport": "One dominant sculptural island carries the selected photo; two smaller islands and a stable memory list keep exploration legible.",
+      "risk": "The scene needs careful restraint to feel personal rather than like a game or a geography claim.",
+      "verdict": "wins",
+      "case": "Beats the signal field on warmth and visible exploration; islands mean existing memories, never inferred locations.",
+      "comp": ".impeccable/mocks/decision/bolder-garden.png",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map.webp"
+    },
+    {
+      "id": "bolder-atlas",
+      "label": "The Atlas of Us",
+      "lineage": "notation-diagram-systems-star-atlas",
+      "thesis": "A navigable chart of dated memories brings one photographic moment into focus.",
+      "palette": [
+        "#101C2C",
+        "#EFE5D2",
+        "#D37348"
+      ],
+      "materials": [
+        "deep blue chart",
+        "fine amber index",
+        "photographic windows"
+      ],
+      "viewport": "A bounded curved memory chart beside a large selected photograph and an ordinary event index.",
+      "risk": "An astronomy language can overpower a personal archive; every plotted point must represent a real memory.",
+      "verdict": "competitive",
+      "case": "Holds spatial exploration; chronology replaces celestial coordinates and no social graph is inferred.",
+      "comp": ".impeccable/mocks/decision/bolder-atlas.png",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-star-atlas-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-star-atlas.webp"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "The familiar photo library",
+    "thesis": "A chronological photo grid with conventional album navigation.",
+    "palette": [
+      "#FAFAF8",
+      "#252525",
+      "#345C49"
+    ],
+    "materials": [
+      "flat white",
+      "precise thumbnails"
+    ],
+    "viewport": "Home navigation, a featured memory, and a clean chronological grid.",
+    "risk": "Efficient, but gives up much of the spatial identity you asked to explore.",
+    "comp": ".impeccable/mocks/decision/photo-library.png"
+  },
+  "steer": true
+}

@@ -1,0 +1,80 @@
+[
+  {
+    "file": "00-design-kickoff.md",
+    "title": "[Design] Agree product context and the Operate interface with dodo",
+    "milestone": "M0 Validate scope and contracts",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "01-m0-scope.md",
+    "title": "[M0] Confirm scope, privacy, fixtures, and experiments",
+    "milestone": "M0 Validate scope and contracts",
+    "labels": ["roadmap"]
+  },
+  {
+    "file": "02-m1-identity.md",
+    "title": "[M1] Authenticate members and protect private staging",
+    "milestone": "M1 Private memory pilot",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "03-m1-upload.md",
+    "title": "[M1] Store originals and accept resumable uploads",
+    "milestone": "M1 Private memory pilot",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "04-m1-memory-loop.md",
+    "title": "[M1] Review, publish, revoke, and revisit a memory",
+    "milestone": "M1 Private memory pilot",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "05-m2-import.md",
+    "title": "[M2] Import historical archives and report every item",
+    "milestone": "M2 Historical import beta",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "06-m3-discovery.md",
+    "title": "[M3] Suggest duplicates and events, then scale discovery",
+    "milestone": "M3 Production archive launch",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "07-m3-launch.md",
+    "title": "[M3] Clear the production gate and launch the invite-only cohort",
+    "milestone": "M3 Production archive launch",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "08-m4-sources.md",
+    "title": "[M4] Sync selected Apple media and Discord channels",
+    "milestone": "M4 Continuous sources and places",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "09-m4-map.md",
+    "title": "[M4] Explore authorized places on a map",
+    "milestone": "M4 Continuous sources and places",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "10-m5-people-search.md",
+    "title": "[M5] Add People and semantic search under consent",
+    "milestone": "M5 People and semantic search",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "11-m6-memory-ai.md",
+    "title": "[M6] Answer questions from authorized archive evidence",
+    "milestone": "M6 Grounded Memory AI",
+    "labels": ["roadmap", "design"]
+  },
+  {
+    "file": "12-m7-advanced.md",
+    "title": "[M7] Ship recaps, stories, capsules, and generated media separately",
+    "milestone": "M7 Advanced memories",
+    "labels": ["roadmap", "design"]
+  }
+]

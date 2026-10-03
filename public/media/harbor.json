@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen",
+  "synthetic": true,
+  "prompt": "Photorealistic travel snapshot for a fictional friend group's memory archive. A small Greek island harbour after sunset, one empty mooring rope in foreground, last ferry receding into dark cobalt sea, whitewashed houses with glowing amber windows on hillside. Human eye view from quay, candid 35mm analog photography, atmospheric natural colors, full bleed landscape 3:2, no text, no UI, no border, no watermark.",
+  "original": "exec-872b1e1d-211d-4dcd-ba6e-f11477df336f.png",
+  "delivery": "WebP quality 84; no compositional edits",
+  "purpose": "Fictional demo memory; not evidence of real events"
+}
