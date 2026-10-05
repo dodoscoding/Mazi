@@ -534,7 +534,9 @@ test(
               .exp >
               Date.now() / 1000,
           );
-          const item = ready[0];
+          const item = ready.find(({ name }) => name === "pending");
+          const independent = ready.find(({ name }) => name === "independent");
+          assert.deepEqual(item.fixture.bytes, independent.fixture.bytes);
           await patch("contributions", `id=eq.${item.id}`, {
             state: "withdrawn",
           });
