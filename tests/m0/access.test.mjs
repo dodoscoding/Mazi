@@ -15,13 +15,31 @@ const fixtures = manifest.files.map(({ name, mime, sha256 }) => {
 });
 
 function localProvider() {
-  const status = JSON.parse(
-    execFileSync("npx", ["supabase", "status", "-o", "json"], {
+  const config = readFileSync(
+    new URL("../../supabase/config.toml", import.meta.url),
+    "utf8",
+  );
+  assert.match(config, /^project_id = "mazi-m0-experiment"$/m);
+  assert.equal(
+    execFileSync("npx", ["supabase", "--version"], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 30_000,
-    }),
+    }).trim(),
+    "2.119.0",
   );
+  let status;
+  try {
+    status = JSON.parse(
+      execFileSync("npx", ["supabase", "status", "-o", "json"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 30_000,
+      }),
+    );
+  } catch {
+    assert.fail("Local Supabase status unavailable; start mazi-m0-experiment");
+  }
   const url = new URL(status.API_URL);
   assert.equal(url.protocol, "http:");
   assert.ok(["127.0.0.1", "localhost"].includes(url.hostname));
@@ -106,6 +124,13 @@ test(
         );
     }
 
+    function databaseWriteDenied(response) {
+      assert.ok(
+        [401, 403].includes(response.status),
+        `expected database authorization denial, received HTTP ${response.status}`,
+      );
+    }
+
     async function insert(table, rows) {
       const response = await request(`/rest/v1/${table}`, {
         method: "POST",
@@ -160,12 +185,34 @@ test(
         body: { prefix: group, limit: 100 },
         token,
       });
+      if (expected.length) succeeds(listing);
       if (listing.status === 200) {
         assert.deepEqual(
           listing.data.map((entry) => entry.name).sort(),
           expected.map((entry) => entry.id).sort(),
         );
       } else denied(listing);
+      const rootListing = await request(
+        "/storage/v1/object/list/m0-originals",
+        {
+          method: "POST",
+          body: { prefix: "", limit: 100 },
+          token,
+        },
+      );
+      const visibleGroups =
+        actor === actors.otherGroup
+          ? [otherGroup]
+          : expected.length
+            ? [group]
+            : [];
+      if (visibleGroups.length) succeeds(rootListing);
+      if (rootListing.status === 200)
+        assert.deepEqual(
+          rootListing.data.map(({ name }) => name).sort(),
+          visibleGroups,
+        );
+      else denied(rootListing);
       for (const contribution of contributions.filter(
         ({ group_id }) => group_id === group,
       )) {
@@ -240,6 +287,11 @@ test(
       });
       succeeds(bucketState);
       assert.equal(bucketState.data.public, false);
+      assert.deepEqual(bucketState.data.allowed_mime_types.sort(), [
+        "image/jpeg",
+        "image/png",
+      ]);
+      assert.equal(bucketState.data.file_size_limit, 25 * 1024 * 1024);
       for (const [name, state, owner, targetGroup, fixture] of [
         ["ready", "available", "alice", group, fixtures[0]],
         ["pending", "processing", "alice", group, fixtures[1]],
@@ -330,6 +382,12 @@ test(
             );
             denied(response, [ready[0].filename, ready[0].id]);
           }
+          denied(
+            await request(
+              `/storage/v1/object/authenticated/m0-originals/${group}/${randomUUID()}/unknown.png`,
+              { token: actors.alice.token },
+            ),
+          );
         },
       );
       await t.test(
@@ -351,14 +409,14 @@ test(
             actors.otherGroup,
             null,
           ]) {
-            denied(
+            databaseWriteDenied(
               await request("/rest/v1/contributions", {
                 method: "POST",
                 token: actor?.token,
                 body: { ...before.data[0], id: randomUUID() },
               }),
             );
-            denied(
+            databaseWriteDenied(
               await request(`/rest/v1/contributions?id=eq.${ready[0].id}`, {
                 method: "PATCH",
                 token: actor?.token,
@@ -369,7 +427,7 @@ test(
                 },
               }),
             );
-            denied(
+            databaseWriteDenied(
               await request(`/rest/v1/memberships?group_id=eq.${group}`, {
                 method: "PATCH",
                 token: actor?.token,
@@ -448,6 +506,11 @@ test(
         "membership revocation denies an existing JWT and contributor departure hides only dependent items",
         async () => {
           const originalToken = actors.ben.token;
+          assert.ok(
+            JSON.parse(Buffer.from(originalToken.split(".")[1], "base64url"))
+              .exp >
+              Date.now() / 1000,
+          );
           await patch(
             "memberships",
             `group_id=eq.${group}&user_id=eq.${actors.ben.id}`,
@@ -466,6 +529,11 @@ test(
         "withdrawal denies new reads with the same current reader JWT",
         async () => {
           const originalToken = actors.alice.token;
+          assert.ok(
+            JSON.parse(Buffer.from(originalToken.split(".")[1], "base64url"))
+              .exp >
+              Date.now() / 1000,
+          );
           const item = ready[0];
           await patch("contributions", `id=eq.${item.id}`, {
             state: "withdrawn",

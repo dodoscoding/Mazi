@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+const firefoxLaunchOptions = process.env.MAZI_FIREFOX_EXECUTABLE
+  ? { executablePath: process.env.MAZI_FIREFOX_EXECUTABLE }
+  : {};
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
@@ -22,6 +25,7 @@ export default defineConfig({
       name: "firefox-desktop",
       use: {
         ...devices["Desktop Firefox"],
+        launchOptions: firefoxLaunchOptions,
         viewport: { width: 1440, height: 1024 },
       },
     },
@@ -29,6 +33,7 @@ export default defineConfig({
       name: "firefox-phone",
       use: {
         browserName: "firefox",
+        launchOptions: firefoxLaunchOptions,
         viewport: { width: 390, height: 844 },
         isMobile: false,
         hasTouch: true,
