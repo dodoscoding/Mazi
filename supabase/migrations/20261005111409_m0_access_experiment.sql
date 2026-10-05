@@ -67,9 +67,6 @@ create policy contributions_read_available on public.contributions
 for select to authenticated
 using (state = 'available' and m0_private.can_read_contribution(group_id, owner_id));
 
-revoke all on storage.objects, storage.buckets from anon, authenticated;
-grant select on storage.objects, storage.buckets to authenticated;
-
 create policy m0_originals_read_available on storage.objects
 for select to authenticated
 using (
