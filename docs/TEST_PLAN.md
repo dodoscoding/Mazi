@@ -1,6 +1,6 @@
 # Mazi test and acceptance plan
 
-T01-T15 define production acceptance and remain uncompleted. The local Atlas prototype has a separate [browser verification record](../work/design/atlas/VERIFICATION.md); its synthetic journey tests do not satisfy production membership, ingestion or lifecycle scenarios. Documentation verification remains in [the planning evidence](../work/poteto/product-plan/VERIFICATION.md).
+T01-T15 define production acceptance and remain uncompleted. The local Atlas prototype has a separate [browser verification record](../work/design/atlas/VERIFICATION.md). The [Python memory-loop experiment](../phase1/README.md) has behavior tests for a different sharing policy. Neither synthetic test set satisfies production membership, ingestion or lifecycle scenarios. Documentation verification remains in [the planning evidence](../work/poteto/product-plan/VERIFICATION.md).
 
 ## Evidence rules
 

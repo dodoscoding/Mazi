@@ -19,7 +19,7 @@
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation:none!important } }
 </style>
 <header><h1>Mazi</h1><button id="logout" class="secondary hidden">Sign out</button></header>
-<p>Private memories for a small group. This local pilot supports JPEG and PNG images.</p>
+<p>Private memories for a small group. This local pilot supports JPEG and PNG images up to 20 MB.</p>
 <p id="notice" role="status" aria-live="polite"></p>
 
 <section id="auth" class="grid">
@@ -29,14 +29,14 @@
 
 <main id="workspace" class="hidden">
   <section><h2>Groups</h2><div id="groups"></div><form id="create-group"><label>New group name<input name="name" required maxlength="100"></label><button>Create group</button></form><form id="accept"><label>Invitation token<input name="token" required></label><button>Join group</button></form></section>
-  <section id="group-work" class="hidden"><h2 id="group-title"></h2><button id="invite" class="secondary">Create 24-hour invite</button><p id="invite-result"></p>
+  <section id="group-work" class="hidden"><h2 id="group-title"></h2><button id="invite" class="secondary">Create 24-hour invite</button><button id="revoke-invite" class="secondary" hidden>Revoke latest invite</button><button id="export" class="secondary">Export what I can see</button><p id="invite-result"></p><h3>Members</h3><div id="members"></div>
     <div class="grid">
-      <form id="upload"><h3>Stage an image privately</h3><label>Image<input name="file" type="file" accept="image/jpeg,image/png" required></label><label>Caption<input name="caption" maxlength="2000"></label><label>Capture date<input name="capture_date" type="date"></label><button>Upload for review</button></form>
+      <form id="upload"><h3>Stage an image privately</h3><label>Image<input name="file" type="file" accept="image/jpeg,image/png" required></label><label>Caption<input name="caption" maxlength="2000"></label><label>Capture date<input name="capture_date" type="date"></label><progress id="upload-progress" max="100" value="0" aria-label="Upload progress"></progress><button>Upload for review</button></form>
       <form id="create-memory"><h3>Make a memory</h3><label>Title<input name="title" required maxlength="200"></label><label>Staged image IDs (comma separated)<input name="media_ids" id="memory-media-ids"></label><button>Create private draft</button></form>
     </div>
     <h3>My staged images</h3><div id="staged" class="cards"></div>
     <h3>My draft memories</h3><div id="drafts" class="cards"></div>
-    <h3>Timeline</h3><label>Search titles<input id="search" type="search"></label><div id="timeline" class="cards"></div>
+    <h3>Timeline</h3><label>Search titles and visible captions<input id="search" type="search"></label><div id="timeline" class="cards"></div><button id="more" class="secondary">Load more</button>
   </section>
 </main>
 <script src="/app.js" defer></script>

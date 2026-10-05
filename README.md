@@ -2,7 +2,7 @@
 
 A private, invite-only archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
 
-The repository contains product planning and a working Atlas design prototype. The Atlas prototype uses fictional memories and generated photographs and has no connected authentication or ingestion. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
+The repository contains product planning, a working Atlas design prototype, and a [local Python memory-loop experiment](phase1/README.md). The Atlas prototype uses fictional memories and generated photographs and has no connected authentication or ingestion. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
 
 Start with the [confirmed product context](PRODUCT.md), [roadmap](docs/ROADMAP.md), and [product specification](docs/SPEC.md). The product direction and Atlas choice were confirmed on 3 October 2026.
 

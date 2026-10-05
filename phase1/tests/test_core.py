@@ -1,10 +1,11 @@
 import io
+import hashlib
 import tempfile
 import unittest
 
 from PIL import Image
 
-from phase1.core import Denied, Store
+from phase1.core import Conflict, Denied, Store
 
 
 def picture():
@@ -82,6 +83,77 @@ class PilotTests(unittest.TestCase):
         self.assertEqual(self.store.user_for_token(token), self.alice)
         self.store.logout(token)
         self.assert_denied(self.store.user_for_token, token)
+
+    def test_resumable_upload_replay_and_rejected_file(self):
+        data = picture()
+        digest = hashlib.sha256(data).hexdigest()
+        upload = self.store.begin_upload(self.alice, self.group, "photo.jpg", len(data), digest)
+        midpoint = len(data) // 2
+        self.assertEqual(self.store.upload_chunk(self.alice, upload, 0, data[:midpoint]), midpoint)
+        self.assertEqual(self.store.upload_chunk(self.alice, upload, 0, data[:midpoint]), midpoint)
+        self.assert_denied(self.store.upload_status, self.ben, upload)
+        self.assertEqual(self.store.upload_status(self.alice, upload)["received"], midpoint)
+        with self.assertRaises(Conflict):
+            self.store.finish_upload(self.alice, upload)
+        self.store.upload_chunk(self.alice, upload, midpoint, data[midpoint:])
+        media = self.store.finish_upload(self.alice, upload)
+        self.assertEqual(self.store.finish_upload(self.alice, upload), media)
+        self.assertEqual(hashlib.sha256(self.store.media_bytes(self.alice, media, True)).hexdigest(), digest)
+        bad = self.store.begin_upload(self.alice, self.group, "bad.jpg", 3, hashlib.sha256(b"bad").hexdigest())
+        self.store.upload_chunk(self.alice, bad, 0, b"bad")
+        self.assert_denied(self.store.finish_upload, self.alice, bad)
+
+    def test_upload_recovers_after_store_restart(self):
+        data = picture()
+        upload = self.store.begin_upload(self.alice, self.group, "photo.jpg", len(data),
+                                         hashlib.sha256(data).hexdigest())
+        midpoint = len(data) // 2
+        self.store.upload_chunk(self.alice, upload, 0, data[:midpoint])
+        self.store.close()
+        self.store = Store(self.temp.name)
+        self.assertEqual(self.store.upload_status(self.alice, upload)["received"], midpoint)
+        self.store.upload_chunk(self.alice, upload, midpoint, data[midpoint:])
+        self.assertTrue(self.store.finish_upload(self.alice, upload))
+
+    def test_member_departure_revokes_contributions_and_selected_grants(self):
+        self.join(self.ben)
+        self.join(self.cara)
+        media = self.store.upload_image(self.ben, self.group, "ben.jpg", picture())
+        self.store.publish_media(self.ben, media, ["preview"], "group")
+        other = self.store.upload_image(self.alice, self.group, "alice.jpg", picture())
+        self.store.publish_media(self.alice, other, ["preview"], "selected", [self.ben])
+        memory = self.store.create_memory(self.ben, self.group, "Ben's memory", [media])
+        self.store.publish_memory(self.ben, memory, "group")
+        self.store.remove_member(self.alice, self.group, self.ben)
+        self.assert_denied(self.store.media_view, self.cara, media)
+        self.assert_denied(self.store.memory_view, self.cara, memory)
+        self.join(self.ben)
+        self.assert_denied(self.store.media_view, self.ben, other)
+
+    def test_export_search_deletion_and_revocation(self):
+        self.join(self.ben)
+        self.join(self.cara)
+        hidden = self.store.upload_image(self.alice, self.group, "secret.jpg", picture(), "secret caption")
+        shared = self.store.upload_image(self.alice, self.group, "shared.jpg", picture(), "visible caption")
+        self.store.publish_media(self.alice, shared, ["preview", "caption"], "selected", [self.ben])
+        memory = self.store.create_memory(self.alice, self.group, "Holiday", [hidden, shared])
+        self.store.publish_memory(self.alice, memory, "group")
+        self.assertEqual(len(self.store.timeline(self.ben, self.group, "visible caption")), 1)
+        self.assertEqual(len(self.store.timeline(self.cara, self.group, "visible caption")), 0)
+        exported = self.store.export_group(self.ben, self.group)
+        self.assertEqual([item["id"] for item in exported["media"]], [shared])
+        self.assertNotIn("secret caption", str(exported))
+        self.assert_denied(self.store.delete_media, self.ben, shared)
+        self.store.delete_media(self.alice, shared)
+        self.assert_denied(self.store.media_bytes, self.ben, shared)
+        self.assertEqual(self.store.memory_view(self.ben, memory)["visible_media_count"], 0)
+        self.store.revoke_memory(self.alice, memory)
+        self.assert_denied(self.store.memory_view, self.ben, memory)
+
+    def test_invite_revoke(self):
+        token = self.store.invite(self.alice, self.group)
+        self.store.revoke_invite(self.alice, self.group, token)
+        self.assert_denied(self.store.accept, self.ben, token)
 
 
 if __name__ == "__main__":

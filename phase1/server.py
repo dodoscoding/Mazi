@@ -57,8 +57,17 @@ def handler_for(store: Store):
                 query = parse_qs(parts.query)
                 if path == "/api/groups":
                     return self.json(200, store.groups_for(user))
+                if path == "/api/members":
+                    return self.json(200, store.members_for(user, query.get("group", [""])[0]))
                 if path == "/api/timeline":
-                    return self.json(200, store.timeline(user, query.get("group", [""])[0], query.get("q", [""])[0]))
+                    return self.json(200, store.timeline(user, query.get("group", [""])[0],
+                                                         query.get("q", [""])[0],
+                                                         int(query.get("offset", ["0"])[0]),
+                                                         int(query.get("limit", ["20"])[0])))
+                if path == "/api/export":
+                    return self.json(200, store.export_group(user, query.get("group", [""])[0]))
+                if path.startswith("/api/upload/"):
+                    return self.json(200, store.upload_status(user, path.rsplit("/", 1)[1]))
                 if path == "/api/owned-media":
                     return self.json(200, store.owned_media(user, query.get("group", [""])[0]))
                 if path == "/api/owned-memories":
@@ -109,6 +118,22 @@ def handler_for(store: Store):
                     return self.json(201, {"token": store.invite(user, body["group"])})
                 if path == "/api/accept":
                     return self.json(200, {"group": store.accept(user, body["token"])})
+                if path == "/api/invite/revoke":
+                    store.revoke_invite(user, body["group"], body["token"])
+                    return self.json(200, {"ok": True})
+                if path == "/api/member/remove":
+                    store.remove_member(user, body["group"], body["user"])
+                    return self.json(200, {"ok": True})
+                if path == "/api/upload/start":
+                    return self.json(201, {"id": store.begin_upload(
+                        user, body["group"], body["filename"], body["size"],
+                        body["sha256"], body.get("caption", ""), body.get("capture_date"))})
+                if path == "/api/upload/chunk":
+                    data = base64.b64decode(body["data"], validate=True)
+                    return self.json(200, {"received": store.upload_chunk(
+                        user, body["id"], body["offset"], data)})
+                if path == "/api/upload/finish":
+                    return self.json(200, {"id": store.finish_upload(user, body["id"])})
                 if path == "/api/upload":
                     data = base64.b64decode(body["data"], validate=True)
                     return self.json(201, {"id": store.upload_image(
@@ -121,12 +146,21 @@ def handler_for(store: Store):
                 if path == "/api/media/revoke":
                     store.revoke_media(user, body["id"])
                     return self.json(200, {"ok": True})
+                if path == "/api/media/delete":
+                    store.delete_media(user, body["id"])
+                    return self.json(200, {"ok": True})
                 if path == "/api/memory":
                     return self.json(201, {"id": store.create_memory(
                         user, body["group"], body["title"], body["media_ids"])})
                 if path == "/api/memory/publish":
                     store.publish_memory(user, body["id"], body["audience"],
                                          body.get("recipients"), body["version"])
+                    return self.json(200, {"ok": True})
+                if path == "/api/memory/revoke":
+                    store.revoke_memory(user, body["id"])
+                    return self.json(200, {"ok": True})
+                if path == "/api/memory/delete":
+                    store.delete_memory(user, body["id"])
                     return self.json(200, {"ok": True})
                 self.json(404, {"error": "Not found"})
             except (KeyError, ValueError, TypeError, json.JSONDecodeError) as exc:
