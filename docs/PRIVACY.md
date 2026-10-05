@@ -1,10 +1,10 @@
 # Mazi privacy and access policy
 
-The single group audience and immediate sharing are confirmed in [D14](DECISIONS.md) on 3 October 2026. Technical enforcement, lifecycle, retention, and later-feature policies below remain proposals; no safeguard is implemented. This document is not a legal compliance assessment.
+The single group audience and immediate sharing are confirmed in [D14](DECISIONS.md) on 3 October 2026. The owner confirmed server readability, EU hosting, departure withdrawal, and disabled optional AI/recognition on 5 October 2026. Application retention targets are delegated engineering decisions. Local M0 read/denial evidence passes; production enforcement remains M1 work; later-feature policies remain proposals. This document is not a legal compliance assessment.
 
 ## Trust boundary
 
-The proposed service processes originals on the server. Transport and storage encryption do not make it end-to-end encrypted. Service operators with privileged infrastructure access may technically access stored data. Restricted operational access, audit records, and approved provider terms are therefore required.
+The accepted architecture processes originals on the server. Transport and storage encryption do not make it end-to-end encrypted. Service operators with privileged infrastructure access may technically access stored data. Restricted operational access, audit records, and approved provider terms are therefore required.
 
 If the product requires the service operator to be unable to read media, stop before real imports and redesign key management, client processing, search, and recovery. [Decision D02](DECISIONS.md) owns that fork.
 
@@ -16,7 +16,7 @@ The initial audience is one invite-only friend group of 8-10 people. Every reade
 | --- | --- | --- | --- |
 | Read available imported media, originals, context, location, and identity evidence | Allowed while an active member | Allowed | Allowed while an active member |
 | Import to the group | Allowed; successfully ingested items share automatically | Allowed for their own imports | Allowed for their own imports |
-| Correct or withdraw/delete a contribution | Own contribution under the proposed lifecycle policy | No ownership implied by read access | May hide from group for moderation; ownership is retained |
+| Correct or withdraw/delete a contribution | Own contribution under the accepted lifecycle policy | No ownership implied by read access | May hide from group for moderation; ownership is retained |
 | Manage invitations and membership | Only with admin role | Only with admin role | Allowed with audit |
 | Edit shared memory title or organization | Creator or assigned editor | Only if assigned editor | Allowed for shared organization |
 
@@ -58,15 +58,15 @@ Contribution withdrawal or membership revocation increments the policy version a
 
 Revocation invalidates application caches, search results, materialized summaries, and pending answer delivery. Deletion/withdrawal queues purge obsolete embeddings and other derivatives. Queries deny access immediately through current policies while physical cleanup proceeds. Re-enabling a model must not resurrect withdrawn output accidentally.
 
-A member leaving or being removed loses group access immediately. Proposed default behavior also revokes that member's contributions from the group, pending confirmation in D06. The departure workflow offers an export beforehand where appropriate. An account-scoped export/delete flow remains available for owned data without restoring group browsing access.
+A member leaving or being removed loses group access immediately. The accepted D06 policy withdraws that member's contributions and their source dependencies from the group. The departure workflow offers an export beforehand where appropriate. An account-scoped export/delete flow remains available for owned data without restoring group browsing access.
 
 Another member's independently imported and authorized copy may remain visible. Removing one origin must remove its context, dependent metadata, and identity assertions without deleting independent contributions. Object garbage collection occurs only when no retained contribution requires the bytes.
 
 ## Retention and deletion
 
-The following are proposed operational targets. M0 must approve them against cost, provider capabilities, and the launch cohort's obligations.
+The M0 engineering decision adopts the following application targets on 5 October 2026. They are not provider retention guarantees. Verify feasibility, provider terms, and the launch cohort's obligations before real imports or hosted provisioning.
 
-| Data | Proposed retention or deletion rule |
+| Data | Accepted application retention or deletion target |
 | --- | --- |
 | Unfinished temporary uploads | Remove after 7 days without activity. |
 | Raw source archives | Delete 30 days after completed import unless the owner explicitly retains them; normalized permitted provenance remains. |
@@ -74,10 +74,16 @@ The following are proposed operational targets. M0 must approve them against cos
 | Withdrawn contributions and revoked memberships | Deny affected reads immediately; retain minimal change history needed for audit. |
 | Deleted originals and derivatives | Purge live storage and indices within 7 days, subject to independent contribution references. |
 | Security audit metadata | Retain 180 days without message bodies or media. |
-| Backups | Proposed 30-day expiry; restored data must reapply deletion tombstones before access. |
+| Backups | 30-day expiry; restored data must reapply deletion tombstones before access. |
 | External model inputs/outputs | Provider-specific terms must be recorded and accepted before enablement. No unverified zero-retention promise. |
 
 Account and group deletion report what was removed, what remains because of independent contributions, and when backups expire. Export includes authorized owned originals where available, normalized metadata, provenance, and machine-readable memory relationships. Export excludes cross-group and withdrawn origins. Ownership and export scope remain distinct from group read access.
+
+## M0 experiment boundary
+
+Use synthetic actors and media for the local database/Auth/private Storage experiment. No paid provisioning or real archive is required for the narrowed JPEG/PNG pilot contract. Keep optional AI and face recognition off. M1 needs object backups as well as database backups; a provider database backup alone cannot satisfy recovery.
+
+EU hosting is accepted. Verify actual regions, provider terms, hosting security, and privacy disclosures before real imports or hosted provisioning. The €75 monthly ceiling is a planning constraint and does not prove provider deletion or backup expiry. [M0 acceptance](M0_ACCEPTANCE.md) separates accepted targets from pending evidence.
 
 ## Production review
 

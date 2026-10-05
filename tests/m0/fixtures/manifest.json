@@ -11,5 +11,6 @@
       "mime": "image/png",
       "sha256": "63ecaa8b698ee9cb07d78ddbaf0c1ccae6b012a6170aa66c2e1e1bfb13d4566d"
     }
-  ]
+  ],
+  "expected_normalized_records": "normalized-items.json"
 }

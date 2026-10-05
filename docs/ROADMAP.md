@@ -2,17 +2,17 @@
 
 Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization and conversational AI remain later proposals.
 
-Status on 3 October 2026 is planning only. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. No milestone has started. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
+Status on 5 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. M1-M7 remain unstarted. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
 ## Use the planning assumptions
 
-Use three engineers as the estimating assumption. Assign one to web experience, one to backend and permissions, and one to imports and media processing. Share a product/design lead and part-time QA or security review. Budget a Swift specialist for M4 or replace another engineer's work during that milestone.
+Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.
 
-The user confirmed two developers on 3 October 2026, with no phase started. Use the [two-developer delivery plan](TWO_DEVELOPER_PLAN.md) for task allocation and parallel handoffs. The ranges below retain their original three-engineer estimating basis; re-estimate for two developers at M0 exit before scheduling delivery.
+The user confirmed two developers on 3 October 2026. Use the [two-developer delivery plan](TWO_DEVELOPER_PLAN.md) for task allocation and parallel handoffs. The 5 October M0 decision replaces the earlier three-engineer M1-M3 estimates.
 
 Treat durations as elapsed working-week ranges for that squad, including integration and review. These are planning estimates, not commitments or measured velocity. Re-estimate after M0 and after the first real archive. Do not convert these ranges to launch dates until capacity, supported formats, and infrastructure costs are agreed.
 
-Use 15 to 23 working weeks for M0 through the M3 launch candidate. Reserve another 3 to 5 weeks for archive compatibility, security findings, and release stabilization. The initial planning envelope is therefore 18 to 28 weeks. A smaller team or an Apple-sync requirement at launch changes that envelope.
+After M0, plan M1 at 6-8 working weeks, M2 at 4-6, and M3 at 4-6. Reserve 3-5 weeks for compatibility, security findings, and stabilization. The remaining two-developer envelope is 17-25 working weeks. This is a rough planning range, not a launch date.
 
 ## Follow the dependencies
 
@@ -28,16 +28,16 @@ flowchart LR
     M6 --> M7
 ```
 
-Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Export-format research starts in M0. Native research and delivery are deferred until a new scope decision; they are not current website launch gates. M4 native tasks below describe that conditional future path.
+Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Manual-format research starts in M0; promised chat-export support requires representative M2 fixtures. Native research and delivery are deferred until a new scope decision; they are not current website launch gates. M4 native tasks below describe that conditional future path.
 
 ## Deliver each milestone
 
 | ID | Outcome | Dependencies | Estimate | Accountable role |
 | --- | --- | --- | --- | --- |
 | M0 | Validated scope, representative fixtures, privacy decisions, architecture experiment results. | None | 1 to 2 weeks | Technical lead with product lead |
-| M1 | Members import into the shared group archive automatically, correct it, and revisit memories. | M0 gates | 5 to 7 weeks | Backend lead with web engineer |
+| M1 | Members import manual JPEG/PNG into the shared group archive automatically, correct it, and revisit memories. | M0 gates | 6 to 8 weeks | Backend lead with web engineer |
 | M2 | Closed beta can reconstruct history from supported archive exports. | M1 | 4 to 6 weeks | Import engineer |
-| M3 | Production launch with useful discovery, safe suggestions, recovery, and measured scale. | M2 | 5 to 8 weeks | Technical lead with QA |
+| M3 | Production launch with useful discovery, safe suggestions, recovery, and measured scale. | M2 | 4 to 6 weeks | Technical lead with QA |
 | M4 | Selective Apple synchronization, authorized Discord server intake, and map exploration. | M3; source-specific feasibility | 5 to 8 weeks | Native/integration lead |
 | M5 | Authorized multimodal retrieval and People; recognition only if consent gates pass. | M3 | 4 to 7 weeks | Retrieval lead |
 | M6 | Memory AI gives evidence-backed answers with uncertainty. | M5 | 3 to 5 weeks | Retrieval lead with product lead |
@@ -45,23 +45,25 @@ Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 befor
 
 ### M0. Resolve the expensive unknowns
 
-- [ ] Confirm the first production scope, format limits, group limits, capacity, cost ceiling, and supported browsers.
-- [ ] Accept or revise the proposed stack and the server-readable privacy model in [Decisions](DECISIONS.md).
-- [ ] Collect consented, redacted exports from each source and document missing fields. Store sensitive fixtures outside Git.
-- [ ] Exercise per-item automatic group availability with a second active member allowed and an outsider/removed member denied at database and storage boundaries.
-- [ ] Establish the concept-first Home-to-memory prototype with synthetic content and feedback from 2-3 friends; record device and reduced-motion behavior separately from production acceptance.
-- [ ] Define each role's acceptance evidence and establish build, lint, type, and test commands when the app scaffold exists.
+- [x] Record the accepted manual pilot scope, limits, two-person capacity, €75 ceiling, and Chrome/Firefox desktop and Android targets in [M0 acceptance](M0_ACCEPTANCE.md).
+- [x] Accept Next.js/PostgreSQL/Supabase, one database-lease worker, EU hosting, server readability, departure withdrawal, and retention targets in [Decisions](DECISIONS.md).
+- [x] Establish synthetic manual JPEG/PNG fixtures and declare unsupported formats. M1 must implement validation and explicit unsupported outcomes. Consented chat-export fixtures move to M2 before support claims; store sensitive fixtures outside Git.
+- [x] Exercise per-item automatic group availability with a second active member allowed and an outsider/removed member denied at database and storage boundaries.
+- [x] Establish the synthetic Atlas prototype and record owner-reported positive feedback from 2-3 friends on 5 October. Record device and reduced-motion evidence separately; 38 browser checks passed with the documented Firefox launcher; physical Android validation is required before the M1 pilot.
+- [x] Define Dev A/Dev B ownership and document prototype build/type/test commands. Prettier checks formatting; local provider, browser, type and build checks pass, with CI established.
 
-Exit when the privacy decisions that affect storage are recorded, every promised importer has a fixture and a declared supported format, and the first denied-access experiment has evidence. If a source cannot meet the proposed scope, record the reduced scope before estimating its parser. These experiments have not run in this documentation task.
+Exit when accepted storage/privacy decisions, manual fixture/format evidence, and denied database/storage access are recorded in [M0 acceptance](M0_ACCEPTANCE.md). The narrowed pilot does not promise chat exports, HEIC, or video. The real local Supabase suite passes 9/9 checks after a fresh migration replay. A prototype or policy mock alone cannot close this access gate.
+
+M1 uses the manual pilot's hard limits from [M0 acceptance](M0_ACCEPTANCE.md). M2 expands support only after representative export/codec fixtures; M3 retains the 100,000-item release profile. Object backups and a database/object restore drill are required in M1. MapLibre is deferred to M3 and there is no map in the pilot.
 
 ### M1. Deliver the shared group memory loop
 
 - [ ] Implement authentication, group membership, single-use expiring invitations, and database authorization.
-- [ ] Implement private object storage and resumable manual image/video upload with per-item validation and progress.
+- [ ] Implement private object storage and resumable manual JPEG/PNG upload with per-item validation and progress.
 - [ ] Preserve originals, source appearances, capture-time evidence, and exact duplicate identity within the permitted scope.
 - [ ] Deliver immediate per-item group sharing, clear import progress, post-import correction, contribution withdrawal/deletion, and membership revocation. Individual audience controls and private staging are deferred.
 - [ ] Deliver manual memories and sub-events, rediscovery Home, paged Timeline, media detail, and keyword search over titles and captions.
-- [ ] Add core audit events, migration checks, minimal export, error monitoring, and an internal recovery drill.
+- [ ] Add core audit events, migration checks, minimal export, error monitoring, object backups, and a database/object recovery drill.
 
 Exit when two members and one outsider pass tests T01 through T06, T08, and T09 in [Test plan](TEST_PLAN.md). Demonstrate a ten-photo memory with one duplicate, one rejected file, imported group-visible context/location, and revoked membership access. Keep M1 restricted to an internal pilot.
 

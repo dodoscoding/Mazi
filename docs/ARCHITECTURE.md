@@ -1,10 +1,10 @@
 # Mazi architecture
 
-This is a proposed architecture for a small production team. No components have been built or benchmarked. [Decisions](DECISIONS.md) records the choices that need validation before implementation.
+This production architecture is the engineering choice recorded on 5 October 2026 under the delegated M0 task. The existing React Atlas is a separate synthetic prototype; the real local M0 database/storage access experiment passes after fresh migration replay. [M0 acceptance](M0_ACCEPTANCE.md) records the implementation boundary and exact limits.
 
 ## One application and one worker deployment
 
-The proposed starting stack is a Next.js web application, PostgreSQL, Supabase Auth and private Storage, and a separate long-running worker. PostgreSQL holds application records and a durable job queue. Later proposals include pgvector and a native companion; [D13](DECISIONS.md) confirms website-only current scope and D07 defers native work.
+The selected starting stack is a Next.js web application, PostgreSQL, Supabase Auth and private Storage, and a separate long-running worker. PostgreSQL holds application records and a durable job queue. Later proposals include pgvector and a native companion; [D13](DECISIONS.md) confirms website-only current scope and D07 defers native work.
 
 This keeps deployment and transactions manageable for a small team. It does not require microservices, a graph database, a separate search cluster, or an orchestration platform. The archive's relationships fit relational tables. Provider-specific calls stay at authentication, storage, and model boundaries without creating generic wrappers for every query.
 
@@ -24,6 +24,12 @@ flowchart TD
     API --> Read[Authorized timeline and retrieval]
     Read --> DB
 ```
+
+## M0 implementation boundary
+
+Next.js integration begins in M1 and retains the React Atlas UI and plain CSS. MapLibre is deferred to M3, with no map in the pilot. PostgreSQL leases replace PROJECT_PLAN's Inngest choice. M0 uses a local Supabase provider experiment to test database, Auth, and private Storage boundaries without claiming a deployed service.
+
+Dev A owns schema, migrations, authentication, policies, APIs, deployment configuration, and CI. Dev B owns normalized imports, worker stages, adapters, UI, fixtures, and browser/device evidence. Dev A owns shared migration files. Both review changes to availability, authorized reads, and withdrawal before dependent implementation.
 
 ## Request and import flow
 
@@ -62,7 +68,7 @@ Cancellation stops new work and signals running stages at safe checkpoints. Late
 
 ## Read paths and scale
 
-The design target is up to hundreds of thousands of items per group. The launch load profile is 100,000 logical media items in one group. These are targets to test, not proven capacity.
+The design target is up to hundreds of thousands of items per group. The M3 launch load profile is 100,000 logical media items in one group. The M1 manual pilot is capped at 10,000 items and 20 GiB of originals plus previews. These are targets to test, not proven capacity.
 
 Timeline pages use a stable date-and-ID cursor and an undated partition. Thumbnails load on demand in a virtualized grid. APIs return bounded pages, not a whole archive. Candidate duplicate matching uses indexed hashes and constrained time/size buckets instead of comparing every pair. Approximate video matching remains deferred until its cost is justified.
 
@@ -78,7 +84,7 @@ The server authorizes every new download capability. Proposed signed URL expiry 
 
 ## Deployment and operation
 
-Development, staging, and production use separate databases, object buckets, secrets, and model credentials. CI checks migrations, authorization, imports, and browser journeys before a release. Package versions and lockfiles are pinned when the application is scaffolded.
+Development, staging, and production use separate databases, object buckets, secrets, and model credentials. CI checks migrations, authorization, imports, and browser journeys before a release. The Atlas prototype has pinned package versions and a lockfile. M1 production and worker dependencies must also be pinned.
 
 Workers have limited concurrency, memory, CPU, archive-expansion, and runtime budgets. Import and model quotas apply per member and group. Provider failure pauses optional enrichment while manual archiving remains usable.
 
@@ -90,4 +96,4 @@ Backups cover both database state and objects. A database backup alone cannot re
 
 Measure storage, previews, egress, worker CPU, database load, and model usage separately. A planning example of 100,000 items averaging 4 MB requires about 400 GB of originals before previews, backups, or video growth. This arithmetic is an assumption, not a price quote or representative average.
 
-M0 sets quotas and a monthly operating ceiling. M2 records measured cost per thousand imported items and per stored GB. M5 adds cost per thousand embeddings; M6 adds cost per answered question. Increase infrastructure only after a measured bottleneck. Current vendor pricing must be checked when the budget is approved.
+M0 accepted a €75 monthly operating ceiling and pilot quotas in [M0 acceptance](M0_ACCEPTANCE.md). No paid provisioning is authorized during M0. M2 records measured cost per thousand imported items and per stored GB. M5 adds cost per thousand embeddings; M6 adds cost per answered question. Increase infrastructure only after a measured bottleneck. Current vendor pricing must be checked when the budget is approved.

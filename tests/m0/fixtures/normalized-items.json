@@ -1,0 +1,63 @@
+{
+  "purpose": "Expected logical records for the synthetic manual fixture. This declares the adapter handoff; no M0 normalizer executed. Group and owner are derived by authenticated ingestion and are intentionally absent.",
+  "items": [
+    {
+      "schema_version": 1,
+      "adapter_version": "manual-m0-contract-1",
+      "source_type": "manual",
+      "source_account_namespace": "synthetic:manual",
+      "source_item_id": "synthetic-harbor.jpg",
+      "occurrence_key": "synthetic-manual-manifest:synthetic-harbor.jpg",
+      "attachment_key": "0",
+      "local_blob_reference": "synthetic-harbor.jpg",
+      "external_reference": null,
+      "original_filename": "synthetic-harbor.jpg",
+      "declared_media_type": "image/jpeg",
+      "sender": null,
+      "conversation": null,
+      "channel": null,
+      "capture_assertions": [],
+      "shared_at_assertion": null,
+      "location_assertions": [],
+      "context": [],
+      "reactions": [],
+      "original_metadata_reference": null,
+      "warnings": [
+        "Capture and location metadata are absent from this contract fixture. M1 must parse actual bytes."
+      ],
+      "coverage": {
+        "kind": "selected-manual-files",
+        "source_history": "not-applicable"
+      }
+    },
+    {
+      "schema_version": 1,
+      "adapter_version": "manual-m0-contract-1",
+      "source_type": "manual",
+      "source_account_namespace": "synthetic:manual",
+      "source_item_id": "synthetic-checker.png",
+      "occurrence_key": "synthetic-manual-manifest:synthetic-checker.png",
+      "attachment_key": "0",
+      "local_blob_reference": "synthetic-checker.png",
+      "external_reference": null,
+      "original_filename": "synthetic-checker.png",
+      "declared_media_type": "image/png",
+      "sender": null,
+      "conversation": null,
+      "channel": null,
+      "capture_assertions": [],
+      "shared_at_assertion": null,
+      "location_assertions": [],
+      "context": [],
+      "reactions": [],
+      "original_metadata_reference": null,
+      "warnings": [
+        "Capture and location metadata are absent from this contract fixture. M1 must parse actual bytes."
+      ],
+      "coverage": {
+        "kind": "selected-manual-files",
+        "source_history": "not-applicable"
+      }
+    }
+  ]
+}

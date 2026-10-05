@@ -2,13 +2,13 @@
 
 **Goal:** Divide M0 through M7 between two developers so independent work progresses in parallel and each milestone closes with integrated acceptance evidence.
 
-**Status:** Proposed allocation, dated 3 October 2026. Every milestone and task below is unstarted. This plan does not mark any roadmap checkbox complete.
+**Status:** Ownership recorded as the M0 engineering decision on 5 October 2026. M0 is complete with recorded decisions and passing local access/browser evidence. M1-M7 remain unstarted; task checkboxes below represent implementation handoffs.
 
 **Confirmed direction:** [D13-D15](DECISIONS.md) and [PRODUCT.md](../PRODUCT.md) establish one 8-10-person group, website-only current scope, Home/Timeline/Search, and immediate group sharing. Native packages below are conditional future proposals.
 
 **Architecture:** Both developers work in the same application and media/import pipeline. Stable authorization, normalized import, and read contracts let the web experience and processing work progress together without separate implementations of privacy rules.
 
-**Tech stack:** Use the existing proposals in [Architecture](ARCHITECTURE.md), reconciled with [PROJECT_PLAN](../PROJECT_PLAN.md) during M0. This allocation does not decide Inngest versus database jobs, native platform, or provider choices.
+**Tech stack:** Use the accepted [Architecture](ARCHITECTURE.md) and [M0 acceptance](M0_ACCEPTANCE.md). Next.js production web, PostgreSQL, Supabase Auth/private Storage, and one worker with database leases replace the Inngest proposal. Keep React Atlas/plain CSS. MapLibre is deferred to M3; native work remains conditional.
 
 **Spec:** [Roadmap](ROADMAP.md), [Specification](SPEC.md), [Contracts](CONTRACTS.md), and [Test plan](TEST_PLAN.md) remain canonical. This is a delivery allocation; code paths, signatures, package commands, and detailed feature implementation plans follow M0's stack and repository-layout decisions.
 
@@ -30,7 +30,7 @@ Both developers own tests and operational evidence for their changes. Neither is
 - Use synthetic fixtures in Git/CI. Real archives require consent, restricted storage, and the relevant M0 privacy/provider decisions.
 - Recognition and optional AI stay disabled until their own gates pass. Basic archiving remains usable without them.
 - Keep source support conditional on demonstrated fixtures and device behavior. Do not promise complete history or Apple People labels.
-- The three-engineer durations in the roadmap are reference estimates, not a two-developer schedule. Re-estimate at M0 exit and after the first real archive; do not set launch dates now.
+- The remaining two-developer envelope is 17-25 working weeks: M1 6-8, M2 4-6, M3 4-6, plus 3-5 reserve. Re-estimate after the manual pilot and first real archive; no launch date is set.
 
 ## Establish interfaces before parallel implementation
 
@@ -45,19 +45,21 @@ Dev A leads the authorization/schema boundary; Dev B leads the normalized item a
 | Discovery | Dev A | Dev B's Home/Timeline/Search and later views | Authorized bounded results, stable cursor, undated partition, uncertainty, eligible rendition, authorized facets/counts, inaccessible evidence omitted. |
 | Revocation and cleanup | Dev A: deny/invalidate; Dev B: worker effects | Every new read/processing path | Immediate denial after policy commit, stale-output rejection, referenced-object preservation, tombstones, published signed-link expiry. |
 
-The app layout, migration location, worker entry point, synthetic fixture location, and evidence location are decided once in M0 and documented in README/AGENTS. Dev A owns shared migrations and deployment configuration. Dev B proposes migration needs before implementing dependent stages. Contract mocks use the same shapes and denied cases as integration tests; they are temporary development aids.
+The Atlas UI remains in src; M0 synthetic manual fixtures belong in tests/m0/fixtures and evidence in work/poteto/m0-acceptance. M1 decides production app and worker layout before adding runtime flows. Dev A owns shared migrations and deployment configuration. Dev B proposes migration needs before implementing dependent stages. Contract mocks use the same shapes and denied cases as integration tests; they are temporary development aids.
 
 ## M0: Validate scope and make parallel work possible
 
-Start here. Work through each row in order; the two columns within a row can proceed together after any stated dependency.
+M0 is complete for the narrowed manual pilot. The table records its handoffs. For later work, follow each row in order; the two columns within a row can proceed together after any stated dependency.
 
 | Wave | Dev A package | Dev B package | Handoff and acceptance |
 | --- | --- | --- | --- |
-| M0.1 | [ ] Lead stack/privacy decisions D01/D02/D06/D10/D12; reconcile PROJECT_PLAN; define region, cost ceiling, quotas, storage and role boundaries. | [ ] Inventory manual, WhatsApp, Messenger, and Discord-export fixtures; document formats, missing fields, browser/device cohort, and ten-photo review journey; lead D05/D07/D09 scope inputs. | Product owner records launch scope and storage-affecting policy decisions before real imports. Confirm two-person capacity; native staffing is deferred. |
-| M0.2 | [ ] After stack decision, scaffold the app, database/storage experiment, CI, and documented build/lint/type/test commands; demonstrate reads by another active member and denial to an outsider/removed member. | [ ] In parallel, run source-format experiments and prepare the concept-first Home-to-memory prototype using synthetic content; define expected normalized records and format limits. | Record actual experiment results; reduce unsupported promises. The design prototype is not a production milestone exit. |
-| M0.3 | [ ] Freeze policy, persistence, upload/availability/read boundaries; map schema and API ownership. | [ ] Freeze normalized-item/worker boundaries; map UI, processing, fixture, and test ownership. | Both review contracts, test actors, repo layout, evidence locations, and a revised two-developer estimate. |
+| M0.1 | [x] Record accepted D01/D02/D06/D10/D12, reconcile PROJECT_PLAN, and define region, cost ceiling, quotas, storage and role ownership. The local access experiment passes; production safeguards remain M1 work. | [x] Establish synthetic JPEG/PNG manual fixtures, declared unsupported formats, with validation outcomes due in M1, selected Chrome/Firefox desktop and Android targets, and the Home-to-memory journey. The ten-photo production journey is M1 acceptance. Chat-export representative fixtures move to M2; native work is deferred. | Product owner confirmed the narrowed manual pilot and storage-affecting preferences on 5 October; detailed limits/retention are engineering decisions; provider/hosting/privacy review remains required before real imports or hosted provisioning. Confirm two-person capacity; native staffing is deferred. |
+| M0.2 | [x] Build the local Supabase database/Auth/private Storage experiment after accepted stack decisions; document checks and demonstrate another active member allowed and outsider/removed member denied. Local CI checks are established; production Next.js integration follows in M1. | [x] Prepare [manual-format fixtures and expected normalized records](../tests/m0/fixtures/normalized-items.json). M1 implements the normalizer against these logical expectations. Retain the delivered Atlas prototype and owner-reported positive feedback; record 38 passing browser checks and 2 canonical screenshot skips; physical Android remains a pre-M1 gate. | Record actual experiment results; reduce unsupported promises. The design prototype is not a production milestone exit. |
+| M0.3 | [x] Freeze policy, persistence, upload/availability/read boundaries; map schema and API ownership. | [x] Freeze normalized-item/worker boundaries; map UI, processing, fixture, and test ownership. | Both review contracts, test actors, repo layout, evidence locations, and a revised two-developer estimate. |
 
-**Exit:** Storage/privacy decisions recorded, every promised importer has a representative fixture and declared format, denied database/storage access demonstrated, website device/browser targets and design experiment recorded, runnable scaffold checks documented. D03/D04 and later D08/D11 remain tied to their implementation gates.
+**Exit:** Accepted storage/privacy decisions recorded, manual JPEG/PNG fixtures and declared limits established, denied database/storage access demonstrated, website targets, desktop/phone-emulation runs, and design evidence recorded; physical Android verification required before M1 pilot, and runnable checks documented. [M0 acceptance](M0_ACCEPTANCE.md) links the passing local evidence. D03/D04 and later D08/D11 remain tied to their implementation gates.
+
+The M1 pilot accepts only manual JPEG/PNG with the exact group/member/file limits in [M0 acceptance](M0_ACCEPTANCE.md). Archive ZIP, HEIC, video, and chat exports remain unsupported until their later fixture gates pass. Existing WebP display photographs are not input-validation evidence.
 
 ## M1: Ship the internal shared group memory loop
 
@@ -68,7 +70,7 @@ Start after M0 acceptance. Dev B can build screens against agreed contracts whil
 | M1.1 | [ ] Authentication/recovery, groups, roles, expiring single-use invitations, membership and database policies. | [ ] Invite/sign-in flows and responsive application shell; upload/review screens against contract fixtures. | T01 passes against real policies before enabling group access. Shared actor fixtures cover active member, administrator, removed member, outsider, and another synthetic group. |
 | M1.2 | [ ] Contributor-owned, group-scoped ImportRun/ImportItem persistence, private storage/quarantine, scoped upload acceptance, job persistence, contribution/origin/variant identity. | [ ] Resumable upload client and manual adapter; worker validation, hashes, original retention, metadata assertions and sanitized previews. | Agree job persistence before worker integration. Exercise T03/T04/T06 and M1 T05; rejected files remain visible outcomes. |
 | M1.3 | [ ] Atomic per-item availability, correction APIs, completion conflicts/idempotency, withdrawal/deletion and group rendition selection. | [ ] Automatic-sharing explanation, date correction, post-import review, progress/retry/cancel and withdraw/delete UI. | Integrate available group items from M1.2. T02/T05/T09 prove group-visible GPS/context, independent copies, outsider denial, and membership/withdrawal handling. |
-| M1.4 | [ ] Manual Memory/sub-event APIs, authorized Home/Timeline/detail/keyword reads; audit, migration checks, minimal export, monitoring and recovery drill. | [ ] Memory/sub-event editing, rediscovery Home, paged Timeline with undated view, media detail and keyword search; accessible full journey. | Query shapes can be built earlier; final reads integrate automatically available group data. T08 and the full ten-photo pilot run close the wave. |
+| M1.4 | [ ] Manual Memory/sub-event APIs, authorized Home/Timeline/detail/keyword reads; audit, migration checks, minimal export, monitoring, object backups and database/object recovery drill. | [ ] Memory/sub-event editing, rediscovery Home, paged Timeline with undated view, media detail and keyword search; accessible full journey. | Query shapes can be built earlier; final reads integrate automatically available group data. T08 and the full ten-photo pilot run close the wave. |
 
 **Exit:** Both reproduce T01 through T06, T08 and T09 at their M1 scope. Demonstrate two members and an outsider with ten photos, a duplicate, rejected file, group-visible location/context and revoked membership access. Include the additional acceptance actors where a scenario requires them. Internal pilot only.
 
@@ -94,7 +96,7 @@ Dev A leads suggestion correctness and lifecycle/operations. Dev B leads candida
 | M3.2 | [ ] Implement explainable time/place event candidates, durable decisions, dependency invalidation, place normalization and approved On This Day queries. | [ ] Event review/split/correction UI, richer timestamp/place review, On This Day, structured date/source/place filters and virtualized Timeline. | T06/T10 and at least 50 reviewed boundaries; target 80% useful suggestions. Cross-group or withdrawn evidence cannot enter group candidates. |
 | M3.3 | [ ] Complete export, account/group lifecycle, retention, quotas, alerts, incident ownership, backup/object restore and rollback drills. Tune policy-enabled queries. | [ ] Run scale browsing, accessibility and usability evaluations; tune media stages; verify formats, privacy explanation, support copy and release screenshots. | Both run release checks against one candidate, including T09/T14 and the cost ceiling. Product owner accepts cohort release evidence. |
 
-**Exit:** T01 through T10 and T14 pass and every production checklist item in Roadmap is satisfied. Use Test plan's 100,000-media/20-session/20,000-import profile and published budgets. Verify first-memory usability and discovery success targets from Specification. No unresolved access leak, missing originals or unaccounted import items. Production release needs recorded acceptance.
+**Exit:** T01 through T10 and T14 pass and every production checklist item in Roadmap is satisfied. Use Test plan's M3 100,000-media/20-session/20,000-import profile and published budgets. Verify first-memory usability and discovery success targets from Specification. No unresolved access leak, missing originals or unaccounted import items. Production release needs recorded acceptance.
 
 ## M4 and M5: Choose one milestone for the two-person team
 
@@ -104,7 +106,7 @@ After M3, default to M4 followed by M5. Prioritize M5 first if beta demand favor
 
 | Wave | Dev A package | Dev B package | Handoff and acceptance |
 | --- | --- | --- | --- |
-| M4.1 | [ ] Extend established ingestion for bounded incremental runs, resource versions, source selection and current permission checks. Implement authorized location/Map queries. | [ ] Build one native platform from the accepted M0 experiment: metadata-first selection/filters, foreground resumable upload, iCloud outcomes and permission handling. | Reuse normalized contract; real-device T12 covers selected subset, interruption, Live Photo and edited resources without dropping components. |
+| M4.1 | [ ] Extend established ingestion for bounded incremental runs, resource versions, source selection and current permission checks. Implement authorized location/Map queries. | [ ] Build one native platform after a separately accepted native experiment: metadata-first selection/filters, foreground resumable upload, iCloud outcomes and permission handling. | Reuse normalized contract; real-device T12 covers selected subset, interruption, Live Photo and edited resources without dropping components. |
 | M4.2 | [ ] Implement authorized Discord bot intake, selected channels/date ranges, rate limits, permission loss and explicit continuous-import control. | [ ] Implement Map, country/city filters and optional travel paths; source selection/status controls after native core integrates. | T02/T07/T12 for newly enabled paths. Map can integrate without waiting for the native companion. |
 | M4.3 | [ ] Verify bot backfill, revoked permissions, incremental identity and delivery authorization. | [ ] Verify actual-device interrupted sync and map visibility; record browser/device/source matrix and known limits. | Both reproduce source-specific T07/T12. Source deletion never silently deletes Mazi's retained copy. |
 
@@ -164,11 +166,11 @@ Use a separate branch/worktree per package, with the `codex/` prefix where appro
 
 Each implementation PR links its milestone and relevant decision, records exact revisions/commands/fixture versions/environment/results/evidence locations, includes UI screenshots where relevant, and calls out schema, privacy, security and deployment effects. Record unresolved limits with an owner and next decision point. Update canonical documents when behavior changes.
 
-The next actions are deliberately M0 work:
+The next actions prepare M1:
 
 1. Assign real names to Dev A/Dev B and confirm the product decision-maker; native capability is deferred until that scope is approved.
-2. Start M0.1 together: Dev A prepares the stack/privacy decision record; Dev B prepares the source-fixture and first-journey inventory.
-3. Complete M0 experiments, freeze interfaces and establish actual commands.
-4. Review M0 exit evidence and re-estimate the two-developer launch envelope before starting M1.
+2. Use the accepted M0 record and passing local experiment as the starting contract. Dev A prepares production auth/storage integration; Dev B prepares the manual normalization/worker and upload journey.
+3. Create focused M1 implementation packages against the frozen interfaces and real allowed/denied tests.
+4. Use the revised two-developer envelope as a planning estimate, then re-estimate after the manual pilot and first real archive.
 
-No production acceptance scenario is complete. This plan's verification covers structure, local links and canonical consistency; the separate [Atlas prototype evidence](../work/design/atlas/VERIFICATION.md) covers the synthetic browsing experiment and does not close M0 or production acceptance.
+M0 is complete; no M1-M7 production acceptance scenario is complete. This plan's verification covers structure, local links and canonical consistency; the separate [Atlas prototype evidence](../work/design/atlas/VERIFICATION.md) covers the synthetic browsing experiment and alone does not close M0 or production acceptance. M0 also has [real database/storage evidence](../work/poteto/m0-acceptance/ACCESS_VERIFICATION.md).
