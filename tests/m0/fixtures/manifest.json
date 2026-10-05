@@ -1,0 +1,16 @@
+{
+  "provenance": "JPEG converted with macOS sips from the existing synthetic public/media/harbor.webp; PNG generated as a 2x2 RGB checker using Node zlib. No personal data. Binary round-trip samples, not decoder or ingestion acceptance.",
+  "files": [
+    {
+      "name": "synthetic-harbor.jpg",
+      "mime": "image/jpeg",
+      "sha256": "fea1bd95132f49a73142907a6cb1625186d641fca60c9328d80c9045c4fb36a6"
+    },
+    {
+      "name": "synthetic-checker.png",
+      "mime": "image/png",
+      "sha256": "63ecaa8b698ee9cb07d78ddbaf0c1ccae6b012a6170aa66c2e1e1bfb13d4566d"
+    }
+  ],
+  "expected_normalized_records": "normalized-items.json"
+}

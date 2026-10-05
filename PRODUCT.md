@@ -12,7 +12,7 @@ A responsive website for phones and computers. Native applications are outside t
 
 ## Stack
 
-The local prototype uses React 19.2, TypeScript, Vite, React Three Fiber 9/Three.js, plain CSS and local synthetic fixtures under [D16](docs/PROTOTYPE_STACK.md). Production stack, queue, storage, authentication and hosting remain M0 decisions; D01/D10 are not resolved by the experiment.
+The local prototype uses React 19.2, TypeScript, Vite, React Three Fiber 9/Three.js, plain CSS and local synthetic fixtures under [D16](docs/PROTOTYPE_STACK.md). The delegated M0 engineering decision selects Next.js production integration in M1, PostgreSQL, Supabase Auth/private Storage, and one worker using database leases. EU hosting is accepted; paid provisioning remains outside M0. The experiment does not prove those production flows.
 
 ## Users
 
@@ -22,7 +22,7 @@ One existing, invite-only friend group of 8-10 people. Members sign in to contri
 
 Help friends rediscover their shared history and find specific memories across fragmented photos, videos, and source conversations. Rediscovery is the main reason to return; search stays easy to reach. A memory connects its media with available context and source evidence.
 
-Success means friends enjoy exploring and can understand and use the archive on their phones and computers. The initial experiment is a polished Home-to-memory journey through photos and context, using synthetic content, tried by 2-3 friends. Observe discoverability, clarity of controls, enjoyment, and willingness to return. These outcomes have not been tested.
+Success means friends enjoy exploring and can understand and use the archive on their phones and computers. The initial experiment is a polished Home-to-memory journey through photos and context, using synthetic content, tried by 2-3 friends. Observe discoverability, clarity of controls, enjoyment, and willingness to return. The owner reported positive feedback on 5 October 2026. Unaided completion observations and exact device evidence have not been supplied.
 
 ## Operating Context
 
@@ -49,7 +49,7 @@ The owner supplied [EnvolDev's HELIOS post](https://x.com/EnvolDev/status/210279
 
 The [specification](docs/SPEC.md), [roadmap](docs/ROADMAP.md), [contracts](docs/CONTRACTS.md), and [access policy](docs/PRIVACY.md) contain implementation proposals. The [original brief](docs/source/PRODUCT_BRIEF.md) and [initial project plan](PROJECT_PLAN.md) are preserved historical sources; confirmed decisions take precedence where they differ.
 
-The team selected The Atlas of Us. A runnable local prototype and generated synthetic assets support Home, memory detail, photo exploration and context. [Prototype evidence](work/design/atlas/VERIFICATION.md) separates automated and visual checks from untested real devices and friend feedback. No production backend or personal archive is connected.
+The team selected The Atlas of Us. A runnable local prototype and generated synthetic assets support Home, memory detail, photo exploration and context. [Prototype evidence](work/design/atlas/VERIFICATION.md) separates automated and visual checks from physical-device acceptance. Owner-reported friend feedback is recorded in M0 acceptance. No production backend or personal archive is connected to Atlas. M0 is complete; [M0 acceptance](docs/M0_ACCEPTANCE.md) records decisions and passing local provider/browser evidence.
 
 ## Product Principles
 
@@ -61,14 +61,14 @@ The team selected The Atlas of Us. A runnable local prototype and generated synt
 
 ## Accessibility & Inclusion
 
-Adapt 3D scene complexity to the device while preserving the experience and access to content. Provide reduced-motion behavior and equivalent conventional controls so essential navigation does not depend on camera manipulation. Keyboard and screen-reader journeys, usable focus, named controls, progress announcements, and contrast remain proposed T08 acceptance. The exact standard, supported browser/device matrix, and measurable motion/rendering budgets remain open for implementation planning.
+Adapt 3D scene complexity to the device while preserving the experience and access to content. Provide reduced-motion behavior and equivalent conventional controls so essential navigation does not depend on camera manipulation. Keyboard and screen-reader journeys, usable focus, named controls, progress announcements, and contrast remain proposed T08 acceptance. The owner selected stable Chrome and Firefox on desktop; the delegated phone decision selects Chrome and Firefox on Android. iOS is deferred. The exact accessibility standard, physical-device evidence, and measurable motion/rendering budgets remain open.
 
 ## Open Decisions
 
-- Atlas is selected for the prototype. Its procedural chart, local synthetic photographs, palette, typography and motion are recorded in the implemented design; validate them with 2-3 friends.
-- Production stack, deployment, server-readable versus end-to-end encrypted architecture, regions, and operating budget: retain the M0 decision gates. The prototype-only stack is recorded in D16.
-- File limits, quotas, supported export formats, and date/context extraction details: validate through source fixtures.
-- Contribution deletion, membership departure, group closure, and retention details: retain their explicit decision gates.
-- Optional AI, recognition, People subject controls, and later native applications: separately scoped future decisions.
+- Atlas is selected. On 5 October 2026 the owner reported positive feedback from 2-3 friends. No raw study record or exact device inventory was supplied; physical-device and numerical fidelity evidence remain open.
+- Accepted production choices are Next.js in M1 with React Atlas, plain CSS, PostgreSQL, Supabase Auth/private Storage, and one worker using database leases. EU hosting and server readability without E2EE are accepted. The ceiling is €75/month with no paid M0 provisioning. Provider review and cost feasibility remain gates.
+- M1 accepts manual JPEG/PNG only, up to 10 members, 10,000 items, and 20 GiB originals/previews. Exact file/member limits are in M0 acceptance. Chat exports, HEIC, and video remain conditional M2 support. D09 raw timestamp evidence and resolved display dates are accepted.
+- Departure withdraws the departing member's contributions while independent eligible copies remain. Application retention targets are engineering decisions in Privacy; provider feasibility and group-closure implementation remain open.
+- Optional AI and face recognition remain off. People subject controls and later native applications require separate scope and acceptance. MapLibre is deferred to M3, with no map in the pilot.
 
 Other unconfirmed details in the planning documents remain proposals; this record does not promote them to approved product facts.

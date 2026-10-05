@@ -1,6 +1,6 @@
 # Mazi domain and processing contracts
 
-These are proposed logical contracts implementing the confirmed group-only sharing direction in [D14](DECISIONS.md). They are not migrations or implemented API endpoints. Every relationship that crosses a group boundary must be rejected at the database boundary. [Privacy](PRIVACY.md) owns the audience policy.
+M0 freezes the group-only audience, contribution ownership, normalized-item, availability and authorized-read boundaries below under [D14](DECISIONS.md) and [the M0 decisions](M0_ACCEPTANCE.md). Detailed later-feature structures remain logical contracts, not production migrations or implemented API endpoints. The local access experiment uses a deliberately smaller membership/contribution schema; M1 must implement the full archive relationships. Every relationship that crosses a group boundary must be rejected at the database boundary. [Privacy](PRIVACY.md) owns the audience policy.
 
 ## Domain vocabulary
 

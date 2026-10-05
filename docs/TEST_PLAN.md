@@ -6,7 +6,7 @@ T01-T15 define production acceptance and remain uncompleted. The local Atlas pro
 
 Each implementation change records the exact commit, command, fixture version, environment, expected result, actual result, and artifact location. Tests use both allowed and denied cases. A build or a mocked success response is not proof that automatic group sharing, storage access, or recovery works.
 
-M0 establishes runnable commands after choosing and scaffolding the application. This document names behaviors instead of inventing package scripts. Database policies need real database tests. Browser journeys need a running app and actual private object delivery. Native behavior needs supported devices, including iCloud and permission changes.
+The Atlas scaffold provides `npm run build` with typechecking, `npm test`, and `npm run check:docs`; no linter is configured. M0 separately establishes provider access-experiment commands. This document names behaviors instead of inventing package scripts. Database policies need real database tests. Browser journeys need a running app and actual private object delivery. Native behavior needs supported devices, including iCloud and permission changes.
 
 ## Acceptance scenarios
 
@@ -32,15 +32,15 @@ Use Alice, Ben, and Cara as active members of the same group, an active administ
 
 ## First design experiment
 
-D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content, tried by 2-3 friends on phones and computers. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
+D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
 
 Inspect actual 3D interactions, loading/failure fallback, phone input, conventional navigation, and reduced motion. Set measurable rendering budgets against representative devices before claiming smoothness. Static concept images establish visual direction only; motion and usability require the browser prototype. Atlas and synthetic local assets are selected for the D16 experiment; production assets and device acceptance remain open.
 
 ## Proposed performance and reliability budgets
 
-These numbers are initial acceptance targets. M0 confirms their test hardware, hosting tier, and cost feasibility. M2 measures a baseline. A budget change requires a recorded decision before release, not a post-failure claim that the target passed.
+These numbers are M3 acceptance targets. M0 records delegated M1 limits and the owner-confirmed €75 operating ceiling in [M0 acceptance](M0_ACCEPTANCE.md); hardware, hosting performance, and cost feasibility still need measurements. M2 measures a baseline. A budget change requires a recorded decision before release, not a post-failure claim that the target passed.
 
-The launch profile is 100,000 logical media items in one group, 20 concurrent active sessions, and one 20,000-item import manifest. Browser checks use a documented mid-range laptop and phone on a 20 Mbps connection with 100 ms simulated round-trip latency. Server checks record region, worker size, database tier, cache state, and codec mix.
+The M3 launch profile is 100,000 logical media items in one group, 20 concurrent active sessions, and one 20,000-item import manifest. Browser checks use a documented mid-range laptop and phone on a 20 Mbps connection with 100 ms simulated round-trip latency. Server checks record region, worker size, database tier, cache state, and codec mix.
 
 | Metric | Proposed budget | Measurement |
 | --- | --- | --- |
@@ -48,13 +48,21 @@ The launch profile is 100,000 logical media items in one group, 20 concurrent ac
 | Timeline/filter API | p95 under 500 ms, error rate below 1% at profile load. | 15-minute run with access policies enabled; exclude neither denied requests nor joins silently. |
 | Keyword search | p95 under 1 second. | Fixed query set over the 100,000-item profile. |
 | Semantic retrieval at M5 | p95 under 2 seconds before answer generation. | Fixed authorized/hidden candidate mix and combined filters. |
-| Ready preview | p95 within 30 seconds after a supported image finishes upload under the agreed load. | Record upload completion, queue delay, and preview availability separately. Video has a codec-specific budget set after M0. |
+| Ready preview | p95 within 30 seconds after a supported image finishes upload under the agreed load. | Record upload completion, queue delay, and preview availability separately. Video is unsupported in M1 and needs a fixture-backed codec budget before later enablement. |
 | Import memory | Less than 1 GiB peak RSS per worker for the agreed image/archive profile. | Sample the worker across a streamed 20,000-item manifest; bounded archive expansion remains enforced. |
 | Worker recovery | Eligible interrupted jobs resume within 5 minutes of worker restoration. | Kill/restart drill with recorded lease expiry and item counts. |
 | Pilot production availability objective | 99.5% per month for authenticated browsing and ingestion. | Synthetic authenticated checks; external source outage is reported separately. Not a contractual SLA. |
 | Recovery objectives | RPO at most 24 hours, RTO at most 8 hours. | Restore database and retained objects into isolation, reapply deletions, compare hashes and relationships. |
 
 Compare baseline and changed revisions using the same fixtures and environment, interleaving runs where practical. For a new feature with no baseline, use its absolute budget and state that comparative performance is unavailable. Do not claim a speedup between unlike scenarios.
+
+## M0 and manual pilot evidence
+
+M0 database and storage denial evidence must use actual provider boundaries. Test another active member, administrator, outsider, removed member, and a separate synthetic group. Cover owner/group reassignment, per-item availability with a pending neighbor, and withdrawal with an independent eligible copy. The [provider suite](../tests/m0/access.test.mjs) passes 9/9 checks after fresh migration replay. [M0 verification](../work/poteto/m0-acceptance/VERIFICATION.md) records the run and its production limits.
+
+The M1 profile is at most 10 active members, 10,000 items, 20 GiB group originals/previews, 5 GiB/member, 100 JPEG/PNG files/run, 25 MiB/file, and a 24-million-pixel decoded-image target. Enforce the hard caps and explicit UNSUPPORTED outcomes in the M1 ingestion pipeline. Archive bytes and video duration are 0 supported. M0 fixtures do not prove a complete media worker.
+
+Selected browser targets are stable Chrome and Firefox on desktop and Android phones. Record versions and physical hardware separately from emulation. iOS is deferred. Existing Chromium desktop and iPhone emulation tests establish only their recorded synthetic environments. M0 can close its browser gate with recorded desktop Chrome/Firefox and phone-emulation runs plus the declared Android matrix. Physical Android validation is required before the M1 pilot. Live reduced-motion changes, keyboard equivalents, loading/error recovery, and the ten-photo M1 journey still require their applicable evidence.
 
 ## Quality evaluations
 

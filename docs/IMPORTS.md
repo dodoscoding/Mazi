@@ -2,13 +2,19 @@
 
 All imports use the normalized contract in [Contracts](CONTRACTS.md). The shared ingestion pipeline makes each successfully ingested item visible to all active group members automatically under [D14](DECISIONS.md). Adapters translate source data; they do not implement a separate access policy or processing pipeline. Review and corrections follow sharing.
 
-No real user archive or device has been tested in this planning task. The matrix below distinguishes intended support from verified platform documentation. M0 fixtures determine the exact formats that M2 can promise.
+M0 accepts a narrowed manual JPEG/PNG pilot. The matrix distinguishes intended future support from verified input support. No representative real chat archive has been tested. M2 must collect consented fixtures before promising an export format.
+
+## Manual pilot limits
+
+[M0 acceptance](M0_ACCEPTANCE.md) fixes the M1 pilot at 10 members, 10,000 logical items, 20 GiB of originals/previews per group, and 5 GiB per contributor within the group cap. Input selection supports JPEG/PNG only. Existing synthetic WebP display assets do not prove input validation. Synthetic manual fixtures belong in `tests/m0/fixtures`; personal archives remain outside Git.
+
+WhatsApp, Messenger, and Discord exports remain M2 goals. Their rows below are conditional support, not accepted M0 promises. Collect consented, redacted representative exports in restricted storage before selecting parser scope. Document missing fields and reduce the support claim when fixtures cannot establish it.
 
 ## Source capability matrix
 
 | Source | Intended path and milestone | Preserved when present | Limits and required evidence |
 | --- | --- | --- | --- |
-| Manual files | Browser upload, M1 | Original bytes/name, capture EXIF, GPS, dimensions, duration, uploader and import time. | No invented source conversation. Validate actual file contents and supported codecs. |
+| Manual files | Browser upload, M1 | Original bytes/name, capture EXIF, GPS, dimensions, uploader and import time. | JPEG/PNG only within M0 limits. No invented source conversation. Validate signatures and decoded pixel limits; reject other formats explicitly. |
 | WhatsApp | User-exported chat text with supplied media or ZIP, M2 | Chat title, source sender labels, message time, nearby context, media links, export boundaries. | Locale, platform, truncation, filename mapping, multiline text, and missing media require fixtures. Reactions are not promised without source evidence. |
 | Messenger | User-provided Meta archive, JSON first, M2 | Threads, participants, text, attachment paths, source times, reactions when supplied. | Export routes and encrypted-history coverage need real samples. HTML can remain unsupported initially with a clear report. No scraping. |
 | Discord user export | Official account data package, M2 | Requester's sent messages, source IDs, channel mapping, timestamps, attachment references. | Not the whole group's messages. Attachment links may not produce retrievable bytes. Missing media remains an explicit outcome. |
@@ -33,7 +39,7 @@ ZIP processing rejects traversal paths, absolute paths, symlinks that escape ext
 
 File validation checks signatures, parser limits, dimensions, duration, codec support, and declared versus actual size. The worker uses restricted media tools with no unnecessary network access. Active source content is never rendered as trusted HTML. Captions and filenames are escaped in the UI.
 
-The M0 format matrix must publish maximum archive size, expanded size, per-file size, video duration, and supported containers/codecs. Proposed initial compatibility is JPEG, PNG, HEIC, and tested MP4/MOV codec combinations. Unsupported files have an explicit outcome and cannot appear as successfully playable media. Temporary byte retention is an operational recovery detail, not contributor-private archive staging.
+The accepted M0 matrix allows manual JPEG/PNG only: 100 files/run, 25 MiB/file, and a 24-million-pixel decoded-image target. Archive size, expanded archive bytes, and video duration are 0 supported. HEIC, video, archive ZIP, and other inputs return UNSUPPORTED. M2 sets archive and codec limits only after representative fixtures and pipeline acceptance. Unsupported files have an explicit outcome and cannot appear as successfully playable media. Temporary byte retention is an operational recovery detail, not contributor-private archive staging.
 
 ## Context and identity
 
@@ -53,13 +59,13 @@ The first supported native platform is a decision if native work is later approv
 
 Incremental sync records device/library/source asset identity and resource version. Library changes, edited assets, limited-library changes, permission withdrawal, and iCloud download failure each produce explicit outcomes. Deleting an item from Apple Photos does not automatically delete Mazi's retained copy; mirror deletion needs a separate user-selected policy.
 
-Apple's [PhotoKit entry point](https://developer.apple.com/documentation/photokit) and [limited-access guidance](https://developer.apple.com/documentation/photokit/delivering-an-enhanced-privacy-experience-in-your-photos-app) are the implementation references. Full API behavior remains an M0 experiment because the documentation renderer exposed only partial content during this planning run.
+Apple's [PhotoKit entry point](https://developer.apple.com/documentation/photokit) and [limited-access guidance](https://developer.apple.com/documentation/photokit/delivering-an-enhanced-privacy-experience-in-your-photos-app) are the implementation references. Full API behavior remains a deferred native experiment because the documentation renderer exposed only partial content during this planning run.
 
 ## Required fixtures and acceptance
 
 | Fixture set | Cases | Evidence required before support claims |
 | --- | --- | --- |
-| Manual | Exact duplicate, corrupt image, rotated image, HEIC, supported/unsupported video, missing EXIF. | Expected byte hashes, metadata, sanitized preview, playable or explicit unsupported outcome. |
+| Manual | M1 JPEG/PNG, exact duplicate, corrupt image, rotated image, missing EXIF; explicit unsupported HEIC/video/archive inputs. Later playable-format tests are conditional. | Expected byte hashes, metadata, sanitized preview, playable or explicit unsupported outcome. |
 | WhatsApp | At least one iOS and one Android export, two date locales, multiline Unicode, omitted media, repeated names/files, partial overlap containing only the second of two identical same-time messages. | Hand-reviewed expected messages, context, links, ambiguity warnings, and exact-manifest replay counts. No uncertain cross-export collapse. |
 | Messenger | Representative JSON archive, missing attachment, reactions, participants, non-ASCII text, encrypted-history sample if promised. | Coverage inventory and exact expected normalized items for each supported format. |
 | Discord export | Sent-message package, channel mapping, missing/dead attachment reference, replay, repeated content. | Report limited to supplied records, no invented full-conversation context. |
