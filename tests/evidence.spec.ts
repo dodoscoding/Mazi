@@ -4,6 +4,10 @@ import { mkdir } from "node:fs/promises";
 test("capture stable Home and memory at the required review sizes", async ({
   page,
 }, testInfo) => {
+  test.skip(
+    testInfo.project.name.startsWith("firefox"),
+    "Canonical visual evidence uses Chromium.",
+  );
   const name = testInfo.project.name === "phone" ? "mobile" : "desktop";
   await page.setViewportSize({
     width: name === "mobile" ? 390 : 1440,
