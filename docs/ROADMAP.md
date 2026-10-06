@@ -82,6 +82,8 @@ Exit when T03, T04, T06, T07, and T09 pass, every discovered item has an outcome
 
 ### M3. Launch the production archive
 
+Local implementation, 6 October: [Phase 3 local archive review](../phase3/README.md) adds a review screen, corrections, Timeline/search, duplicate and event review, approved On This Day, individual source removal, member departure, current-visibility export, local health/metrics and an offline restore drill to the Phase 2 local archive. [Verification](../phase3/VERIFICATION.md) separates those synthetic checks from production acceptance. It is not integrated into the production stack or release candidate; all M3 acceptance and production gates below remain open.
+
 - [ ] Add perceptual duplicate suggestions, explicit merge review, split/undo, and authorized rendition selection.
 - [ ] Add explainable event suggestions using time, permitted location, and available grouping metadata.
 - [ ] Add improved timestamp review, place normalization, approved On This Day, and virtualized timeline views.
