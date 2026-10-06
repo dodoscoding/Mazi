@@ -1,0 +1,17 @@
+{
+  ".github/workflows/verify.yml": "f2248f593503018c6c239ad1e929629dc91f19c27b498fbfaf4840129b5ff9cf",
+  "package.json": "7922677e1864a3a357149cf2190657d942f6ed4425222548b41f701d74e6def0",
+  "phase2/__init__.py": "61d2230119fc5fc342a71ccf4aeac046bda6efbab9715176f8137678bc4e4aff",
+  "phase2/adapters.py": "7e9a58e74af2c6c7b8328c3aa5c888d7fd95102ec9fdd32d068c6d8077f5e7f1",
+  "phase2/engine.py": "273f8bfb053da6128f3ac9fa1ce0dc471b5e612f17fbc5f640697d000d3b69d1",
+  "phase2/imports.css": "d3fc6ae9dfb314888b7c48e63c3a3784d4fc77f2ae48cb2a8db16dfb547d5106",
+  "phase2/imports.js": "b6072e0fd4f190102355d6aad00596f50121cf5b2500fbfb6cf74fd25aa49e5e",
+  "phase2/index.html": "9507ea1c3073e3f091f1c8d6aca22c6c84ccfc2705d23d5a51567c06ed84dc9c",
+  "phase2/playwright.config.ts": "010162916edcd111c718787a29512cfa21d9e7e620d7e6ee9ed3835635c3de4d",
+  "phase2/server.py": "03ec4da508139bff213a080e883cf0fca9d6b06eebaed0055b5409d5de7deaff",
+  "phase2/tests/browser.spec.ts": "ef515ae2eed2909b530f51680cdefb28dbc7a50934bebfd722ecaef781722613",
+  "phase2/tests/browser_server.py": "ff29235ebfb15bfe9eeb72f52758e5809505a0fb6d95647a3430d946ff73f545",
+  "phase2/tests/test_adapters.py": "ed41655c84eda5916be62af2e39a24d80264a069044cb015dfd51be612d815ba",
+  "phase2/tests/test_engine.py": "3bb51cd333bd6edde3f88bcf543fa661aa2593ba50466b914e60c031d53649ee",
+  "phase2/tests/test_http.py": "57c224b3832e84a0b581db288b8bc29e5a7f18c40957a62d2ceb6fcd146c7b36"
+}

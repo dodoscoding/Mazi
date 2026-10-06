@@ -1,0 +1,31 @@
+test_archive_rejects_unsafe_names_duplicates_and_symlinks (test_adapters.AdapterTests.test_archive_rejects_unsafe_names_duplicates_and_symlinks) ... ok
+test_context_bound_and_orphan_accounting (test_adapters.AdapterTests.test_context_bound_and_orphan_accounting) ... ok
+test_discord_sent_only_and_no_remote_fetch (test_adapters.AdapterTests.test_discord_sent_only_and_no_remote_fetch) ... ok
+test_expansion_bomb_and_unsafe_attachment_reference (test_adapters.AdapterTests.test_expansion_bomb_and_unsafe_attachment_reference) ... ok
+test_malformed_source_is_explicit_failure (test_adapters.AdapterTests.test_malformed_source_is_explicit_failure) ... ok
+test_messenger_reactions_unicode_and_missing_media (test_adapters.AdapterTests.test_messenger_reactions_unicode_and_missing_media) ... ok
+test_repeated_messages_and_partial_overlap_never_collapse (test_adapters.AdapterTests.test_repeated_messages_and_partial_overlap_never_collapse) ... ok
+test_text_only_empty_and_unknown_export_formats_are_accounted (test_adapters.AdapterTests.test_text_only_empty_and_unknown_export_formats_are_accounted) ... ok
+test_whatsapp_platforms_multiline_context_and_ambiguous_dates (test_adapters.AdapterTests.test_whatsapp_platforms_multiline_context_and_ambiguous_dates) ... ok
+test_all_source_records_remain_accessible_through_pages (test_engine.EngineTests.test_all_source_records_remain_accessible_through_pages) ... ok
+test_cancel_twenty_thousand_record_run_preserves_finished_prefix (test_engine.EngineTests.test_cancel_twenty_thousand_record_run_preserves_finished_prefix) ... ok
+test_checksum_mismatch_can_restart_and_unsafe_archive_fails_closed (test_engine.EngineTests.test_checksum_mismatch_can_restart_and_unsafe_archive_fails_closed) ... ok
+test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays (test_engine.EngineTests.test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays) ... ok
+test_exif_capture_time_preserved_separately_and_preview_stripped (test_engine.EngineTests.test_exif_capture_time_preserved_separately_and_preview_stripped) ... ok
+test_late_completion_after_cancel_and_departure_denied (test_engine.EngineTests.test_late_completion_after_cancel_and_departure_denied) ... ok
+test_lease_fencing_cancel_and_membership_revocation (test_engine.EngineTests.test_lease_fencing_cancel_and_membership_revocation) ... ok
+test_other_group_has_independent_asset_and_no_foreign_metadata (test_engine.EngineTests.test_other_group_has_independent_asset_and_no_foreign_metadata) ... ok
+test_recovery_after_object_write_and_retry_backoff (test_engine.EngineTests.test_recovery_after_object_write_and_retry_backoff) ... ok
+test_retry_backoff_attempt_cap_and_explicit_retry (test_engine.EngineTests.test_retry_backoff_attempt_cap_and_explicit_retry) ... ok
+test_stable_ids_replay_and_conflicting_payload (test_engine.EngineTests.test_stable_ids_replay_and_conflicting_payload) ... ok
+test_twenty_thousand_manifest_replay_accounts_for_every_item (test_engine.EngineTests.test_twenty_thousand_manifest_replay_accounts_for_every_item) ... ok
+test_two_workers_claim_once_and_reject_post_commit_replay (test_engine.EngineTests.test_two_workers_claim_once_and_reject_post_commit_replay) ... ok
+test_upload_resume_scan_restart_and_manual_shared_pipeline (test_engine.EngineTests.test_upload_resume_scan_restart_and_manual_shared_pipeline) ... ok
+test_withdraw_independent_contributions_and_owner_only_report (test_engine.EngineTests.test_withdraw_independent_contributions_and_owner_only_report) ... ok
+test_bad_requests_and_static_content_security_policy (test_http.HttpTests.test_bad_requests_and_static_content_security_policy) ... ok
+test_http_flow_permissions_headers_and_media (test_http.HttpTests.test_http_flow_permissions_headers_and_media) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 6.900s
+
+OK
