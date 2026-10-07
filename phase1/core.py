@@ -510,7 +510,7 @@ class Store:
 
     def revoke_memory(self, user: str, memory: str):
         row = self.db.execute("SELECT * FROM memories WHERE id=?", (memory,)).fetchone()
-        if row is None or row["owner_id"] != user:
+        if row is None or row["owner_id"] != user or row["status"] == "deleted":
             raise Denied("Memory unavailable")
         self._member(user, row["group_id"])
         with self.db:

@@ -155,6 +155,16 @@ class PilotTests(unittest.TestCase):
         self.store.revoke_invite(self.alice, self.group, token)
         self.assert_denied(self.store.accept, self.ben, token)
 
+    def test_deleted_memory_cannot_be_revoked_back_into_draft(self):
+        self.join(self.ben)
+        memory = self.store.create_memory(self.alice, self.group, "Keep this secret", [])
+        self.store.publish_memory(self.alice, memory, "group")
+        self.store.delete_memory(self.alice, memory)
+        self.assert_denied(self.store.revoke_memory, self.alice, memory)
+        self.assert_denied(self.store.memory_view, self.ben, memory)
+        status = self.store.db.execute("SELECT status FROM memories WHERE id=?", (memory,)).fetchone()["status"]
+        self.assertEqual(status, "deleted")
+
 
 if __name__ == "__main__":
     unittest.main()
