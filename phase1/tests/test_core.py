@@ -76,13 +76,6 @@ class PilotTests(unittest.TestCase):
         other = self.store.create_group(self.alice, "Other")
         self.assert_denied(self.store.create_memory, self.alice, other, "Wrong", [private])
 
-    def test_session_expiry_and_wrong_password(self):
-        self.assert_denied(self.store.login, "alice@example.test", "wrong")
-        token = self.store.login("alice@example.test", "correct horse battery")
-        self.assertEqual(self.store.user_for_token(token), self.alice)
-        self.store.logout(token)
-        self.assert_denied(self.store.user_for_token, token)
-
     def test_removed_member_cannot_publish_a_draft_memory(self):
         self.join(self.ben)
         self.join(self.cara)
@@ -98,6 +91,13 @@ class PilotTests(unittest.TestCase):
         self.store.db.commit()
         self.assert_denied(self.store.publish_memory, self.alice, memory, "group")
         self.assert_denied(self.store.memory_view, self.ben, memory)
+
+    def test_session_expiry_and_wrong_password(self):
+        self.assert_denied(self.store.login, "alice@example.test", "wrong")
+        token = self.store.login("alice@example.test", "correct horse battery")
+        self.assertEqual(self.store.user_for_token(token), self.alice)
+        self.store.logout(token)
+        self.assert_denied(self.store.user_for_token, token)
 
 
 if __name__ == "__main__":
