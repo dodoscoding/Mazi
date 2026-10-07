@@ -83,6 +83,22 @@ class PilotTests(unittest.TestCase):
         self.store.logout(token)
         self.assert_denied(self.store.user_for_token, token)
 
+    def test_removed_member_cannot_publish_a_draft_memory(self):
+        self.join(self.ben)
+        self.join(self.cara)
+        memory = self.store.create_memory(self.ben, self.group, "Ben private title", [])
+        self.store.remove_member(self.alice, self.group, self.ben)
+        self.assert_denied(self.store.publish_memory, self.ben, memory, "group", None, 0)
+        self.assert_denied(self.store.memory_view, self.cara, memory)
+
+    def test_deleted_memory_cannot_be_published(self):
+        self.join(self.ben)
+        memory = self.store.create_memory(self.alice, self.group, "Gone", [])
+        self.store.db.execute("UPDATE memories SET status='deleted' WHERE id=?", (memory,))
+        self.store.db.commit()
+        self.assert_denied(self.store.publish_memory, self.alice, memory, "group")
+        self.assert_denied(self.store.memory_view, self.ben, memory)
+
 
 if __name__ == "__main__":
     unittest.main()
