@@ -492,7 +492,10 @@ class Store:
     def publish_memory(self, user: str, memory: str, audience: str,
                        recipients: list[str] | None = None, version: int = 0):
         row = self.db.execute("SELECT * FROM memories WHERE id=?", (memory,)).fetchone()
-        if row is None or row["owner_id"] != user or row["policy_version"] != version:
+        if row is None or row["owner_id"] != user or row["status"] == "deleted":
+            raise Denied("Memory unavailable or stale")
+        self._member(user, row["group_id"])
+        if row["policy_version"] != version:
             raise Denied("Memory unavailable or stale")
         if audience not in ("group", "selected"):
             raise Denied("Invalid audience")
@@ -510,7 +513,7 @@ class Store:
 
     def revoke_memory(self, user: str, memory: str):
         row = self.db.execute("SELECT * FROM memories WHERE id=?", (memory,)).fetchone()
-        if row is None or row["owner_id"] != user:
+        if row is None or row["owner_id"] != user or row["status"] == "deleted":
             raise Denied("Memory unavailable")
         self._member(user, row["group_id"])
         with self.db:
