@@ -14,8 +14,8 @@
     "test:ui": "playwright test --ui",
     "check:docs": "python3 work/poteto/product-plan/verify_docs.py",
     "typecheck": "tsc -b",
-    "lint": "prettier --check src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts",
-    "format": "prettier --write src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts",
+    "lint": "prettier --check src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts",
+    "format": "prettier --write src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts",
     "m0:start": "supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "m0:stop": "supabase stop",
     "test:m0": "node --test tests/m0/*.test.mjs",
@@ -24,7 +24,10 @@
     "test:imports": "python3 -m unittest discover -s phase2/tests -v",
     "test:imports:browser": "playwright test --config phase2/playwright.config.ts",
     "test:archive": "python3 -m unittest discover -s phase3/tests -v",
-    "test:archive:browser": "playwright test --config phase3/playwright.config.ts"
+    "test:archive:browser": "playwright test --config phase3/playwright.config.ts",
+    "dev:sources": "python3 -m phase4.server",
+    "test:sources": "python3 -m unittest discover -s phase4/tests -v",
+    "test:sources:browser": "playwright test --config phase4/playwright.config.ts"
   },
   "dependencies": {
     "@fontsource/libre-caslon-text": "5.3.0",

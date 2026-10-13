@@ -14,7 +14,7 @@ import sqlite3
 from pathlib import Path
 
 
-DIRECTORIES = ("originals", "previews", "uploads", "archives", "archive-objects")
+DIRECTORIES = ("originals", "previews", "uploads", "archives", "archive-objects", "source-resources")
 
 
 def _hash(path):
@@ -78,6 +78,13 @@ def verify_backup(backup):
                                       "(SELECT 1 FROM archive_origins o WHERE o.asset_id=archive_assets.id AND o.withdrawn=0)"):
             if Path(key).name != key or not (backup / "archive-objects" / key).is_file() or _hash(backup / "archive-objects" / key) != digest:
                 raise ValueError("Active original missing or corrupt")
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='source_resources'").fetchone():
+            for identifier, checksum, size, received in db.execute("SELECT id,sha256,size,received FROM source_resources WHERE withdrawn=0 AND received>0"):
+                resource = backup / "source-resources" / identifier
+                if Path(identifier).name != identifier or not resource.is_file() or resource.stat().st_size < received:
+                    raise ValueError("Source resource missing or truncated")
+                if received == size and _hash(resource) != checksum:
+                    raise ValueError("Source resource checksum mismatch")
     return {"files": len(manifest), "verified": True}
 
 

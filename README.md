@@ -2,7 +2,7 @@
 
 A private, invite-only archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
 
-The repository contains product planning, a working Atlas design prototype, a [local Python memory-loop experiment](phase1/README.md), the [Phase 2 historical import engine](phase2/README.md), and a [Phase 3 local archive review screen](phase3/README.md). The import and review workflow uses synthetic tests; it is not connected to the Atlas or production providers. The Atlas prototype uses fictional memories and generated photographs. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
+The repository contains product planning, a working Atlas design prototype, a [local Python memory-loop experiment](phase1/README.md), the [Phase 2 historical import engine](phase2/README.md), a [Phase 3 local archive review screen](phase3/README.md), and [Phase 4 sources and places](phase4/README.md). The import and review workflow uses synthetic tests; it is not connected to the Atlas or production providers. The Atlas prototype uses fictional memories and generated photographs. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
 
 Start with the [confirmed product context](PRODUCT.md), [roadmap](docs/ROADMAP.md), and [product specification](docs/SPEC.md). The product direction and Atlas choice were confirmed on 3 October 2026.
 
@@ -41,6 +41,8 @@ Dev A owns shared migrations, authentication, policies, APIs, deployment configu
 For historical imports, follow the [Phase 2 run instructions](phase2/README.md): install the existing Python requirements and run `python3 -m phase2.server`, then open http://127.0.0.1:8002. The local workflow supports synthetic WhatsApp text, Messenger JSON and Discord user CSV archives in ZIPs, with JPEG/PNG validation and explicit unsupported outcomes. [Verification and remaining beta gates](phase2/VERIFICATION.md) distinguish implemented behavior from production acceptance.
 
 For import plus post-import review in one local archive, run `.venv/bin/python -m phase3.server` and open http://127.0.0.1:8002/review. The [Phase 3 guide](phase3/README.md) records features and release limits.
+
+For Map, selected Discord intake and the macOS Photos companion, run `.venv/bin/python -m phase4.server` and open http://127.0.0.1:8002/places. The [Phase 4 guide](phase4/README.md) includes companion build, operator configuration and limits.
 
 Use Node 22.12+ (developed on 24.15.0).
 

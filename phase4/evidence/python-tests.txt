@@ -1,0 +1,31 @@
+test_native_protocol_resume_revoke_and_no_discord_bypass (test_api.ApiTests.test_native_protocol_resume_revoke_and_no_discord_bypass) ... ok
+test_more_than_one_page_is_not_skipped_and_unsupported_outcomes_are_durable (test_discord.DiscordTests.test_more_than_one_page_is_not_skipped_and_unsupported_outcomes_are_durable) ... ok
+test_pause_resume_after_checkpoint_keeps_pending_image (test_discord.DiscordTests.test_pause_resume_after_checkpoint_keeps_pending_image) ... ok
+test_permission_overwrites_and_cdn_rejection (test_discord.DiscordTests.test_permission_overwrites_and_cdn_rejection) ... ok
+test_switch_scope_replay_and_permission_change_before_worker_commit (test_discord.DiscordTests.test_switch_scope_replay_and_permission_change_before_worker_commit) ... ok
+test_all_source_records_remain_accessible_through_pages (test_sources.SourceTests.test_all_source_records_remain_accessible_through_pages) ... ok
+test_cancel_twenty_thousand_record_run_preserves_finished_prefix (test_sources.SourceTests.test_cancel_twenty_thousand_record_run_preserves_finished_prefix) ... ok
+test_checksum_mismatch_can_restart_and_unsafe_archive_fails_closed (test_sources.SourceTests.test_checksum_mismatch_can_restart_and_unsafe_archive_fails_closed) ... ok
+test_departure_denies_resources_and_map (test_sources.SourceTests.test_departure_denies_resources_and_map) ... ok
+test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays (test_sources.SourceTests.test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays) ... ok
+test_exif_capture_time_preserved_separately_and_preview_stripped (test_sources.SourceTests.test_exif_capture_time_preserved_separately_and_preview_stripped) ... ok
+test_late_completion_after_cancel_and_departure_denied (test_sources.SourceTests.test_late_completion_after_cancel_and_departure_denied) ... ok
+test_lease_fencing_cancel_and_membership_revocation (test_sources.SourceTests.test_lease_fencing_cancel_and_membership_revocation) ... ok
+test_map_places_filters_paths_and_origin_visibility (test_sources.SourceTests.test_map_places_filters_paths_and_origin_visibility) ... ok
+test_opaque_resources_restore_export_and_rejoin_tombstones (test_sources.SourceTests.test_opaque_resources_restore_export_and_rejoin_tombstones) ... ok
+test_other_group_has_independent_asset_and_no_foreign_metadata (test_sources.SourceTests.test_other_group_has_independent_asset_and_no_foreign_metadata) ... ok
+test_pause_revocation_and_late_worker_stop (test_sources.SourceTests.test_pause_revocation_and_late_worker_stop) ... ok
+test_recovery_after_object_write_and_retry_backoff (test_sources.SourceTests.test_recovery_after_object_write_and_retry_backoff) ... ok
+test_restart_replay_versions_and_related_resources (test_sources.SourceTests.test_restart_replay_versions_and_related_resources) ... ok
+test_retry_backoff_attempt_cap_and_explicit_retry (test_sources.SourceTests.test_retry_backoff_attempt_cap_and_explicit_retry) ... ok
+test_scope_ownership_checksum_and_withdrawal (test_sources.SourceTests.test_scope_ownership_checksum_and_withdrawal) ... ok
+test_stable_ids_replay_and_conflicting_payload (test_sources.SourceTests.test_stable_ids_replay_and_conflicting_payload) ... ok
+test_twenty_thousand_manifest_replay_accounts_for_every_item (test_sources.SourceTests.test_twenty_thousand_manifest_replay_accounts_for_every_item) ... ok
+test_two_workers_claim_once_and_reject_post_commit_replay (test_sources.SourceTests.test_two_workers_claim_once_and_reject_post_commit_replay) ... ok
+test_upload_resume_scan_restart_and_manual_shared_pipeline (test_sources.SourceTests.test_upload_resume_scan_restart_and_manual_shared_pipeline) ... ok
+test_withdraw_independent_contributions_and_owner_only_report (test_sources.SourceTests.test_withdraw_independent_contributions_and_owner_only_report) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 7.701s
+
+OK

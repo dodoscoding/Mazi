@@ -12,3 +12,5 @@ __pycache__/
 .impeccable/config.local.json
 .impeccable/questions/*.state.json
 .impeccable/questions/*.log
+
+phase4/macos/build/

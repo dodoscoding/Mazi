@@ -61,3 +61,30 @@ jobs:
       - run: npx supabase db advisors --local --type security --fail-on error
       - run: npx supabase stop
         if: always()
+  continuous-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: python3 -m pip install -r phase1/requirements.txt
+      - run: npm ci
+      - run: npm run test:sources
+      - run: python3 -m unittest discover -s phase3/tests -v
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:sources:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-browser-evidence
+          path: test-results/
+  macos-companion:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh phase4/macos/build.sh
