@@ -4,6 +4,8 @@ All imports use the normalized contract in [Contracts](CONTRACTS.md). The shared
 
 M0 accepts a narrowed manual JPEG/PNG pilot. The matrix distinguishes intended future support from verified input support. No representative real chat archive has been tested. M2 must collect consented fixtures before promising an export format.
 
+The [Phase 2 local engine](../phase2/README.md), added 6 October 2026, implements the normalized adapters, ZIP safety limits, queue/recovery, group-visible ingestion and outcome UI against synthetic fixtures. Its [fixture format matrix](../phase2/README.md#fixture-scope-and-format-matrix) lists exact accepted shapes and local limits. This does not expand production support or complete the real-export fixture gate. Video and unverified codecs remain explicit unsupported outcomes.
+
 ## Manual pilot limits
 
 [M0 acceptance](M0_ACCEPTANCE.md) fixes the M1 pilot at 10 members, 10,000 logical items, 20 GiB of originals/previews per group, and 5 GiB per contributor within the group cap. Input selection supports JPEG/PNG only. Existing synthetic WebP display assets do not prove input validation. Synthetic manual fixtures belong in `tests/m0/fixtures`; personal archives remain outside Git.

@@ -2,7 +2,7 @@
 
 Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization and conversational AI remain later proposals.
 
-Status on 5 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. M1-M7 remain unstarted. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
+Status on 6 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](../phase2/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open; M3-M7 remain unstarted. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
 ## Use the planning assumptions
 
@@ -68,6 +68,8 @@ M1 uses the manual pilot's hard limits from [M0 acceptance](M0_ACCEPTANCE.md). M
 Exit when two members and one outsider pass tests T01 through T06, T08, and T09 in [Test plan](TEST_PLAN.md). Demonstrate a ten-photo memory with one duplicate, one rejected file, imported group-visible context/location, and revoked membership access. Keep M1 restricted to an internal pilot.
 
 ### M2. Import real history
+
+Local implementation, 6 October: [Phase 2](../phase2/README.md) provides a shared manual/WhatsApp/Messenger/Discord adapter contract, resumable ZIP transfer, checkpointed inventory, fenced database leases, retry/cancel/reconciliation, source provenance, group-visible photos and paged reports. [Verification](../phase2/VERIFICATION.md) distinguishes synthetic implementation evidence from the production and real-fixture gates below. The production checkboxes remain open until integration and acceptance; video is explicitly unsupported.
 
 - [ ] Finalize the normalized adapter contract using the existing manual importer.
 - [ ] Deliver WhatsApp export support first, then Messenger, then Discord user export. Reorder only if fixture evidence justifies it.

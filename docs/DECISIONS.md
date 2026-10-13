@@ -47,6 +47,8 @@ The product owner approved the delivered prototype and requested saving the sess
 
 ## Open choices
 
+Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](../phase2/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
+
 | Choice | Working assumption | Due before | Consequence if unresolved |
 | --- | --- | --- | --- |
 | Actual squad capacity | Two developers confirmed on 3 October 2026; see [task allocation](TWO_DEVELOPER_PLAN.md). Product/design, QA/security, and Swift capacity still need confirmation. | M0 complete; two-developer estimate recorded 5 October in M0_ACCEPTANCE | Use the revised two-developer remaining envelope of 17-25 working weeks; no launch date is committed. |

@@ -3,6 +3,11 @@ dist/
 test-results/
 playwright-report/
 *.tsbuildinfo
+.venv/
+__pycache__/
+*.pyc
+.mazi-pilot/
+.mazi-imports/
 .DS_Store
 .impeccable/config.local.json
 .impeccable/questions/*.state.json
