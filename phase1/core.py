@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import io
+import json
 import os
 import secrets
 import sqlite3
@@ -89,6 +90,19 @@ CREATE TABLE IF NOT EXISTS audit (
  id INTEGER PRIMARY KEY AUTOINCREMENT, actor_id TEXT NOT NULL,
  action TEXT NOT NULL, target_id TEXT NOT NULL, at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS upload_sessions (
+ id TEXT PRIMARY KEY, group_id TEXT NOT NULL REFERENCES groups(id),
+ owner_id TEXT NOT NULL REFERENCES users(id), filename TEXT NOT NULL,
+ caption TEXT NOT NULL, capture_date TEXT, expected_size INTEGER NOT NULL,
+ sha256 TEXT NOT NULL, received INTEGER NOT NULL DEFAULT 0,
+ created_at INTEGER NOT NULL, completed_media_id TEXT REFERENCES media(id)
+);
+CREATE TABLE IF NOT EXISTS media_origins (
+ id TEXT PRIMARY KEY, media_id TEXT NOT NULL REFERENCES media(id),
+ source_type TEXT NOT NULL, occurrence_key TEXT NOT NULL,
+ shared_at TEXT, UNIQUE(media_id,source_type,occurrence_key)
+);
+CREATE INDEX IF NOT EXISTS media_exact_owner ON media(group_id,owner_id,sha256);
 """
 
 
@@ -106,11 +120,14 @@ class Store:
         self.root.mkdir(parents=True, exist_ok=True)
         self.originals = self.root / "originals"
         self.previews = self.root / "previews"
+        self.uploads = self.root / "uploads"
         self.originals.mkdir(exist_ok=True)
         self.previews.mkdir(exist_ok=True)
+        self.uploads.mkdir(exist_ok=True)
         os.chmod(self.root, 0o700)
         os.chmod(self.originals, 0o700)
         os.chmod(self.previews, 0o700)
+        os.chmod(self.uploads, 0o700)
         self.db = sqlite3.connect(self.root / "mazi.sqlite3", check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
@@ -185,6 +202,12 @@ class Store:
             "SELECT g.id,g.name,m.role FROM groups g JOIN members m ON m.group_id=g.id WHERE m.user_id=?",
             (user,))]
 
+    def members_for(self, user: str, group: str) -> list[dict]:
+        self._member(user, group)
+        return [dict(row) for row in self.db.execute(
+            "SELECT u.id,u.email,m.role FROM members m JOIN users u ON u.id=m.user_id "
+            "WHERE m.group_id=? ORDER BY u.email", (group,))]
+
     def invite(self, user: str, group: str, hours: int = 24) -> str:
         self._member(user, group, admin=True)
         if hours < 1 or hours > 168:
@@ -195,6 +218,17 @@ class Store:
                             (_id(), group, _hash_token(token), int(time.time()) + hours * 3600))
             self._audit(user, "invitation.create", group)
         return token
+
+    def revoke_invite(self, user: str, group: str, token: str):
+        self._member(user, group, admin=True)
+        with self.db:
+            changed = self.db.execute(
+                "UPDATE invitations SET revoked_at=? WHERE group_id=? AND token_hash=? "
+                "AND accepted_at IS NULL AND revoked_at IS NULL",
+                (int(time.time()), group, _hash_token(token))).rowcount
+            if not changed:
+                raise Denied("Invitation unavailable")
+            self._audit(user, "invitation.revoke", group)
 
     def accept(self, user: str, token: str) -> str:
         # SQLite serializes these writes. The conditional UPDATE makes acceptance single use.
@@ -221,13 +255,101 @@ class Store:
             raise Denied("Admin cannot remove self")
         with self.db:
             self.db.execute("DELETE FROM members WHERE group_id=? AND user_id=?", (group, user))
+            self.db.execute("DELETE FROM media_grants WHERE audience='selected' AND recipient_id=? "
+                            "AND media_id IN (SELECT id FROM media WHERE group_id=?)", (user, group))
+            self.db.execute("DELETE FROM memory_grants WHERE audience='selected' AND recipient_id=? "
+                            "AND memory_id IN (SELECT id FROM memories WHERE group_id=?)", (user, group))
+            # The pilot follows D06: departure revokes this contributor's grants.
+            self.db.execute("DELETE FROM media_grants WHERE media_id IN "
+                            "(SELECT id FROM media WHERE group_id=? AND owner_id=?)", (group, user))
+            self.db.execute("UPDATE media SET status='staged',policy_version=policy_version+1 "
+                            "WHERE group_id=? AND owner_id=? AND status='published'", (group, user))
+            self.db.execute("DELETE FROM memory_grants WHERE memory_id IN "
+                            "(SELECT id FROM memories WHERE group_id=? AND owner_id=?)", (group, user))
+            self.db.execute("UPDATE memories SET status='draft',policy_version=policy_version+1 "
+                            "WHERE group_id=? AND owner_id=? AND status='published'", (group, user))
             self._audit(admin, "membership.remove", user)
+
+    def begin_upload(self, user: str, group: str, filename: str, size: int,
+                     sha256: str, caption: str = "", capture_date: str | None = None) -> str:
+        self._member(user, group)
+        if not isinstance(size, int) or not 0 < size <= 20 * 1024 * 1024:
+            raise Denied("Image must be 20 MB or smaller")
+        if not isinstance(sha256, str) or len(sha256) != 64 or any(c not in "0123456789abcdef" for c in sha256):
+            raise Denied("Invalid checksum")
+        if not isinstance(filename, str) or not filename or len(filename) > 255:
+            raise Denied("Invalid filename")
+        upload = _id()
+        with self.db:
+            self.db.execute("INSERT INTO upload_sessions(id,group_id,owner_id,filename,caption,capture_date,expected_size,sha256,created_at) "
+                            "VALUES(?,?,?,?,?,?,?,?,?)",
+                            (upload, group, user, filename, caption[:2000], capture_date, size, sha256, int(time.time())))
+            self._audit(user, "upload.begin", upload)
+        path = self.uploads / upload
+        path.touch(mode=0o600)
+        return upload
+
+    def _upload(self, user: str, upload: str):
+        row = self.db.execute("SELECT * FROM upload_sessions WHERE id=?", (upload,)).fetchone()
+        if row is None or row["owner_id"] != user:
+            raise Denied("Upload unavailable")
+        self._member(user, row["group_id"])
+        return row
+
+    def upload_status(self, user: str, upload: str) -> dict:
+        row = self._upload(user, upload)
+        return {"received": row["received"], "size": row["expected_size"],
+                "media_id": row["completed_media_id"]}
+
+    def upload_chunk(self, user: str, upload: str, offset: int, data: bytes) -> int:
+        row = self._upload(user, upload)
+        if row["completed_media_id"] or not isinstance(offset, int) or offset < 0 or not data or len(data) > 512 * 1024:
+            raise Denied("Invalid chunk")
+        if offset > row["received"] or offset + len(data) > row["expected_size"]:
+            raise Conflict("Upload offset mismatch")
+        path = self.uploads / upload
+        with path.open("r+b") as file:
+            if offset < row["received"]:
+                file.seek(offset)
+                if file.read(len(data)) != data or offset + len(data) > row["received"]:
+                    raise Conflict("Upload chunk differs from accepted bytes")
+                return row["received"]
+            file.seek(offset)
+            file.write(data)
+            file.flush()
+            os.fsync(file.fileno())
+        with self.db:
+            self.db.execute("UPDATE upload_sessions SET received=? WHERE id=?", (offset + len(data), upload))
+        return offset + len(data)
+
+    def finish_upload(self, user: str, upload: str) -> str:
+        row = self._upload(user, upload)
+        if row["completed_media_id"]:
+            return row["completed_media_id"]
+        if row["received"] != row["expected_size"]:
+            raise Conflict("Upload incomplete")
+        data = (self.uploads / upload).read_bytes()
+        if hashlib.sha256(data).hexdigest() != row["sha256"]:
+            raise Conflict("Upload checksum mismatch")
+        media = self.upload_image(user, row["group_id"], row["filename"], data,
+                                  row["caption"], row["capture_date"])
+        with self.db:
+            self.db.execute("UPDATE upload_sessions SET completed_media_id=? WHERE id=?", (media, upload))
+            self._audit(user, "upload.finish", upload)
+        (self.uploads / upload).unlink(missing_ok=True)
+        return media
 
     def upload_image(self, user: str, group: str, filename: str, data: bytes,
                      caption: str = "", capture_date: str | None = None) -> str:
         self._member(user, group)
         if len(data) > 20 * 1024 * 1024 or not data:
             raise Denied("Image must be 20 MB or smaller")
+        from datetime import date
+        if capture_date is not None:
+            try:
+                date.fromisoformat(capture_date)
+            except (TypeError, ValueError) as exc:
+                raise Denied("Invalid capture date") from exc
         from PIL import Image, UnidentifiedImageError
         try:
             image = Image.open(io.BytesIO(data))
@@ -254,6 +376,8 @@ class Store:
                      "image/jpeg" if image.format == "JPEG" else "image/png",
                      filename[:255], int(time.time()), caption[:2000], capture_date))
                 self._audit(user, "media.stage", media)
+                self.db.execute("INSERT INTO media_origins VALUES(?,?,?,?,?)",
+                                (_id(), media, "manual", media, None))
         except Exception:
             (self.originals / media).unlink(missing_ok=True)
             (self.previews / media).unlink(missing_ok=True)
@@ -305,6 +429,17 @@ class Store:
             self.db.execute("DELETE FROM media_grants WHERE media_id=?", (media,))
             self.db.execute("UPDATE media SET status='staged', policy_version=policy_version+1 WHERE id=?", (media,))
             self._audit(user, "media.revoke", media)
+
+    def delete_media(self, user: str, media: str):
+        row = self._media(user, media)
+        if row["owner_id"] != user:
+            raise Denied("Only owner can delete")
+        with self.db:
+            self.db.execute("DELETE FROM media_grants WHERE media_id=?", (media,))
+            self.db.execute("UPDATE media SET status='deleted',policy_version=policy_version+1 WHERE id=?", (media,))
+            self._audit(user, "media.delete", media)
+        (self.originals / media).unlink(missing_ok=True)
+        (self.previews / media).unlink(missing_ok=True)
 
     def media_view(self, user: str, media: str) -> dict:
         row = self._media(user, media)
@@ -376,6 +511,22 @@ class Store:
             self.db.execute("UPDATE memories SET status='published', policy_version=policy_version+1 WHERE id=?", (memory,))
             self._audit(user, "memory.publish", memory)
 
+    def revoke_memory(self, user: str, memory: str):
+        row = self.db.execute("SELECT * FROM memories WHERE id=?", (memory,)).fetchone()
+        if row is None or row["owner_id"] != user or row["status"] == "deleted":
+            raise Denied("Memory unavailable")
+        self._member(user, row["group_id"])
+        with self.db:
+            self.db.execute("DELETE FROM memory_grants WHERE memory_id=?", (memory,))
+            self.db.execute("UPDATE memories SET status='draft',policy_version=policy_version+1 WHERE id=?", (memory,))
+            self._audit(user, "memory.revoke", memory)
+
+    def delete_memory(self, user: str, memory: str):
+        self.revoke_memory(user, memory)
+        with self.db:
+            self.db.execute("UPDATE memories SET status='deleted',policy_version=policy_version+1 WHERE id=?", (memory,))
+            self._audit(user, "memory.delete", memory)
+
     def memory_view(self, user: str, memory: str) -> dict:
         row = self.db.execute("SELECT * FROM memories WHERE id=? AND status!='deleted'", (memory,)).fetchone()
         if row is None:
@@ -400,10 +551,13 @@ class Store:
             "SELECT id FROM memories WHERE owner_id=? AND group_id=? AND status!='deleted' ORDER BY created_at DESC",
             (user, group))]
 
-    def timeline(self, user: str, group: str, query: str = "") -> list[dict]:
+    def timeline(self, user: str, group: str, query: str = "", offset: int = 0,
+                 limit: int = 100) -> list[dict]:
         self._member(user, group)
+        if not 0 <= offset <= 100000 or not 1 <= limit <= 100:
+            raise Denied("Invalid page")
         rows = self.db.execute(
-            "SELECT id FROM memories WHERE group_id=? AND status!='deleted' ORDER BY created_at DESC LIMIT 100",
+            "SELECT id FROM memories WHERE group_id=? AND status!='deleted' ORDER BY created_at DESC,id DESC",
             (group,)).fetchall()
         results = []
         for row in rows:
@@ -411,6 +565,25 @@ class Store:
                 item = self.memory_view(user, row["id"])
             except Denied:
                 continue
-            if query.casefold() in item["title"].casefold():
+            if query.casefold() in item["title"].casefold() or any(
+                    query.casefold() in media.get("caption", "").casefold() for media in item["media"]):
                 results.append(item)
-        return results
+        return results[offset:offset + limit]
+
+    def export_group(self, user: str, group: str) -> dict:
+        self._member(user, group)
+        memories = []
+        for row in self.db.execute("SELECT id FROM memories WHERE group_id=? AND status!='deleted'", (group,)):
+            try:
+                memories.append(self.memory_view(user, row["id"]))
+            except Denied:
+                pass
+        media = []
+        for row in self.db.execute("SELECT id FROM media WHERE group_id=? AND status!='deleted'", (group,)):
+            try:
+                media.append(self.media_view(user, row["id"]))
+            except Denied:
+                pass
+        self._audit(user, "group.export", group)
+        self.db.commit()
+        return {"schema_version": 1, "group_id": group, "memories": memories, "media": media}

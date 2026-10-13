@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Mazi is a private, invite-only memory archive with production planning and a local Atlas prototype. The prototype uses synthetic fixtures; production authentication, ingestion and infrastructure remain unimplemented.
+Mazi is a private, invite-only memory archive with production planning, a local Atlas prototype, and a separate Python memory-loop experiment under `phase1/`. These use synthetic fixtures; production authentication, ingestion and infrastructure remain unimplemented.
 
 - `README.md` indexes planning and prototype run instructions.
 - `src/` contains the React/TypeScript interface and procedural Fiber/Three atlas; `public/media/` holds generated synthetic photographs and provenance.
@@ -23,8 +23,9 @@ Run commands from the repository root:
 - `npm run dev`: starts the local Vite prototype.
 - `npm run build`: typechecks and builds the prototype.
 - `npx playwright install chromium` then `npm test`: runs desktop and phone-emulation contracts.
+- `python3 -m unittest discover -s phase1/tests`: runs the separate Python experiment's behavior tests after installing `phase1/requirements.txt`.
 
-These commands validate the synthetic experiment, not production milestone acceptance. No linter or coverage threshold is configured.
+These commands validate synthetic experiments, not production milestone acceptance. No linter or coverage threshold is configured.
 
 ## Coding Style & Naming Conventions
 

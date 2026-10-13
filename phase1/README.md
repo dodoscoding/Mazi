@@ -1,6 +1,6 @@
-# M1 internal pilot
+# Local memory-loop experiment
 
-This is a local, single-process pilot for the first private memory loop. It is not a production deployment or the proposed Next.js/Supabase stack. It provides a concrete implementation to exercise the M1 permissions and review flow while the M0 architecture and privacy decisions remain open.
+This is a local, single-process experiment for a private review loop. It predates the confirmed M0 decision to share successful manual imports automatically with the group. Its publication policy therefore does not implement the current M1 product contract. It is not a production deployment or the chosen Next.js/Supabase stack.
 
 Run with Python 3.11 or newer after installing the image dependency:
 
@@ -13,4 +13,8 @@ Open `http://127.0.0.1:8000`. Data is stored under `.mazi-pilot/` by default. Se
 
 Run the behavior tests with `python3 -m unittest discover -s phase1/tests`.
 
-Implemented: local accounts, sessions, private groups, expiring single-use invitations, owner-only staging, JPEG/PNG upload with metadata-stripped previews, draft memories, component-specific publication, group timeline, title search, and revocation. These cover a narrow internal happy path and selected denied-access checks. Resumable upload, video, source provenance, comprehensive recovery, account deletion/export, accessibility review, and production authorization/storage tests remain for M1.
+Implemented: local accounts and sessions; private groups; expiring, revocable single-use invitations; owner-only staging; resumable JPEG/PNG uploads with checksums, size validation, progress, and metadata-stripped previews; original preservation; manual origins; draft memories; component-specific media publication; selected-member or group audiences; timeline paging; visible title/caption search; revocation and deletion; contributor grant revocation on membership removal; and a JSON export of metadata visible to the requesting member. The browser lets an owner review components and recipients before publication.
+
+The upload form resumes an interrupted transfer when the same browser selects the same file again. The transfer record and temporary bytes are stored in the private data directory. Original downloads require a separate grant. The JSON export does not bundle original files.
+
+This remains an internal pilot, not completion of the roadmap's M1 gate. Video processing, sub-events, Today, source capture-time evidence, production database and object-storage authorization, complete recovery and account lifecycle, accessibility verification, and the ten-photo browser demonstration remain open. Do not use real personal archives or expose this server beyond localhost.
