@@ -1,6 +1,6 @@
 # Phase 4 verification
 
-Verified 13 October 2026 in the local `mazi-implementation` checkout based on `567616e`, with the Phase 4 working changes. No remote deployment, account connection or GitHub CI run is claimed.
+Verified 13 October 2026 in the local `mazi-implementation` checkout. Python suites, Phase 4 browser tests and the document checker were rerun at `ba5ca79` after merging upstream main `acecf93`; native build and other frontend checks below were performed before that merge, which only changed Phase 1 and an Atlas regression test. No remote deployment, account connection or GitHub CI run is claimed.
 
 ## Executed checks
 
@@ -9,7 +9,7 @@ Verified 13 October 2026 in the local `mazi-implementation` checkout based on `5
 | `.venv/bin/python -m unittest discover -s phase4/tests -v` | 26 passed, including inherited import-engine regressions. [Raw output](evidence/python-tests.txt). |
 | Phase 3 Python suite | 9 passed, including offline restore and withdrawal. |
 | Phase 2 Python suite | 26 passed, including HTTP and 20,000-record cases. |
-| Phase 1 Python suite in this checkout | 10 passed. This checkout predates the additional upstream pilot regressions. |
+| Phase 1 Python suite in this checkout | 13 passed, including the additional upstream pilot regressions. |
 | `MAZI_CHROME_CHANNEL=chrome MAZI_PYTHON="$PWD/.venv/bin/python" node node_modules/@playwright/test/cli.js test --config phase4/playwright.config.ts` | 2 passed: installed Chrome desktop and Pixel 7 emulation, not physical Android. |
 | Browser accessibility | Axe reported no violations in either tested layout; no horizontal overflow or page errors. |
 | Native `sh phase4/macos/build.sh` | Passed with Swift 6.4, arm64 macOS, macOS 13 deployment target. Ad-hoc signature created. Does not demonstrate Photos permission, iCloud or device behavior. |
