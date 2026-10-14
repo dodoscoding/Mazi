@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from mazi.persistence import ArchiveBusy
+
 import base64
 import json
 import os
@@ -78,6 +80,8 @@ def handler_for(store: Store):
                         return self.send(200, data, "image/jpeg" if bits[4] == "preview" else "application/octet-stream")
                     return self.json(200, store.media_view(user, bits[3]))
                 self.json(404, {"error": "Not found"})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
             except (ValueError, IndexError):
@@ -177,6 +181,8 @@ def handler_for(store: Store):
                 self.json(400, {"error": "Invalid request"})
             except Conflict as exc:
                 self.json(409, {"error": str(exc)})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
 

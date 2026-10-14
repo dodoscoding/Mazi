@@ -1,5 +1,7 @@
 """Local People/search UI with the complete existing archive routes."""
 import json
+
+from mazi.persistence import ArchiveBusy
 import os
 import threading
 from http.server import HTTPServer
@@ -32,6 +34,8 @@ def handler_for(store):
                 return self.json(404, {'error': 'Not found'})
             except Conflict as exc:
                 self.json(409, {'error': str(exc)})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (ValueError, TypeError):
@@ -86,6 +90,8 @@ def handler_for(store):
                 else:
                     return self.json(404, {'error': 'Not found'})
                 self.json(200, {'ok': True})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:

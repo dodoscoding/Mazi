@@ -1,5 +1,7 @@
 """Loopback-only Memory answers, inheriting import/review/discovery routes."""
 import json
+
+from mazi.persistence import ArchiveBusy
 import os
 import threading
 from http.server import HTTPServer
@@ -26,6 +28,8 @@ def handler_for(store):
                 if parts.path == '/api/answers/evidence':
                     return self.json(200, store.evidence(user, query['group'], query['asset']))
                 return self.json(404, {'error': 'Not found'})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (KeyError, TypeError, ValueError):
@@ -54,6 +58,8 @@ def handler_for(store):
                     store.answer_processing(user, body['group'], body['enabled'], body.get('group_wide', False))
                     return self.json(200, {'ok': True})
                 return self.json(404, {'error': 'Not found'})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:

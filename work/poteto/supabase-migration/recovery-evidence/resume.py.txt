@@ -1,0 +1,46 @@
+exec(open('/tmp/mazi_recovery_live.py').read().split("prefix='recovery-'")[0])
+import sqlite3
+root,prefix=Path('/tmp/mazi-recovery-fixture-location').read_text().splitlines()
+with sqlite3.connect(Path(root)/'mazi.sqlite3') as local:
+    alice=local.execute("SELECT id FROM users WHERE email='recovery-alice@example.test'").fetchone()[0]
+    ben=local.execute("SELECT id FROM users WHERE email='recovery-ben@example.test'").fetchone()[0]
+    group=local.execute('SELECT id FROM groups').fetchone()[0]
+    asset=local.execute('SELECT id FROM archive_assets').fetchone()[0]
+    completed=local.execute("SELECT id FROM import_runs WHERE namespace='synthetic'").fetchone()[0]
+    partial=local.execute("SELECT id FROM import_runs WHERE namespace='partial'").fetchone()[0]
+    resource=local.execute('SELECT id FROM source_resources').fetchone()[0]
+data=(Path(root)/'archives'/completed).read_bytes()
+raw=b'synthetic unsupported retained video'
+os.environ.update(config);os.environ['MAZI_BACKEND']='supabase'
+secret=config.get('MAZI_SUPABASE_STORAGE_KEY') or config['MAZI_SUPABASE_SECRET_KEY']
+db=PostgresConnection(config['MAZI_DATABASE_URL'],'mazi_migration_test')
+objects=HostedObjects(db,config['MAZI_SUPABASE_URL'],secret,'mazi-migration-test')
+objects.remote=PrefixRemote(objects.remote,prefix)
+result=migrate_archive(root,db,objects)
+retry=migrate_archive(root,db,objects)
+snapshot=Path(root)/'snapshot.json'
+backup=create_backup(db,objects,snapshot)
+first=capture_tables(db)
+db.close()
+target=PostgresConnection(config['MAZI_DATABASE_URL'],'mazi_recovery_test')
+restored_objects=HostedObjects(target,config['MAZI_SUPABASE_URL'],secret,'mazi-recovery-test')
+restored_objects.remote=PrefixRemote(restored_objects.remote,prefix)
+restored=restore_backup(target,restored_objects,snapshot,isolated=True)
+assert first==capture_tables(target)
+restore_retry=restore_backup(target,restored_objects,snapshot,isolated=True)
+target.close()
+os.environ['MAZI_DATABASE_SCHEMA']='mazi_recovery_test';os.environ['MAZI_STORAGE_BUCKET']='mazi-recovery-test'
+with tempfile.TemporaryDirectory() as scratch:
+    recovered=MemoryStore(scratch)
+    recovered.objects.remote=PrefixRemote(recovered.objects.remote,prefix)
+    assert recovered.db.execute('SELECT introduced_at FROM shared_profiles WHERE user_id=?',(alice,)).fetchone()[0] is not None
+    assert recovered.asset_bytes(ben,asset,True)==picture()
+    assert recovered.resource_bytes(ben,resource)==raw
+    assert recovered.report(alice,partial)['received']==100
+    recovered.write_chunk(alice,partial,100,data[100:]);recovered.finish_transfer(alice,partial)
+    recovered.remove_member(alice,group,ben)
+    assert recovered.db.execute('SELECT count(*) FROM members WHERE group_id=? AND user_id=?',(group,ben)).fetchone()[0]==0
+    recovered.close()
+evidence={'fixture':'synthetic JPEG, completed import, 100-byte partial archive, opaque video resource, shared sessions/introduction, consent epochs, photo capsule','migration':result,'exact_source_retry':retry,'backup':backup,'restore':restored,'restore_retry':restore_retry,'row_and_binary_equality':True,'introduction_preserved':True,'fresh_scratch_byte_reads':True,'partial_transfer_resumed':True,'departure_trigger_write':True,'schema':'mazi_migration_test -> mazi_recovery_test','buckets':'mazi-migration-test -> mazi-recovery-test','prefix':prefix}
+Path('work/poteto/supabase-migration/recovery-evidence/live.json').write_text(json.dumps(evidence,indent=2))
+print(json.dumps(evidence))

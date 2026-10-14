@@ -1,0 +1,22 @@
+-- Retain the provider event trigger while removing its public RPC capability.
+REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
+SET search_path TO mazi, pg_catalog;
+CREATE INDEX IF NOT EXISTS sessions_user_id_lookup ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS groups_creator_id_lookup ON groups(creator_id);
+CREATE INDEX IF NOT EXISTS members_user_id_lookup ON members(user_id);
+CREATE INDEX IF NOT EXISTS shared_policy_group_id_lookup ON shared_policy(group_id);
+CREATE INDEX IF NOT EXISTS invitations_group_id_lookup ON invitations(group_id);
+CREATE INDEX IF NOT EXISTS invitations_accepted_by_lookup ON invitations(accepted_by);
+CREATE INDEX IF NOT EXISTS media_owner_id_lookup ON media(owner_id);
+CREATE INDEX IF NOT EXISTS media_grants_recipient_id_lookup ON media_grants(recipient_id);
+CREATE INDEX IF NOT EXISTS memories_group_id_lookup ON memories(group_id);
+CREATE INDEX IF NOT EXISTS memories_owner_id_lookup ON memories(owner_id);
+CREATE INDEX IF NOT EXISTS memory_media_media_id_lookup ON memory_media(media_id);
+CREATE INDEX IF NOT EXISTS memory_grants_recipient_id_lookup ON memory_grants(recipient_id);
+CREATE INDEX IF NOT EXISTS upload_sessions_group_id_lookup ON upload_sessions(group_id);
+CREATE INDEX IF NOT EXISTS upload_sessions_owner_id_lookup ON upload_sessions(owner_id);
+CREATE INDEX IF NOT EXISTS upload_sessions_completed_media_id_lookup ON upload_sessions(completed_media_id);
+CREATE INDEX IF NOT EXISTS import_runs_group_id_lookup ON import_runs(group_id);
+CREATE INDEX IF NOT EXISTS archive_origins_owner_id_lookup ON archive_origins(owner_id);
+CREATE INDEX IF NOT EXISTS archive_origins_run_id_lookup ON archive_origins(run_id);

@@ -14,8 +14,7 @@ def atlas_view(store, user, group):
             offset = page['next_offset']
         hidden_assets = set()
         for row in store.db.execute(
-            'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h '
-            'ON h.event=e.id WHERE h.user=? AND e.group_id=?', (user, group)
+            'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
         ):
             hidden_assets.update(json.loads(row[0]))
         cards, grouped = [], set()

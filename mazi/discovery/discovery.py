@@ -4,6 +4,8 @@ SQLite write transactions serialize local retrieval with membership/consent
 mutations. Vectors are derivatives, never an authorization source.
 """
 import hashlib
+from mazi.persistence import initialize_schema
+
 import io
 import json
 import time
@@ -29,10 +31,10 @@ CREATE TABLE IF NOT EXISTS discovery_suppressions (
  PRIMARY KEY(person,asset)
 );
 CREATE TABLE IF NOT EXISTS discovery_hidden (
- user TEXT NOT NULL, asset TEXT NOT NULL, PRIMARY KEY(user,asset)
+ "user" TEXT NOT NULL, asset TEXT NOT NULL, PRIMARY KEY("user",asset)
 );
 CREATE TABLE IF NOT EXISTS discovery_hidden_events (
- user TEXT NOT NULL, event TEXT NOT NULL, PRIMARY KEY(user,event)
+ "user" TEXT NOT NULL, event TEXT NOT NULL, PRIMARY KEY("user",event)
 );
 CREATE TABLE IF NOT EXISTS discovery_processing (
  group_id TEXT NOT NULL, subject TEXT NOT NULL, enabled INTEGER NOT NULL,
@@ -49,16 +51,16 @@ CREATE TABLE IF NOT EXISTS discovery_measurements (
  seconds REAL NOT NULL DEFAULT 0
 );
 CREATE TRIGGER IF NOT EXISTS discovery_consent_insert AFTER INSERT ON discovery_processing BEGIN
- INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 CREATE TRIGGER IF NOT EXISTS discovery_consent_update AFTER UPDATE ON discovery_processing BEGIN
- INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 CREATE TRIGGER IF NOT EXISTS discovery_consent_delete AFTER DELETE ON discovery_processing BEGIN
- INSERT INTO discovery_generations VALUES(OLD.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(OLD.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 CREATE TRIGGER IF NOT EXISTS discovery_membership_epoch AFTER DELETE ON members BEGIN
- INSERT INTO discovery_generations VALUES(OLD.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(OLD.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 CREATE TRIGGER IF NOT EXISTS discovery_member_departure AFTER DELETE ON members BEGIN
  DELETE FROM discovery_tags WHERE person IN (SELECT id FROM discovery_people WHERE group_id=OLD.group_id) AND (actor=OLD.user_id OR person IN (SELECT id FROM discovery_people WHERE account=OLD.user_id));
@@ -84,12 +86,12 @@ def text(value, limit=200):
 class DiscoveryStore(SourceStore):
     def __init__(self, root, encoder=None):
         super().__init__(root)
-        self.db.executescript(SCHEMA)
+        initialize_schema(self.db, SCHEMA)
         self.encoder = encoder if encoder is not None else model.configured_encoder()
 
     def _visible_ids(self, user, group):
         ids = super()._visible_ids(user, group)
-        hidden = {r[0] for r in self.db.execute('SELECT asset FROM discovery_hidden WHERE user=?', (user,))}
+        hidden = {r[0] for r in self.db.execute('SELECT asset FROM discovery_hidden WHERE "user"=?', (user,))}
         return [asset for asset in ids if asset not in hidden]
 
     def gallery(self, user, group, offset=0, limit=30):
@@ -117,11 +119,7 @@ class DiscoveryStore(SourceStore):
         if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
             raise ValueError('Invalid filters')
         rows = [dict(row) for row in self.db.execute(
-            'SELECT p.*,o.asset_id FROM shared_places p JOIN archive_origins o ON o.id=p.origin '
-            'JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
-            'WHERE o.group_id=? AND o.withdrawn=0 AND NOT EXISTS '
-            '(SELECT 1 FROM discovery_hidden h WHERE h.user=? AND h.asset=o.asset_id) '
-            'ORDER BY p.day,p.origin LIMIT 1001', (group, user))]
+            'SELECT p.*,o.asset_id FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.group_id=? AND o.withdrawn=0 AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=o.asset_id) ORDER BY p.day,p.origin LIMIT 1001', (group, user))]
         if len(rows) > 1000:
             raise ValueError('Local map limit is 1,000 shared locations')
         visible = set(self._visible_ids(user, group))
@@ -139,15 +137,15 @@ class DiscoveryStore(SourceStore):
         with self.transaction():
             self._asset(user, asset)
             if enabled:
-                self.db.execute('INSERT OR IGNORE INTO discovery_hidden VALUES(?,?)', (user, asset))
+                self.db.execute('INSERT INTO discovery_hidden VALUES(?,?) ON CONFLICT("user",asset) DO NOTHING', (user, asset))
             else:
-                self.db.execute('DELETE FROM discovery_hidden WHERE user=? AND asset=?', (user, asset))
+                self.db.execute('DELETE FROM discovery_hidden WHERE "user"=? AND asset=?', (user, asset))
             self._audit(user, 'discovery.hide' if enabled else 'discovery.unhide', asset)
 
     def hidden(self, user, group):
         allowed = set(super()._visible_ids(user, group))
         hidden = []
-        for (asset,) in self.db.execute('SELECT asset FROM discovery_hidden WHERE user=?', (user,)):
+        for (asset,) in self.db.execute('SELECT asset FROM discovery_hidden WHERE "user"=?', (user,)):
             if asset not in allowed:
                 continue
             title = self.db.execute('SELECT title FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
@@ -209,7 +207,7 @@ class DiscoveryStore(SourceStore):
                 raise Denied('Verified subject is not a current member')
             if self.db.execute('SELECT 1 FROM discovery_suppressions WHERE person=? AND asset=?', (person, asset)).fetchone():
                 raise Conflict('Association suppressed; subject must opt back in')
-            self.db.execute('INSERT OR IGNORE INTO discovery_tags VALUES(?,?,?)', (person, asset, user))
+            self.db.execute('INSERT INTO discovery_tags VALUES(?,?,?) ON CONFLICT(person,asset) DO NOTHING', (person, asset, user))
             self._audit(user, 'person.tag.confirm', person + ':' + asset)
 
     def untag(self, user, person, asset):
@@ -228,7 +226,7 @@ class DiscoveryStore(SourceStore):
             media = self._asset(user, asset)
             if row['account'] != user or row['group_id'] != media['group_id']:
                 raise Denied('Verified subject required')
-            self.db.execute('INSERT OR IGNORE INTO discovery_suppressions VALUES(?,?,?)', (person, asset, user))
+            self.db.execute('INSERT INTO discovery_suppressions VALUES(?,?,?) ON CONFLICT(person,asset) DO NOTHING', (person, asset, user))
             self.db.execute('DELETE FROM discovery_tags WHERE person=? AND asset=?', (person, asset))
             self._audit(user, 'person.disassociate', person + ':' + asset)
 
@@ -238,7 +236,7 @@ class DiscoveryStore(SourceStore):
             if row['account'] != user or self._asset(user, asset)['group_id'] != row['group_id']:
                 raise Denied('Verified subject required')
             self.db.execute('DELETE FROM discovery_suppressions WHERE person=? AND asset=?', (person, asset))
-            self.db.execute('INSERT OR REPLACE INTO discovery_tags VALUES(?,?,?)', (person, asset, user))
+            self.db.execute('INSERT INTO discovery_tags VALUES(?,?,?) ON CONFLICT(person,asset) DO UPDATE SET actor=excluded.actor', (person, asset, user))
             self._audit(user, 'person.opt-in', person + ':' + asset)
 
     def suppressed(self, user, group):
@@ -269,9 +267,9 @@ class DiscoveryStore(SourceStore):
                 raise Denied('Use the verified member subject controls')
             if restore:
                 self.db.execute('DELETE FROM discovery_suppressions WHERE person=? AND asset=?', (person, asset))
-                self.db.execute('INSERT OR REPLACE INTO discovery_tags VALUES(?,?,?)', (person, asset, user))
+                self.db.execute('INSERT INTO discovery_tags VALUES(?,?,?) ON CONFLICT(person,asset) DO UPDATE SET actor=excluded.actor', (person, asset, user))
             else:
-                self.db.execute('INSERT OR REPLACE INTO discovery_suppressions VALUES(?,?,?)', (person, asset, 'private-review'))
+                self.db.execute('INSERT INTO discovery_suppressions VALUES(?,?,?) ON CONFLICT(person,asset) DO UPDATE SET subject=excluded.subject', (person, asset, 'private-review'))
                 self.db.execute('DELETE FROM discovery_tags WHERE person=? AND asset=?', (person, asset))
             self._audit(user, 'person.private-review.restore' if restore else 'person.private-review.remove', person + ':' + asset)
 
@@ -283,17 +281,17 @@ class DiscoveryStore(SourceStore):
             if event not in {e['id'] for e in events}:
                 raise Denied('Memory unavailable')
             if enabled:
-                self.db.execute('INSERT OR IGNORE INTO discovery_hidden_events VALUES(?,?)', (user, event))
+                self.db.execute('INSERT INTO discovery_hidden_events VALUES(?,?) ON CONFLICT("user",event) DO NOTHING', (user, event))
             else:
-                self.db.execute('DELETE FROM discovery_hidden_events WHERE user=? AND event=?', (user, event))
+                self.db.execute('DELETE FROM discovery_hidden_events WHERE "user"=? AND event=?', (user, event))
             self._audit(user, 'discovery.memory.visibility', event)
 
     def reviewed_events(self, user, group):
-        hidden = {r[0] for r in self.db.execute('SELECT event FROM discovery_hidden_events WHERE user=?', (user,))}
+        hidden = {r[0] for r in self.db.execute('SELECT event FROM discovery_hidden_events WHERE "user"=?', (user,))}
         return [e for e in super().reviewed_events(user, group) if e['id'] not in hidden]
 
     def hidden_events(self, user, group):
-        hidden = {r[0] for r in self.db.execute('SELECT event FROM discovery_hidden_events WHERE user=?', (user,))}
+        hidden = {r[0] for r in self.db.execute('SELECT event FROM discovery_hidden_events WHERE "user"=?', (user,))}
         return [dict(id=e['id'], title=e['title']) for e in super().reviewed_events(user, group) if e['id'] in hidden]
 
     def _enabled(self, group, subject):
@@ -353,8 +351,8 @@ class DiscoveryStore(SourceStore):
             if len(vector) != self.encoder.dimensions[kind]:
                 raise ValueError('Unexpected vector dimensions')
             model.cosine(vector, vector)
-            self.db.execute('INSERT OR REPLACE INTO discovery_vectors VALUES(?,?,?,?,?,?)', (doc['id'], kind, self.encoder.version, len(vector), doc['fingerprint'], json.dumps(vector)))
-        self.db.execute('INSERT INTO discovery_measurements VALUES(?,?,?) ON CONFLICT(group_id) DO UPDATE SET embeddings=embeddings+excluded.embeddings,seconds=seconds+excluded.seconds', (group, 2, seconds))
+            self.db.execute('INSERT INTO discovery_vectors VALUES(?,?,?,?,?,?) ON CONFLICT(asset,modality) DO UPDATE SET version=excluded.version,dimensions=excluded.dimensions,fingerprint=excluded.fingerprint,vector=excluded.vector', (doc['id'], kind, self.encoder.version, len(vector), doc['fingerprint'], json.dumps(vector)))
+        self.db.execute('INSERT INTO discovery_measurements VALUES(?,?,?) ON CONFLICT(group_id) DO UPDATE SET embeddings=discovery_measurements.embeddings+excluded.embeddings,seconds=discovery_measurements.seconds+excluded.seconds', (group, 2, seconds))
 
     def _vectors(self, user, group, doc):
         cached = self._cached_vectors(doc)

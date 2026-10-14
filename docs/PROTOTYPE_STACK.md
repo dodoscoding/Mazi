@@ -1,12 +1,12 @@
-# Local app architecture
+# Atlas app architecture
 
-Mazi combines the Atlas interface and the complete local archive engine in one app as of 14 October 2026. This supersedes the separate Atlas and numbered phase runtimes. Production architecture and acceptance in D01 remain separate.
+Mazi combines the Atlas interface and the complete local archive engine in one app as of 14 October 2026. This supersedes the separate Atlas and numbered phase runtimes. D18 adds hosted PostgreSQL/private Storage to this runtime; public production deployment and milestone acceptance remain separate.
 
 ## Runtime
 
 `npm run dev` supervises a Vite interface and a loopback Python API/worker. Vite forwards `/api`, `/health` and `/land.geojson` without rewriting the browser Host, preserving Origin validation. The browser uses one origin and one HttpOnly session cookie. `npm start` builds the interface and serves both assets and APIs from Python.
 
-`python -m mazi` is the backend entry point. The app stores data in `.mazi-imports`, with the existing SQLite schema and original/preview file keys. The background worker uses a separate connection. No database conversion or automatic sample seeding occurs. The historical `.mazi-pilot` archive remains separate.
+`python -m mazi` is the backend entry point. With ignored `.env.supabase` present, normal startup selects hosted PostgreSQL/private Storage; `--local` or `MAZI_BACKEND=local` retains SQLite and file keys in `.mazi-imports`. Hosted scratch defaults to `.mazi-hosted`; it is separate from the local source. The background worker uses a separate connection with the same configuration. Startup never transfers an archive or seeds samples. The historical `.mazi-pilot` archive remains separate. [Hosted setup](SUPABASE_SETUP.md) documents credentials, transfer and recovery.
 
 ## Ownership
 
@@ -15,6 +15,7 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 | `src/App.tsx`, `src/Atlas.tsx` | Shared navigation, Atlas selection, memory detail, timeline and renderer recovery. |
 | `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
 | `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
+| `mazi/persistence.py`, `mazi/storage.py` | Backend selection, compatible rows/binding, schema-scoped transaction locks, verified private bytes and deletion receipts. |
 | `mazi/identity/` | Shared profiles, transactional circle/code setup, sessions and retained legacy domain contracts. |
 | `mazi/imports/`, `mazi/archive/` | Resumable ingestion, provenance, correction, duplicates and accepted memories. |
 | `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
@@ -36,4 +37,4 @@ The server builds cards from authorized photographs and fully visible approved e
 
 Imports support the existing synthetic archive formats and JPEG/PNG validation. People use manual associations and confirmed identities. Related search has an offline baseline and optional local CLIP model. Answers are extractive and preserve abstention, consent and live evidence checks. Capsules use server UTC unlock. Video remains a silent, bounded MJPEG AVI download. Notifications remain opt-in and in-app.
 
-These integrations do not establish production authentication, hosted storage, provider compatibility, physical-device performance or production milestone acceptance. See [the consolidation evidence](../work/poteto/unified-app/VERIFICATION.md) and [README](../README.md) for commands.
+D18 synthetic checks establish hosted database/private-byte behavior for this application, including restart and recovery. They do not establish public production deployment, representative exporter compatibility, physical-device performance or production milestone acceptance. The Free project cannot promise the planned 20 GiB allocation; arbitrary orphan collection remains deferred. See [the consolidation evidence](../work/poteto/unified-app/VERIFICATION.md) and [README](../README.md) for commands.

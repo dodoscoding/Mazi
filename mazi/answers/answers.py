@@ -4,6 +4,8 @@ Imported text is searchable data only. Output consists of attributed metadata,
 not inferred historical facts. Each processing boundary re-reads live evidence.
 """
 import hashlib
+from mazi.persistence import initialize_schema
+
 import json
 import re
 import time
@@ -18,17 +20,17 @@ CREATE TABLE IF NOT EXISTS answer_processing (
  group_id TEXT NOT NULL, subject TEXT NOT NULL, enabled INTEGER NOT NULL,
  PRIMARY KEY(group_id,subject));
 CREATE TABLE IF NOT EXISTS answer_usage (
- group_id TEXT NOT NULL, user TEXT NOT NULL, day TEXT NOT NULL,
+ group_id TEXT NOT NULL, "user" TEXT NOT NULL, day TEXT NOT NULL,
  requests INTEGER NOT NULL DEFAULT 0, seconds REAL NOT NULL DEFAULT 0,
- PRIMARY KEY(group_id,user,day));
+ PRIMARY KEY(group_id,"user",day));
 CREATE TRIGGER IF NOT EXISTS answer_member_departure AFTER DELETE ON members BEGIN
  DELETE FROM answer_processing WHERE group_id=OLD.group_id AND subject=OLD.user_id;
 END;
 CREATE TRIGGER IF NOT EXISTS answer_consent_insert AFTER INSERT ON answer_processing BEGIN
- INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 CREATE TRIGGER IF NOT EXISTS answer_consent_update AFTER UPDATE ON answer_processing BEGIN
- INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=revision+1;
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 '''
 COVERAGE = ('This archive is incomplete. Results cover only your currently visible, processing-consented '
@@ -41,7 +43,7 @@ class AnswerStore(DiscoveryStore):
 
     def __init__(self, root, encoder=None):
         super().__init__(root, encoder)
-        self.db.executescript(SCHEMA)
+        initialize_schema(self.db, SCHEMA)
 
     def _answer_enabled(self, group, subject):
         row = self.db.execute('SELECT enabled FROM answer_processing WHERE group_id=? AND subject=?', (group, subject)).fetchone()
@@ -57,7 +59,7 @@ class AnswerStore(DiscoveryStore):
 
     def _usage(self, user, group):
         day = datetime.now(timezone.utc).date().isoformat()
-        row = self.db.execute('SELECT requests,seconds FROM answer_usage WHERE group_id=? AND user=? AND day=?', (group, user, day)).fetchone()
+        row = self.db.execute('SELECT requests,seconds FROM answer_usage WHERE group_id=? AND "user"=? AND day=?', (group, user, day)).fetchone()
         return dict(day_utc=day, requests=row['requests'] if row else 0, seconds=round(row['seconds'], 3) if row else 0,
                     daily_limit=self.daily_limit, provider_cost_eur=0, provider='none; local extractive engine', infrastructure_cost='not measured')
 
@@ -127,7 +129,7 @@ class AnswerStore(DiscoveryStore):
             usage = self._usage(user, group)
             if usage['requests'] >= self.daily_limit:
                 raise Conflict('Daily Memory answer limit reached; resets at 00:00 UTC')
-            self.db.execute('INSERT INTO answer_usage(group_id,user,day,requests) VALUES(?,?,?,1) ON CONFLICT(group_id,user,day) DO UPDATE SET requests=requests+1', (group, user, usage['day_utc']))
+            self.db.execute('INSERT INTO answer_usage(group_id,"user",day,requests) VALUES(?,?,?,1) ON CONFLICT(group_id,"user",day) DO UPDATE SET requests=answer_usage.requests+1', (group, user, usage['day_utc']))
             rows, digest = self._snapshot(user, group)
         self._checkpoint('dispatch')
         with self.transaction():
@@ -169,7 +171,7 @@ class AnswerStore(DiscoveryStore):
         with self.transaction():
             if self._snapshot(user, group)[1] != digest:
                 raise Conflict('Archive or consent changed; ask again')
-            self.db.execute('UPDATE answer_usage SET seconds=seconds+? WHERE group_id=? AND user=? AND day=?', (time.monotonic() - started, group, user, usage['day_utc']))
+            self.db.execute('UPDATE answer_usage SET seconds=seconds+? WHERE group_id=? AND "user"=? AND day=?', (time.monotonic() - started, group, user, usage['day_utc']))
             return dict(status='supported' if claims else 'abstained', claims=claims, evidence=matched,
                         message='Matching archive records, with attributed metadata.' if claims else 'I do not have enough eligible archive evidence to answer that.',
                         coverage=COVERAGE, uncertainty=uncertainty, matching_records=total, shown=len(matched), usage=self._usage(user, group))

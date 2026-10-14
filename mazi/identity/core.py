@@ -6,6 +6,8 @@ the same checks. The pilot is not a substitute for database RLS in production.
 
 from __future__ import annotations
 
+from mazi.persistence import initialize_schema
+
 import hashlib
 import hmac
 import io
@@ -140,10 +142,13 @@ class Store:
         os.chmod(self.originals, 0o700)
         os.chmod(self.previews, 0o700)
         os.chmod(self.uploads, 0o700)
-        self.db = sqlite3.connect(self.root / "mazi.sqlite3", check_same_thread=False)
-        self.db.row_factory = sqlite3.Row
-        self.db.executescript(SCHEMA)
-        os.chmod(self.root / "mazi.sqlite3", 0o600)
+        from mazi.persistence import open_database
+        self.db = open_database(self.root)
+        initialize_schema(self.db, SCHEMA)
+        from mazi.storage import open_objects
+        self.objects = open_objects(self.root, self.db)
+        if not getattr(self.db, "hosted", False):
+            os.chmod(self.root / "mazi.sqlite3", 0o600)
 
     @staticmethod
     def _name(name):
@@ -207,7 +212,7 @@ class Store:
             if existing and not rotate:
                 return None
             code = secrets.token_urlsafe(24)
-            self.db.execute("INSERT OR REPLACE INTO shared_policy VALUES(1,?,?)", (group_id, _hash_token(code)))
+            self.db.execute('INSERT INTO shared_policy VALUES(1,?,?) ON CONFLICT(singleton) DO UPDATE SET group_id=excluded.group_id,code_digest=excluded.code_digest', (group_id, _hash_token(code)))
             return code
 
     def enter_shared(self, *, code, name):
@@ -364,7 +369,7 @@ class Store:
                 (user, int(time.time()), row["id"])).rowcount
             if updated != 1:
                 raise Denied("Invitation already used")
-            self.db.execute("INSERT OR IGNORE INTO members VALUES(?,?,?)",
+            self.db.execute('INSERT INTO members VALUES(?,?,?) ON CONFLICT(group_id,user_id) DO NOTHING',
                             (row["group_id"], user, "member"))
             self._audit(user, "invitation.accept", row["id"])
         return row["group_id"]
@@ -405,8 +410,6 @@ class Store:
                             "VALUES(?,?,?,?,?,?,?,?,?)",
                             (upload, group, user, filename, caption[:2000], capture_date, size, sha256, int(time.time())))
             self._audit(user, "upload.begin", upload)
-        path = self.uploads / upload
-        path.touch(mode=0o600)
         return upload
 
     def _upload(self, user: str, upload: str):
@@ -422,25 +425,22 @@ class Store:
                 "media_id": row["completed_media_id"]}
 
     def upload_chunk(self, user: str, upload: str, offset: int, data: bytes) -> int:
-        row = self._upload(user, upload)
-        if row["completed_media_id"] or not isinstance(offset, int) or offset < 0 or not data or len(data) > 512 * 1024:
-            raise Denied("Invalid chunk")
-        if offset > row["received"] or offset + len(data) > row["expected_size"]:
-            raise Conflict("Upload offset mismatch")
-        path = self.uploads / upload
-        with path.open("r+b") as file:
-            if offset < row["received"]:
-                file.seek(offset)
-                if file.read(len(data)) != data or offset + len(data) > row["received"]:
-                    raise Conflict("Upload chunk differs from accepted bytes")
-                return row["received"]
-            file.seek(offset)
-            file.write(data)
-            file.flush()
-            os.fsync(file.fileno())
         with self.db:
-            self.db.execute("UPDATE upload_sessions SET received=? WHERE id=?", (offset + len(data), upload))
-        return offset + len(data)
+            row = self._upload(user, upload)
+            if row["completed_media_id"] or type(offset) is not int or offset < 0 or not data or len(data) > 512 * 1024:
+                raise Denied("Invalid chunk")
+            if offset > row["received"] or offset + len(data) > row["expected_size"]:
+                raise Conflict("Upload offset mismatch")
+            received = self._append_object("uploads", upload, offset, data)
+            self.db.execute("UPDATE upload_sessions SET received=? WHERE id=?", (received, upload))
+            return received
+
+    def _append_object(self, area, key, offset, data):
+        from mazi.storage import StorageConflict
+        try:
+            return self.objects.append(area, key, offset, data)
+        except StorageConflict as error:
+            raise Conflict(str(error)) from error
 
     def finish_upload(self, user: str, upload: str) -> str:
         row = self._upload(user, upload)
@@ -448,7 +448,7 @@ class Store:
             return row["completed_media_id"]
         if row["received"] != row["expected_size"]:
             raise Conflict("Upload incomplete")
-        data = (self.uploads / upload).read_bytes()
+        data = self.objects.read("uploads", upload)
         if hashlib.sha256(data).hexdigest() != row["sha256"]:
             raise Conflict("Upload checksum mismatch")
         media = self.upload_image(user, row["group_id"], row["filename"], data,
@@ -456,7 +456,8 @@ class Store:
         with self.db:
             self.db.execute("UPDATE upload_sessions SET completed_media_id=? WHERE id=?", (media, upload))
             self._audit(user, "upload.finish", upload)
-        (self.uploads / upload).unlink(missing_ok=True)
+        with self.db:
+            self.objects.remove("uploads", upload)
         return media
 
     def upload_image(self, user: str, group: str, filename: str, data: bytes,
@@ -483,10 +484,9 @@ class Store:
         except (UnidentifiedImageError, OSError, ValueError) as exc:
             raise Denied("Invalid image") from exc
         media = _id()
-        (self.originals / media).write_bytes(data)
-        (self.previews / media).write_bytes(preview.getvalue())
-        os.chmod(self.originals / media, 0o600)
-        os.chmod(self.previews / media, 0o600)
+        with self.db:
+            self.objects.retain("originals", media, data)
+            self.objects.retain("previews", media, preview.getvalue())
         try:
             with self.db:
                 self.db.execute(
@@ -499,8 +499,9 @@ class Store:
                 self.db.execute("INSERT INTO media_origins VALUES(?,?,?,?,?)",
                                 (_id(), media, "manual", media, None))
         except Exception:
-            (self.originals / media).unlink(missing_ok=True)
-            (self.previews / media).unlink(missing_ok=True)
+            with self.db:
+                self.objects.remove("originals", media)
+                self.objects.remove("previews", media)
             raise
         return media
 
@@ -558,8 +559,9 @@ class Store:
             self.db.execute("DELETE FROM media_grants WHERE media_id=?", (media,))
             self.db.execute("UPDATE media SET status='deleted',policy_version=policy_version+1 WHERE id=?", (media,))
             self._audit(user, "media.delete", media)
-        (self.originals / media).unlink(missing_ok=True)
-        (self.previews / media).unlink(missing_ok=True)
+        with self.db:
+            self.objects.remove("originals", media)
+            self.objects.remove("previews", media)
 
     def media_view(self, user: str, media: str) -> dict:
         row = self._media(user, media)
@@ -590,7 +592,7 @@ class Store:
             if row["status"] != "published" or not self._grant_visible(
                     "media_grants", "media_id", media, component, user):
                 raise Denied("Media unavailable")
-        return ((self.originals if original else self.previews) / media).read_bytes()
+        return self.objects.read("originals" if original else "previews", media)
 
     def create_memory(self, user: str, group: str, title: str, media_ids: list[str]) -> str:
         self._member(user, group)

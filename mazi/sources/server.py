@@ -1,5 +1,7 @@
 """Local Map and Sources UI; extends the existing archive, never binds publicly."""
 import base64
+
+from mazi.persistence import ArchiveBusy
 import json
 import os
 import threading
@@ -33,6 +35,8 @@ def handler_for(store):
                 if parts.path == '/api/sources/original':
                     return self.send(200, store.resource_bytes(user, query.get('id', [''])[0]), 'application/octet-stream')
                 return self.json(404, {'error': 'Not found'})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (ValueError, TypeError):
@@ -79,6 +83,8 @@ def handler_for(store):
                 else:
                     return self.json(404, {'error': 'Not found'})
                 self.json(200, {'ok': True})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:

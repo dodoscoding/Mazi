@@ -560,7 +560,7 @@ export default function App() {
         <span>
           {demo
             ? "Sample Atlas · Fictional memories & AI-generated photographs"
-            : "Your shared archive · Stored on this computer"}
+            : "Your shared archive · Private to your circle"}
         </span>
         <a
           className="mobile-imports"

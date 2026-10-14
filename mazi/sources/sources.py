@@ -1,6 +1,8 @@
 """Foreground source transfers sharing the local archive's authorization boundary."""
 from __future__ import annotations
 
+from mazi.persistence import initialize_schema, insertion_order
+
 import io
 import hashlib
 import json
@@ -59,7 +61,7 @@ def text(value, limit=200):
 class SourceStore(ReviewStore):
     def __init__(self, root):
         super().__init__(root)
-        self.db.executescript(SCHEMA)
+        initialize_schema(self.db, SCHEMA)
         self.discord_authorize = None
         self.discord_sources = set()
         self.resource_dir = self.root / 'source-resources'
@@ -108,7 +110,7 @@ class SourceStore(ReviewStore):
     def sources(self, user, group):
         self._member(user, group)
         return [{**dict(row), 'scope': json.loads(row['scope'])} for row in self.db.execute(
-            'SELECT * FROM continuous_sources WHERE owner_id=? AND group_id=? ORDER BY rowid', (user, group))]
+            'SELECT * FROM continuous_sources WHERE owner_id=? AND group_id=? ORDER BY ' + insertion_order(self.db, '') + '', (user, group))]
 
     def set_source(self, user, connection, enabled, permission):
         if type(enabled) is not bool or permission not in ('unknown', 'authorized', 'limited', 'denied', 'revoked'):
@@ -202,20 +204,9 @@ class SourceStore(ReviewStore):
             row, _ = self._resource(user, resource, True)
             if row['state'] != 'UPLOADING' or offset > row['received'] or offset + len(data) > row['size']:
                 raise Conflict('Transfer state or offset changed')
-            path = self.resource_dir / resource
-            if not path.exists():
-                path.touch(mode=0o600)
-            with path.open('r+b') as stream:
-                stream.seek(offset)
-                if offset < row['received']:
-                    if offset + len(data) > row['received'] or stream.read(len(data)) != data:
-                        raise Conflict('Repeated chunk differs')
-                    return row['received']
-                stream.write(data)
-                stream.flush()
-                os.fsync(stream.fileno())
-            self.db.execute('UPDATE source_resources SET received=? WHERE id=?', (offset + len(data), resource))
-            return offset + len(data)
+            received = self._append_object("source-resources", resource, offset, data)
+            self.db.execute('UPDATE source_resources SET received=? WHERE id=?', (received, resource))
+            return received
 
     def finish_resource(self, user, resource):
         with self.transaction():
@@ -224,9 +215,10 @@ class SourceStore(ReviewStore):
                 return
             if row['received'] != row['size']:
                 raise Conflict('Transfer incomplete')
-            data = (self.resource_dir / resource).read_bytes()
+            data = self.objects.read("source-resources", resource)
             if hashlib.sha256(data).hexdigest() != row['sha256']:
                 self.db.execute('UPDATE source_resources SET received=0 WHERE id=?', (resource,))
+                self.objects.reset('source-resources', resource)
                 self.db.commit()
                 raise Conflict('Checksum mismatch; restart transfer')
             metadata = json.loads(row['metadata'])
@@ -238,10 +230,10 @@ class SourceStore(ReviewStore):
                 self._audit(user, 'source.retained_without_preview', resource)
                 return
             blob = 'resource' + suffix
-            target = self.archive_dir / resource
-            with zipfile.ZipFile(target, 'w', compression=zipfile.ZIP_STORED) as archive:
+            output = io.BytesIO()
+            with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_STORED) as archive:
                 archive.writestr(blob, data)
-            os.chmod(target, 0o600)
+            self.objects.retain("archives", resource, output.getvalue())
             item = NormalizedImportItem(source['kind'], source['id'], digest([source['id'], row['identity']]),
                 metadata['component'], 'source:#' + metadata['item'], source_item_id=metadata['item'],
                 local_blob_reference=blob, original_filename=metadata['filename'], declared_media_type=mime,
@@ -297,14 +289,15 @@ class SourceStore(ReviewStore):
         with self.transaction():
             self._source(user, connection, True)
             key = digest([connection, metadata])
-            self.db.execute("INSERT OR REPLACE INTO source_outcomes VALUES(?,?,?,?)", (key, connection, json.dumps(metadata), reason))
+            self.db.execute('DELETE FROM source_outcomes WHERE id=?', (key,))
+            self.db.execute('INSERT INTO source_outcomes(id,connection,metadata,reason) VALUES(?,?,?,?)', (key, connection, json.dumps(metadata), reason))
 
     def resources(self, user, connection):
         self._source(user, connection)
         transfers = [{**dict(row), 'metadata': json.loads(row['metadata']), 'state': row['outcome'] or row['state']}
-                for row in self.db.execute('SELECT r.*,i.outcome,i.reason,i.asset_id FROM source_resources r LEFT JOIN import_items i ON i.id=r.id WHERE connection=? ORDER BY r.rowid LIMIT 1000', (connection,))]
+                for row in self.db.execute('SELECT r.*,i.outcome,i.reason,i.asset_id FROM source_resources r LEFT JOIN import_items i ON i.id=r.id WHERE connection=? ORDER BY ' + insertion_order(self.db, 'r') + ' LIMIT 1000', (connection,))]
         rejected = [{**dict(row), 'metadata': json.loads(row['metadata']), 'state': row['reason'], 'withdrawn': True, 'size': 0, 'received': 0}
-                    for row in self.db.execute('SELECT * FROM source_outcomes WHERE connection=? ORDER BY rowid LIMIT 1000', (connection,))]
+                    for row in self.db.execute('SELECT * FROM source_outcomes WHERE connection=? ORDER BY ' + insertion_order(self.db, '') + ' LIMIT 1000', (connection,))]
         return (transfers + rejected)[:1000]
 
     def resource_bytes(self, user, resource):
@@ -317,7 +310,7 @@ class SourceStore(ReviewStore):
         self._member(user, row['group_id'])
         self._member(row['owner_id'], row['group_id'])
         if row['state'] == 'RETAINED_NO_PREVIEW':
-            return (self.resource_dir / resource).read_bytes()
+            return self.objects.read("source-resources", resource)
         origin = self.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=? AND withdrawn=0', (resource,)).fetchone()
         if not origin:
             raise Denied('Resource unavailable')

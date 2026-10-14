@@ -2,7 +2,7 @@
 
 The user confirmed a small team targeting production launch on 2 October 2026. M0 records owner preferences and delegated engineering decisions for the narrowed manual pilot on 5 October 2026. The local M0 access experiment passes; production enforcement remains M1 work. Later choices remain proposals unless marked as confirmed decisions.
 
-The existing [project plan](../PROJECT_PLAN.md), added upstream in eb81cc9, was discovered during PR preparation. It specifies Inngest, Tailwind CSS, MapLibre, earlier manual People tagging, and a different navigation arrangement. D13-D15 supersede the earlier navigation, sharing, current platform scope, and visual brief as confirmed on 3 October 2026. M0 selected database jobs with leases over Inngest, plain CSS over Tailwind, and deferred MapLibre to M3. Next.js production integration starts in M1. Its four broad stages correspond to M1, M2, M3 through M5, and M6 through M7 here.
+The existing [project plan](../PROJECT_PLAN.md), added upstream in eb81cc9, was discovered during PR preparation. It specifies Inngest, Tailwind CSS, MapLibre, earlier manual People tagging, and a different navigation arrangement. D13-D15 supersede the earlier navigation, sharing, current platform scope, and visual brief as confirmed on 3 October 2026. M0 selected database jobs with leases over Inngest, plain CSS over Tailwind, and deferred MapLibre to M3. D18 retains the current React/Python application for the authorized hosted archive; the earlier Next.js/Supabase Auth production proposal requires a separate decision before implementation. Its four broad stages correspond to M1, M2, M3 through M5, and M6 through M7 here.
 
 ## Decision register
 
@@ -52,6 +52,12 @@ The product owner approved the delivered prototype and requested saving the sess
 A valid remembered browser session opens the Atlas directly. A new profile sees the short introduction before the Atlas. Completion is stored with the profile and survives browser changes. About makes the introduction available again. Signed-out visitors see only the login screen, including when they follow a deep link or request sample mode. Existing Atlas, Timeline, Search, My Imports, and Our circle pages remain in scope without a broader redesign.
 
 Profile IDs distinguish stored accounts, not real people. Name uniqueness and remembered sessions reduce accidental duplicates but cannot prevent one person choosing several names. Browser data removal, expiry, and logout end remembered access. Existing archive IDs and contribution ownership must survive this change. Production deployment and milestone acceptance remain separate.
+
+## Hosted archive decision, 14 October 2026
+
+**D18: Hosted PostgreSQL and private Storage for the current app.** The owner requested creation/configuration of Mazi in Altan Esmer's Frankfurt Supabase organization and migration of the existing application. Retain the React Atlas shell, Python domain methods, D17 shared-code identities and sessions. Move durable rows to a private PostgreSQL schema through a restricted server role and retained bytes to a private bucket through server authorization. Keep explicit SQLite/file mode and the unchanged local source. Normal startup selects hosted mode only from the ignored server configuration; archive transfer and database-plus-object recovery remain explicit operations.
+
+This revises D01 for the current runtime: Next.js and Supabase Auth are not prerequisites for this hosted increment and must not silently replace the accepted D17 entry contract. A public production deployment, real-device acceptance, and M0-M7 milestones remain separate gates. The project stays on Free with no paid upgrade; its provider capacity is not the accepted 20 GiB pilot allocation. All 44 domain tables and 12 privacy triggers are ported, with RLS on the private tables and durable object receipts/deletion work. Full orphan collection awaits safe maintenance isolation. [Setup and recovery](SUPABASE_SETUP.md), [runtime ownership](PROTOTYPE_STACK.md), and [synthetic evidence](../work/poteto/supabase-migration/database-implementation.md) record the resulting boundary. Actual archive transfer requires its own recorded result.
 
 ## Open choices
 

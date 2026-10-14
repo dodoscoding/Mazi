@@ -1,0 +1,38 @@
+{
+  "fixture": "synthetic JPEG, completed import, 100-byte partial archive, opaque video resource, shared sessions/introduction, consent epochs, photo capsule",
+  "migration": {
+    "migrated": true,
+    "tables": 44,
+    "files": 5
+  },
+  "exact_source_retry": {
+    "migrated": true,
+    "already_complete": true,
+    "tables": 44,
+    "files": 5
+  },
+  "backup": {
+    "tables": 47,
+    "objects": 6,
+    "verified": true
+  },
+  "restore": {
+    "restored": true,
+    "tables": 47,
+    "objects": 6
+  },
+  "restore_retry": {
+    "restored": true,
+    "already_complete": true,
+    "tables": 47,
+    "objects": 6
+  },
+  "row_and_binary_equality": true,
+  "introduction_preserved": true,
+  "fresh_scratch_byte_reads": true,
+  "partial_transfer_resumed": true,
+  "departure_trigger_write": true,
+  "schema": "mazi_migration_test -> mazi_recovery_test",
+  "buckets": "mazi-migration-test -> mazi-recovery-test",
+  "prefix": "recovery-c61c638bf70d416299314953e0b96709"
+}

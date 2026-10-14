@@ -1,10 +1,12 @@
-"""Durable local import queue and authorized archive reads.
+"""Durable import queue and authorized archive reads.
 
-SQLite transactions are the local boundary; this is not Supabase RLS evidence.
+The configured connection serializes availability and lease decisions.
 Workers use separate connections and fenced, expiring leases. Object writes are
 immutable and precede the availability transaction so crashed work can resume.
 """
 from __future__ import annotations
+
+from mazi.persistence import initialize_schema, insertion_order
 
 import hashlib
 import io
@@ -70,9 +72,10 @@ CREATE INDEX IF NOT EXISTS archive_asset_origins ON archive_origins(asset_id,wit
 class ImportStore(Store):
     def __init__(self, root):
         super().__init__(root)
-        self.db.execute("PRAGMA journal_mode=WAL")
-        self.db.execute("PRAGMA busy_timeout=5000")
-        self.db.executescript(SCHEMA)
+        if not getattr(self.db, "hosted", False):
+            self.db.execute("PRAGMA journal_mode=WAL")
+            self.db.execute("PRAGMA busy_timeout=5000")
+        initialize_schema(self.db, SCHEMA)
         self.archive_dir = self.root / "archives"
         self.object_dir = self.root / "archive-objects"
         for directory in (self.archive_dir, self.object_dir):
@@ -131,20 +134,9 @@ class ImportStore(Store):
             row = self._run(user, run)
             if row["state"] != "UPLOADING" or offset > row["received"] or offset + len(data) > row["size"]:
                 raise Conflict("Upload offset or state changed")
-            path = self.archive_dir / run
-            if not path.exists():
-                path.touch(mode=0o600)
-            with path.open("r+b") as file:
-                file.seek(offset)
-                if offset < row["received"]:
-                    if offset + len(data) > row["received"] or file.read(len(data)) != data:
-                        raise Conflict("Repeated chunk differs")
-                    return row["received"]
-                file.write(data)
-                file.flush()
-                os.fsync(file.fileno())
-            self.db.execute("UPDATE import_runs SET received=? WHERE id=?", (offset + len(data), run))
-            return offset + len(data)
+            received = self._append_object("archives", run, offset, data)
+            self.db.execute("UPDATE import_runs SET received=? WHERE id=?", (received, run))
+            return received
 
     def finish_transfer(self, user, run):
         with self.transaction():
@@ -153,13 +145,12 @@ class ImportStore(Store):
                 return
             if row["received"] != row["size"]:
                 raise Conflict("Upload incomplete")
-            with (self.archive_dir / run).open("rb") as source:
-                actual = hashlib.file_digest(source, "sha256").hexdigest()
+            actual = hashlib.sha256(self.objects.read("archives", run)).hexdigest()
             if actual != row["manifest"]:
                 # Allow the same upload to restart after corrupt bytes.
                 self.db.execute("UPDATE import_runs SET received=0 WHERE id=?", (run,))
+                self.objects.reset("archives", run)
                 self.db.commit()
-                (self.archive_dir / run).unlink(missing_ok=True)
                 raise Conflict("Archive checksum mismatch; transfer must restart")
             self.db.execute("UPDATE import_runs SET state='SCANNING' WHERE id=?", (run,))
 
@@ -170,7 +161,7 @@ class ImportStore(Store):
         pending = []
         exhausted = True
         try:
-            with Archive(self.archive_dir / run) as archive:
+            with self.objects.materialize("archives", run) as path, Archive(path) as archive:
                 for index, item in enumerate(inventory(archive, row["source"], row["namespace"], json.loads(row["options"]))):
                     if index < row["checkpoint"]:
                         continue
@@ -244,27 +235,18 @@ class ImportStore(Store):
         return row
 
     def _write_object(self, key, data):
-        path = self.object_dir / key
-        if path.exists():
-            if hashlib.sha256(path.read_bytes()).digest() != hashlib.sha256(data).digest():
-                raise Conflict("Retained object checksum conflict")
-            return
-        temp = self.object_dir / ("tmp-" + secrets.token_hex(16))
+        from mazi.storage import StorageConflict
         try:
-            with temp.open("xb") as target:
-                os.chmod(temp, 0o600)
-                target.write(data)
-                target.flush()
-                os.fsync(target.fileno())
-            os.replace(temp, path)
-        finally:
-            temp.unlink(missing_ok=True)
+            with self.transaction():
+                self.objects.retain("archive-objects", key, data)
+        except StorageConflict as error:
+            raise Conflict(str(error)) from error
 
     def prepare(self, job):
         from PIL import Image, ImageOps, UnidentifiedImageError
         payload = json.loads(job["payload"])
         try:
-            with Archive(self.archive_dir / job["run_id"]) as archive:
+            with self.objects.materialize("archives", job["run_id"]) as path, Archive(path) as archive:
                 data = archive.read(payload["local_blob_reference"], MAX_FILE)
             with Image.open(io.BytesIO(data)) as image:
                 if image.format not in ("JPEG", "PNG"):
@@ -360,12 +342,12 @@ class ImportStore(Store):
                         outcome, reason = "FAILED", "CONTRIBUTOR_STORAGE_LIMIT"
                     else:
                         asset = str(uuid.uuid4())
-                        self.db.execute("INSERT OR IGNORE INTO archive_assets VALUES(?,?,?,?,?,?,?,?,?)",
+                        self.db.execute('INSERT INTO archive_assets(id,group_id,sha256,original_key,preview_key,mime,size,width,height) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(group_id,sha256) DO NOTHING',
                                         (asset, row["group_id"], prepared["sha256"], prepared["original_key"], prepared["preview_key"],
                                          prepared["mime"], prepared["size"], prepared["width"], prepared["height"]))
                         asset = self.db.execute("SELECT id FROM archive_assets WHERE group_id=? AND sha256=?",
                                                 (row["group_id"], prepared["sha256"])).fetchone()[0]
-                        self.db.execute("INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)",
+                        self.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,0)',
                                         (str(uuid.uuid4()), asset, row["group_id"], row["owner_id"], row["run_id"], row["occurrence"],
                                          fingerprint, json.dumps(payload, ensure_ascii=False)))
                         self._audit(row["owner_id"], "import.available_to_group", row["id"])
@@ -487,7 +469,7 @@ class ImportStore(Store):
 
     def asset_bytes(self, user, asset, original=False):
         row = self._asset(user, asset)
-        return (self.object_dir / row["original_key" if original else "preview_key"]).read_bytes()
+        return self.objects.read("archive-objects", row["original_key" if original else "preview_key"])
 
     def gallery(self, user, group, offset=0, limit=30):
         self._member(user, group)
@@ -495,7 +477,7 @@ class ImportStore(Store):
             raise ValueError("Invalid gallery page")
         rows = self.db.execute("SELECT a.* FROM archive_assets a WHERE a.group_id=? AND EXISTS "
                                "(SELECT 1 FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
-                               "WHERE o.asset_id=a.id AND o.withdrawn=0) ORDER BY a.rowid DESC LIMIT ? OFFSET ?", (group, limit, offset))
+                               'WHERE o.asset_id=a.id AND o.withdrawn=0) ORDER BY ' + insertion_order(self.db, 'a') + ' DESC LIMIT ? OFFSET ?', (group, limit, offset))
         results = []
         for row in rows:
             origins = self.origins(user, row["id"])
@@ -511,16 +493,19 @@ class ImportStore(Store):
         clause = ("FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
                   "WHERE o.asset_id=? AND o.withdrawn=0")
         total = self.db.execute("SELECT count(*) " + clause, (asset,)).fetchone()[0]
-        rows = self.db.execute("SELECT o.payload " + clause + " ORDER BY o.rowid LIMIT 100 OFFSET ?", (asset, offset))
+        rows = self.db.execute("SELECT o.payload " + clause + ' ORDER BY ' + insertion_order(self.db, 'o') + ' LIMIT 100 OFFSET ?', (asset, offset))
         items = [json.loads(row[0]) for row in rows]
         return {"items": items, "total": total, "next_offset": offset + len(items) if offset + len(items) < total else None}
 
     def reconcile(self):
+        self.objects.retry_deletions()
         # Only collect old unreferenced objects while no stage can attach them.
         with self.transaction():
             if self.db.execute("SELECT 1 FROM import_items WHERE outcome='PROCESSING' LIMIT 1").fetchone():
                 return
             referenced = {key for row in self.db.execute("SELECT original_key,preview_key FROM archive_assets") for key in row}
+            if getattr(self.db, "hosted", False):
+                return
             cutoff = time.time() - 3600
             for path in self.object_dir.iterdir():
                 if path.name not in referenced and path.stat().st_mtime < cutoff:

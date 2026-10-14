@@ -15,14 +15,14 @@ CREATE TABLE IF NOT EXISTS time_capsules (
  id TEXT PRIMARY KEY, group_id TEXT NOT NULL, owner TEXT NOT NULL,
  unlock_at REAL NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, photo BLOB);
 CREATE TABLE IF NOT EXISTS memory_notifications (
- group_id TEXT NOT NULL, user TEXT NOT NULL, enabled INTEGER NOT NULL,
- PRIMARY KEY(group_id,user));
+ group_id TEXT NOT NULL, "user" TEXT NOT NULL, enabled INTEGER NOT NULL,
+ PRIMARY KEY(group_id,"user"));
 CREATE TABLE IF NOT EXISTS story_subevents (
  story TEXT PRIMARY KEY REFERENCES advanced_stories(id) ON DELETE CASCADE,
  actor TEXT NOT NULL, payload TEXT NOT NULL);
 CREATE TRIGGER IF NOT EXISTS advanced_departure AFTER DELETE ON members BEGIN
  DELETE FROM time_capsules WHERE group_id=OLD.group_id AND owner=OLD.user_id;
- DELETE FROM memory_notifications WHERE group_id=OLD.group_id AND user=OLD.user_id;
+ DELETE FROM memory_notifications WHERE group_id=OLD.group_id AND "user"=OLD.user_id;
  UPDATE advanced_stories SET revision=revision+1 WHERE group_id=OLD.group_id AND id IN
  (SELECT story FROM story_subevents WHERE actor=OLD.user_id);
  DELETE FROM story_subevents WHERE actor=OLD.user_id AND story IN
@@ -134,12 +134,12 @@ class AdvancedMixin:
         if type(enabled) is not bool: raise ValueError('Boolean required')
         with self.transaction():
             self._member(user, group)
-            self.db.execute('INSERT INTO memory_notifications VALUES(?,?,?) ON CONFLICT(group_id,user) DO UPDATE SET enabled=excluded.enabled', (group, user, enabled))
+            self.db.execute('INSERT INTO memory_notifications VALUES(?,?,?) ON CONFLICT(group_id,"user") DO UPDATE SET enabled=excluded.enabled', (group, user, int(enabled)))
 
     def notifications(self, user, group):
         with self.transaction():
             self._member(user, group)
-            row = self.db.execute('SELECT enabled FROM memory_notifications WHERE group_id=? AND user=?', (group, user)).fetchone()
+            row = self.db.execute('SELECT enabled FROM memory_notifications WHERE group_id=? AND "user"=?', (group, user)).fetchone()
             enabled = bool(row and row[0])
             items = [dict(id=r[0], message='A time capsule is ready to open.') for r in self.db.execute('SELECT id FROM time_capsules WHERE group_id=? AND unlock_at<=? ORDER BY unlock_at,id', (group, self._now()))] if enabled else []
             return dict(enabled=enabled, items=items)

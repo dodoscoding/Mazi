@@ -1,0 +1,15 @@
+{
+  "auth_settings": {
+    "status": 200,
+    "disable_signup": true
+  },
+  "private_schema": {
+    "status": 406
+  },
+  "private_bytes": {
+    "status": 400
+  },
+  "public_bytes": {
+    "status": 400
+  }
+}

@@ -1,5 +1,7 @@
 """Live approved-memory projections; no generated or cached archive content."""
 import json
+from mazi.persistence import initialize_schema
+
 import uuid
 from mazi.identity.core import Conflict, Denied
 from mazi.discovery.discovery import text
@@ -28,8 +30,8 @@ END;
 class MemoryStore(AdvancedMixin, AnswerStore):
     def __init__(self, root, encoder=None):
         super().__init__(root, encoder)
-        self.db.executescript(SCHEMA)
-        self.db.executescript(ADVANCED_SCHEMA)
+        initialize_schema(self.db, SCHEMA)
+        initialize_schema(self.db, ADVANCED_SCHEMA)
 
     def _approved(self, user, group):
         self._member(user, group)
