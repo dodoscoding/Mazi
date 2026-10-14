@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { followShellLink, signOut } from "./helpers/shell";
 
 test("every signed-out route is gated and named profiles resume across browsers", async ({
   page,
@@ -49,7 +50,7 @@ test("every signed-out route is gated and named profiles resume across browsers"
     page.getByRole("navigation", { name: "Main navigation" }),
   ).toBeVisible();
   const original = await (await page.request.get("/api/session")).json();
-  await page.getByRole("link", { name: "About", exact: true }).click();
+  await followShellLink(page, "About");
   await expect(
     page.getByRole("button", { name: "Open the Atlas" }),
   ).toBeVisible();
@@ -77,7 +78,7 @@ test("every signed-out route is gated and named profiles resume across browsers"
   } finally {
     await fresh.close();
   }
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });

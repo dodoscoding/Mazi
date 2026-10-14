@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 import { flushSync } from "react-dom";
+export type Route = ReturnType<typeof readRoute>;
+export type LinkFor = (
+  url: string,
+  animate?: boolean,
+) => (event: MouseEvent<HTMLAnchorElement>) => void;
 export function useReducedMotion() {
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,

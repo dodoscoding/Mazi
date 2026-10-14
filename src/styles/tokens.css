@@ -1,0 +1,230 @@
+/* Luminous night tokens. Names follow the M2-00 Tokens sheet: bg.void becomes --bg-void. */
+@property --bg-void {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #05070c;
+}
+@property --bg-deep {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0a0f18;
+}
+@property --bg-raised {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #121a26;
+}
+@property --surface {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #161f2d;
+}
+@property --line {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #263244;
+}
+@property --line-soft {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1c2636;
+}
+@property --text-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #eef2f7;
+}
+@property --text-body {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #c9d2de;
+}
+@property --text-secondary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #9aa6b8;
+}
+@property --text-muted {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #7f8b9e;
+}
+@property --accent-atmosphere {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #8fd3ff;
+}
+@property --accent-terminator {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffb46a;
+}
+@property --accent-node {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffe2a8;
+}
+@property --on-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #05070c;
+}
+@property --focus {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b8e4ff;
+}
+@property --overlay-hud {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(10, 15, 24, 0.92);
+}
+
+:root,
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --bg-void: #05070c;
+  --bg-deep: #0a0f18;
+  --bg-raised: #121a26;
+  --surface: #161f2d;
+  --line: #263244;
+  --line-soft: #1c2636;
+  --text-primary: #eef2f7;
+  --text-body: #c9d2de;
+  --text-secondary: #9aa6b8;
+  --text-muted: #7f8b9e;
+  --accent-atmosphere: #8fd3ff;
+  --accent-terminator: #ffb46a;
+  --accent-node: #ffe2a8;
+  --accent-hot: #fff3da;
+  --on-accent: #05070c;
+  --focus: #b8e4ff;
+  --success: #6fd6a5;
+  --warning: #f2c25b;
+  --error: #ff7a6e;
+  --overlay-hud: rgba(10, 15, 24, 0.92);
+  --overlay-scrim: linear-gradient(180deg, transparent, rgba(5, 7, 12, 0.78));
+  --overlay-sheet: rgba(5, 7, 12, 0.6);
+  --glow: rgba(255, 180, 106, 0.3);
+  --success-tint: rgba(111, 214, 165, 0.12);
+  --warning-tint: rgba(242, 194, 91, 0.12);
+  --error-tint: rgba(255, 122, 110, 0.12);
+  --atmosphere-tint: rgba(143, 211, 255, 0.12);
+  --terminator-tint: rgba(255, 180, 106, 0.16);
+  --shadow-float: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --bar: var(--bg-deep);
+}
+:root[data-theme="day"] {
+  color-scheme: light;
+  --bg-void: #f4f2ec;
+  --bg-deep: #ece9e1;
+  --bg-raised: #e2ded4;
+  --surface: #fbfaf6;
+  --line: #cfc9bc;
+  --line-soft: #ddd8cc;
+  --text-primary: #10141b;
+  --text-body: #2a303b;
+  --text-secondary: #4a5160;
+  --text-muted: #5e6573;
+  --accent-atmosphere: #1c6599;
+  --accent-terminator: #934f10;
+  --accent-node: #7d5a12;
+  --accent-hot: #a85a12;
+  --on-accent: #fbfaf6;
+  --focus: #0b5cad;
+  --success: #1a6e48;
+  --warning: #825900;
+  --error: #b3261e;
+  --overlay-hud: rgba(251, 250, 246, 0.94);
+  --overlay-scrim: linear-gradient(180deg, transparent, rgba(16, 20, 27, 0.72));
+  --overlay-sheet: rgba(16, 20, 27, 0.35);
+  --glow: rgba(168, 90, 18, 0.2);
+  --success-tint: rgba(26, 110, 72, 0.1);
+  --warning-tint: rgba(130, 89, 0, 0.1);
+  --error-tint: rgba(179, 38, 30, 0.08);
+  --atmosphere-tint: rgba(31, 111, 168, 0.1);
+  --terminator-tint: rgba(168, 90, 18, 0.12);
+  --shadow-float: 0 18px 48px rgba(16, 20, 27, 0.16);
+  /* Accents fall below 4.5:1 on day bg.deep, so phone bars use the surface. */
+  --bar: var(--surface);
+}
+
+:root {
+  --font-display: "Instrument Serif", serif;
+  --font-ui: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  --type-display-xl: 72px;
+  --type-display-l: 48px;
+  --type-display-m: 32px;
+  --type-display-s: 22px;
+  --type-body: 17px;
+  --type-body-s: 15px;
+  --type-ui: 14px;
+  --type-button: 15px;
+  --type-label: 11px;
+  --tracking-label: 0.16em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --gutter: 48px;
+
+  --radius-photo: 3px;
+  --radius-panel: 6px;
+  --radius-sheet: 22px;
+  --radius-pill: 999px;
+
+  --target: 44px;
+  --target-phone: 48px;
+  --header-height: 72px;
+  --tab-bar-height: calc(64px + env(safe-area-inset-bottom));
+
+  --dur-instant: 120ms;
+  --dur-quick: 200ms;
+  --dur-base: 320ms;
+  --dur-slow: 600ms;
+  --dur-camera: 1100ms;
+  --ease-arrive: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-camera: cubic-bezier(0.7, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  transition-property:
+    --bg-void, --bg-deep, --bg-raised, --surface, --line, --line-soft,
+    --text-primary, --text-body, --text-secondary, --text-muted,
+    --accent-atmosphere, --accent-terminator, --accent-node, --on-accent,
+    --focus, --overlay-hud;
+  transition-duration: var(--dur-slow);
+  transition-timing-function: var(--ease-arrive);
+}
+@media (max-width: 1150px) {
+  :root {
+    --type-display-xl: 60px;
+    --gutter: 32px;
+  }
+}
+@media (max-width: 800px) {
+  :root {
+    --type-display-xl: 48px;
+    --type-display-l: 36px;
+    --type-display-m: 28px;
+    --type-body: 15px;
+    --gutter: 24px;
+  }
+}
+@media (max-width: 600px) {
+  :root {
+    --gutter: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+}

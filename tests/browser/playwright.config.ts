@@ -10,6 +10,7 @@ const domains = [
   "answers",
   "memories",
 ];
+const portBase = Number(process.env.MAZI_DOMAIN_PORT_BASE || 18020);
 export default defineConfig({
   testDir: ".",
   outputDir: process.env.MAZI_BROWSER_RESULTS_DIR || "/tmp/mazi-domain-results",
@@ -31,14 +32,14 @@ export default defineConfig({
         ...(screen === "desktop"
           ? devices["Desktop Chrome"]
           : devices["Pixel 7"]),
-        baseURL: `http://127.0.0.1:${18020 + index}`,
+        baseURL: `http://127.0.0.1:${portBase + index}`,
       },
     })),
   ),
   webServer: domains.map((domain, index) => ({
-    command: `MAZI_IMPORT_PORT=${18020 + index} ${process.env.MAZI_PYTHON || "python3"} -m tests.browser.${domain}_server`,
+    command: `MAZI_IMPORT_PORT=${portBase + index} ${process.env.MAZI_PYTHON || "python3"} -m tests.browser.${domain}_server`,
     cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.."),
-    url: `http://127.0.0.1:${18020 + index}/`,
+    url: `http://127.0.0.1:${portBase + index}/`,
     reuseExistingServer: false,
   })),
 });

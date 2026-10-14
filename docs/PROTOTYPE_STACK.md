@@ -29,7 +29,7 @@ React owns routes and feature lifecycles. Existing feature workflows are scoped 
 
 ## Atlas data and appearance
 
-Atlas retains Libre Caslon Text, Source Sans 3, navy/ivory/copper colors and the procedural Fiber/Three chart. The chart displays at most three current memory planes. It is a chronological visual index, not inferred geography. Private textures are owned and disposed by the mounted scene. Keyboard/touch HTML controls and flat-view recovery remain available.
+The interface uses self-hosted Instrument Serif, Geist and Geist Mono with the Luminous night night/day tokens under [D18](DECISIONS.md#luminous-night-visual-world-14-october-2026); the theme preference is the only value kept in localStorage (`mazi.theme`). Atlas keeps the procedural Fiber/Three chart until the globe stage replaces it. The chart displays at most three current memory planes. It is a chronological visual index, not inferred geography. Private textures are owned and disposed by the mounted scene. Keyboard/touch HTML controls and flat-view recovery remain available.
 
 The server builds cards from authorized photographs and fully visible approved events. Cross-year and undated records remain available with honest date labels. It never borrows fictional messages or dates. A hidden or partially inaccessible event cannot expose its title through Atlas. The explicit `?demo=1` sample uses checked-in synthetic fixtures; a new personal archive stays empty.
 

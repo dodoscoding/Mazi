@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = Number(process.env.MAZI_UNIFIED_PORT || 8017);
 export default defineConfig({
   testDir: "./tests",
   testMatch: ["unified.spec.ts", "entry.spec.ts"],
@@ -12,7 +13,7 @@ export default defineConfig({
     ["list"],
     ["json", { outputFile: "work/poteto/unified-app/browser-results.json" }],
   ],
-  use: { baseURL: "http://127.0.0.1:8017", trace: "retain-on-failure" },
+  use: { baseURL: `http://127.0.0.1:${port}`, trace: "retain-on-failure" },
   projects: [
     {
       name: "desktop",
@@ -24,9 +25,8 @@ export default defineConfig({
     { name: "phone", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command:
-      "npm run build && MAZI_IMPORT_PORT=8017 .venv/bin/python -m tests.browser.memories_server",
-    url: "http://127.0.0.1:8017",
+    command: `npm run build && MAZI_IMPORT_PORT=${port} .venv/bin/python -m tests.browser.memories_server`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 120000,
   },

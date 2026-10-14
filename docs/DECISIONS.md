@@ -33,7 +33,7 @@ The product owner answered the design discussion for [issue #3](https://github.c
 | --- | --- | --- |
 | D13 | One existing invite-only friend group of 8-10 people. Responsive website only. Rediscovery leads; Home, Timeline, Search are the initial primary navigation. My Imports and group settings are supporting routes. | Replaces several-group launch assumptions, Today naming, and the initial project plan's primary Events/Ask AI/My Imports arrangement. Later destinations appear only when shipped. Full small-memory workflows work on phones; desktop supports bulk work. |
 | D14 | Every successfully ingested contribution becomes visible to all active group members automatically. Members sign in; no anonymous public access. Private staging, selected recipients, and independent component audiences are deferred. | Replaces D03 and the previous review-then-publish workflow. Review is post-import correction, not permission to publish. Availability follows each item's technical readiness without a batch-wide or human gate. T02/T05/T08/T09 must test group sharing, membership boundaries, and withdrawal instead of selected-member grants. |
-| D15 | Warm, personal, nostalgic, photography-led experience with bespoke visual craft, tasteful animation, and meaningful 3D exploration. Adapt scene complexity by device, offer reduced motion and equivalent conventional controls. | Revises and accepts the initial visual sentence. HELIOS is an exploration/interaction reference, not an approved space theme. Start with a concept image, then a working Home-to-memory/photos/context prototype using synthetic content; test with 2-3 friends. Exact visual world and technical stack remain open. |
+| D15 | Warm, personal, nostalgic, photography-led experience with bespoke visual craft, tasteful animation, and meaningful 3D exploration. Adapt scene complexity by device, offer reduced motion and equivalent conventional controls. | Revises and accepts the initial visual sentence. HELIOS is an exploration/interaction reference, not an approved space theme. [D19](#luminous-night-visual-world-14-october-2026) later approved a space theme. Start with a concept image, then a working Home-to-memory/photos/context prototype using synthetic content; test with 2-3 friends. Exact visual world and technical stack remain open. |
 
 Q1-Q5 established audience, purpose, platform, navigation, and phone workflows. Q6-Q10 established design ambition, the HELIOS reference, the prototype, and device/accessibility behavior. Q11-Q14 replaced granular sharing with immediate group sharing and chose the concept-first workflow. Q15 confirmed the complete summary. The workflow preference is stored only in .impeccable/config.json; it is not a product stack decision.
 
@@ -58,6 +58,19 @@ Profile IDs distinguish stored accounts, not real people. Name uniqueness and re
 **D18: Hosted PostgreSQL and private Storage for the current app.** The owner requested creation/configuration of Mazi in Altan Esmer's Frankfurt Supabase organization and migration of the existing application. Retain the React Atlas shell, Python domain methods, D17 shared-code identities and sessions. Move durable rows to a private PostgreSQL schema through a restricted server role and retained bytes to a private bucket through server authorization. Keep explicit SQLite/file mode and the unchanged local source. Normal startup selects hosted mode only from the ignored server configuration; archive transfer and database-plus-object recovery remain explicit operations.
 
 This revises D01 for the current runtime: Next.js and Supabase Auth are not prerequisites for this hosted increment and must not silently replace the accepted D17 entry contract. A public production deployment, real-device acceptance, and M0-M7 milestones remain separate gates. The project stays on Free with no paid upgrade; its provider capacity is not the accepted 20 GiB pilot allocation. All 44 domain tables and 12 privacy triggers are ported, with RLS on the private tables and durable object receipts/deletion work. Full orphan collection awaits safe maintenance isolation. [Setup and recovery](SUPABASE_SETUP.md), [runtime ownership](PROTOTYPE_STACK.md), and [synthetic evidence](../work/poteto/supabase-migration/database-implementation.md) record the resulting boundary. Actual archive transfer requires its own recorded result.
+
+## Luminous night visual world, 14 October 2026
+
+**D19: Luminous night.** The owner approved a space theme and selected direction A, Luminous night, from the Claude Design canvas ("Round 2 · Luminous night, every screen"). This supersedes D15's wording that HELIOS is not an approved space theme; D15's other commitments stand. The owner decided:
+
+- Direction A, Luminous night, with the round 2 sheets as the specification for every screen and state.
+- The space theme is approved, revising D15 and the HELIOS note in [PRODUCT.md](../PRODUCT.md).
+- Delivery is a stack of pull requests, one per stage.
+- Ambient sound is built. It stays off by default behind a visible toggle.
+- People lines show evidence only. Contributors show as "shared by" and chat participants as "in the conversation". Nothing claims that a person was present.
+- Night is the default theme for everyone. A header toggle switches to day, and the browser remembers the choice.
+
+The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shapes and stage order. The canvas artboards are the measured contract; this decision does not change archive access, sharing, or production acceptance.
 
 ## Open choices
 

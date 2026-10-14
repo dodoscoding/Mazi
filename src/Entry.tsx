@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { useEntry } from "./useEntry";
+import "./styles/entry.css";
 export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
