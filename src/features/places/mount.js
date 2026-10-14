@@ -34,6 +34,7 @@ export function mount(root, lifecycle) {
   let group = "";
   let generation = 0;
   let land;
+  let counted = "";
   toastNotice($("#notice"), lifecycle);
   async function api(path, body) {
     const response = await fetch(
@@ -434,6 +435,7 @@ export function mount(root, lifecycle) {
                   "Withdraw resource",
                   async () => {
                     await api("/api/sources/withdraw", { id: resource.id });
+                    counted = "";
                     await refresh();
                   },
                   "fx-button fx-button--danger-quiet",
@@ -456,11 +458,15 @@ export function mount(root, lifecycle) {
     $("#origins").replaceChildren();
     await map();
     await loadSources();
-    try {
-      await originCounts();
-    } catch {
-      $("#origin-counts").replaceChildren();
-    }
+    // Counting pages through the whole archive, so it runs once per circle
+    // and again only after a withdrawal changes what is shared.
+    if (counted !== group)
+      try {
+        await originCounts();
+        counted = group;
+      } catch {
+        $("#origin-counts").replaceChildren();
+      }
     const origins = await api(
       "/api/review/my-contributions?" + new URLSearchParams({ group }),
     );
