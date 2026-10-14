@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { readRoute } from "../useRoute";
 
 export const INTRO_KEY = "mazi.intro";
 export const INTRO_MS = 4200;
@@ -70,6 +71,9 @@ export function Intro({
       clearTimeout(timer);
       removeEventListener("keydown", key, true);
       removeEventListener("pointerdown", tap, true);
+      // Leaving the atlas mid-intro still counts as seeing it, so the return visit does
+      // not replay it. A remount on the atlas itself (data arriving) keeps the claim.
+      if (readRoute().path !== "/") finishIntro();
     };
   }, [reduced]);
   return (
