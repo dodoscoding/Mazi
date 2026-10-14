@@ -22,6 +22,7 @@ import { Viewer } from "./memory/Viewer";
 import type { LinkFor } from "./useRoute";
 import { useReducedMotion } from "./useRoute";
 import { Arrow } from "./ui/icons";
+import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
@@ -96,7 +97,7 @@ export function MemoryView({
   const momentLink = (
     item: Memory | undefined,
     label: string,
-    glyph: GlyphName,
+    glyph: GlyphName | IconName,
   ) =>
     item ? (
       <a
@@ -105,11 +106,11 @@ export function MemoryView({
         onClick={link(`/memory/${item.id}`)}
         aria-label={`${label}: ${item.title}, ${displayDate(item)}`}
       >
-        <Glyph name={glyph} size={14} stroke={1.8} />
+        <Glyph name={glyph} size={14} />
       </a>
     ) : (
       <span className="round-link is-disabled" aria-hidden="true">
-        <Glyph name={glyph} size={14} stroke={1.8} />
+        <Glyph name={glyph} size={14} />
       </span>
     );
 
@@ -122,7 +123,7 @@ export function MemoryView({
             href={`#${backUrl}`}
             onClick={link(backUrl, true)}
           >
-            <Glyph name="chevron-left" size={14} stroke={1.8} />
+            <Glyph name="chevron-left" size={14} />
             <span className="back-label">Back to atlas</span>
             <kbd aria-hidden="true">Esc</kbd>
           </a>

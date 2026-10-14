@@ -254,7 +254,7 @@ export function Viewer({
               aria-disabled={index === 0}
               onClick={() => index > 0 && go(index - 1)}
             >
-              <Glyph name="chevron-left" size={18} stroke={1.8} />
+              <Glyph name="chevron-left" size={18} />
             </button>
             <button
               type="button"
@@ -263,7 +263,7 @@ export function Viewer({
               aria-disabled={index === photos.length - 1}
               onClick={() => index < photos.length - 1 && go(index + 1)}
             >
-              <Glyph name="chevron-right" size={18} stroke={1.8} />
+              <Glyph name="chevron-right" size={18} />
             </button>
             <div className="viewer-dots" aria-hidden="true">
               {dots.map((dot) => (

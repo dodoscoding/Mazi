@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { Icon, IconFrame } from "../ui/icons";
+import type { IconName } from "../ui/icons";
 
-/** Memory-detail glyphs, drawn in the same 1.6 stroke as src/ui/icons. */
+/** Glyphs the shared icon set lacks, drawn in its 1.6 stroke. */
 const paths = {
   photos: (
     <>
@@ -27,7 +29,6 @@ const paths = {
     </>
   ),
   "chevron-left": <path d="M15 5l-7 7 7 7" />,
-  "chevron-right": <path d="M9 5l7 7-7 7" />,
   compass: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -38,29 +39,20 @@ const paths = {
 
 export type GlyphName = keyof typeof paths;
 
+/** Memory glyphs, or any shared icon name, in the shared icon frame. */
 export function Glyph({
   name,
   size = 16,
   stroke = 1.6,
 }: {
-  name: GlyphName;
+  name: GlyphName | IconName;
   size?: number;
   stroke?: number;
 }) {
+  if (!(name in paths)) return <Icon name={name as IconName} size={size} />;
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={stroke}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {paths[name]}
-    </svg>
+    <IconFrame size={size} strokeWidth={stroke}>
+      {paths[name as GlyphName]}
+    </IconFrame>
   );
 }

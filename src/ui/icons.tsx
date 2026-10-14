@@ -44,6 +44,37 @@ const glyphs = {
 
 export type IconName = keyof typeof glyphs;
 
+/** The shared 24px line-icon frame; features with their own glyphs reuse it. */
+export function IconFrame({
+  size = 20,
+  strokeWidth = 1.6,
+  className,
+  children,
+}: {
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {children}
+    </svg>
+  );
+}
+
 export function Icon({
   name,
   size = 20,
@@ -54,21 +85,9 @@ export function Icon({
   className?: string;
 }) {
   return (
-    <svg
-      className={className}
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <IconFrame size={size} className={className}>
       {glyphs[name]}
-    </svg>
+    </IconFrame>
   );
 }
 
