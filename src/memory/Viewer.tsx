@@ -251,8 +251,8 @@ export function Viewer({
               type="button"
               className="viewer-arrow viewer-arrow--previous"
               aria-label="Previous photo"
-              disabled={index === 0}
-              onClick={() => go(index - 1)}
+              aria-disabled={index === 0}
+              onClick={() => index > 0 && go(index - 1)}
             >
               <Glyph name="chevron-left" size={18} stroke={1.8} />
             </button>
@@ -260,8 +260,8 @@ export function Viewer({
               type="button"
               className="viewer-arrow viewer-arrow--next"
               aria-label="Next photo"
-              disabled={index === photos.length - 1}
-              onClick={() => go(index + 1)}
+              aria-disabled={index === photos.length - 1}
+              onClick={() => index < photos.length - 1 && go(index + 1)}
             >
               <Glyph name="chevron-right" size={18} stroke={1.8} />
             </button>

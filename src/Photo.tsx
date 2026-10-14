@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler } from "react";
 import type { Photo as PhotoData } from "./memories";
 import { Glyph } from "./memory/glyphs";
@@ -20,6 +20,14 @@ export function Photo({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const frame = useRef<HTMLDivElement>(null);
+  const retried = useRef(false);
+  useEffect(() => {
+    // Retry unmounts its own button; keep focus on the photo it brought back.
+    if (!retried.current) return;
+    retried.current = false;
+    frame.current?.focus({ preventScroll: true });
+  }, [attempt]);
   const photograph = (
     <img
       key={attempt}
@@ -36,6 +44,8 @@ export function Photo({
   );
   return (
     <div
+      ref={frame}
+      tabIndex={-1}
       className={`photo-frame${loaded ? " is-loaded" : ""}${failed ? " is-failed" : ""}`}
       style={continuity ? { viewTransitionName: "memory-photo" } : undefined}
       aria-busy={!loaded && !failed}
@@ -51,6 +61,7 @@ export function Photo({
             type="button"
             className="button button--primary"
             onClick={() => {
+              retried.current = true;
               setFailed(false);
               setAttempt((a) => a + 1);
             }}

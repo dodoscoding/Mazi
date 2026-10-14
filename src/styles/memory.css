@@ -7,6 +7,9 @@
   background: var(--bg-raised);
   overflow: hidden;
 }
+.photo-frame:focus-visible {
+  outline-offset: -3px;
+}
 .photo-frame img {
   width: 100%;
   height: 100%;
@@ -286,10 +289,12 @@
 .viewer-arrow--next {
   right: 20px;
 }
-.viewer-arrow:not(:disabled):hover {
+.viewer-arrow:not([aria-disabled="true"]):hover {
   background: rgba(5, 7, 12, 0.85);
 }
-.viewer-arrow:disabled {
+/* aria-disabled, not disabled, so keyboard focus stays on the arrow at the ends. */
+.viewer-arrow[aria-disabled="true"] {
+  cursor: default;
   background: rgba(5, 7, 12, 0.4);
   color: rgba(255, 255, 255, 0.45);
 }
