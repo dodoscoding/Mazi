@@ -163,3 +163,55 @@ test("archive access denial clears the authenticated shell", async ({
     await page.unroute(endpoint);
   }
 });
+
+test("an old Atlas denial cannot clear a newer authorized load", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  let captured!: () => void;
+  const held = new Promise<void>((resolve) => {
+    captured = resolve;
+  });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let delivered!: () => void;
+  const delivery = new Promise<void>((resolve) => {
+    delivered = resolve;
+  });
+  let first = true;
+  await page.route("**/api/atlas?*", async (route) => {
+    if (!first) return route.continue();
+    first = false;
+    captured();
+    await gate;
+    await route.fulfill({
+      status: 403,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Old access denial" }),
+    });
+    delivered();
+  });
+  await page.goto("/");
+  await held;
+  await page.evaluate(() => window.dispatchEvent(new Event("mazi:group")));
+  await expect(
+    page.getByRole("button", { name: "Select Our summer", exact: true }),
+  ).toBeVisible();
+  release();
+  await delivery;
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Select Our summer", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Shared code")).toHaveCount(0);
+});
