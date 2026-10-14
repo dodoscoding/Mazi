@@ -21,6 +21,10 @@ with tempfile.TemporaryDirectory(prefix='mazi-places-browser-') as root:
         while store.work_once(): pass
         origin=store.db.execute('SELECT id FROM archive_origins WHERE run_id=?',(resource['id'],)).fetchone()[0]
         store.set_place(alice,origin,'NL' if index==0 else 'TR','Amsterdam' if index==0 else 'Istanbul',52.37 if index==0 else 41.01,4.9 if index==0 else 28.97,f'2024-01-0{index+2}')
+    partial = b'partial-bytes-not-a-full-photo'
+    waiting = store.begin_resource(alice, source, dict(item='partial', component='photo', version='original', filename='partial.jpg', date='2024-01-02', kind='image', albums=[]), len(partial), hashlib.sha256(partial).hexdigest())
+    store.resource_chunk(alice, waiting['id'], 0, partial[:8])
+    store.set_source(alice, source, False, 'authorized')
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR']=root
     main()

@@ -237,6 +237,12 @@ final class ResourceBuffer: @unchecked Sendable {
                 HStack { TextField("Mazi email", text: $model.email); SecureField("Password", text: $model.password); Button("Sign in", action: model.signIn) }.disabled(model.busy)
                 TextField("Apple source ID from Places & sources", text: $model.connection).disabled(model.busy)
                 HStack { Button("Allow Photos access", action: model.authorize); Picker("Album", selection: $model.album) { Text("All albums").tag(""); ForEach(model.albums, id: \.0) { Text($0.1).tag($0.0) } }; Picker("Media", selection: $model.kind) { Text("Photos & videos").tag("all"); Text("Photos").tag("image"); Text("Videos").tag("video") } }.disabled(model.busy)
+                if !model.album.isEmpty {
+                    Text("Album ID: \(model.album)")
+                        .font(.caption)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 HStack { DatePicker("From", selection: $model.from, displayedComponents: .date); DatePicker("Through", selection: $model.through, displayedComponents: .date); Button("Refresh selection", action: model.reload) }.disabled(model.busy)
                 Text("Up to 1,000 metadata records. Narrow the date range for larger libraries. No image bytes are read until you transfer.").font(.caption)
                 List(model.items) { item in
