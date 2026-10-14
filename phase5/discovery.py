@@ -113,10 +113,19 @@ class DiscoveryStore(SourceStore):
         return super().rendition_bytes(user, asset)
 
     def places(self, user, group, country='', city='', paths=False):
-        # Recompute facets and paths after personal exclusions, not before.
-        points = super().places(user, group)['points']
+        self._member(user, group)
+        if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
+            raise ValueError('Invalid filters')
+        rows = [dict(row) for row in self.db.execute(
+            'SELECT p.*,o.asset_id FROM shared_places p JOIN archive_origins o ON o.id=p.origin '
+            'JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+            'WHERE o.group_id=? AND o.withdrawn=0 AND NOT EXISTS '
+            '(SELECT 1 FROM discovery_hidden h WHERE h.user=? AND h.asset=o.asset_id) '
+            'ORDER BY p.day,p.origin LIMIT 1001', (group, user))]
+        if len(rows) > 1000:
+            raise ValueError('Local map limit is 1,000 shared locations')
         visible = set(self._visible_ids(user, group))
-        points = [p for p in points if p['asset_id'] in visible]
+        points = [row for row in rows if row['asset_id'] in visible]
         countries = sorted({p['country'] for p in points})
         points = [p for p in points if not country or p['country'] == text(country).upper()]
         cities = sorted({p['city'] for p in points})
@@ -196,6 +205,8 @@ class DiscoveryStore(SourceStore):
             row, media = self._person(user, person), self._asset(user, asset)
             if row['group_id'] != media['group_id'] or asset not in self._visible_ids(user, row['group_id']):
                 raise Denied('Media unavailable')
+            if row['account'] and not self.db.execute('SELECT 1 FROM members WHERE group_id=? AND user_id=?', (row['group_id'], row['account'])).fetchone():
+                raise Denied('Verified subject is not a current member')
             if self.db.execute('SELECT 1 FROM discovery_suppressions WHERE person=? AND asset=?', (person, asset)).fetchone():
                 raise Conflict('Association suppressed; subject must opt back in')
             self.db.execute('INSERT OR IGNORE INTO discovery_tags VALUES(?,?,?)', (person, asset, user))
@@ -226,14 +237,14 @@ class DiscoveryStore(SourceStore):
             row = self._person(user, person)
             if row['account'] != user or self._asset(user, asset)['group_id'] != row['group_id']:
                 raise Denied('Verified subject required')
-            self.db.execute('DELETE FROM discovery_suppressions WHERE person=? AND asset=? AND subject=?', (person, asset, user))
+            self.db.execute('DELETE FROM discovery_suppressions WHERE person=? AND asset=?', (person, asset))
             self.db.execute('INSERT OR REPLACE INTO discovery_tags VALUES(?,?,?)', (person, asset, user))
             self._audit(user, 'person.opt-in', person + ':' + asset)
 
     def suppressed(self, user, group):
         self._member(user, group)
         allowed = set(super()._visible_ids(user, group))
-        return [dict(r) for r in self.db.execute('SELECT s.person,s.asset,p.name FROM discovery_suppressions s JOIN discovery_people p ON p.id=s.person WHERE p.group_id=? AND p.account=? AND s.subject=?', (group, user, user)) if r['asset'] in allowed]
+        return [dict(r) for r in self.db.execute("SELECT s.person,s.asset,p.name FROM discovery_suppressions s JOIN discovery_people p ON p.id=s.person WHERE p.group_id=? AND p.account=? AND s.subject IN (?, 'private-review')", (group, user, user)) if r['asset'] in allowed]
 
     def people(self, user, group, manage=False):
         visible = set(self._visible_ids(user, group))
@@ -428,18 +439,19 @@ class DiscoveryStore(SourceStore):
                 semantic, query_vector = False, None
             unindexed = 0
             reference = None
-            if similar:
-                if similar not in visible:
-                    raise Denied('Reference image unavailable for processing')
-                if not semantic:
-                    raise Conflict('Similar search needs semantic mode and group processing')
+            if similar and similar not in visible:
+                raise Denied('Reference image unavailable for processing')
+            if similar and not semantic:
+                similar = ''
+            elif similar:
                 doc = self._document(user, similar)
                 if not doc['eligible']:
-                    raise Conflict('This photograph is not included in local related search until its contributors allow processing')
-                cached = self._vectors(user, group, doc)
-                if cached is None:
-                    raise Conflict('Build the local search index before using this reference image')
-                reference = cached['visual']
+                    similar = ''
+                else:
+                    cached = self._vectors(user, group, doc)
+                    if cached is None:
+                        raise Conflict('Build the local search index before using this reference image')
+                    reference = cached['visual']
             # Garbage-collect inaccessible rows even when an independent writer performed withdrawal.
             allowed = set(super()._visible_ids(user, group))
             for row in self.db.execute('SELECT v.asset FROM discovery_vectors v JOIN archive_assets a ON a.id=v.asset WHERE a.group_id=?', (group,)).fetchall():

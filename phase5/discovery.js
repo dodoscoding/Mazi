@@ -328,13 +328,14 @@ $("#contribution-processing").onchange = () =>
     }),
   );
 $("#group-processing").onchange = () =>
-  run(() =>
-    mutate("processing", {
+  run(async () => {
+    if (!$("#group-processing").checked) similar = "";
+    await mutate("processing", {
       group,
       enabled: $("#group-processing").checked,
       group_wide: true,
-    }),
-  );
+    });
+  });
 $("#identity-form").onsubmit = (event) => {
   event.preventDefault();
   run(() =>

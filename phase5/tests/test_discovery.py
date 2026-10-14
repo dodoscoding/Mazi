@@ -190,18 +190,45 @@ class DiscoveryTests(unittest.TestCase):
         self.store.hide_event(self.ben, self.group, event, False)
         self.assertEqual(len(self.store.accepted_events(self.ben, self.group)), 1)
 
-    def test_similar_search_refuses_unavailable_processing_without_denying_access(self):
-        with self.assertRaises(Conflict) as off:
-            self.store.search(self.alice, self.group, mode='semantic', similar=self.asset)
-        self.assertIn('group processing', str(off.exception))
+    def test_similar_search_falls_back_to_keywords_when_semantic_search_is_unavailable(self):
+        result = self.store.search(self.alice, self.group, query='bicycle', mode='semantic', similar=self.asset)
+        self.assertEqual(result['total'], 1)
+        self.assertEqual(result['mode'], 'keyword / filters')
         self.enable()
-        with self.assertRaises(Conflict) as keyword:
-            self.store.search(self.alice, self.group, mode='keyword', similar=self.asset)
-        self.assertIn('semantic mode', str(keyword.exception))
         self.store.processing(self.alice, self.group, False)
-        with self.assertRaises(Conflict) as blocked:
-            self.store.search(self.ben, self.group, mode='semantic', similar=self.asset)
-        self.assertIn('contributors', str(blocked.exception))
+        self.assertEqual(self.store.search(self.ben, self.group, query='bicycle', mode='semantic', similar=self.asset)['total'], 1)
+
+    def test_private_review_survives_identity_confirmation(self):
+        person = self.store.create_person(self.alice, self.group, 'Later member')
+        self.store.tag(self.alice, person, self.asset, True)
+        self.store.nonmember_review(self.alice, person, self.asset, True)
+        self.store.propose_identity(self.alice, person, self.ben)
+        self.store.confirm_identity(self.ben, person)
+        self.assertEqual(len(self.store.suppressed(self.ben, self.group)), 1)
+        self.store.restore_association(self.ben, person, self.asset)
+        self.assertEqual(self.store.search(self.ben, self.group, person=person)['total'], 1)
+
+    def test_departed_identity_cannot_be_tagged_until_they_rejoin(self):
+        person = self.person()
+        self.store.leave_group(self.ben, self.group)
+        with self.assertRaises(Denied):
+            self.store.tag(self.alice, person, self.asset, True)
+        self.store.accept(self.ben, self.store.invite(self.alice, self.group))
+        self.assertEqual(self.store.people(self.alice, self.group), [])
+
+    def test_personal_hides_do_not_count_toward_the_map_limit(self):
+        origin = self.store.db.execute('SELECT * FROM archive_origins WHERE asset_id=?', (self.asset,)).fetchone()
+        for index in range(1001):
+            identifier = f'extra-origin-{index}'
+            self.store.db.execute('INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)',
+                (identifier, origin['asset_id'], origin['group_id'], origin['owner_id'], origin['run_id'], identifier, origin['fingerprint'], origin['payload']))
+            self.store.db.execute('INSERT INTO shared_places VALUES(?,?,?,?,?,?)', (identifier, 'NL', 'Amsterdam', 52.3, 4.9, '2020-01-02'))
+        self.store.db.commit()
+        self.store.hide(self.ben, self.asset, True)
+        self.assertEqual(self.store.places(self.ben, self.group)['points'], [])
+        self.store.export_archive(self.ben, self.group)
+        with self.assertRaises(ValueError):
+            self.store.places(self.alice, self.group)
 
     def test_image_reference_consent_and_cross_group_denial(self):
         self.enable()
