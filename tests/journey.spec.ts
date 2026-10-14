@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { openFullMemory } from "./helpers/atlas";
+import { openFullMemory, settled } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -80,8 +80,10 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await settled(page);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await openFullMemory(page);
+  await settled(page);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
