@@ -18,6 +18,8 @@ The local prototype uses React 19.2, TypeScript, Vite, React Three Fiber 9/Three
 
 One existing, invite-only friend group of 8-10 people. Members sign in to contribute and explore the group's archive. Group administrators manage invitations and membership.
 
+On 14 October 2026 the owner approved shared-code entry for the local app. Friends enter the shared code and a unique visible name. An existing name resumes immediately, including on another browser. A remembered browser goes straight to the Atlas. New profiles see a short introduction once, and About retains it. The owner accepts that code holders can use another member's name. No email or personal password is required. [D17](docs/DECISIONS.md#shared-code-entry-decision-14-october-2026) owns this entry decision; the existing application pages remain in place.
+
 ## Product Purpose
 
 Help friends rediscover their shared history and find specific memories across fragmented photos, videos, and source conversations. Rediscovery is the main reason to return; search stays easy to reach. A memory connects its media with available context and source evidence.

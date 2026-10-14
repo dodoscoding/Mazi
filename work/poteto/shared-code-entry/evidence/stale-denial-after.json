@@ -1,0 +1,16 @@
+{
+  "revision": "1ec20e4",
+  "before": {
+    "entry": "ready",
+    "archive": "ready",
+    "requests": 2
+  },
+  "after": {
+    "entry": "ready",
+    "archive": "ready",
+    "requests": 2,
+    "staleSignalAborted": false
+  },
+  "errors": [],
+  "verdict": "PASS: stale Atlas 403 leaves the newer successful load and session intact"
+}

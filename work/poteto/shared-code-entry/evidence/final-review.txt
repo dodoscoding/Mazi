@@ -1,0 +1,28 @@
+Independent final review receipt
+
+Base revision: 2a2f861
+Final reviewed head: 1ec20e4492e12fe68661e12bf73726b91ef76c91
+Repository: /Users/altanesmer/.codex/worktrees/shared-code-entry/Mazi
+Verdict: No remaining actionable correctness, regression, security, or validation findings in the assigned scope.
+
+Scope
+Backend reviewed at immutable 2fd7ccf. Frontend hooks, UI, direct/hash routing, setup instructions, committed tests, and domain browser fixture migration reviewed through immutable 1ec20e4. Parent-generated work/poteto evidence and personal archive data were excluded. Shared-code holders resuming any existing name is accepted behavior.
+
+Resolved findings
+1. Stale Atlas denial previously dispatched access-lost before checking request generation. The added guard immediately after the Atlas await suppresses stale response side effects. The committed regression holds an older 403 while a newer authorized load succeeds, then asserts the shell and archive remain visible.
+2. Unified phone expectations previously relied on photos imported by an earlier desktop test. Expectations now use the current API inventory and verify imported filenames rather than branching on project name.
+3. No-comments audit found one unused summary docstring in tests/browser/shared_fixture.py. It was removed. setup_shared.py's module text is retained because argparse uses __doc__ as live CLI help. No other task-added comment deletion candidates, suppressions, MUST KILL flags, or actionable deslop findings remain.
+
+Independently executed evidence
+The 10 committed focused Store/HTTP tests passed against snapshot 2fd7ccf. Results are in /tmp/mazi-entry-review/focused-tests.txt.
+Additional uncommitted synthetic backend probes passed actual base-schema migration with ownership/grants, repeat setup, exact 30-day expiry boundary, introduction isolation, failed-session-insert rollback, and missing-policy denial. Script /tmp/mazi-entry-review/probe.py. Output /tmp/mazi-entry-review/probe-output.txt.
+The original UI race reproduced against c90974f. Script /tmp/mazi-entry-review/ui-hook-probe.mjs. Output /tmp/mazi-entry-review/ui-hook-output.json.
+The same isolated Chromium hook harness passed against 1ec20e4. The older request signal was not aborted; the generation guard alone kept entry and archive ready after releasing the stale 403. Script /tmp/mazi-entry-review/ui-hook-fixed-probe.mjs. Immutable input hooks are in /tmp/mazi-entry-review/ui-1ec20e4. Output /tmp/mazi-entry-review/ui-hook-fixed-output.json.
+
+Rerun UI fixed probe from the repository root with:
+node /tmp/mazi-entry-review/ui-hook-fixed-probe.mjs
+
+Validation supplied by parent, not rerun by reviewer
+151 backend tests with 2 existing skips; sample Chromium/Firefox 38 passed with 2 skips; domain browser suite 14 passed with 2 optional model skips; final phone-only app suite 7 passed; complete app suite 14 passed. Parent owns those command logs and acceptance evidence.
+
+No application files changed or commits created by reviewer. All independent probes used temporary synthetic databases or isolated temporary UI input files and ephemeral ports. No Playwright configuration was run during the final UI review.
