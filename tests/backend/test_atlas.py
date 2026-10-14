@@ -1,5 +1,6 @@
 import hashlib
 import io
+import json
 import tempfile
 import unittest
 from PIL import Image
@@ -70,3 +71,56 @@ class AtlasTests(unittest.TestCase):
         event = self.store.review_event(self.alice, self.group, self.assets, 'Hidden winter', 'accept')
         self.store.hide_event(self.ben, self.group, event, True)
         self.assertEqual(atlas_view(self.store, self.ben, self.group)['memories'], [])
+
+    def _origin(self, asset):
+        return self.store.db.execute('SELECT id FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()[0]
+
+    def _memory(self):
+        self.store.review_event(self.alice, self.group, self.assets, 'Island week', 'accept')
+        return atlas_view(self.store, self.ben, self.group)['memories'][0]
+
+    def test_assets_sharing_one_city_give_that_place(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.25, 25.5, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'GR', 'Naxos', 37.75, 25.0, None)
+        self.assertEqual(self._memory()['place'],
+                         {'name': 'Naxos', 'country': 'GR', 'latitude': 37.5, 'longitude': 25.25})
+
+    def test_unplaced_asset_does_not_block_agreeing_place(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.1, 25.4, None)
+        self.assertEqual(self._memory()['place'],
+                         {'name': 'Naxos', 'country': 'GR', 'latitude': 37.1, 'longitude': 25.4})
+
+    def test_assets_in_different_cities_give_no_place(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.1, 25.4, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'GR', 'Paros', 37.1, 25.2, None)
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        self.assertEqual({card['title']: card['place']['name'] for card in cards}, {'Red': 'Naxos', 'Blue': 'Paros'})
+        self.assertIsNone(self._memory()['place'])
+
+    def test_no_shared_place_rows_give_no_place_despite_annotation(self):
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        self.assertEqual([card['place'] for card in cards], [None, None])
+        self.assertIsNone(self._memory()['place'])
+
+    def test_shared_people_are_visible_contributor_names(self):
+        self.assertEqual(self._memory()['people']['shared'], [])
+        self.store.setup_shared(admin_name='Alice', group_id=self.group, mappings={'Alice': self.alice, 'Ben': self.ben})
+        self.assertEqual(atlas_view(self.store, self.ben, self.group)['memories'][0]['people'],
+                         {'shared': ['Alice'], 'conversation': []})
+        with self.assertRaises(Denied):
+            atlas_view(self.store, self.outsider, self.group)
+
+    def test_conversation_people_exclude_fallback_label(self):
+        context = [{'text': 'Ferry?', 'sender': {'label': 'Maya'}, 'shared_at': '21:14'},
+                   {'text': 'We live here now.', 'sender': {'label': 'Deniz'}, 'shared_at': '21:16'},
+                   {'text': 'Still here.', 'sender': {'label': 'Maya'}, 'shared_at': '21:20'},
+                   {'text': 'Unlabelled', 'sender': {}, 'shared_at': '21:22'}]
+        for asset in self.assets:
+            row = self.store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()
+            payload = json.loads(row['payload'])
+            payload['context'] = context
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+        self.store.db.commit()
+        card = self._memory()
+        self.assertIn('Source participant', [message['name'] for message in card['messages']])
+        self.assertEqual(card['people']['conversation'], ['Deniz', 'Maya'])
