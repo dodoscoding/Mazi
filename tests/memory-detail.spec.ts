@@ -421,9 +421,24 @@ test("a broken photo URL shows the retry state", async ({ page }) => {
     "No place recorded",
   );
   await expect(page.locator(".date-chip")).toHaveText("Date not recorded");
+  const retried = page.waitForRequest("**/media/does-not-exist.webp*");
   await page.getByRole("button", { name: "Retry photo" }).click();
+  await retried;
   await expect(page.getByText("This photo could not load.")).toBeVisible();
 });
+
+for (const [value, shown] of [
+  ["99", "3 / 3"],
+  ["-1", "1 / 3"],
+  ["abc", "1 / 3"],
+  ["1.7", "2 / 3"],
+])
+  test(`?photo=${value} clamps to ${shown}`, async ({ page }) => {
+    await open(page, `/memory/harbour-night?photo=${value}`);
+    await expect(counter(page)).toHaveText(shown);
+    await expect(page.locator(".viewer-caption-title")).not.toBeEmpty();
+    await expect(page.getByText("This photo could not load.")).toHaveCount(0);
+  });
 
 for (const theme of ["night", "day"] as const)
   test(`memory screens pass axe in ${theme}`, async ({ page }) => {
