@@ -57,7 +57,8 @@ export function coordinates(memory: Memory) {
 const basisNotes: Record<string, string> = {
   undated: "Some photos have no capture date.",
   "date unknown": "Some photos have no capture date.",
-  "conflicting source evidence": "The sources disagree about the day.",
+  "conflicting source evidence":
+    "The sources disagree about the date or place.",
   "conflicting source dates": "The sources disagree about the day.",
   "source capture evidence": "Dates come from the photos' capture times.",
   "source capture date": "Dates come from the photos' capture times.",
