@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { RefObject } from "react";
 import type { Memory } from "./memories";
 import {
+  chronology,
   coordinates,
   countryName,
   dateBasisNotes,
@@ -65,8 +66,7 @@ export function MemoryView({
   ]
     .filter(Boolean)
     .join(" · ");
-  // The archive lists newest first; memories read oldest to newest here.
-  const moments = [...memories].reverse();
+  const moments = chronology(memories);
   const position = moments.findIndex((item) => item.id === memory.id);
   const earlier = position > 0 ? moments[position - 1] : undefined;
   const later =

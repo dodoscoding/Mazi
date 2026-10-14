@@ -119,6 +119,28 @@ export function sourceRows(memory: Memory): SourceRow[] {
   });
 }
 
+/** Sort key from the first ISO day in the date label, else the year; undated is null. */
+function when(memory: Memory) {
+  const day = memory.date.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+  if (day) return day;
+  return memory.year === null ? null : `${memory.year}`;
+}
+
+/**
+ * Oldest first, undated last. The archive's own order puts approximate cards
+ * (year null) at the very end, so it cannot be reversed into a timeline.
+ */
+export function chronology(memories: Memory[]) {
+  return memories
+    .map((memory, index) => ({ memory, index, key: when(memory) }))
+    .sort((a, b) => {
+      if (a.key === null || b.key === null)
+        return a.key === b.key ? a.index - b.index : a.key === null ? 1 : -1;
+      return a.key < b.key ? -1 : a.key > b.key ? 1 : b.index - a.index;
+    })
+    .map(({ memory }) => memory);
+}
+
 export type Related = { memory: Memory; why: "Same place" | "Same year" };
 
 /** Same place first, then same year, newest archive order kept; at most four. */
