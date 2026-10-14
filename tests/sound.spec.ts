@@ -121,6 +121,8 @@ test("with sound off, browsing the atlas never creates an AudioContext", async (
   await expect(page).toHaveURL(/selected=lake-days/);
   await page.getByRole("link", { name: "Open memory", exact: true }).click();
   await expect(page).toHaveURL(/view=portal/);
+  // The URL leads the render by a frame; Esc belongs to the portal once it holds focus.
+  await expect(page.locator("#dossier-title")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).not.toHaveURL(/view=portal/);
   expect((await audio(page)).contexts).toBe(0);
@@ -142,6 +144,7 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   await page.getByRole("link", { name: "Open memory", exact: true }).click();
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
   await expect.poll(() => calls(page, "createBufferSource")).toBe(1);
+  await expect(page.locator("#dossier-title")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).not.toHaveURL(/view=portal/);
   await expect.poll(() => calls(page, "createBufferSource")).toBe(2);
