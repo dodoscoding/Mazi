@@ -88,13 +88,17 @@ export function toastNotice(node, lifecycle) {
   let timer = 0;
   const show = () => {
     clearTimeout(timer);
-    node.classList.remove("is-in", "is-hidden");
     if (!node.textContent.trim()) {
+      node.classList.remove("is-in");
       node.classList.add("is-hidden");
       return;
     }
-    void node.offsetWidth;
-    node.classList.add("is-in");
+    // Only a hidden toast rises again; a visible one just updates its text.
+    if (node.classList.contains("is-hidden")) {
+      node.classList.remove("is-in", "is-hidden");
+      void node.offsetWidth;
+      node.classList.add("is-in");
+    }
     if (node.dataset.tone !== "error")
       timer = window.setTimeout(() => node.classList.add("is-hidden"), 5000);
   };

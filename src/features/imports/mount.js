@@ -693,6 +693,8 @@ export function mount(root, lifecycle) {
         await refreshReport();
         let received = currentReport.received;
         if (currentReport.state === "UPLOADING") {
+          // Chunk progress lives in the transfer bar; the toast says it once.
+          notice("Transferring archive…");
           while (received < values.file.size) {
             const bytes = new Uint8Array(
               await values.file
@@ -711,7 +713,6 @@ export function mount(root, lifecycle) {
             $("transfer").value = Math.round(
               (received * 100) / values.file.size,
             );
-            notice(`Transferring archive · ${$("transfer").value}%`);
           }
           await api("/api/imports/finish", { id });
           notice(
