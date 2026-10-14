@@ -180,6 +180,32 @@ test("buttons and arrow keys move between photos and keep ?photo=n", async ({
   await expect(counter(page)).toHaveText("2 / 3");
 });
 
+test("keyboard focus stays put at the ends and after Retry", async ({
+  page,
+}) => {
+  await open(page, "/memory/harbour-night");
+  const next = page.getByRole("button", { name: "Next photo" });
+  const previous = page.getByRole("button", { name: "Previous photo" });
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(counter(page)).toHaveText("3 / 3");
+  await expect(next).toBeDisabled();
+  await expect(next).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(counter(page)).toHaveText("3 / 3");
+  await previous.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(counter(page)).toHaveText("1 / 3");
+  await expect(previous).toBeFocused();
+
+  await open(page, "/memory/photo-broken");
+  await page.getByRole("button", { name: "Retry photo" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".viewer .photo-frame")).toBeFocused();
+});
+
 test("the filmstrip chooses a photo on wider screens", async ({
   page,
 }, testInfo) => {
