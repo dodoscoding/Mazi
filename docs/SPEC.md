@@ -37,6 +37,8 @@ Keyword search covers group titles, user captions, and imported source text. It 
 
 ## Primary journeys
 
+The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shared-code-entry-decision-14-october-2026) instead of the production-planning invitation journey below. Friends enter a shared code and unique visible name. Existing names resume immediately. New profiles see the introduction once, returning sessions open the Atlas, and About retains the introduction. Existing application pages remain unchanged in scope.
+
 1. A group creator signs in, creates a private group, and sends a single-use invitation through their chosen channel. The recipient accepts before expiry. An expired or revoked invitation grants nothing.
 2. A contributor selects files or an archive and sees the inventory, formats, size, and processing choices. Transfer and background progress survive interruption. Successful items remain reviewable if other items fail.
 3. Each successfully ingested item enters the group archive automatically. Import UI explains this before submission and shows per-item progress and failures. The contributor can review dates, duplicates, source context, and warnings afterward; there is no audience selector or Publish action.
