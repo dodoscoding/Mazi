@@ -1,3 +1,6 @@
+import { createGallery } from "./gallery";
+import "./memories.css";
+
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
@@ -167,8 +170,10 @@ export function mount(root, lifecycle) {
     refresh();
   };
   $("refresh").onclick = refresh;
+  const grid = createGallery(root, lifecycle, api);
   $("groups").onchange = () => {
     group = lifecycle.selectGroup($("groups"));
+    grid.load(group);
     refresh();
   };
   void (async () => {
@@ -180,6 +185,8 @@ export function mount(root, lifecycle) {
         $("groups").append(option);
       }
       group = lifecycle.selectGroup($("groups"));
+      $("groups").closest("label").hidden = $("groups").options.length < 2;
+      grid.load(group);
       await refresh();
     } catch (error) {
       $("notice").textContent = error.message + ". Sign in from Imports.";

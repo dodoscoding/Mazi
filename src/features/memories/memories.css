@@ -1,0 +1,750 @@
+/* Memories (M2-05). Every rule is scoped under .memories-page. */
+.memories-page {
+  /* Badges sit on the photograph itself, so they keep night ink in both themes. */
+  --mem-badge-bg: rgb(5 7 12 / 0.78);
+  --mem-badge-ink: #f2c25b;
+}
+.memories-page .mem-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.memories-page .mem-main {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.memories-page .mem-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.memories-page .mem-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.memories-page .mem-title {
+  margin: 0;
+  font-size: 56px;
+  line-height: 1;
+}
+.memories-page .mem-summary {
+  color: var(--text-secondary);
+  font-size: var(--type-ui);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.memories-page .mem-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.memories-page .mem-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.memories-page .mem-group select {
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border-color: var(--line);
+  font-size: 13px;
+}
+.memories-page .mem-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-primary);
+  font: 500 13px / 1 var(--font-ui);
+}
+.memories-page .mem-pill:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+.memories-page .mem-filters-button,
+.memories-page .mem-main .mem-year-row,
+.memories-page .mem-sheet-handle,
+.memories-page .mem-sheet-foot,
+.memories-page .mem-scrim {
+  display: none;
+}
+
+/* Filter rail */
+.memories-page .mem-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.memories-page .mem-filters-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.memories-page .mem-filters-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+.memories-page .mem-text-button {
+  min-height: var(--target);
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-atmosphere);
+  font: 500 13px / 1 var(--font-ui);
+}
+.memories-page .mem-text-button:not(:disabled):hover {
+  box-shadow: none;
+  color: var(--text-primary);
+}
+.memories-page .mem-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.memories-page .mem-fieldset legend {
+  padding: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.memories-page .mem-fieldset:disabled legend {
+  color: var(--text-muted);
+}
+.memories-page .mem-filter-note {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.memories-page .mem-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.memories-page .mem-chip {
+  min-height: 32px;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-body);
+  font: 500 12px / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.memories-page .mem-chip[aria-pressed="true"],
+.memories-page .mem-person[aria-pressed="true"] {
+  background: var(--accent-node);
+  box-shadow: none;
+  color: var(--on-accent);
+}
+.memories-page .mem-chip:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+.memories-page .mem-chip[aria-pressed="true"]:hover {
+  box-shadow: none;
+}
+.memories-page .mem-person {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  min-height: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-primary);
+  font: 600 11px / 1 var(--font-ui);
+}
+.memories-page .mem-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.memories-page .mem-check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--type-ui);
+  cursor: pointer;
+}
+.memories-page .mem-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent-node);
+}
+.memories-page .mem-check-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.memories-page .mem-count {
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.memories-page .mem-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: var(--target);
+  padding-top: 8px;
+  box-shadow: inset 0 1px 0 var(--line-soft);
+  color: var(--text-body);
+  font-size: var(--type-ui);
+}
+.memories-page .mem-switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  min-height: 0;
+  height: var(--target);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.memories-page .mem-switch::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 10px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background-color var(--dur-quick) var(--ease-arrive);
+}
+.memories-page .mem-switch i {
+  position: absolute;
+  left: 9px;
+  top: 13px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform var(--dur-quick) var(--ease-arrive);
+}
+.memories-page .mem-switch[aria-checked="true"]::before {
+  background: var(--accent-node);
+  box-shadow: none;
+}
+.memories-page .mem-switch[aria-checked="true"] i {
+  transform: translateX(16px);
+  background: var(--on-accent);
+}
+.memories-page .mem-switch:not(:disabled):hover {
+  box-shadow: none;
+}
+.memories-page .mem-switch:disabled {
+  opacity: 0.5;
+  background: transparent;
+}
+
+/* Active filters */
+.memories-page .mem-active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.memories-page .mem-active:empty {
+  display: none;
+}
+.memories-page .mem-active-chip {
+  min-height: 32px;
+  padding: 0 8px 0 12px;
+  font-size: 13px;
+}
+
+/* Photo grid */
+.memories-page .mem-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 240px;
+}
+.memories-page .mem-moment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.memories-page .mem-moment-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding-top: 6px;
+  box-shadow: inset 0 1px 0 var(--line-soft);
+}
+.memories-page .mem-moment-title {
+  padding-top: 12px;
+  color: var(--text-primary);
+  font: 400 26px / 1.1 var(--font-display);
+  text-decoration: none;
+}
+.memories-page .mem-moment-title:hover {
+  color: var(--accent-atmosphere);
+}
+.memories-page .mem-moment-meta {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.memories-page .mem-moment-meta.is-about {
+  color: var(--warning);
+}
+.memories-page .mem-tiles {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.memories-page .mem-tile {
+  position: relative;
+  display: block;
+  border-radius: var(--radius-photo);
+}
+.memories-page .mem-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-photo);
+  background: var(--bg-raised);
+  transition: filter var(--dur-instant) ease-out;
+}
+.memories-page .mem-tile:hover img {
+  filter: brightness(1.08);
+}
+.memories-page .mem-about {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  padding: 2px 6px;
+  border-radius: var(--radius-photo);
+  background: var(--mem-badge-bg);
+  color: var(--mem-badge-ink);
+  font: 500 10px / 1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.memories-page .mem-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.memories-page .mem-skeleton-title {
+  width: 160px;
+  height: 20px;
+  margin-top: 18px;
+}
+.memories-page .mem-skeleton-tile {
+  aspect-ratio: 1;
+}
+.memories-page .mem-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 34rem;
+  padding: var(--space-6) 0;
+}
+.memories-page .mem-empty h2 {
+  margin: 0;
+  font-size: var(--type-display-m);
+  line-height: 1.02;
+}
+.memories-page .mem-empty p {
+  color: var(--text-body);
+  font-size: var(--type-body-s);
+  line-height: 1.55;
+}
+.memories-page .mem-empty .primary-action {
+  color: var(--on-accent);
+  overflow-wrap: normal;
+}
+.memories-page .mem-empty-frames {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  gap: 4px;
+}
+.memories-page .mem-empty-frames i {
+  height: 56px;
+  border-radius: var(--radius-photo);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.memories-page .mem-empty-frames i:last-child {
+  box-shadow: inset 0 0 0 1px var(--accent-node);
+}
+
+/* Stories and capsules keep their working forms below the grid. */
+.memories-page .mem-stories,
+.memories-page .mem-capsules {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  box-shadow: inset 0 1px 0 var(--line-soft);
+}
+.memories-page .mem-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+}
+.memories-page .mem-section-head h2,
+.memories-page .mem-capsules > h2 {
+  margin: 0 0 10px;
+}
+.memories-page .mem-section-head p,
+.memories-page .mem-capsules > p {
+  max-width: 62ch;
+  color: var(--text-body);
+  font-size: var(--type-body-s);
+}
+.memories-page .mem-year-form {
+  flex-wrap: nowrap;
+  margin: 0;
+}
+.memories-page .mem-year-form > label {
+  flex: none;
+}
+.memories-page .mem-year-form button {
+  margin: 0;
+  white-space: nowrap;
+}
+.memories-page .mem-year-form label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.memories-page .mem-year-form input {
+  width: 8rem;
+  font: 400 var(--type-body-s) / 1.2 var(--font-mono);
+  letter-spacing: normal;
+}
+.memories-page #recap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.memories-page #recap > h2,
+.memories-page #recap > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.memories-page #recap > p {
+  color: var(--text-secondary);
+  font-size: var(--type-ui);
+}
+.memories-page .mem-stories article.panel,
+.memories-page .mem-capsules article.panel,
+.memories-page .mem-capsules form.panel {
+  margin: 0;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.memories-page #stories,
+.memories-page #capsules {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+.memories-page #capsules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+}
+.memories-page #capsules > p,
+.memories-page #stories > p {
+  color: var(--text-secondary);
+  font-size: var(--type-ui);
+}
+.memories-page .mem-capsules form.panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px 24px;
+  margin: 20px 0;
+}
+.memories-page .mem-capsules form.panel > label {
+  margin: 0;
+  font-size: var(--type-ui);
+}
+.memories-page .mem-capsules form.panel > label:has(textarea) {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.memories-page .mem-capsules form.panel > button {
+  justify-self: start;
+  margin: 0;
+}
+.memories-page .mem-refresh {
+  margin-top: 20px;
+}
+
+@media (max-width: 1150px) {
+  .memories-page .mem-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* 800 and below: the rail becomes a bottom sheet. */
+@media (max-width: 800px) {
+  .memories-page .mem-layout {
+    display: block;
+  }
+  .memories-page .mem-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .memories-page .mem-filters-button {
+    display: inline-flex;
+  }
+  .memories-page .mem-narrow-label {
+    display: none;
+  }
+  .memories-page .mem-main .mem-year-row {
+    display: flex;
+  }
+  .memories-page .mem-year-row .mem-chip {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+  .memories-page .mem-filters {
+    display: none;
+  }
+  .memories-page .mem-filters.is-open {
+    position: fixed;
+    z-index: 47;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: 18px;
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px var(--gutter) 0;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+    animation: sheet-rise var(--dur-base) var(--ease-reveal);
+  }
+  .memories-page .mem-filters.is-closing {
+    animation: sheet-fall 240ms var(--ease-exit) forwards;
+  }
+  .memories-page .mem-scrim:not([hidden]) {
+    display: block;
+    position: fixed;
+    z-index: 46;
+    inset: 0;
+    background: var(--overlay-sheet);
+    animation: fade-in var(--dur-base) var(--ease-reveal);
+  }
+  .memories-page .mem-scrim.is-closing {
+    animation: fade-out 240ms var(--ease-exit) forwards;
+  }
+  .memories-page .is-open .mem-sheet-handle {
+    display: block;
+    flex: none;
+    align-self: center;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .memories-page .is-open .mem-filters-title {
+    font-size: 30px;
+  }
+  .memories-page .is-open .mem-fieldset legend {
+    font-size: 10px;
+    padding-bottom: 8px;
+  }
+  .memories-page .is-open .mem-chip {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+  .memories-page .is-open .mem-checks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .memories-page .is-open .mem-check {
+    position: relative;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .memories-page .is-open .mem-check input[type="checkbox"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .memories-page .is-open .mem-check:has(:checked) {
+    background: var(--accent-node);
+    box-shadow: none;
+    color: var(--on-accent);
+  }
+  .memories-page .is-open .mem-check:has(:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  .memories-page .is-open .mem-check .mem-count {
+    display: none;
+  }
+  .memories-page .is-open .mem-sheet-foot {
+    position: sticky;
+    bottom: 0;
+    display: block;
+    margin: auto calc(-1 * var(--gutter)) 0;
+    padding: 12px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+    background: var(--surface);
+  }
+  .memories-page .mem-apply {
+    width: 100%;
+    min-height: 52px;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--accent-terminator);
+    box-shadow: none;
+    color: var(--on-accent);
+    font: 600 var(--type-button) / 1 var(--font-ui);
+  }
+  .memories-page .mem-apply:not(:disabled):hover {
+    box-shadow: 0 0 32px var(--glow);
+  }
+  .memories-page .mem-title {
+    font-size: var(--type-display-l);
+  }
+}
+:root.mem-sheet-lock {
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .memories-page .mem-head {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .memories-page .mem-title {
+    font-size: 38px;
+  }
+  .memories-page .mem-summary,
+  .memories-page .mem-main .mem-year-row,
+  .memories-page .br-segmented,
+  .memories-page #grid-order {
+    display: none;
+  }
+  .memories-page .mem-wide-label {
+    display: none;
+  }
+  .memories-page .mem-narrow-label {
+    display: inline;
+  }
+  .memories-page .mem-filters-button {
+    min-height: var(--target);
+    font-size: var(--type-ui);
+    background: var(--bg-raised);
+  }
+  .memories-page .mem-active {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-right: calc(-1 * var(--gutter));
+    scrollbar-width: none;
+  }
+  .memories-page .mem-active-chip {
+    flex: none;
+  }
+  .memories-page .mem-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .memories-page .mem-moment-head {
+    justify-content: space-between;
+    box-shadow: none;
+    padding-top: 0;
+  }
+  .memories-page .mem-moment-title {
+    padding-top: 0;
+    font-size: var(--type-display-s);
+  }
+  .memories-page .mem-moment-meta {
+    font-size: 12px;
+  }
+  .memories-page .mem-about {
+    left: 4px;
+    top: 4px;
+    padding: 1px 5px;
+    font-size: 9px;
+  }
+  .memories-page .mem-filters.is-open {
+    top: 120px;
+    max-height: none;
+  }
+  .memories-page .mem-section-head {
+    align-items: stretch;
+  }
+  .memories-page .mem-capsules form.panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .memories-page .mem-capsules form.panel > label:has(textarea) {
+    grid-row: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memories-page .mem-filters.is-open,
+  .memories-page .mem-scrim:not([hidden]) {
+    animation: fade-in 160ms linear !important;
+  }
+  .memories-page .mem-filters.is-closing,
+  .memories-page .mem-scrim.is-closing {
+    animation: fade-out 120ms linear forwards !important;
+  }
+}

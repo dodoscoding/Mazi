@@ -1,64 +1,185 @@
-<h1>Our memories, in our words.</h1>
-<p class="intro">
-  Revisit approved memories and add your own recollections. Approve memories in
-  Archive review to get started.
-</p>
-<label>Group<select id="groups"></select></label>
-<form id="year-form" class="panel">
-  <label
-    >Year<input
-      id="year"
-      type="number"
-      min="1"
-      max="9999"
-      value="2024"
-      required /></label
-  ><button>Show year</button>
-</form>
-<p id="notice" role="status"></p>
-<section id="recap" aria-label="Annual recap"></section>
-<h2>Stories we share</h2>
-<p>
-  Each member can edit or remove their own recollection. The creator can delete
-  the story. Exports contain currently accessible text and references;
-  downloaded copies cannot be recalled.
-</p>
-<button id="refresh" type="button">Refresh stories</button>
-<section id="stories" aria-label="Collaborative stories"></section>
-<h2>Time capsules</h2>
-<p>
-  Seal a new note and optional photograph. Nobody, including you, can read or
-  edit it before the server opening time. You can delete it. Existing archive
-  photographs stay shared; this upload is stored separately.
-</p>
-<form id="capsule-form" class="panel">
-  <label
-    >Capsule title<input id="capsule-title" required maxlength="200"
-  /></label>
-  <label
-    >Note for the future<textarea
-      id="capsule-text"
-      required
-      maxlength="4000"
-    ></textarea>
-  </label>
-  <label
-    >Opening time (your local time)<input
-      id="capsule-date"
-      type="datetime-local"
-      required
-  /></label>
-  <label
-    >Optional photo (JPEG/PNG, up to 2 MiB)<input
-      id="capsule-photo"
-      type="file"
-      accept="image/jpeg,image/png"
-  /></label>
-  <button>Seal capsule</button>
-</form>
-<label class="check"
-  ><input id="notifications-enabled" type="checkbox" />Show in-app capsule
-  notifications</label
->
-<p id="notifications" role="status"></p>
-<section id="capsules" aria-label="Time capsules"></section>
+<div class="memories-page">
+  <div class="mem-layout">
+    <div id="filters-scrim" class="mem-scrim" hidden></div>
+    <aside
+      id="memory-filters"
+      class="mem-filters"
+      aria-labelledby="filters-title"
+    >
+      <span class="mem-sheet-handle" aria-hidden="true"></span>
+      <div class="mem-filters-head">
+        <h2 id="filters-title" class="mem-filters-title">Filters</h2>
+        <button id="filters-reset" type="button" class="mem-text-button">
+          Reset
+        </button>
+      </div>
+      <fieldset class="mem-fieldset">
+        <legend>Year</legend>
+        <div id="filter-years" class="mem-chips"></div>
+      </fieldset>
+      <fieldset id="place-filter" class="mem-fieldset">
+        <legend>Place</legend>
+        <div id="filter-places" class="mem-checks"></div>
+      </fieldset>
+      <fieldset id="person-filter" class="mem-fieldset">
+        <legend>Person</legend>
+        <div id="filter-people" class="mem-chips mem-people"></div>
+      </fieldset>
+      <fieldset id="source-filter" class="mem-fieldset">
+        <legend>Source</legend>
+        <div id="filter-sources" class="mem-checks"></div>
+      </fieldset>
+      <div class="mem-switch-row">
+        <span id="uncertain-label">Only uncertain dates</span>
+        <button
+          id="filter-uncertain"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-labelledby="uncertain-label"
+          class="mem-switch"
+        >
+          <i></i>
+        </button>
+      </div>
+      <div class="mem-sheet-foot">
+        <button id="filters-apply" type="button" class="mem-apply">
+          Show photos
+        </button>
+      </div>
+    </aside>
+    <div class="mem-main">
+      <header class="mem-head">
+        <div class="mem-heading">
+          <h1 class="mem-title">Memories</h1>
+          <p id="grid-summary" class="mem-summary"></p>
+        </div>
+        <div class="mem-controls">
+          <label class="mem-group">Group<select id="groups"></select></label>
+          <div
+            id="grid-view"
+            class="br-segmented"
+            role="group"
+            aria-label="View"
+          >
+            <button type="button" aria-pressed="true" data-view="moment">
+              By moment
+            </button>
+            <button type="button" aria-pressed="false" data-view="all">
+              All photos
+            </button>
+          </div>
+          <button id="grid-order" type="button" class="mem-pill">
+            <span class="visually-hidden">Order: </span
+            ><span id="grid-order-label">Newest first</span>
+          </button>
+          <button
+            id="filters-open"
+            type="button"
+            class="mem-pill mem-filters-button"
+            aria-expanded="false"
+            aria-controls="memory-filters"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M4 6h16M7 12h10M10 18h4" /></svg
+            ><span class="mem-wide-label">More filters</span
+            ><span class="mem-narrow-label">Filters</span
+            ><span id="filters-count"></span>
+          </button>
+        </div>
+      </header>
+      <div
+        id="year-chips"
+        class="mem-chips mem-year-row"
+        role="group"
+        aria-label="Years"
+      ></div>
+      <div
+        id="active-filters"
+        class="mem-active"
+        role="group"
+        aria-label="Active filters"
+      ></div>
+      <div id="grid" class="mem-grid"></div>
+    </div>
+  </div>
+
+  <section class="mem-stories" aria-labelledby="stories-heading">
+    <div class="mem-section-head">
+      <div>
+        <h2 id="stories-heading">Stories we share</h2>
+        <p>
+          Each member can edit or remove their own recollection. The creator can
+          delete the story. Exports contain currently accessible text and
+          references; downloaded copies cannot be recalled.
+        </p>
+      </div>
+      <form id="year-form" class="mem-year-form">
+        <label
+          >Year<input
+            id="year"
+            type="number"
+            min="1"
+            max="9999"
+            value="2024"
+            required /></label
+        ><button>Show year</button>
+      </form>
+    </div>
+    <p id="notice" role="status"></p>
+    <section id="recap" aria-label="Annual recap"></section>
+    <button id="refresh" type="button" class="mem-refresh">
+      Refresh stories
+    </button>
+    <section id="stories" aria-label="Collaborative stories"></section>
+  </section>
+
+  <div class="mem-capsules">
+    <h2 id="capsules-heading">Time capsules</h2>
+    <p>
+      Seal a new note and optional photograph. Nobody, including you, can read
+      or edit it before the server opening time. You can delete it. Existing
+      archive photographs stay shared; this upload is stored separately.
+    </p>
+    <form id="capsule-form" class="panel">
+      <label
+        >Capsule title<input id="capsule-title" required maxlength="200"
+      /></label>
+      <label
+        >Note for the future<textarea
+          id="capsule-text"
+          required
+          maxlength="4000"
+        ></textarea>
+      </label>
+      <label
+        >Opening time (your local time)<input
+          id="capsule-date"
+          type="datetime-local"
+          required
+      /></label>
+      <label
+        >Optional photo (JPEG/PNG, up to 2 MiB)<input
+          id="capsule-photo"
+          type="file"
+          accept="image/jpeg,image/png"
+      /></label>
+      <button>Seal capsule</button>
+    </form>
+    <label class="check"
+      ><input id="notifications-enabled" type="checkbox" />Show in-app capsule
+      notifications</label
+    >
+    <p id="notifications" role="status"></p>
+    <section id="capsules" aria-label="Time capsules"></section>
+  </div>
+</div>
