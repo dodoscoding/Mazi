@@ -59,7 +59,11 @@ test("Sign out on About asks first; Stay keeps the session and confirming ends i
     dialog.getByRole("button", { name: "Stay signed in" }),
   ).toBeFocused();
   await dialog.getByRole("button", { name: "Stay signed in" }).click();
+  // A late press on Sign out while the dialog fades away must not sign out.
+  await page.locator(".about-dialog .button--primary").dispatchEvent("click");
   await expect(dialog).toBeHidden();
+  await page.waitForTimeout(300);
+  await expect(page.getByLabel("Shared code")).toHaveCount(0);
   await expect(page).toHaveURL(/#\/about/);
   expect((await page.request.get("/api/groups")).status()).toBe(200);
   await main.getByRole("button", { name: "Sign out", exact: true }).click();
