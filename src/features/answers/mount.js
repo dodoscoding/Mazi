@@ -312,6 +312,7 @@ export function mount(root, lifecycle) {
     clear();
     const current = revision;
     const question = $("question").value;
+    const askedGroup = group;
     page.dataset.asked = "true";
     $("ask").disabled = true;
     $("notice").dataset.state = "thinking";
@@ -322,7 +323,11 @@ export function mount(root, lifecycle) {
         group,
         question,
       });
-      if (current !== revision) return;
+      if (current !== revision) {
+        // A stopped request still counted against today's limit; show it.
+        if (group === askedGroup) usage(result.usage);
+        return;
+      }
       $("notice").dataset.state = "";
       $("notice").textContent =
         result.status === "supported"
