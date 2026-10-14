@@ -39,7 +39,10 @@ test("authorized places, filters, optional paths, source controls and privacy", 
     await source.getByRole("button", { name: "Pause source" }).click();
   await expect(source).toContainText("Paused");
   await source.getByRole("button", { name: "View transfers" }).click();
-  await expect(page.locator("#resources article")).toHaveCount(2);
+  await expect(page.locator("#resources article")).toHaveCount(3);
+  await expect(page.locator("#resources")).toContainText(
+    "Paused · resume from companion",
+  );
   await expect(
     page.getByRole("link", { name: "Download original resource" }),
   ).toHaveCount(2);

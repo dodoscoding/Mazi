@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlsplit
 from phase1.core import Conflict, Denied
 from phase3.server import handler_for as review_handler
 from .sources import SourceStore
-from .discord import DiscordClient, RateLimited, poll_source
+from .discord import DiscordClient, ProviderDenied, RateLimited, poll_source
 
 STATIC = Path(__file__).parent
 
@@ -100,6 +100,20 @@ def handler_for(store):
     return Handler
 
 
+def settle_poll(store, user, connection, client):
+    try:
+        poll_source(store, user, connection, client)
+    except ProviderDenied:
+        try:
+            store.set_source(user, connection, False, 'revoked')
+        except Denied:
+            pass
+        return 'revoked'
+    except Denied:
+        return 'paused'
+    return 'ok'
+
+
 def worker(root, stop):
     store = SourceStore(root)
     token = os.environ.get('MAZI_DISCORD_BOT_TOKEN')
@@ -116,13 +130,7 @@ def worker(root, stop):
                     for source in store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
                         if source['id'] not in store.discord_sources:
                             continue
-                        try:
-                            poll_source(store, source['owner_id'], source['id'], client)
-                        except Denied:
-                            try:
-                                store.set_source(source['owner_id'], source['id'], False, 'revoked')
-                            except Denied:
-                                pass  # Removed owners cannot ingest; membership fences still apply.
+                        settle_poll(store, source['owner_id'], source['id'], client)
                 if not store.work_once():
                     stop.wait(0.5)
             except RateLimited as exc:

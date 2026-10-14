@@ -11,11 +11,20 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   });
   await page.goto("/discover");
   await expect(page.locator("#results article")).toHaveCount(3);
+  const groupAlreadyOn = await page
+    .getByLabel("Enable optional local processing")
+    .isChecked();
   await page.getByLabel("Search mode").selectOption("semantic");
+  const searched = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/discovery/search") &&
+      response.request().method() === "GET",
+  );
   await page.getByRole("button", { name: "Search archive" }).click();
+  await searched;
   await expect(
     page.getByRole("button", { name: "Find similar colors" }),
-  ).toHaveCount(0);
+  ).toHaveCount(groupAlreadyOn ? 3 : 0);
   await page.getByLabel("Search mode").selectOption("keyword");
   await page
     .getByText("My visibility & processing choices", { exact: true })
