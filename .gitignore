@@ -8,6 +8,7 @@ __pycache__/
 *.pyc
 .mazi-pilot/
 .mazi-imports/
+.mazi-hosted/
 .DS_Store
 .impeccable/config.local.json
 .impeccable/questions/*.state.json
@@ -15,5 +16,9 @@ __pycache__/
 
 tools/apple-photos/build/
 .models/
+
+.env.supabase
+.supabase-secrets/
+work/poteto/supabase-migration/private/
 
 work/poteto/unified-app/browser-results/

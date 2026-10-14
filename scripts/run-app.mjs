@@ -1,13 +1,53 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { loadEnvFile } from "node:process";
 import { resolve } from "node:path";
 import { createServer } from "node:net";
 
 const built = process.argv.includes("--built");
+const local = process.argv.includes("--local");
+const hosted = process.argv.includes("--supabase");
+if (local && hosted) throw Error("Choose --local or --supabase");
+if (
+  hosted &&
+  process.env.MAZI_BACKEND &&
+  process.env.MAZI_BACKEND !== "supabase"
+)
+  throw Error("--supabase conflicts with MAZI_BACKEND");
+if (local) process.env.MAZI_BACKEND = "local";
+else if (hosted || (!process.env.MAZI_BACKEND && existsSync(".env.supabase"))) {
+  loadEnvFile(".env.supabase");
+  if (process.env.MAZI_BACKEND !== "supabase")
+    throw Error("Hosted startup requires MAZI_BACKEND=supabase");
+}
+if (!process.env.MAZI_BACKEND) process.env.MAZI_BACKEND = "local";
+if (
+  process.env.MAZI_BACKEND === "supabase" &&
+  !process.env.MAZI_IMPORT_DATA_DIR
+)
+  process.env.MAZI_IMPORT_DATA_DIR = ".mazi-hosted";
+if (process.argv.includes("--check-mode")) {
+  console.log(
+    JSON.stringify({
+      backend: process.env.MAZI_BACKEND,
+      dataDirectory: process.env.MAZI_IMPORT_DATA_DIR || ".mazi-imports",
+    }),
+  );
+  process.exit(0);
+}
 const python =
   process.env.MAZI_PYTHON ||
   (existsSync(".venv/bin/python") ? resolve(".venv/bin/python") : "python3");
-const check = spawnSync(python, ["-c", "import PIL"], { stdio: "ignore" });
+const check = spawnSync(
+  python,
+  [
+    "-c",
+    process.env.MAZI_BACKEND === "supabase"
+      ? "import PIL, psycopg"
+      : "import PIL",
+  ],
+  { stdio: "ignore" },
+);
 if (check.status !== 0) {
   console.error("Install the Python dependency first: npm run setup");
   process.exit(1);

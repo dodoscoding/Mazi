@@ -1,6 +1,8 @@
 """Local review screen and API. Bind only to localhost."""
 from __future__ import annotations
 
+from mazi.persistence import ArchiveBusy
+
 import json
 import os
 import threading
@@ -56,6 +58,8 @@ def handler_for(store):
                 if path.startswith("/api/review/rendition/"):
                     return self.send(200, store.rendition_bytes(user, path.rsplit("/", 1)[1]), "image/jpeg")
                 self.json(404, {"error": "Not found"})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
             except (ValueError, TypeError):
@@ -98,6 +102,8 @@ def handler_for(store):
                 else:
                     return self.json(404, {"error": "Not found"})
                 self.json(200, {"ok": True})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
             except Conflict as exc:

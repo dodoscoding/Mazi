@@ -1,5 +1,7 @@
 """Loopback-only Advanced memories, inheriting import/review/discovery routes."""
 import json
+
+from mazi.persistence import ArchiveBusy
 import os
 import threading
 from http.server import HTTPServer
@@ -40,6 +42,8 @@ def handler_for(store):
                 if parts.path in ('/api/memories/story', '/api/memories/export'):
                     return self.json(200, store.story(user, query['group'], query['story']))
                 return self.json(404, {'error': 'Not found'})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (KeyError, TypeError, ValueError):
@@ -82,6 +86,8 @@ def handler_for(store):
                     store.delete_story(user, body['group'], body['story'], body['revision'])
                     return self.json(200, {'ok': True})
                 return self.json(404, {'error': 'Not found'})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:

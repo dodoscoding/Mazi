@@ -5,11 +5,13 @@ presentation grouping; every original remains accessible through its own ID.
 """
 from __future__ import annotations
 
+from mazi.persistence import initialize_schema, insertion_order
+
 import io
 import json
 import hashlib
 import zipfile
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import time
 
 from PIL import Image, ImageOps, ImageStat
@@ -57,7 +59,7 @@ def signature(data):
 class ReviewStore(ImportStore):
     def __init__(self, root):
         super().__init__(root)
-        self.db.executescript(SCHEMA)
+        initialize_schema(self.db, SCHEMA)
 
     def _visible_ids(self, user, group):
         self._member(user, group)
@@ -105,10 +107,10 @@ class ReviewStore(ImportStore):
                 self.db.execute("DELETE FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=?",
                                 (group, left, right))
             else:
-                self.db.execute("INSERT INTO review_pairs VALUES(?,?,?,?,?,datetime('now')) "
+                self.db.execute("INSERT INTO review_pairs VALUES(?,?,?,?,?,?) "
                                 "ON CONFLICT(group_id,left_id,right_id) DO UPDATE SET "
                                 "status=excluded.status,actor_id=excluded.actor_id,updated_at=excluded.updated_at",
-                                (group, left, right, "merged" if action == "merge" else "dismissed", user))
+                                (group, left, right, "merged" if action == "merge" else "dismissed", user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
                 if action == "merge":
                     choices = [self.db.execute("SELECT width,height,size FROM archive_assets WHERE id=?", (asset,)).fetchone()
                                for asset in (left, right)]
@@ -130,7 +132,7 @@ class ReviewStore(ImportStore):
         return [{"id": row["id"], "asset": row["asset_id"],
                  "filename": json.loads(row["payload"]).get("original_filename") or "Unnamed photograph"}
                 for row in self.db.execute("SELECT id,asset_id,payload FROM archive_origins "
-                                           "WHERE owner_id=? AND group_id=? AND withdrawn=0 ORDER BY rowid DESC LIMIT 1000",
+                                           'WHERE owner_id=? AND group_id=? AND withdrawn=0 ORDER BY ' + insertion_order(self.db, '') + ' DESC LIMIT 1000',
                                            (user, group))]
 
     def group_metrics(self, user, group):
@@ -304,11 +306,11 @@ class ReviewStore(ImportStore):
             raise ValueError("Anniversary needs an approved date")
         with self.transaction():
             self._asset(user, asset)
-            self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,datetime('now')) "
+            self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,?) "
                             "ON CONFLICT(asset_id) DO UPDATE SET title=excluded.title,capture_date=excluded.capture_date,"
                             "place=excluded.place,anniversary=excluded.anniversary,actor_id=excluded.actor_id,"
                             "updated_at=excluded.updated_at",
-                            (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user))
+                            (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
             self._audit(user, "review.correct", asset)
 
     def timeline(self, user, group, offset=0, limit=30, query=""):
@@ -358,11 +360,11 @@ class ReviewStore(ImportStore):
                     event_id = matches[0]
                 self.db.execute("DELETE FROM review_events WHERE id=? AND group_id=?", (event_id, group))
             else:
-                self.db.execute("INSERT INTO review_events VALUES(?,?,?,?,?,?,datetime('now')) "
+                self.db.execute("INSERT INTO review_events VALUES(?,?,?,?,?,?,?) "
                                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title,status=excluded.status,"
                                 "actor_id=excluded.actor_id,updated_at=excluded.updated_at",
                                 (event_id, group, json.dumps(sorted(assets)), title.strip(),
-                                 "accepted" if decision == "accept" else "rejected", user))
+                                 "accepted" if decision == "accept" else "rejected", user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
             self._audit(user, "review.event." + decision, event_id)
         return event_id
 

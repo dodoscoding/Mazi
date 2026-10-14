@@ -1,6 +1,8 @@
 """Local import UI plus the existing account/group endpoints."""
 from __future__ import annotations
 
+from mazi.persistence import ArchiveBusy
+
 import base64
 import json
 import os
@@ -44,6 +46,8 @@ def handler_for(store):
                     data = store.asset_bytes(user, bits[3], bits[4] == "original")
                     return self.send(200, data, "image/jpeg" if bits[4] == "preview" else "application/octet-stream")
                 self.json(404, {"error": "Not found"})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
             except (ValueError, TypeError):
@@ -84,6 +88,8 @@ def handler_for(store):
                     return self.json(404, {"error": "Not found"})
                 action()
                 self.json(200, {"ok": True})
+            except ArchiveBusy:
+                return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
             except Conflict as exc:

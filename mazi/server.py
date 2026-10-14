@@ -1,5 +1,7 @@
 """One loopback app origin for the Atlas interface and authorized archive APIs."""
 import mimetypes
+
+from mazi.persistence import ArchiveBusy
 import os
 import threading
 from http.server import HTTPServer
@@ -30,6 +32,8 @@ def handler_for(store, dist=None):
                     from .atlas import atlas_view
                     group = parse_qs(parts.query).get('group', [''])[0]
                     return self.json(200, atlas_view(store, self.user(), group))
+                except ArchiveBusy:
+                    return self.json(503, {"error": "Archive is busy; retry shortly"})
                 except Denied as exc:
                     return self.json(403, {'error': str(exc)})
                 except (ValueError, TypeError):
