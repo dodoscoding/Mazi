@@ -351,6 +351,11 @@ class ReviewStore(ImportStore):
             if not set(assets) <= visible:
                 raise Denied("Media unavailable")
             if decision == "undo":
+                wanted = sorted(assets)
+                matches = [row["id"] for row in self.db.execute("SELECT id, asset_ids FROM review_events WHERE group_id=?", (group,))
+                           if sorted(asset for asset in json.loads(row["asset_ids"]) if asset in visible) == wanted]
+                if len(matches) == 1:
+                    event_id = matches[0]
                 self.db.execute("DELETE FROM review_events WHERE id=? AND group_id=?", (event_id, group))
             else:
                 self.db.execute("INSERT INTO review_events VALUES(?,?,?,?,?,?,datetime('now')) "

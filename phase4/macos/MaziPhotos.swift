@@ -156,12 +156,19 @@ struct LibraryItem: Identifiable {
         }
     }
 
+    func albumIdentifiers(for asset: PHAsset) -> [String] {
+        var identifiers: [String] = []
+        PHAssetCollection.fetchAssetCollectionsContaining(asset, with: .album, options: nil).enumerateObjects { collection, _, _ in
+            identifiers.append(collection.localIdentifier)
+        }
+        return identifiers.sorted()
+    }
+
     func transfer() {
         guard !busy else { return }
         UserDefaults.standard.set(connection, forKey: "source")
         UserDefaults.standard.set(Array(selected), forKey: "selected")
         let selection = items.filter { selected.contains($0.id) }
-        let selectedAlbum = album
         busy = true
         task = Task {
             var outcomes: [String] = []
@@ -182,9 +189,10 @@ struct LibraryItem: Identifiable {
                             let formatter = DateFormatter(); formatter.dateFormat = "yyyy-MM-dd"; formatter.locale = Locale(identifier: "en_US_POSIX")
                             guard let created = item.asset.creationDate else { outcomes.append("\(resource.maziFilename): missing capture date; not uploaded"); continue }
                             // Every PhotoKit resource gets its own stable identity; changes create a new version.
+                            let videoResources: Set<PHAssetResourceType> = [.video, .fullSizeVideo, .pairedVideo, .fullSizePairedVideo]
                             let metadata: [String: Any] = ["item": item.id, "component": "\(resource.type.rawValue):\(resource.maziFilename)", "version": hash,
                                 "filename": resource.maziFilename, "date": formatter.string(from: created), "capture_date": formatter.string(from: created),
-                                "kind": item.asset.mediaType == .video ? "video" : "image", "albums": selectedAlbum.isEmpty ? [] : [selectedAlbum]]
+                                "kind": videoResources.contains(resource.type) ? "video" : "image", "albums": self.albumIdentifiers(for: item.asset)]
                             let transfer = try await post("api/sources/begin", ["connection": connection, "metadata": metadata, "size": data.count, "sha256": hash])
                             guard let id = transfer["id"] as? String else { throw CancellationError() }
                             if transfer["state"] as? String == "UPLOADING" {
@@ -237,6 +245,12 @@ final class ResourceBuffer: @unchecked Sendable {
                 HStack { TextField("Mazi email", text: $model.email); SecureField("Password", text: $model.password); Button("Sign in", action: model.signIn) }.disabled(model.busy)
                 TextField("Apple source ID from Places & sources", text: $model.connection).disabled(model.busy)
                 HStack { Button("Allow Photos access", action: model.authorize); Picker("Album", selection: $model.album) { Text("All albums").tag(""); ForEach(model.albums, id: \.0) { Text($0.1).tag($0.0) } }; Picker("Media", selection: $model.kind) { Text("Photos & videos").tag("all"); Text("Photos").tag("image"); Text("Videos").tag("video") } }.disabled(model.busy)
+                if !model.album.isEmpty {
+                    Text("Album ID: \(model.album)")
+                        .font(.caption)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 HStack { DatePicker("From", selection: $model.from, displayedComponents: .date); DatePicker("Through", selection: $model.through, displayedComponents: .date); Button("Refresh selection", action: model.reload) }.disabled(model.busy)
                 Text("Up to 1,000 metadata records. Narrow the date range for larger libraries. No image bytes are read until you transfer.").font(.caption)
                 List(model.items) { item in

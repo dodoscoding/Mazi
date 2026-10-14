@@ -211,6 +211,20 @@ async function loadSources() {
           "/api/sources/resources?" +
             new URLSearchParams({ connection: source.id }),
         )) {
+          const labels = {
+            AVAILABLE_TO_GROUP: "Shared with group",
+            RETAINED_NO_PREVIEW: "Original retained · preview unavailable",
+            UPLOADING: "Transfer in progress",
+            QUEUED: "Preparing preview",
+            CANCELLED: "Paused · resume from companion",
+            FAILED: "Could not prepare preview",
+            UNSUPPORTED: "Preview format unsupported",
+          };
+          const stateLabel =
+            !source.enabled && resource.state === "UPLOADING"
+              ? "Paused · resume from companion"
+              : labels[resource.state] ||
+                resource.state.toLowerCase().replaceAll("_", " ");
           const item = node("article");
           item.append(
             node("h3", resource.metadata.filename),
@@ -220,7 +234,7 @@ async function loadSources() {
             ),
             node(
               "p",
-              `${{ AVAILABLE_TO_GROUP: "Shared with group", RETAINED_NO_PREVIEW: "Original retained · preview unavailable", UPLOADING: "Transfer in progress", QUEUED: "Preparing preview", CANCELLED: "Paused · resume from companion", FAILED: "Could not prepare preview", UNSUPPORTED: "Preview format unsupported" }[resource.state] || resource.state.toLowerCase().replaceAll("_", " ")} · ${resource.received} / ${resource.size} bytes`,
+              `${stateLabel} · ${resource.received} / ${resource.size} bytes`,
             ),
           );
           if (
