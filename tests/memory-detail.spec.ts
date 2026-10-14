@@ -108,7 +108,9 @@ const archive = [
   },
 ];
 
-const isPhone = (testInfo: TestInfo) => testInfo.project.name === "phone";
+// Width, not project name, so firefox-phone takes the phone paths too.
+const isPhone = (testInfo: TestInfo) =>
+  (testInfo.project.use.viewport?.width ?? 1440) <= 600;
 
 async function enter(page: Page) {
   const login = await page.request.post("/api/entry", {
