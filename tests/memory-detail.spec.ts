@@ -378,6 +378,7 @@ for (const theme of ["night", "day"] as const)
   });
 
 test("capture memory evidence screenshots", async ({ page }, testInfo) => {
+  test.skip(!process.env.MAZI_EVIDENCE, "Set MAZI_EVIDENCE=1 to capture.");
   const phone = isPhone(testInfo);
   await page.setViewportSize(
     phone ? { width: 390, height: 844 } : { width: 1440, height: 900 },
@@ -423,6 +424,7 @@ test("capture memory evidence screenshots", async ({ page }, testInfo) => {
 test("capture memory evidence at the responsive widths", async ({
   page,
 }, testInfo) => {
+  test.skip(!process.env.MAZI_EVIDENCE, "Set MAZI_EVIDENCE=1 to capture.");
   test.skip(isPhone(testInfo), "Responsive widths are desktop captures.");
   await page.emulateMedia({ reducedMotion: "reduce" });
   mkdirSync(evidence, { recursive: true });
