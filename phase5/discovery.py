@@ -137,7 +137,13 @@ class DiscoveryStore(SourceStore):
 
     def hidden(self, user, group):
         allowed = set(super()._visible_ids(user, group))
-        return [{'id': r[0]} for r in self.db.execute('SELECT asset FROM discovery_hidden WHERE user=?', (user,)) if r[0] in allowed]
+        hidden = []
+        for (asset,) in self.db.execute('SELECT asset FROM discovery_hidden WHERE user=?', (user,)):
+            if asset not in allowed:
+                continue
+            title = self.db.execute('SELECT title FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
+            hidden.append({'id': asset, 'title': title['title'] if title and title['title'] else 'Untitled photograph'})
+        return hidden
 
     def _person(self, user, person):
         row = self.db.execute('SELECT * FROM discovery_people WHERE id=?', (person,)).fetchone()
@@ -421,13 +427,15 @@ class DiscoveryStore(SourceStore):
             except RuntimeError:
                 semantic, query_vector = False, None
             unindexed = 0
-            if similar and (not semantic or similar not in visible):
-                raise Denied('Reference image unavailable for processing')
             reference = None
             if similar:
+                if similar not in visible:
+                    raise Denied('Reference image unavailable for processing')
+                if not semantic:
+                    raise Conflict('Similar search needs semantic mode and group processing')
                 doc = self._document(user, similar)
                 if not doc['eligible']:
-                    raise Denied('Reference image unavailable for processing')
+                    raise Conflict('This photograph is not included in local related search until its contributors allow processing')
                 cached = self._vectors(user, group, doc)
                 if cached is None:
                     raise Conflict('Build the local search index before using this reference image')

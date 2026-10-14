@@ -11,6 +11,12 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   });
   await page.goto("/discover");
   await expect(page.locator("#results article")).toHaveCount(3);
+  await page.getByLabel("Search mode").selectOption("semantic");
+  await page.getByRole("button", { name: "Search archive" }).click();
+  await expect(
+    page.getByRole("button", { name: "Find similar colors" }),
+  ).toHaveCount(0);
+  await page.getByLabel("Search mode").selectOption("keyword");
   await page
     .getByText("My visibility & processing choices", { exact: true })
     .click();
@@ -27,6 +33,9 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   await expect(page.locator("#results")).toContainText(
     "Bicycle beside the sea",
   );
+  await expect(
+    page.getByRole("button", { name: "Find similar colors" }),
+  ).toHaveCount(1);
   await page.getByRole("button", { name: "Hide from my discovery" }).click();
   await expect(page.locator("#results article")).toHaveCount(0);
   await page.getByRole("button", { name: "Restore hidden photograph" }).click();

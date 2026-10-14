@@ -4,6 +4,7 @@ let indexRun = 0,
 let group = "",
   groups = [],
   people = [],
+  groupEnabled = false,
   generation = 0,
   next = null,
   similar = "";
@@ -184,7 +185,7 @@ async function search(offset = 0) {
         mutate("hide", { asset: item.id, enabled: true }),
       ),
     );
-    if ($("#mode").value === "semantic")
+    if ($("#mode").value === "semantic" && groupEnabled)
       card.append(
         action(
           learned ? "Find similar photographs" : "Find similar colors",
@@ -219,6 +220,7 @@ async function refresh() {
     !state.settings.model_ready ||
     !state.settings.group_enabled;
   learned = state.settings.learned;
+  groupEnabled = state.settings.group_enabled;
   people = state.people;
   for (const event of state.memories)
     $("#memories").append(
@@ -260,8 +262,9 @@ async function refresh() {
     );
   for (const item of state.hidden)
     $("#hidden-items").append(
-      action("Restore hidden photograph", () =>
-        mutate("hide", { asset: item.id, enabled: false }),
+      action(
+        `Restore hidden photograph: ${item.title || "Untitled photograph"}`,
+        () => mutate("hide", { asset: item.id, enabled: false }),
       ),
     );
   for (const item of state.suppressed)

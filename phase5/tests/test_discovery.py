@@ -102,7 +102,9 @@ class DiscoveryTests(unittest.TestCase):
             self.assertEqual(json.loads(archive.read('manifest.json'))['assets'], [])
         self.assertEqual(self.store.search(self.alice, self.group)['total'], 1)
         self.assertTrue(self.store.asset_bytes(self.ben, self.asset))
-        self.assertEqual(len(self.store.hidden(self.ben, self.group)), 1)
+        hidden = self.store.hidden(self.ben, self.group)
+        self.assertEqual(len(hidden), 1)
+        self.assertEqual(hidden[0]['title'], 'A bicycle beside the sea')
         self.store.hide(self.ben, self.asset, False)
         self.assertEqual(self.store.search(self.ben, self.group, person=person)['total'], 1)
 
@@ -187,6 +189,19 @@ class DiscoveryTests(unittest.TestCase):
                 copy.close()
         self.store.hide_event(self.ben, self.group, event, False)
         self.assertEqual(len(self.store.accepted_events(self.ben, self.group)), 1)
+
+    def test_similar_search_refuses_unavailable_processing_without_denying_access(self):
+        with self.assertRaises(Conflict) as off:
+            self.store.search(self.alice, self.group, mode='semantic', similar=self.asset)
+        self.assertIn('group processing', str(off.exception))
+        self.enable()
+        with self.assertRaises(Conflict) as keyword:
+            self.store.search(self.alice, self.group, mode='keyword', similar=self.asset)
+        self.assertIn('semantic mode', str(keyword.exception))
+        self.store.processing(self.alice, self.group, False)
+        with self.assertRaises(Conflict) as blocked:
+            self.store.search(self.ben, self.group, mode='semantic', similar=self.asset)
+        self.assertIn('contributors', str(blocked.exception))
 
     def test_image_reference_consent_and_cross_group_denial(self):
         self.enable()
