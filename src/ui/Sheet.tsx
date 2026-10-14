@@ -59,7 +59,8 @@ export function Sheet({
   useEffect(() => {
     if (open && mounted)
       sheet.current
-        ?.querySelector<HTMLElement>(`.sheet-body ${focusable}`)
+        ?.querySelector(".sheet-body")
+        ?.querySelector<HTMLElement>(focusable)
         ?.focus({ preventScroll: true });
   }, [open, mounted]);
   if (!mounted) return null;
@@ -92,13 +93,15 @@ export function Sheet({
     <div
       className={`sheet-root ${closing ? "is-closing" : ""} ${className}`.trim()}
       style={style}
+      aria-hidden={closing || undefined}
+      inert={closing}
     >
       <div className="sheet-scrim" aria-hidden="true" onClick={onClose} />
       <div
         ref={sheet}
         className="sheet"
         role="dialog"
-        aria-modal="true"
+        aria-modal={!closing}
         aria-label={label}
         onKeyDown={onKeyDown}
       >

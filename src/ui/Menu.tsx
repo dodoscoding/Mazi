@@ -23,7 +23,9 @@ export function Menu({
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
   const items = () =>
-    Array.from(panel.current?.querySelectorAll<HTMLElement>(focusable) || []);
+    Array.from(
+      panel.current?.querySelectorAll<HTMLElement>(focusable) || [],
+    ).filter((item) => item.getClientRects().length > 0);
   useEffect(() => {
     if (!open) return;
     items()[0]?.focus();

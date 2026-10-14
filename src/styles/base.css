@@ -552,14 +552,3 @@ time,
     animation: fade-out 120ms linear forwards !important;
   }
 }
-
-/* Legacy names kept until every page reads the token names directly. */
-:root {
-  --ground: var(--bg-void);
-  --ink: var(--text-primary);
-  --muted: var(--text-secondary);
-  --copper: var(--accent-node);
-  --action: var(--accent-terminator);
-  --serif: var(--font-display);
-  --sans: var(--font-ui);
-}

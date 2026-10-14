@@ -153,6 +153,7 @@ export default function App() {
       path={route.path}
       demo={demo}
       archive={archive}
+      profileName={entry.state.profile.display_name}
       link={link}
       onSignOut={() => {
         void entry.logout();

@@ -112,6 +112,7 @@
   --atmosphere-tint: rgba(143, 211, 255, 0.12);
   --terminator-tint: rgba(255, 180, 106, 0.16);
   --shadow-float: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --bar: var(--bg-deep);
 }
 :root[data-theme="day"] {
   color-scheme: light;
@@ -144,6 +145,8 @@
   --atmosphere-tint: rgba(31, 111, 168, 0.1);
   --terminator-tint: rgba(168, 90, 18, 0.12);
   --shadow-float: 0 18px 48px rgba(16, 20, 27, 0.16);
+  /* Accents fall below 4.5:1 on day bg.deep, so phone bars use the surface. */
+  --bar: var(--surface);
 }
 
 :root {
@@ -180,7 +183,7 @@
   --target: 44px;
   --target-phone: 48px;
   --header-height: 72px;
-  --tab-bar-height: 84px;
+  --tab-bar-height: calc(64px + env(safe-area-inset-bottom));
 
   --dur-instant: 120ms;
   --dur-quick: 200ms;
