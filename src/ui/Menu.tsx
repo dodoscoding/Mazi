@@ -69,8 +69,10 @@ export function Menu({
       className={`menu ${className}`.trim()}
       onKeyDown={onKeyDown}
       onBlur={(event) => {
-        if (open && !root.current?.contains(event.relatedTarget as Node))
-          setOpen(false);
+        // A null relatedTarget is a click on something unfocusable (Safari
+        // never focuses clicked links), which pointerdown already handles.
+        const next = event.relatedTarget as Node | null;
+        if (open && next && !root.current?.contains(next)) setOpen(false);
       }}
     >
       <button

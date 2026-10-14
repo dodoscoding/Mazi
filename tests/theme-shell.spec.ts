@@ -148,3 +148,44 @@ test("Home has no axe violations in night or day", async ({ page }) => {
     expect(results.violations, `${theme} theme`).toEqual([]);
   }
 });
+
+test("a mouse click on an Archive tools link lands even when clicks do not focus", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "Phones reach the archive tools through More.");
+  await openHome(page);
+  await page.getByRole("button", { name: "Archive tools" }).click();
+  const tools = page.getByRole("navigation", { name: "Archive tools" });
+  const memories = tools.getByRole("link", { name: "Memories" });
+  await expect(memories).toBeFocused();
+  // Safari and macOS Firefox blur the focused item without focusing the target.
+  await memories.evaluate((link) =>
+    link.addEventListener("mousedown", (event) => event.preventDefault()),
+  );
+  const places = tools.getByRole("link", { name: "Places & sources" });
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+  await places.click();
+  await expect(page).toHaveURL(/#\/places/);
+});
+
+test("the open Archive tools menu has no axe violations in day", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "Phones reach the archive tools through More.");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openHome(page);
+  await switchTheme(page, "day");
+  await page.goto("/?demo=1#/memories");
+  const button = page.getByRole("button", { name: "Archive tools" });
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Archive tools" })
+      .getByRole("link", { name: "Memories" }),
+  ).toBeFocused();
+  const results = await new AxeBuilder({ page })
+    .include(".menu-popover")
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
