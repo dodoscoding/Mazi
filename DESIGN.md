@@ -185,7 +185,7 @@
 
 Mazi is a globe seen from space at night. The circle's memories are warm lights on a cool, dark world. A member turns the globe, scrubs through the years, and dives through a portal into one memory. Day is the same atlas printed on paper, not an inverted night.
 
-This file records what the redesign built. The values come from the code: [`src/styles/tokens.css`](src/styles/tokens.css), [`src/styles/base.css`](src/styles/base.css), [`src/ui/`](src/ui/), [`src/atlas/palette.ts`](src/atlas/palette.ts) and the screen stylesheets. The owner chose the direction in [D18](docs/DECISIONS.md#luminous-night-visual-world-14-october-2026). The stage order and data shapes are in the [program plan](work/poteto/luminous-night/PLAN.md). The Claude Design "Round 2 · Luminous night" artboards are the measured contract. This file describes the build; it is not production acceptance.
+This file records what the redesign built. The values come from the code: [`src/styles/tokens.css`](src/styles/tokens.css), [`src/styles/base.css`](src/styles/base.css), [`src/ui/`](src/ui/), [`src/atlas/palette.ts`](src/atlas/palette.ts) and the screen stylesheets. The owner chose the direction in [D19](docs/DECISIONS.md#luminous-night-visual-world-14-october-2026). The stage order and data shapes are in the [program plan](work/poteto/luminous-night/PLAN.md). The Claude Design "Round 2 · Luminous night" artboards are the measured contract. This file describes the build; it is not production acceptance.
 
 **Key characteristics:**
 
