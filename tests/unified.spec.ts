@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
+import { openFullMemory } from "./helpers/atlas";
 import { followShellLink, signOut } from "./helpers/shell";
 
 async function shell(page: Page) {
@@ -41,7 +42,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page
     .getByRole("button", { name: "Select Our summer", exact: true })
     .click();
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openFullMemory(page);
   await expect(
     page.getByRole("heading", { name: "Our summer", exact: true }),
   ).toBeVisible();

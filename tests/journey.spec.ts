@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { openFullMemory, settled } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -20,7 +21,7 @@ test("select, open, explore photos and context; Back restores selection and focu
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Select The last ferry" }).click();
-  await page.getByRole("link", { name: "Open memory" }).click();
+  await openFullMemory(page);
   await expect(page).toHaveURL(/memory\/last-ferry/);
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
@@ -71,7 +72,7 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Select Lake days" }).click();
     await page.getByRole("button", { name: "Select The last ferry" }).click();
-    await page.getByRole("link", { name: "Open memory" }).click();
+    await openFullMemory(page);
     await page.getByRole("link", { name: "Back to atlas" }).click();
   }
   expect(
@@ -79,8 +80,10 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await settled(page);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await page.getByRole("link", { name: "Open memory" }).click();
+  await openFullMemory(page);
+  await settled(page);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
@@ -96,7 +99,8 @@ test("failed images are recoverable and renderer failure preserves the journey",
   await page.getByRole("link", { name: "Back to atlas" }).click();
   await expect(page.getByText("The atlas is in flat view.")).toBeVisible();
   await page.getByRole("button", { name: "Select Lake days" }).click();
-  await page.getByRole("link", { name: "Open memory" }).click();
+  await openFullMemory(page);
+  await expect(page).toHaveURL(/memory\/lake-days/);
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();

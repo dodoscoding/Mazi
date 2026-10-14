@@ -1,0 +1,54 @@
+[
+  {
+    "name": "desktop",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "cpuThrottle": 1,
+    "renderer": "no WebGL",
+    "idle": {
+      "frames": 301,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 16.7,
+      "frameMaxMs": 16.8,
+      "scriptMedianMs": 0.4,
+      "scriptP95Ms": 0.8
+    },
+    "packetsAndScrub": {
+      "frames": 301,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 16.8,
+      "frameMaxMs": 16.8,
+      "scriptMedianMs": 0.5,
+      "scriptP95Ms": 0.7
+    },
+    "jsHeapAfter30sMB": 6.8
+  },
+  {
+    "name": "phone-4x",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cpuThrottle": 4,
+    "renderer": "no WebGL",
+    "idle": {
+      "frames": 301,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 16.7,
+      "frameMaxMs": 16.8,
+      "scriptMedianMs": 0.7,
+      "scriptP95Ms": 1.1
+    },
+    "packetsAndScrub": {
+      "frames": 301,
+      "frameMedianMs": 16.7,
+      "frameP95Ms": 16.7,
+      "frameMaxMs": 16.8,
+      "scriptMedianMs": 0.6,
+      "scriptP95Ms": 1
+    },
+    "jsHeapAfter30sMB": 6.9
+  }
+]

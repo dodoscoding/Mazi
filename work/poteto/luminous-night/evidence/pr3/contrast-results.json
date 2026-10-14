@@ -1,0 +1,1066 @@
+[
+  {
+    "theme": "night",
+    "size": "desktop",
+    "view": "globe",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 48,
+        "required": 3,
+        "ringMin": 15.54,
+        "boxMin": 14.19,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 12.72,
+        "boxMin": 10.82,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Naxos · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 17.07,
+        "boxMin": 9.93,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 8.18,
+        "boxMin": 8.18,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2023\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 8.18,
+        "boxMin": 8.07,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 15.82,
+        "boxMin": 15.65,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Drag to turn\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"↑ ↓ places\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"← → years\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Enter open\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Esc back\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"/ search\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 30,
+        "required": 3,
+        "ringMin": 14.73,
+        "boxMin": 14.73,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 11.45,
+        "boxMin": 11.45,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 12.16,
+        "boxMin": 12.16,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 13.17,
+        "boxMin": 13.17,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 10.52,
+        "boxMin": 10.52,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 11.1,
+        "boxMin": 11.1,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "night",
+    "size": "desktop",
+    "view": "flat",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 48,
+        "required": 3,
+        "ringMin": 15.73,
+        "boxMin": 15.57,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 12.81,
+        "boxMin": 12.47,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 8.18,
+        "boxMin": 8.17,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2023\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 8.18,
+        "boxMin": 8.17,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 15.82,
+        "boxMin": 15.65,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Drag to turn\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"↑ ↓ places\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"← → years\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Enter open\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Esc back\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"/ search\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.84,
+        "boxMin": 5.84,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NAXOS · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 6.36,
+        "boxMin": 1.92,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"BOHINJ\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.85,
+        "boxMin": 1.35,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NICOSIA\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 6.55,
+        "boxMin": 5.09,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 30,
+        "required": 3,
+        "ringMin": 14.73,
+        "boxMin": 14.73,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 13.04,
+        "boxMin": 13.04,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 13.04,
+        "boxMin": 13.04,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 13.17,
+        "boxMin": 13.17,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 11.98,
+        "boxMin": 11.98,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 11.98,
+        "boxMin": 11.98,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "night",
+    "size": "phone",
+    "view": "globe",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 36,
+        "required": 3,
+        "ringMin": 15.85,
+        "boxMin": 15.73,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 13.04,
+        "boxMin": 12.9,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Naxos · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 17.19,
+        "boxMin": 9.32,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Bohinj\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 12.91,
+        "boxMin": 10.1,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 6.72,
+        "boxMin": 6.72,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 12.86,
+        "boxMin": 12.72,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 15.05,
+        "boxMin": 15.05,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": 9.97,
+        "boxMin": 1.21,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.01,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 13.17,
+        "boxMin": 13.17,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 2.4,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.48,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "night",
+    "size": "phone",
+    "view": "flat",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 36,
+        "required": 3,
+        "ringMin": 15.93,
+        "boxMin": 15.46,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 13.12,
+        "boxMin": 12.55,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 6.72,
+        "boxMin": 6.72,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 12.86,
+        "boxMin": 12.72,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NAXOS · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 4.61,
+        "boxMin": 1.92,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"BOHINJ\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.92,
+        "boxMin": 1.35,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NICOSIA\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.68,
+        "boxMin": 5.09,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 15.05,
+        "boxMin": 15.05,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": 9.97,
+        "boxMin": 1.21,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.01,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 13.17,
+        "boxMin": 13.17,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 2.4,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.48,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "day",
+    "size": "desktop",
+    "view": "globe",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 48,
+        "required": 3,
+        "ringMin": 4.62,
+        "boxMin": 4.18,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 11.22,
+        "boxMin": 9.39,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Naxos · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 15.48,
+        "boxMin": 10.01,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 7.11,
+        "boxMin": 7.11,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2023\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 7.11,
+        "boxMin": 6.86,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 4.75,
+        "boxMin": 4.71,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Drag to turn\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"↑ ↓ places\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"← → years\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Enter open\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Esc back\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"/ search\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 30,
+        "required": 3,
+        "ringMin": 17.67,
+        "boxMin": 17.67,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 12.69,
+        "boxMin": 12.69,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 11.82,
+        "boxMin": 11.82,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.14,
+        "boxMin": 5.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.14,
+        "boxMin": 5.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 4.78,
+        "boxMin": 4.78,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "day",
+    "size": "desktop",
+    "view": "flat",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 48,
+        "required": 3,
+        "ringMin": 4.63,
+        "boxMin": 4.58,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 11.23,
+        "boxMin": 10.8,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 7.11,
+        "boxMin": 7.05,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2023\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 7.11,
+        "boxMin": 7.05,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 4.75,
+        "boxMin": 4.68,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Drag to turn\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"↑ ↓ places\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"← → years\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Enter open\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"Esc back\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".atlas-hints span \"/ search\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.23,
+        "boxMin": 5.23,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NAXOS · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.23,
+        "boxMin": 5.18,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"BOHINJ\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.83,
+        "boxMin": 2.61,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NICOSIA\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.44,
+        "boxMin": 4.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 30,
+        "required": 3,
+        "ringMin": 17.67,
+        "boxMin": 17.67,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 11.49,
+        "boxMin": 11.49,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 11.49,
+        "boxMin": 11.49,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.14,
+        "boxMin": 5.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 4.65,
+        "boxMin": 4.65,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 4.65,
+        "boxMin": 4.65,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "day",
+    "size": "phone",
+    "view": "globe",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 36,
+        "required": 3,
+        "ringMin": 4.54,
+        "boxMin": 4.3,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 11.5,
+        "boxMin": 10.43,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Naxos · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 15.38,
+        "boxMin": 10.28,
+        "pass": true
+      },
+      {
+        "label": ".globe-label > span \"Bohinj\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 11.31,
+        "boxMin": 8.66,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.62,
+        "boxMin": 7.62,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.09,
+        "boxMin": 5.06,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 4.86,
+        "boxMin": 4.86,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": 9.32,
+        "boxMin": 2.47,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 2.47,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.14,
+        "boxMin": 5.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.26,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.01,
+        "pass": true
+      }
+    ]
+  },
+  {
+    "theme": "day",
+    "size": "phone",
+    "view": "flat",
+    "labels": [
+      {
+        "label": ".readout-year \"2024\"",
+        "fontPx": 36,
+        "required": 3,
+        "ringMin": 4.74,
+        "boxMin": 4.43,
+        "pass": true
+      },
+      {
+        "label": ".readout-summary \"1 place · 1 memory\"",
+        "fontPx": 11,
+        "required": 4.5,
+        "ringMin": 11.63,
+        "boxMin": 10.9,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2022\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.62,
+        "boxMin": 7.62,
+        "pass": true
+      },
+      {
+        "label": ".scrubber-years span \"2024\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.09,
+        "boxMin": 5.06,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NAXOS · 1\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 7.24,
+        "boxMin": 5.16,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"BOHINJ\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 8.04,
+        "boxMin": 2.61,
+        "pass": true
+      },
+      {
+        "label": ".flat-label \"NICOSIA\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.31,
+        "boxMin": 4.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Naxos\"",
+        "fontPx": 24,
+        "required": 3,
+        "ringMin": 4.86,
+        "boxMin": 4.86,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Bohinj\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": 9.32,
+        "boxMin": 2.47,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-name \"Nicosia\"",
+        "fontPx": 22,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 2.47,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"The last ferry · 1 memor\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": 5.14,
+        "boxMin": 5.14,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About July 2023 · 1 memo\"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.26,
+        "pass": true
+      },
+      {
+        "label": ".atlas-index .index-meta \"About November 2022 · 1 \"",
+        "fontPx": 10,
+        "required": 4.5,
+        "ringMin": null,
+        "boxMin": 1.01,
+        "pass": true
+      }
+    ]
+  }
+]
