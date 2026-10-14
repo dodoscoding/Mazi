@@ -129,6 +129,9 @@ img {
 svg {
   flex: none;
 }
+svg.is-back {
+  transform: rotate(180deg);
+}
 time,
 .data {
   font-family: var(--font-mono);
@@ -447,6 +450,18 @@ time,
 .toast > span {
   flex: 1;
 }
+.toast .icon-button {
+  box-shadow: none;
+}
+.toast.is-leaving {
+  animation: toast-leave var(--dur-quick) var(--ease-exit) forwards;
+}
+@keyframes toast-leave {
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
 @keyframes toast-rise {
   from {
     opacity: 0;
@@ -532,6 +547,9 @@ time,
   }
   .toast {
     animation: fade-in 120ms linear !important;
+  }
+  .toast.is-leaving {
+    animation: fade-out 120ms linear forwards !important;
   }
 }
 
