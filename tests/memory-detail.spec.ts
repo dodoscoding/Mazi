@@ -250,7 +250,9 @@ async function swipe(
 
 test("touch swipe tracks the finger and changes photo, also with reduced motion", async ({
   page,
+  browserName,
 }, testInfo) => {
+  test.skip(browserName !== "chromium", "CDP touch events are Chromium-only.");
   test.skip(!isPhone(testInfo), "Swipe is a touch gesture.");
   await open(page, "/memory/harbour-night");
   await expect(page.locator(".viewer .photo-frame")).toHaveClass(/is-loaded/);
