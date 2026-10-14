@@ -111,6 +111,8 @@ Model-bound retrieval additionally requires current processing consent for each 
 
 An answer carries cited evidence, observed archive coverage, and uncertainty. "Earliest imported Copenhagen memory" is supportable; "first trip ever" requires evidence beyond a partial archive. Revocation rechecks before dispatch and answer delivery prevent stale results from becoming new disclosures. Already-sent provider requests follow the disclosed provider retention policy.
 
+The local Phase 6 implementation uses a fixed extractive engine over eligible photo metadata. It returns at most five cited records, labels metadata as recorded assertions, and abstains on unsupported question forms or indeterminate date ordering. Before retrieval, local dispatch and delivery, it rechecks membership, processing switches, every contributor and annotation author's opt-in, and a fingerprint of current evidence. Questions and answers are not persisted or cached. Evidence URLs require fresh authorization and consent. Corrections, hides, withdrawals and deletion invalidate in-flight output; already delivered text cannot be recalled. No external provider or tool-capable model is configured. See [Phase 6](../phase6/README.md) for the bounded question contract.
+
 ## Capsule boundary
 
 At M7, a capsule adds a server-time unlock condition to the normal group access policy. Before unlock, original downloads, thumbnails, embeddings, search snippets, AI answers, recaps, and notifications cannot reveal locked content. Author editing and access rules must be decided separately before implementation. A browser timer is never the access control.

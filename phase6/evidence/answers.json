@@ -1,0 +1,8 @@
+{
+  "scope": "150 templated synthetic regression questions; not independent production acceptance",
+  "answerable": 100,
+  "supported": 100,
+  "unanswerable": 50,
+  "correct_abstentions": 50,
+  "failures": []
+}

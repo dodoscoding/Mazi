@@ -1,0 +1,726 @@
+{
+  "fixtures": [
+    {
+      "key": "0",
+      "title": "Lantern walk",
+      "date": "2020-01-01",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "1",
+      "title": "Canal picnic",
+      "date": "2020-01-02",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "2",
+      "title": "Snow weekend",
+      "date": "2020-01-03",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "3",
+      "title": "Forest cabin",
+      "date": "2020-01-04",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "4",
+      "title": "Harbor festival",
+      "date": "2020-01-05",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "5",
+      "title": "Mountain hike",
+      "date": "2020-01-06",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "6",
+      "title": "Museum visit",
+      "date": "2020-01-07",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "7",
+      "title": "Garden breakfast",
+      "date": "2020-01-08",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "8",
+      "title": "Beach volleyball",
+      "date": "2020-01-09",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "9",
+      "title": "Autumn market",
+      "date": "2020-01-10",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "10",
+      "title": "River kayaking",
+      "date": "2020-01-11",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "11",
+      "title": "Castle tour",
+      "date": "2020-01-12",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "12",
+      "title": "Rooftop dinner",
+      "date": "2020-01-13",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "13",
+      "title": "Lakeside camping",
+      "date": "2020-01-14",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "14",
+      "title": "Orchard harvest",
+      "date": "2020-01-15",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "15",
+      "title": "Desert sunrise",
+      "date": "2020-01-16",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "16",
+      "title": "Winter skating",
+      "date": "2020-01-17",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "17",
+      "title": "Village concert",
+      "date": "2020-01-18",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "18",
+      "title": "Island ferry",
+      "date": "2020-01-19",
+      "place": "Amsterdam"
+    },
+    {
+      "key": "19",
+      "title": "Meadow wedding",
+      "date": "2020-01-20",
+      "place": "Amsterdam"
+    }
+  ],
+  "questions": [
+    {
+      "question": "When was Lantern walk?",
+      "expected": "0"
+    },
+    {
+      "question": "Where was Lantern walk?",
+      "expected": "0"
+    },
+    {
+      "question": "Show Lantern walk",
+      "expected": "0"
+    },
+    {
+      "question": "Earliest Lantern walk",
+      "expected": "0"
+    },
+    {
+      "question": "Latest Lantern walk",
+      "expected": "0"
+    },
+    {
+      "question": "When was Canal picnic?",
+      "expected": "1"
+    },
+    {
+      "question": "Where was Canal picnic?",
+      "expected": "1"
+    },
+    {
+      "question": "Show Canal picnic",
+      "expected": "1"
+    },
+    {
+      "question": "Earliest Canal picnic",
+      "expected": "1"
+    },
+    {
+      "question": "Latest Canal picnic",
+      "expected": "1"
+    },
+    {
+      "question": "When was Snow weekend?",
+      "expected": "2"
+    },
+    {
+      "question": "Where was Snow weekend?",
+      "expected": "2"
+    },
+    {
+      "question": "Show Snow weekend",
+      "expected": "2"
+    },
+    {
+      "question": "Earliest Snow weekend",
+      "expected": "2"
+    },
+    {
+      "question": "Latest Snow weekend",
+      "expected": "2"
+    },
+    {
+      "question": "When was Forest cabin?",
+      "expected": "3"
+    },
+    {
+      "question": "Where was Forest cabin?",
+      "expected": "3"
+    },
+    {
+      "question": "Show Forest cabin",
+      "expected": "3"
+    },
+    {
+      "question": "Earliest Forest cabin",
+      "expected": "3"
+    },
+    {
+      "question": "Latest Forest cabin",
+      "expected": "3"
+    },
+    {
+      "question": "When was Harbor festival?",
+      "expected": "4"
+    },
+    {
+      "question": "Where was Harbor festival?",
+      "expected": "4"
+    },
+    {
+      "question": "Show Harbor festival",
+      "expected": "4"
+    },
+    {
+      "question": "Earliest Harbor festival",
+      "expected": "4"
+    },
+    {
+      "question": "Latest Harbor festival",
+      "expected": "4"
+    },
+    {
+      "question": "When was Mountain hike?",
+      "expected": "5"
+    },
+    {
+      "question": "Where was Mountain hike?",
+      "expected": "5"
+    },
+    {
+      "question": "Show Mountain hike",
+      "expected": "5"
+    },
+    {
+      "question": "Earliest Mountain hike",
+      "expected": "5"
+    },
+    {
+      "question": "Latest Mountain hike",
+      "expected": "5"
+    },
+    {
+      "question": "When was Museum visit?",
+      "expected": "6"
+    },
+    {
+      "question": "Where was Museum visit?",
+      "expected": "6"
+    },
+    {
+      "question": "Show Museum visit",
+      "expected": "6"
+    },
+    {
+      "question": "Earliest Museum visit",
+      "expected": "6"
+    },
+    {
+      "question": "Latest Museum visit",
+      "expected": "6"
+    },
+    {
+      "question": "When was Garden breakfast?",
+      "expected": "7"
+    },
+    {
+      "question": "Where was Garden breakfast?",
+      "expected": "7"
+    },
+    {
+      "question": "Show Garden breakfast",
+      "expected": "7"
+    },
+    {
+      "question": "Earliest Garden breakfast",
+      "expected": "7"
+    },
+    {
+      "question": "Latest Garden breakfast",
+      "expected": "7"
+    },
+    {
+      "question": "When was Beach volleyball?",
+      "expected": "8"
+    },
+    {
+      "question": "Where was Beach volleyball?",
+      "expected": "8"
+    },
+    {
+      "question": "Show Beach volleyball",
+      "expected": "8"
+    },
+    {
+      "question": "Earliest Beach volleyball",
+      "expected": "8"
+    },
+    {
+      "question": "Latest Beach volleyball",
+      "expected": "8"
+    },
+    {
+      "question": "When was Autumn market?",
+      "expected": "9"
+    },
+    {
+      "question": "Where was Autumn market?",
+      "expected": "9"
+    },
+    {
+      "question": "Show Autumn market",
+      "expected": "9"
+    },
+    {
+      "question": "Earliest Autumn market",
+      "expected": "9"
+    },
+    {
+      "question": "Latest Autumn market",
+      "expected": "9"
+    },
+    {
+      "question": "When was River kayaking?",
+      "expected": "10"
+    },
+    {
+      "question": "Where was River kayaking?",
+      "expected": "10"
+    },
+    {
+      "question": "Show River kayaking",
+      "expected": "10"
+    },
+    {
+      "question": "Earliest River kayaking",
+      "expected": "10"
+    },
+    {
+      "question": "Latest River kayaking",
+      "expected": "10"
+    },
+    {
+      "question": "When was Castle tour?",
+      "expected": "11"
+    },
+    {
+      "question": "Where was Castle tour?",
+      "expected": "11"
+    },
+    {
+      "question": "Show Castle tour",
+      "expected": "11"
+    },
+    {
+      "question": "Earliest Castle tour",
+      "expected": "11"
+    },
+    {
+      "question": "Latest Castle tour",
+      "expected": "11"
+    },
+    {
+      "question": "When was Rooftop dinner?",
+      "expected": "12"
+    },
+    {
+      "question": "Where was Rooftop dinner?",
+      "expected": "12"
+    },
+    {
+      "question": "Show Rooftop dinner",
+      "expected": "12"
+    },
+    {
+      "question": "Earliest Rooftop dinner",
+      "expected": "12"
+    },
+    {
+      "question": "Latest Rooftop dinner",
+      "expected": "12"
+    },
+    {
+      "question": "When was Lakeside camping?",
+      "expected": "13"
+    },
+    {
+      "question": "Where was Lakeside camping?",
+      "expected": "13"
+    },
+    {
+      "question": "Show Lakeside camping",
+      "expected": "13"
+    },
+    {
+      "question": "Earliest Lakeside camping",
+      "expected": "13"
+    },
+    {
+      "question": "Latest Lakeside camping",
+      "expected": "13"
+    },
+    {
+      "question": "When was Orchard harvest?",
+      "expected": "14"
+    },
+    {
+      "question": "Where was Orchard harvest?",
+      "expected": "14"
+    },
+    {
+      "question": "Show Orchard harvest",
+      "expected": "14"
+    },
+    {
+      "question": "Earliest Orchard harvest",
+      "expected": "14"
+    },
+    {
+      "question": "Latest Orchard harvest",
+      "expected": "14"
+    },
+    {
+      "question": "When was Desert sunrise?",
+      "expected": "15"
+    },
+    {
+      "question": "Where was Desert sunrise?",
+      "expected": "15"
+    },
+    {
+      "question": "Show Desert sunrise",
+      "expected": "15"
+    },
+    {
+      "question": "Earliest Desert sunrise",
+      "expected": "15"
+    },
+    {
+      "question": "Latest Desert sunrise",
+      "expected": "15"
+    },
+    {
+      "question": "When was Winter skating?",
+      "expected": "16"
+    },
+    {
+      "question": "Where was Winter skating?",
+      "expected": "16"
+    },
+    {
+      "question": "Show Winter skating",
+      "expected": "16"
+    },
+    {
+      "question": "Earliest Winter skating",
+      "expected": "16"
+    },
+    {
+      "question": "Latest Winter skating",
+      "expected": "16"
+    },
+    {
+      "question": "When was Village concert?",
+      "expected": "17"
+    },
+    {
+      "question": "Where was Village concert?",
+      "expected": "17"
+    },
+    {
+      "question": "Show Village concert",
+      "expected": "17"
+    },
+    {
+      "question": "Earliest Village concert",
+      "expected": "17"
+    },
+    {
+      "question": "Latest Village concert",
+      "expected": "17"
+    },
+    {
+      "question": "When was Island ferry?",
+      "expected": "18"
+    },
+    {
+      "question": "Where was Island ferry?",
+      "expected": "18"
+    },
+    {
+      "question": "Show Island ferry",
+      "expected": "18"
+    },
+    {
+      "question": "Earliest Island ferry",
+      "expected": "18"
+    },
+    {
+      "question": "Latest Island ferry",
+      "expected": "18"
+    },
+    {
+      "question": "When was Meadow wedding?",
+      "expected": "19"
+    },
+    {
+      "question": "Where was Meadow wedding?",
+      "expected": "19"
+    },
+    {
+      "question": "Show Meadow wedding",
+      "expected": "19"
+    },
+    {
+      "question": "Earliest Meadow wedding",
+      "expected": "19"
+    },
+    {
+      "question": "Latest Meadow wedding",
+      "expected": "19"
+    },
+    {
+      "question": "When was missinglocation0?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation1?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation2?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation3?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation4?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation5?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation6?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation7?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation8?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation9?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation10?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation11?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation12?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation13?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation14?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation15?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation16?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation17?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation18?",
+      "expected": null
+    },
+    {
+      "question": "When was missinglocation19?",
+      "expected": null
+    },
+    {
+      "question": "Why was Lantern walk?",
+      "expected": null
+    },
+    {
+      "question": "Was Lantern walk our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Lantern walk?",
+      "expected": null
+    },
+    {
+      "question": "Why was Canal picnic?",
+      "expected": null
+    },
+    {
+      "question": "Was Canal picnic our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Canal picnic?",
+      "expected": null
+    },
+    {
+      "question": "Why was Snow weekend?",
+      "expected": null
+    },
+    {
+      "question": "Was Snow weekend our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Snow weekend?",
+      "expected": null
+    },
+    {
+      "question": "Why was Forest cabin?",
+      "expected": null
+    },
+    {
+      "question": "Was Forest cabin our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Forest cabin?",
+      "expected": null
+    },
+    {
+      "question": "Why was Harbor festival?",
+      "expected": null
+    },
+    {
+      "question": "Was Harbor festival our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Harbor festival?",
+      "expected": null
+    },
+    {
+      "question": "Why was Mountain hike?",
+      "expected": null
+    },
+    {
+      "question": "Was Mountain hike our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Mountain hike?",
+      "expected": null
+    },
+    {
+      "question": "Why was Museum visit?",
+      "expected": null
+    },
+    {
+      "question": "Was Museum visit our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Museum visit?",
+      "expected": null
+    },
+    {
+      "question": "Why was Garden breakfast?",
+      "expected": null
+    },
+    {
+      "question": "Was Garden breakfast our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Garden breakfast?",
+      "expected": null
+    },
+    {
+      "question": "Why was Beach volleyball?",
+      "expected": null
+    },
+    {
+      "question": "Was Beach volleyball our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Beach volleyball?",
+      "expected": null
+    },
+    {
+      "question": "Why was Autumn market?",
+      "expected": null
+    },
+    {
+      "question": "Was Autumn market our first trip ever?",
+      "expected": null
+    },
+    {
+      "question": "Who was at Autumn market?",
+      "expected": null
+    }
+  ]
+}

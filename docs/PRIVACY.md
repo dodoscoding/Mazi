@@ -85,6 +85,10 @@ Use synthetic actors and media for the local database/Auth/private Storage exper
 
 EU hosting is accepted. Verify actual regions, provider terms, hosting security, and privacy disclosures before real imports or hosted provisioning. The €75 monthly ceiling is a planning constraint and does not prove provider deletion or backup expiry. [M0 acceptance](M0_ACCEPTANCE.md) separates accepted targets from pending evidence.
 
+## Local Memory answer processing
+
+Phase 6 requires a separate, default-off Memory answer switch for the group, requesting member, and every contributor or correction author supporting a record, in addition to Phase 5 local-processing eligibility. Existing search consent alone does not authorize Memory answers. Only current visible records participate; no imported instruction can authorize tools. There is no external model provider, persisted question text, answer history, or answer cache. The local database retains daily request counts and elapsed processing time, keyed by member/group/UTC day; provider cost is zero, while infrastructure cost is not measured. Production retention and account deletion integration for this usage metadata remain release gates. Citation reads repeat consent and visibility checks. Already delivered output cannot be recalled; the browser discards it on backgrounding or navigation.
+
 ## Production review
 
 Before launch, identify data regions, subprocessors, provider training/retention settings, consent text, support routes, nonmember requests, incident ownership, and any needed privacy/legal assessment. Keep sensitive production exports out of development fixtures. Do not claim regulatory compliance from the existence of RLS or encryption.

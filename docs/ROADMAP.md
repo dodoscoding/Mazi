@@ -2,7 +2,7 @@
 
 Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization now has a local Phase 4 implementation; production native release and conversational AI remain later gates.
 
-Status on 14 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, the initial website-only scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](../phase2/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open. Local Phase 3, Phase 4 and Phase 5 implementations are recorded below; M3-M5 production acceptance and M6-M7 remain open. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
+Status on 14 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, the initial website-only scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](../phase2/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open. Local Phase 3, Phase 4 and Phase 5 implementations are recorded below; M3-M6 production acceptance and M7 remain open. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
 ## Use the planning assumptions
 
@@ -117,6 +117,8 @@ Local implementation, 13 October 2026: [Phase 5](../phase5/README.md) adds manua
 Exit when T11 passes, T01/T02/T09 remain green for retrieval, and the proposed retrieval target in the test plan is met. Face recognition may remain disabled while semantic search ships.
 
 ### M6. Answer with archive evidence
+
+Local implementation, 14 October 2026: [Phase 6](../phase6/README.md) adds local extractive Memory answers with attributed metadata, live evidence links, incomplete-archive language, date-conflict handling, explicit opt-in, permission/consent rechecks, and durable daily usage limits. No external provider or tool dispatch is enabled. [Verification](../phase6/VERIFICATION.md) records synthetic boundary tests and a 150-question templated regression set; it does not establish independent real-archive T13 quality. Production integration and the release gates below remain open.
 
 - [ ] Implement retrieval-grounded answers with accessible evidence links and explicit archive-coverage language.
 - [ ] Recheck permissions and processing consent before retrieval, provider dispatch, and answer delivery.
