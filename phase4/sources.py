@@ -261,13 +261,22 @@ class SourceStore(ReviewStore):
         row = super()._fence(job, now)
         resource = self.db.execute('SELECT id FROM source_resources WHERE id=?', (job['run_id'],)).fetchone()
         if resource:
-            transfer, source = self._resource(row['owner_id'], resource['id'], True)
-            if source['kind'] == 'discord':
-                if self.discord_authorize is None or source['id'] not in self.discord_sources:
-                    raise Denied('Discord permission verification unavailable')
-                metadata = json.loads(transfer['metadata'])
-                self.discord_authorize(metadata['guild'], metadata['channel'])
+            _, source = self._resource(row['owner_id'], resource['id'], True)
+            if source['kind'] == 'discord' and (self.discord_authorize is None or source['id'] not in self.discord_sources):
+                raise Denied('Discord permission verification unavailable')
         return row
+
+    def _authorize_discord(self, job):
+        resource = self.db.execute('SELECT id FROM source_resources WHERE id=?', (job['run_id'],)).fetchone()
+        if not resource:
+            return
+        transfer, source = self._resource(job['owner_id'], resource['id'], True)
+        if source['kind'] != 'discord':
+            return
+        if self.discord_authorize is None or source['id'] not in self.discord_sources:
+            raise Denied('Discord permission verification unavailable')
+        metadata = json.loads(transfer['metadata'])
+        self.discord_authorize(metadata['guild'], metadata['channel'])
 
     def prepare(self, job):
         prepared = super().prepare(job)
@@ -279,6 +288,7 @@ class SourceStore(ReviewStore):
         return prepared
 
     def complete(self, job, prepared=None, now=None):
+        self._authorize_discord(job)
         super().complete(job, prepared, now)
         with self.transaction():
             self.db.execute("UPDATE source_resources SET state=(SELECT outcome FROM import_items WHERE id=?) WHERE id=?", (job['id'], job['run_id']))

@@ -60,6 +60,45 @@ class DiscordTests(unittest.TestCase):
             poll_source(self.store, self.alice, connection, client)
         self.assertEqual(client.reads, 1)
 
+    def test_untrusted_attachment_and_pause_do_not_revoke_the_source(self):
+        from phase4.server import settle_poll
+        connection = self.store.create_source(self.alice, self.group, 'discord', 'Selected channel',
+            {'guild': '10', 'channels': ['20'], 'start': '2024-01-01', 'end': '2030-12-31'})
+        self.store.set_source(self.alice, connection, True, 'authorized')
+        client = FakeDiscord()
+        client.attachment = lambda attachment: (_ for _ in ()).throw(Denied('Untrusted attachment URL'))
+        self.assertEqual(settle_poll(self.store, self.alice, connection, client), 'ok')
+        source = self.store.db.execute('SELECT enabled, permission FROM continuous_sources WHERE id=?', (connection,)).fetchone()
+        self.assertEqual((source['enabled'], source['permission']), (1, 'authorized'))
+        self.assertEqual(self.store.resources(self.alice, connection)[-1]['state'], 'UNSUPPORTED_SIZE_OR_INVALID_RESOURCE')
+        self.assertIsNotNone(self.store.db.execute('SELECT cursor FROM discord_cursors WHERE connection=?', (connection,)).fetchone())
+
+        def pause(channel, before):
+            self.store.set_source(self.alice, connection, False, 'authorized')
+            return client.messages_data
+        client.messages = pause
+        client.attachment = lambda attachment: FakeDiscord.attachment(client, attachment)
+        self.assertEqual(settle_poll(self.store, self.alice, connection, client), 'paused')
+        source = self.store.db.execute('SELECT enabled, permission FROM continuous_sources WHERE id=?', (connection,)).fetchone()
+        self.assertEqual((source['enabled'], source['permission']), (0, 'authorized'))
+
+    def test_discord_permission_check_does_not_hold_the_write_lock(self):
+        connection = self.store.create_source(self.alice, self.group, 'discord', 'Selected channel',
+            {'guild': '10', 'channels': ['20'], 'start': '2024-01-01', 'end': '2030-12-31'})
+        self.store.set_source(self.alice, connection, True, 'authorized')
+        client = FakeDiscord()
+        def authorize(guild, channel):
+            if self.store.db.in_transaction:
+                raise AssertionError('Discord permission check held the write lock')
+            FakeDiscord.authorize(client, guild, channel)
+        client.authorize = authorize
+        self.store.discord_authorize = client.authorize
+        self.store.discord_sources = {connection}
+        poll_source(self.store, self.alice, connection, client)
+        job = self.store.claim()
+        prepared = self.store.prepare(job)
+        self.store.complete(job, prepared)
+
     def test_permission_overwrites_and_cdn_rejection(self):
         client = DiscordClient('synthetic-not-a-token')
         responses = {'/users/@me': {'id': '30'}, '/guilds/10/members/30': {'roles': ['50']},

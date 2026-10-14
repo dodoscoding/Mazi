@@ -156,12 +156,19 @@ struct LibraryItem: Identifiable {
         }
     }
 
+    func albumIdentifiers(for asset: PHAsset) -> [String] {
+        var identifiers: [String] = []
+        PHAssetCollection.fetchAssetCollectionsContaining(asset, with: .album, options: nil).enumerateObjects { collection, _, _ in
+            identifiers.append(collection.localIdentifier)
+        }
+        return identifiers.sorted()
+    }
+
     func transfer() {
         guard !busy else { return }
         UserDefaults.standard.set(connection, forKey: "source")
         UserDefaults.standard.set(Array(selected), forKey: "selected")
         let selection = items.filter { selected.contains($0.id) }
-        let selectedAlbum = album
         busy = true
         task = Task {
             var outcomes: [String] = []
@@ -182,9 +189,10 @@ struct LibraryItem: Identifiable {
                             let formatter = DateFormatter(); formatter.dateFormat = "yyyy-MM-dd"; formatter.locale = Locale(identifier: "en_US_POSIX")
                             guard let created = item.asset.creationDate else { outcomes.append("\(resource.maziFilename): missing capture date; not uploaded"); continue }
                             // Every PhotoKit resource gets its own stable identity; changes create a new version.
+                            let videoResources: Set<PHAssetResourceType> = [.video, .fullSizeVideo, .pairedVideo, .fullSizePairedVideo]
                             let metadata: [String: Any] = ["item": item.id, "component": "\(resource.type.rawValue):\(resource.maziFilename)", "version": hash,
                                 "filename": resource.maziFilename, "date": formatter.string(from: created), "capture_date": formatter.string(from: created),
-                                "kind": item.asset.mediaType == .video ? "video" : "image", "albums": selectedAlbum.isEmpty ? [] : [selectedAlbum]]
+                                "kind": videoResources.contains(resource.type) ? "video" : "image", "albums": self.albumIdentifiers(for: item.asset)]
                             let transfer = try await post("api/sources/begin", ["connection": connection, "metadata": metadata, "size": data.count, "sha256": hash])
                             guard let id = transfer["id"] as? String else { throw CancellationError() }
                             if transfer["state"] as? String == "UPLOADING" {

@@ -9,6 +9,10 @@ from urllib.parse import urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 from phase1.core import Denied
+
+
+class ProviderDenied(Denied):
+    pass
 from phase2.adapters import MAX_FILE
 
 
@@ -38,7 +42,7 @@ class DiscordClient:
                 return json.loads(data)
         except HTTPError as exc:
             if exc.code in (401, 403, 404):
-                raise Denied('Discord access unavailable') from None
+                raise ProviderDenied('Discord access unavailable') from None
             if exc.code == 429:
                 raise RateLimited(json.loads(exc.read(4096)).get('retry_after', 60)) from None
             raise
@@ -49,7 +53,7 @@ class DiscordClient:
         roles = self.request(f'/guilds/{guild}/roles')
         info = self.request(f'/channels/{channel}')
         if info.get('guild_id') != guild or info.get('type') not in (0, 5):
-            raise Denied('Only selected text and announcement channels are supported')
+            raise ProviderDenied('Only selected text and announcement channels are supported')
         owned = {guild, *member['roles']}
         permissions = 0
         for role in roles:
@@ -67,7 +71,7 @@ class DiscordClient:
                 deny |= int(overwrite['deny'])
             permissions = (permissions & ~deny) | allow
         if permissions & ((1 << 10) | (1 << 16)) != ((1 << 10) | (1 << 16)):
-            raise Denied('View Channel and Read Message History are required')
+            raise ProviderDenied('View Channel and Read Message History are required')
 
     def messages(self, channel, before):
         return self.request(f'/channels/{channel}/messages?limit=100&before={before}')
@@ -126,7 +130,9 @@ def poll_source(store, user, connection, client):
                     client.authorize(scope['guild'], channel)
                     try:
                         data = client.attachment(attachment)
-                    except ValueError:
+                    except ProviderDenied:
+                        raise
+                    except (ValueError, Denied):
                         store.record_source_outcome(user, connection, {'item': message['id'], 'filename': attachment.get('filename', 'Attachment'), 'component': attachment['id'], 'version': message.get('edited_timestamp') or 'original'}, 'UNSUPPORTED_SIZE_OR_INVALID_RESOURCE')
                         continue
                     metadata = dict(item=message['id'], component=attachment['id'],
