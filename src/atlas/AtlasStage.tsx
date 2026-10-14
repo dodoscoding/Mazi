@@ -56,12 +56,18 @@ export function AtlasStage({
   onPick,
   onFailedChange,
   retryKey,
-}: Omit<GlobeProps, "land" | "active" | "onReady" | "onLost"> & {
+  compact = false,
+}: Omit<
+  GlobeProps,
+  "land" | "active" | "onReady" | "onLost" | "framing" | "interactive"
+> & {
   view: StageView;
   onView: (view: StageView) => void;
   onFailedChange: (failed: boolean) => void;
   /** Bumped by the Globe button to retry 3D after a failure. */
   retryKey: number;
+  /** A display-only globe framed for a panel, with a one-line flat-view note. */
+  compact?: boolean;
 }) {
   const toast = useToast();
   const [land, setLand] = useState<Land | null | undefined>(undefined);
@@ -160,6 +166,8 @@ export function AtlasStage({
                 onPick={onPick}
                 onReady={markReady}
                 onLost={lost}
+                framing={compact ? "panel" : "atlas"}
+                interactive={!compact}
               />
             </Suspense>
           </SceneBoundary>
@@ -170,7 +178,16 @@ export function AtlasStage({
           Drawing your atlas…
         </p>
       )}
-      {failed && (
+      {failed && compact && (
+        <p className="flat-note is-compact" role="status">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l9 16H3z" />
+            <path d="M12 10v4M12 17v.5" />
+          </svg>
+          3D isn't available here; same timeline, flat map.
+        </p>
+      )}
+      {failed && !compact && (
         <div className="flat-note" role="status">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3l9 16H3z" />

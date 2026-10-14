@@ -42,6 +42,10 @@ export type GlobeProps = {
   onPick: (placeId: string) => void;
   onReady: () => void;
   onLost: () => void;
+  /** "panel" frames the globe for a side panel or band, such as the Timeline's, instead of the Atlas page. */
+  framing?: "atlas" | "panel";
+  /** False leaves the globe display-only: no drag, zoom or picking, and touch scrolls the page. */
+  interactive?: boolean;
 };
 
 const SPIN_IDLE = (3 * Math.PI) / 180;
@@ -97,7 +101,17 @@ function frameFor(
   width: number,
   height: number,
   portal: boolean,
+  framing: "atlas" | "panel" = "atlas",
 ) {
+  if (framing === "panel")
+    // A short band shows the globe's upper cap; a tall panel shows the whole globe high up.
+    return height < 360
+      ? { x: width * 0.62, y: height * 0.8, r: Math.min(width * 0.55, height) }
+      : {
+          x: width * 0.6,
+          y: height * 0.38,
+          r: Math.min(width * 0.56, height * 0.36),
+        };
   if (portal) {
     if (layout === "wide" || layout === "medium") {
       const dossier = layout === "wide" ? 520 : 440;
@@ -680,8 +694,8 @@ function Scene(
       (control.zoomTarget - control.zoom) * (1 - Math.exp(-delta * 10));
     const dive = tweenValue(control.dive, now, ease.camera);
     const day = tweenValue(control.day, now, ease.arrive);
-    const orbit = frameFor(props.layout, width, height, false);
-    const landed = frameFor(props.layout, width, height, true);
+    const orbit = frameFor(props.layout, width, height, false, props.framing);
+    const landed = frameFor(props.layout, width, height, true, props.framing);
     const wanted = {
       x: orbit.x + (landed.x - orbit.x) * dive,
       y: orbit.y + (landed.y - orbit.y) * dive + height * 0.18 * (1 - rise),
@@ -1010,7 +1024,7 @@ export default function Globe(props: GlobeProps) {
   // Drag to turn with inertia, wheel or pinch to zoom, tap a node to pick it.
   useEffect(() => {
     const element = root.current;
-    if (!element) return;
+    if (!element || props.interactive === false) return;
     const pointers = new Map<number, { x: number; y: number }>();
     let start = { x: 0, y: 0, time: 0 };
     let travelled = 0;
@@ -1124,10 +1138,13 @@ export default function Globe(props: GlobeProps) {
       element.removeEventListener("pointercancel", up);
       element.removeEventListener("wheel", wheel);
     };
-  }, [props.atlas]);
+  }, [props.atlas, props.interactive]);
 
   return (
-    <div className="globe-root" ref={root}>
+    <div
+      className={`globe-root${props.interactive === false ? " is-static" : ""}`}
+      ref={root}
+    >
       <div className="globe-canvas" aria-hidden="true">
         <Canvas
           frameloop={
@@ -1140,7 +1157,7 @@ export default function Globe(props: GlobeProps) {
             alpha: true,
             powerPreference: "high-performance",
           }}
-          style={{ touchAction: "none" }}
+          style={{ touchAction: props.interactive === false ? "auto" : "none" }}
         >
           <Scene {...props} controller={controller} overlay={overlay} />
         </Canvas>

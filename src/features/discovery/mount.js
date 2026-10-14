@@ -1,6 +1,32 @@
+import {
+  promptSkeleton,
+  renderGroups,
+  renderPrompts,
+  skeletonRows,
+  suggestions,
+} from "./views";
+import "./discovery.css";
+
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(id);
+  // One template serves /discover and, outside the sample, /search.
+  const path = (
+    location.hash.startsWith("#/") ? location.hash.slice(1) : location.pathname
+  ).split("?")[0];
+  const view = path === "/search" ? "search" : "discover";
+  root.querySelector(".discovery-page").dataset.view = view;
+  let atlas = [],
+    atlasKey = null,
+    heroIndex = 0,
+    resultType = "all",
+    counts = null;
+  if (view === "search") {
+    $("#discovery-title").textContent = "Search";
+    $("#search-title").textContent = "Search the archive";
+    $("#prompts").hidden = true;
+    $("#discover-sub").hidden = true;
+  } else promptSkeleton(root);
   let indexRun = 0,
     learned = false;
   let group = "",
@@ -34,8 +60,17 @@ export function mount(root, lifecycle) {
       "#identity-account",
       "#nonmember-person",
       "#nonmember-asset",
+      "#memory-list",
+      "#chat-list",
+      "#place-list",
+      "#people-list",
+      "#search-loading",
     ])
       $(id).replaceChildren();
+    $("#search-loading").hidden = true;
+    $("#search-none").hidden = true;
+    $("#result-types").hidden = true;
+    $("#result-total").textContent = "";
     $("#count").textContent = "";
     $("#processing-status").textContent = "";
     $("#more").hidden = true;
@@ -98,11 +133,101 @@ export function mount(root, lifecycle) {
     await refresh();
     $("#notice").textContent = "Changes saved.";
   }
+  function showGroups() {
+    const shown = (key, count) =>
+      count > 0 && (resultType === "all" || resultType === key);
+    $("#memory-results").hidden = !shown("memories", counts.memories);
+    $("#chat-results").hidden = !shown("chats", counts.chats);
+    $("#place-results").hidden = !shown("places", counts.places);
+    $("#people-results").hidden = !shown("people", counts.people);
+    $("#photo-results").hidden = !(
+      resultType === "all" || resultType === "photos"
+    );
+    $("#ask-card").hidden = !counts.term || resultType !== "all";
+    root
+      .querySelectorAll("#result-types button")
+      .forEach((button) =>
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.type === resultType),
+        ),
+      );
+  }
+  function renderTypes(photos) {
+    const total =
+      counts.memories + counts.chats + counts.places + counts.people + photos;
+    const types = [
+      ["all", "All", total],
+      ["memories", "Memories", counts.memories],
+      ["photos", "Photographs", photos],
+      ["places", "Places", counts.places],
+      ["people", "People", counts.people],
+      ["chats", "Chats", counts.chats],
+    ];
+    $("#result-types").replaceChildren(
+      ...types.map(([type, label, count]) => {
+        const button = node("button", `${label} `, { type: "button" });
+        button.dataset.type = type;
+        button.append(node("span", String(count), { class: "data" }));
+        button.onclick = () => {
+          resultType = type;
+          showGroups();
+        };
+        return button;
+      }),
+    );
+    $("#result-types").hidden = !counts.term;
+    $("#result-total").textContent = counts.term
+      ? `${total} ${total === 1 ? "result" : "results"}`
+      : "";
+    const none = Boolean(counts.term) && total === 0;
+    $("#search-none").hidden = !none;
+    $("#search-groups").hidden = none;
+    if (none) {
+      $("#none-title").textContent =
+        `Nothing for “${$("#query").value.trim()}”`;
+      $("#none-try").replaceChildren(
+        ...suggestions(atlas).map((word) => {
+          const button = node("button", word, {
+            type: "button",
+            class: "br-chip",
+          });
+          button.onclick = () => {
+            $("#query").value = word;
+            $("#clear-query").hidden = false;
+            run(() => search());
+          };
+          return button;
+        }),
+      );
+    }
+    $("#ask-quote").textContent = counts.term
+      ? `“${$("#query").value.trim()}”`
+      : "";
+    showGroups();
+  }
   async function search(offset = 0) {
     const revision = ++generation;
     $("#results").replaceChildren();
     $("#more").hidden = true;
     $("#count").textContent = "Searching…";
+    if (!offset) {
+      $("#search-loading").replaceChildren(...skeletonRows());
+      $("#search-loading").hidden = false;
+      $("#search-groups").hidden = true;
+      $("#search-none").hidden = true;
+    }
+    try {
+      await searchPage(revision, offset);
+    } finally {
+      if (revision === generation) {
+        $("#search-loading").hidden = true;
+        $("#search-loading").replaceChildren();
+        if ($("#search-none").hidden) $("#search-groups").hidden = false;
+      }
+    }
+  }
+  async function searchPage(revision, offset) {
     const query = new URLSearchParams({
       group,
       query: $("#query").value,
@@ -124,6 +249,10 @@ export function mount(root, lifecycle) {
       $("#index-progress").textContent =
         `${result.unindexed} eligible photographs need indexing; these use words and filters until the index is built.`;
     $("#count").textContent = `${result.total} photographs · ${result.mode}`;
+    if (!offset) {
+      counts = renderGroups(root, atlas, $("#query").value, people);
+      renderTypes(result.total);
+    }
     $("#more").hidden = next === null;
     $("#clear-similar").hidden = !similar;
     options(
@@ -135,7 +264,7 @@ export function mount(root, lifecycle) {
       "Choose a photograph",
     );
     for (const item of result.items) {
-      const card = node("article");
+      const card = node("article", undefined, { class: "disc-photo" });
       card.append(
         node("img", undefined, {
           src: "/api/archive/" + encodeURIComponent(item.id) + "/preview",
@@ -151,10 +280,11 @@ export function mount(root, lifecycle) {
           href: "/api/archive/" + encodeURIComponent(item.id) + "/original",
           target: "_blank",
           rel: "noopener",
+          class: "disc-original",
         }),
       );
       for (const person of item.people) {
-        const line = node("p", person.name);
+        const line = node("p", person.name, { class: "disc-person" });
         if (person.is_me || person.can_remove)
           line.append(
             action(person.is_me ? "Remove my association" : "Remove tag", () =>
@@ -166,7 +296,9 @@ export function mount(root, lifecycle) {
           );
         card.append(line);
       }
-      const label = node("label", "Confirm someone in this photo");
+      const label = node("label", "Confirm someone in this photo", {
+        class: "disc-tag",
+      });
       const select = node("select", undefined, {
         "aria-label": "Person to tag",
       });
@@ -213,10 +345,19 @@ export function mount(root, lifecycle) {
     clearPrivate();
     const revision = generation;
     const currentGroup = group;
-    const state = await api(
-      "/api/discovery/state?group=" + encodeURIComponent(group),
-    );
+    const [state, map] = await Promise.all([
+      api("/api/discovery/state?group=" + encodeURIComponent(group)),
+      api("/api/atlas?group=" + encodeURIComponent(group)).catch(() => ({
+        memories: [],
+      })),
+    ]);
     if (revision !== generation || currentGroup !== group) return;
+    atlas = map.memories;
+    const key = currentGroup + atlas.map((memory) => memory.id).join();
+    if (view === "discover" && key !== atlasKey) {
+      atlasKey = key;
+      renderPrompts(root, atlas, heroIndex);
+    }
     $("#mode option[value=semantic]").textContent = state.settings.model_label;
     $("#model-help").textContent = state.settings.model_message;
     $("#build-index").hidden =
@@ -298,6 +439,19 @@ export function mount(root, lifecycle) {
     $("#private").hidden = false;
     await search();
   }
+  $("#shuffle").onclick = () => {
+    heroIndex++;
+    renderPrompts(root, atlas, heroIndex);
+  };
+  $("#query").addEventListener("input", () => {
+    $("#clear-query").hidden = !$("#query").value;
+  });
+  $("#clear-query").onclick = () => {
+    $("#query").value = "";
+    $("#clear-query").hidden = true;
+    $("#query").focus();
+    run(() => search());
+  };
   $("#search-form").onsubmit = (event) => {
     event.preventDefault();
     run(() => search());
@@ -366,6 +520,7 @@ export function mount(root, lifecycle) {
       ...groups.map((g) => node("option", g.name, { value: g.id })),
     );
     group = lifecycle.selectGroup($("#groups"));
+    $("#groups").closest("label").hidden = groups.length < 2;
     if (!group) {
       $("#notice").textContent =
         "Sign in and join a group through Imports to explore your archive.";
