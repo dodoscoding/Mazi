@@ -198,6 +198,7 @@ async function swipe(
   from: number,
   to: number,
   check?: () => Promise<void>,
+  end: "touchEnd" | "touchCancel" = "touchEnd",
 ) {
   const box = (await page.locator(".viewer-surface").boundingBox())!;
   const y = box.y + box.height / 2;
@@ -214,10 +215,7 @@ async function swipe(
       touchPoints: point(from + ((to - from) * step) / steps),
     });
   await check?.();
-  await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
+  await cdp.send("Input.dispatchTouchEvent", { type: end, touchPoints: [] });
 }
 
 test("touch swipe tracks the finger and changes photo, also with reduced motion", async ({
@@ -241,6 +239,19 @@ test("touch swipe tracks the finger and changes photo, also with reduced motion"
   // A short drag springs back without changing photo.
   await swipe(page, 200, 170);
   await expect(counter(page)).toHaveText("1 / 3");
+
+  // Pinch-zoom stays with the browser; a cancelled drag settles back in place.
+  await expect(page.locator(".viewer-surface")).toHaveCSS(
+    "touch-action",
+    "pan-y pinch-zoom",
+  );
+  await swipe(page, 300, 120, undefined, "touchCancel");
+  await expect(page.locator(".viewer-track")).not.toHaveAttribute(
+    "style",
+    /translateX/,
+  );
+  await expect(counter(page)).toHaveText("1 / 3");
+  await expect(page).toHaveURL(/photo=0$/);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await swipe(page, 300, 80);
