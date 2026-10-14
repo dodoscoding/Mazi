@@ -1,8 +1,8 @@
 # Mazi test and acceptance plan
 
-T01-T15 define production acceptance and remain uncompleted. The local Atlas prototype has a separate [browser verification record](../work/design/atlas/VERIFICATION.md). The [Python memory-loop experiment](../phase1/README.md) has behavior tests for a different sharing policy. Neither synthetic test set satisfies production membership, ingestion or lifecycle scenarios. Documentation verification remains in [the planning evidence](../work/poteto/product-plan/VERIFICATION.md).
+T01-T15 define production acceptance and remain uncompleted. The local Atlas prototype has a separate [browser verification record](../work/design/atlas/VERIFICATION.md). The [Python memory-loop experiment](history/identity/README.md) has behavior tests for a different sharing policy. Neither synthetic test set satisfies production membership, ingestion or lifecycle scenarios. Documentation verification remains in [the planning evidence](../work/poteto/product-plan/VERIFICATION.md).
 
-The [Phase 2 verification record](../phase2/VERIFICATION.md) maps local synthetic adapter, recovery, access and browser checks to the M2 scenarios. It includes 20,000-record replay/cancellation fixtures and current group-sharing behavior. These are local SQLite/HTTP checks; T03/T04/T06/T07/T09 production acceptance still requires provider integration, real representative exports, recovery evidence and the beta walkthrough.
+The [Phase 2 verification record](history/imports/VERIFICATION.md) maps local synthetic adapter, recovery, access and browser checks to the M2 scenarios. It includes 20,000-record replay/cancellation fixtures and current group-sharing behavior. These are local SQLite/HTTP checks; T03/T04/T06/T07/T09 production acceptance still requires provider integration, real representative exports, recovery evidence and the beta walkthrough.
 
 ## Evidence rules
 

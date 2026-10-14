@@ -13,10 +13,15 @@ export function useReducedMotion() {
   return reduced;
 }
 export function readRoute() {
-  const [path, query] = location.hash.slice(1).split("?");
+  const [path, query] = (
+    location.hash.startsWith("#/")
+      ? location.hash.slice(1)
+      : location.pathname + location.search
+  ).split("?");
   const params = new URLSearchParams(query);
   return {
-    path: path || "/",
+    path: path === "/atlas" ? "/" : path || "/",
+    search: query ? `?${query}` : "",
     selected: params.get("selected") || "last-ferry",
     photo: Math.max(0, Number(params.get("photo")) || 0),
   };

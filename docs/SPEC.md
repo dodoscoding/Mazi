@@ -67,7 +67,7 @@ Unavailable areas are omitted from the shipped navigation. My Imports and group 
 - AI processing requires an explicit choice and is independently disableable. Basic archiving works without it.
 - Imported archive coverage is partial until demonstrated otherwise. Empty search results do not prove an event never happened.
 - Nonmembers in messages or images are not silently turned into searchable identified people.
-- The owner-requested [local Phase 5 implementation](../phase5/README.md) applies manual People and personal discovery hiding without changing the shared group audience. The [Phase 5 decision](DECISIONS.md) records identity verification, suppression and optional local processing; production integration and recognition gates remain open.
+- The owner-requested [local Phase 5 implementation](history/discovery/README.md) applies manual People and personal discovery hiding without changing the shared group audience. The [Phase 5 decision](DECISIONS.md) records identity verification, suppression and optional local processing; production integration and recognition gates remain open.
 
 ## Design direction and first experiment
 

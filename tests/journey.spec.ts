@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 test("select, open, explore photos and context; Back restores selection and focus", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await page.getByRole("button", { name: "Select Lake days" }).click();
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
@@ -31,7 +31,7 @@ test("select, open, explore photos and context; Back restores selection and focu
 test("deep links, photo boundaries, browser history and unknown IDs", async ({
   page,
 }) => {
-  await page.goto("/#/memory/last-ferry");
+  await page.goto("/?demo=1#/memory/last-ferry");
   await expect(
     page.getByRole("button", { name: "Previous photo" }),
   ).toBeDisabled();
@@ -43,7 +43,7 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeVisible();
-  await page.goto("/#/memory/missing");
+  await page.goto("/?demo=1#/memory/missing");
   await expect(
     page.getByRole("heading", { name: "Memory not found" }),
   ).toBeVisible();
@@ -57,7 +57,7 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/?demo=1");
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Select Lake days" }).click();
     await page.getByRole("button", { name: "Select The last ferry" }).click();
@@ -78,7 +78,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
   page,
 }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
-  await page.goto("/?scene=off#/memory/last-ferry");
+  await page.goto("/?demo=1&scene=off#/memory/last-ferry");
   await expect(page.getByText("This photo could not load.")).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
@@ -94,7 +94,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
 
 test("retrying the Home photograph stays on Home", async ({ page }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await expect(page.getByText("This photo could not load.")).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();

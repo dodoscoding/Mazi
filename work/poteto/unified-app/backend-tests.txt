@@ -1,0 +1,52 @@
+
+> mazi@0.1.0 test:backend
+> .venv/bin/python -m unittest discover -s tests/backend -t .
+
+.......................ss/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/PIL/Image.py:1563: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b563e20>
+  return tuple(self.im)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/PIL/Image.py:1563: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e84f0>
+  return tuple(self.im)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/PIL/Image.py:1563: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8220>
+  return tuple(self.im)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/PIL/Image.py:1563: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8310>
+  return tuple(self.im)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/PIL/Image.py:1563: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8400>
+  return tuple(self.im)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................./Users/altanesmer/Desktop/Ales/Mazi/mazi/identity/core.py:511: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b0f2890>
+  self.db.execute("UPDATE memories SET status='published', policy_version=policy_version+1 WHERE id=?", (memory,))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/identity/core.py:511: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8130>
+  self.db.execute("UPDATE memories SET status='published', policy_version=policy_version+1 WHERE id=?", (memory,))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/identity/core.py:511: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8400>
+  self.db.execute("UPDATE memories SET status='published', policy_version=policy_version+1 WHERE id=?", (memory,))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/identity/core.py:511: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5e8310>
+  self.db.execute("UPDATE memories SET status='published', policy_version=policy_version+1 WHERE id=?", (memory,))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................................./opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 400: 'Bad Request'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+......................../Users/altanesmer/Desktop/Ales/Mazi/mazi/imports/adapters.py:260: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b500310>
+  if any(row.get(key) is None for key in ("ID", "Timestamp", "Contents", "Attachments")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/imports/adapters.py:260: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b402a70>
+  if any(row.get(key) is None for key in ("ID", "Timestamp", "Contents", "Attachments")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/imports/adapters.py:260: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b402200>
+  if any(row.get(key) is None for key in ("ID", "Timestamp", "Contents", "Attachments")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi/mazi/imports/adapters.py:260: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b5ea110>
+  if any(row.get(key) is None for key in ("ID", "Timestamp", "Contents", "Attachments")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........
+----------------------------------------------------------------------
+Ran 141 tests in 21.229s
+
+OK (skipped=2)

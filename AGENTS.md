@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 
-Mazi is a private, invite-only memory archive with production planning, a local Atlas prototype, and a separate Python memory-loop experiment under `phase1/`. These use synthetic fixtures; production authentication, ingestion and infrastructure remain unimplemented.
+Mazi is a private, invite-only memory archive with one local Atlas application. React UI lives in `src/`, Python domain logic in `mazi/`, and synthetic regression tests in `tests/`. Production deployment and milestone acceptance remain separate.
 
 - `README.md` indexes planning and prototype run instructions.
-- `src/` contains the React/TypeScript interface and procedural Fiber/Three atlas; `public/media/` holds generated synthetic photographs and provenance.
-- `tests/` contains Playwright browser contracts; `docs/PROTOTYPE_STACK.md` records the experiment boundary.
+- `src/` contains the shared React/TypeScript shell, feature modules and Fiber/Three atlas; `mazi/` owns the API, worker and archive domains. `public/media/` contains explicit sample-mode photographs.
+- `tests/` contains browser and backend contracts; `docs/PROTOTYPE_STACK.md` records runtime ownership and local limits. Preserve `.mazi-imports` storage compatibility.
 - `PROJECT_PLAN.md` preserves the initial project plan; reconcile differences through `docs/DECISIONS.md` before implementation.
 - `docs/` contains the specification, roadmap, architecture, domain contracts, privacy policy, import design, and acceptance plan.
 - `docs/source/PRODUCT_BRIEF.md` is the preserved source brief; keep it unchanged.
@@ -20,10 +20,11 @@ Run commands from the repository root:
 - `git diff --check`: checks patch whitespace; preserve existing Markdown hard-break spaces in the source brief.
 
 - `npm ci`: installs exact locked dependencies; use Node 22.12+ (developed on 24.15.0).
-- `npm run dev`: starts the local Vite prototype.
+- `npm run setup`: installs the locked Python dependency in `.venv`.
+- `npm run dev`: starts the unified interface and Python API. `npm start` serves the built app.
 - `npm run build`: typechecks and builds the prototype.
 - `npx playwright install chromium` then `npm test`: runs desktop and phone-emulation contracts.
-- `python3 -m unittest discover -s phase1/tests`: runs the separate Python experiment's behavior tests after installing `phase1/requirements.txt`.
+- `npm run test:backend`: runs domain and HTTP contracts. `npm run test:app` verifies integrated desktop and phone workflows against a temporary archive.
 
 These commands validate synthetic experiments, not production milestone acceptance. No linter or coverage threshold is configured.
 

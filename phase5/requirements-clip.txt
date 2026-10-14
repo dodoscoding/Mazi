@@ -1,4 +1,0 @@
--r ../phase1/requirements.txt
-numpy==2.4.3
-onnxruntime==1.24.3
-tokenizers==0.22.2
