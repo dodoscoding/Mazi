@@ -14,6 +14,8 @@ import os
 import secrets
 import sqlite3
 import time
+import threading
+import unicodedata
 import uuid
 from pathlib import Path
 
@@ -43,6 +45,14 @@ CREATE TABLE IF NOT EXISTS members (
  group_id TEXT NOT NULL REFERENCES groups(id), user_id TEXT NOT NULL REFERENCES users(id),
  role TEXT NOT NULL CHECK(role IN ('admin','member')),
  PRIMARY KEY(group_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS shared_profiles (
+ user_id TEXT PRIMARY KEY REFERENCES users(id), name_key TEXT NOT NULL UNIQUE,
+ display_name TEXT NOT NULL, introduced_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS shared_policy (
+ singleton INTEGER PRIMARY KEY CHECK(singleton=1), group_id TEXT NOT NULL REFERENCES groups(id),
+ code_digest BLOB NOT NULL
 );
 CREATE TABLE IF NOT EXISTS invitations (
  id TEXT PRIMARY KEY, group_id TEXT NOT NULL REFERENCES groups(id),
@@ -116,6 +126,8 @@ def _hash_token(token: str) -> bytes:
 
 class Store:
     def __init__(self, root: str | Path):
+        self.shared_mode = False
+        self._entry_lock = threading.RLock()
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self.originals = self.root / "originals"
@@ -132,6 +144,108 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
         os.chmod(self.root / "mazi.sqlite3", 0o600)
+
+    @staticmethod
+    def _name(name):
+        if not isinstance(name, str):
+            raise Denied("Enter a visible name")
+        display = name.strip()
+        if not display or len(display) > 80 or any(unicodedata.category(c).startswith("C") for c in display):
+            raise Denied("Use a name of 1 to 80 characters without control characters")
+        return display, display.casefold()
+
+    def shared_policy(self):
+        row = self.db.execute("SELECT * FROM shared_policy WHERE singleton=1").fetchone()
+        if row is None:
+            raise Denied("Shared entry is not configured. Run the shared-entry setup command.")
+        return row
+
+    def _shared_user(self):
+        user = _id()
+        self.db.execute("INSERT INTO users VALUES(?,?,?,?)",
+                        (user, f"shared.{user}@profiles.invalid", secrets.token_bytes(16), secrets.token_bytes(64)))
+        return user
+
+    def setup_shared(self, *, admin_name, group_id=None, mappings=None, rotate=False):
+        display, key = self._name(admin_name)
+        mappings = mappings or {}
+        normalized = [(self._name(name), user) for name, user in mappings.items()]
+        with self._entry_lock, self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            existing = self.db.execute("SELECT * FROM shared_policy WHERE singleton=1").fetchone()
+            if existing:
+                if group_id and group_id != existing["group_id"]:
+                    raise Denied("Configured circle cannot be changed by setup")
+                group_id = existing["group_id"]
+            elif self.db.execute("SELECT 1 FROM users LIMIT 1").fetchone():
+                if not group_id or key not in [pair[0][1] for pair in normalized]:
+                    raise Denied("Existing archives require a group ID and explicit admin name mapping")
+            else:
+                if group_id or normalized:
+                    raise Denied("Fresh archives require only an admin name")
+                user = self._shared_user()
+                group_id = _id()
+                self.db.execute("INSERT INTO groups VALUES(?,?,?)", (group_id, "Our circle", user))
+                self.db.execute("INSERT INTO members VALUES(?,?,?)", (group_id, user, "admin"))
+                normalized = [((display, key), user)]
+            for (name, name_key), user in normalized:
+                row = self.db.execute("SELECT role FROM members WHERE group_id=? AND user_id=?", (group_id, user)).fetchone()
+                if row is None or (name_key == key and row["role"] != "admin"):
+                    raise Denied("Mapped profiles must be current members; admin name must map to an admin")
+                profile = self.db.execute("SELECT * FROM shared_profiles WHERE user_id=? OR name_key=?", (user, name_key)).fetchone()
+                if profile:
+                    if profile["user_id"] != user or profile["name_key"] != name_key:
+                        raise Conflict("Profile mapping conflicts with an existing name")
+                else:
+                    self.db.execute("INSERT INTO shared_profiles VALUES(?,?,?,NULL)", (user, name_key, name))
+            admin = self.db.execute("SELECT user_id FROM shared_profiles WHERE name_key=?", (key,)).fetchone()
+            if admin is None:
+                raise Denied("Explicit admin mapping required")
+            role = self.db.execute("SELECT role FROM members WHERE group_id=? AND user_id=?", (group_id, admin["user_id"])).fetchone()
+            if role is None or role["role"] != "admin":
+                raise Denied("Admin name must map to an admin")
+            if existing and not rotate:
+                return None
+            code = secrets.token_urlsafe(24)
+            self.db.execute("INSERT OR REPLACE INTO shared_policy VALUES(1,?,?)", (group_id, _hash_token(code)))
+            return code
+
+    def enter_shared(self, *, code, name):
+        display, key = self._name(name)
+        if not isinstance(code, str) or not code:
+            raise Denied("Enter the shared code")
+        with self._entry_lock, self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            policy = self.shared_policy()
+            if not hmac.compare_digest(_hash_token(code), policy["code_digest"]):
+                raise Denied("The shared code is incorrect")
+            profile = self.db.execute("SELECT * FROM shared_profiles WHERE name_key=?", (key,)).fetchone()
+            if profile is None:
+                user = self._shared_user()
+                self.db.execute("INSERT INTO shared_profiles VALUES(?,?,?,NULL)", (user, key, display))
+                self.db.execute("INSERT INTO members VALUES(?,?,?)", (policy["group_id"], user, "member"))
+            else:
+                user = profile["user_id"]
+            self._member(user, policy["group_id"])
+            token = secrets.token_urlsafe(32)
+            self.db.execute("INSERT INTO sessions VALUES(?,?,?)", (_hash_token(token), user, int(time.time()) + 2592000))
+            return self.shared_session(token), token
+
+    def shared_session(self, token):
+        user = self.user_for_token(token)
+        policy = self.shared_policy()
+        row = self.db.execute("SELECT * FROM shared_profiles WHERE user_id=?", (user,)).fetchone()
+        if row is None:
+            raise Denied("Shared entry required")
+        self._member(user, policy["group_id"])
+        return {"user_id": user, "display_name": row["display_name"], "group_id": policy["group_id"],
+                "introduced": row["introduced_at"] is not None}
+
+    def complete_introduction(self, token):
+        profile = self.shared_session(token)
+        with self.db:
+            self.db.execute("UPDATE shared_profiles SET introduced_at=COALESCE(introduced_at,?) WHERE user_id=?",
+                            (int(time.time()), profile["user_id"]))
 
     def close(self):
         self.db.close()
@@ -181,6 +295,8 @@ class Store:
             self.db.execute("DELETE FROM sessions WHERE token_hash=?", (_hash_token(token),))
 
     def _member(self, user: str, group: str, admin: bool = False):
+        if self.shared_mode and group != self.shared_policy()["group_id"]:
+            raise Denied("Group access denied")
         row = self.db.execute("SELECT role FROM members WHERE user_id=? AND group_id=?",
                               (user, group)).fetchone()
         if row is None or (admin and row["role"] != "admin"):
@@ -198,6 +314,10 @@ class Store:
         return group
 
     def groups_for(self, user: str):
+        if self.shared_mode:
+            group = self.shared_policy()["group_id"]
+            self._member(user, group)
+            return [dict(row) for row in self.db.execute("SELECT g.id,g.name,m.role FROM groups g JOIN members m ON m.group_id=g.id WHERE m.user_id=? AND g.id=?", (user, group))]
         return [dict(row) for row in self.db.execute(
             "SELECT g.id,g.name,m.role FROM groups g JOIN members m ON m.group_id=g.id WHERE m.user_id=?",
             (user,))]
@@ -205,8 +325,8 @@ class Store:
     def members_for(self, user: str, group: str) -> list[dict]:
         self._member(user, group)
         return [dict(row) for row in self.db.execute(
-            "SELECT u.id,u.email,m.role FROM members m JOIN users u ON u.id=m.user_id "
-            "WHERE m.group_id=? ORDER BY u.email", (group,))]
+            "SELECT u.id,CASE WHEN p.user_id IS NULL THEN u.email ELSE NULL END AS email,p.display_name,m.role FROM members m JOIN users u ON u.id=m.user_id LEFT JOIN shared_profiles p ON p.user_id=u.id "
+            "WHERE m.group_id=? ORDER BY COALESCE(p.display_name,u.email)", (group,))]
 
     def invite(self, user: str, group: str, hours: int = 24) -> str:
         self._member(user, group, admin=True)

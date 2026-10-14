@@ -14,10 +14,11 @@ from .sources.server import worker
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
 APP_PATHS = {'/', '/atlas', '/imports', '/review', '/timeline', '/places',
-             '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings'}
+             '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/circle', '/search'}
 
 
 def handler_for(store, dist=None):
+    store.shared_mode = True
     build = Path(dist) if dist is not None else DIST
 
     class Handler(memory_handler(store)):
