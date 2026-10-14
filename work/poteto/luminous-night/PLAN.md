@@ -17,6 +17,7 @@ The work lands as eight stacked pull requests, each reviewable and testable on i
 
 - `Memory` gains `place: Place | null` and `people: { shared: string[]; conversation: string[] }`.
 - `Place` is `{ name: string; country: string; latitude: number; longitude: number }`. Coordinates come from `shared_places`, which already stores city-level latitude and longitude. A memory whose assets disagree on a city has no single place and goes to the "No place recorded" shelf.
+- Place agreement compares city names without case and within 50 km; the most common spelling is shown. Free-text review places are descriptions and never move coordinates.
 - The globe reads one pure model, `buildAtlas(memories)`, which returns place nodes (memories grouped by place, with per-year counts), journeys (arcs between consecutive distinct places in date order), the year range, and unplaced memories.
 - The theme is one value, `"night" | "day"`, stored under `mazi.theme` and applied as `data-theme` on the root element.
 - Sound is one value, `"on" | "off"`, stored under `mazi.sound`, default `"off"`.
