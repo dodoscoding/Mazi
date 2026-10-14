@@ -7,6 +7,7 @@ import { FeaturePage } from "./features";
 import { ArchiveStatus, Home } from "./Home";
 import { MemoryNotFound, MemoryView } from "./MemoryView";
 import { Shell } from "./Shell";
+import { SoundController } from "./sound/SoundController";
 import { useArchive } from "./useArchive";
 import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
@@ -146,8 +147,9 @@ export default function App() {
       />
     );
   else content = <MemoryNotFound link={link} heading={heading} />;
+  let screen: ReactNode;
   if (entry.state.status === "onboarding")
-    return (
+    screen = (
       <main className="entry-page">
         <Introduction
           pending={entry.state.pending}
@@ -160,25 +162,41 @@ export default function App() {
         />
       </main>
     );
-  if (entry.state.status === "loading")
-    return (
+  else if (entry.state.status === "loading")
+    screen = (
       <main className="entry-page">
         <p role="status">Opening Mazi…</p>
       </main>
     );
-  if (entry.state.status !== "ready") return <Entry entry={entry} />;
+  else if (entry.state.status !== "ready") screen = <Entry entry={entry} />;
+  else
+    screen = (
+      <Shell
+        path={route.path}
+        demo={demo}
+        archive={archive}
+        profileName={entry.state.profile.display_name}
+        link={link}
+        onSignOut={() => {
+          void entry.logout();
+        }}
+      >
+        {content}
+      </Shell>
+    );
   return (
-    <Shell
-      path={route.path}
-      demo={demo}
-      archive={archive}
-      profileName={entry.state.profile.display_name}
-      link={link}
-      onSignOut={() => {
-        void entry.logout();
-      }}
-    >
-      {content}
-    </Shell>
+    <>
+      <SoundController
+        reduced={reduced}
+        route={{
+          // Entry and onboarding are not the Atlas, whatever the URL says.
+          path: entry.state.status === "ready" ? route.path : "",
+          portal: new URLSearchParams(route.search).get("view") === "portal",
+          selected: selected?.id,
+          year: selected?.year,
+        }}
+      />
+      {screen}
+    </>
   );
 }

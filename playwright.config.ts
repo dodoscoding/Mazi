@@ -14,6 +14,7 @@ export default defineConfig({
     "memory-detail.spec.ts",
     "browse.spec.ts",
     "entry-redesign.spec.ts",
+    "sound.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,

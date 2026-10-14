@@ -1,6 +1,7 @@
 import { initials } from "./ui/initials";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { SoundToggle } from "./sound/SoundToggle";
 import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
 import { Icon } from "./ui/icons";
@@ -224,6 +225,7 @@ export function Shell({
               </a>
             )}
             <ThemeToggle />
+            <SoundToggle className="hud-button" />
             <span
               className="avatar"
               role="img"
@@ -278,7 +280,13 @@ export function Shell({
         >
           <div className="sheet-header">
             <h2 className="sheet-title">More</h2>
-            <ThemeToggle compact />
+            <div className="sheet-controls">
+              <ThemeToggle compact />
+              <SoundToggle
+                variant="pill"
+                className="button button--secondary theme-pill"
+              />
+            </div>
           </div>
           <nav aria-label="Archive tools" className="more-list">
             {tools.map(([url, label]) => navLink(url, label, "", closeMore))}
