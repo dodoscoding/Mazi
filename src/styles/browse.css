@@ -461,7 +461,7 @@
   height: 12px;
   background: var(--text-secondary);
 }
-.scrubber-head {
+.year-scrubber .scrubber-head {
   position: absolute;
   top: 8px;
   width: 2px;
