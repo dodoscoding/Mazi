@@ -1,4 +1,11 @@
 export type Photo = { src: string; alt: string; caption: string };
+export type Place = {
+  name: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+};
+export type People = { shared: string[]; conversation: string[] };
 export type Memory = {
   id: string;
   kind?: "memory" | "photo";
@@ -13,6 +20,8 @@ export type Memory = {
   description: string;
   photos: Photo[];
   messages: { name: string; time: string; text: string }[];
+  place: Place | null;
+  people: People;
 };
 const photo = (name: string, alt: string, caption: string): Photo => ({
   src: `/media/${name}.webp`,
@@ -52,6 +61,13 @@ export const memories: Memory[] = [
       { name: "Deniz", time: "21:16", text: "I think we live here now." },
       { name: "Alex", time: "21:18", text: "Worth missing the ferry for." },
     ],
+    place: {
+      name: "Naxos",
+      country: "GR",
+      latitude: 37.1036,
+      longitude: 25.3766,
+    },
+    people: { shared: ["Deniz"], conversation: ["Alex", "Deniz", "Maya"] },
   },
   {
     id: "lake-days",
@@ -71,6 +87,13 @@ export const memories: Memory[] = [
       ),
     ],
     messages: [],
+    place: {
+      name: "Bohinj",
+      country: "SI",
+      latitude: 46.2833,
+      longitude: 13.8833,
+    },
+    people: { shared: ["Maya"], conversation: [] },
   },
   {
     id: "birthday",
@@ -96,6 +119,13 @@ export const memories: Memory[] = [
         text: "Same kitchen, same time next year?",
       },
     ],
+    place: {
+      name: "Nicosia",
+      country: "CY",
+      latitude: 35.1856,
+      longitude: 33.3823,
+    },
+    people: { shared: ["Alex"], conversation: ["Alex"] },
   },
 ];
 export function memoryById(id: string) {

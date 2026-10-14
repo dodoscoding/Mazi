@@ -28,9 +28,16 @@ def atlas_view(store, user, group):
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
                 if not complete_dates:
                     date_label += ' · some dates unknown'
-            photos, messages, sources = [], [], set()
+            photos, messages, sources, places, shared = [], [], set(), [], set()
             seen_messages = set()
             for item in records:
+                places.extend(store.db.execute(
+                    'SELECT p.city,p.country,p.latitude,p.longitude FROM shared_places p '
+                    'JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+                    'WHERE o.asset_id=? AND o.withdrawn=0', (item['id'],)))
+                shared.update(row[0] for row in store.db.execute(
+                    'SELECT p.display_name FROM archive_origins o JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+                    'JOIN shared_profiles p ON p.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (item['id'],)))
                 photos.append(dict(src='/api/review/rendition/' + item['id'],
                                    alt=item['title'] or 'Archive photograph',
                                    caption=item['title'] or 'Untitled photograph'))
@@ -44,11 +51,19 @@ def atlas_view(store, user, group):
                         if value and key not in seen_messages:
                             seen_messages.add(key)
                             messages.append(dict(name=name, time=when, text=value))
+            place = None
+            if len({(row['city'], row['country']) for row in places}) == 1:
+                place = dict(name=places[0]['city'], country=places[0]['country'],
+                             latitude=sum(row['latitude'] for row in places) / len(places),
+                             longitude=sum(row['longitude'] for row in places) / len(places))
+            people = dict(shared=sorted(shared),
+                          conversation=sorted({message['name'] for message in messages} - {'Source participant'}))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,
                         date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
                         approximate=not complete_dates, by='Your circle',
                         description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
                         source=', '.join(sorted(sources)), photos=photos, messages=messages,
+                        place=place, people=people,
                         dateBasis=', '.join(sorted({item['date_basis'] for item in records})))
 
         for event in store._approved(user, group):
