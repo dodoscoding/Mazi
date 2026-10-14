@@ -51,6 +51,11 @@ test("every signed-out route is gated and named profiles resume across browsers"
   ).toBeVisible();
   const original = await (await page.request.get("/api/session")).json();
   await followShellLink(page, "About");
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Replay introduction" })
+    .click();
+  await expect(page).toHaveURL(/#\/introduction/);
   await expect(
     page.getByRole("button", { name: "Open the Atlas" }),
   ).toBeVisible();

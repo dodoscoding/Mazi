@@ -103,7 +103,9 @@ test("the phone tab bar reaches Imports in one tap and About in two", async ({
   await expect(page).toHaveURL(/#\/about/);
   await expect(sheet).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Open the Atlas" }),
+    page.getByRole("heading", {
+      name: "A private atlas for one circle of friends",
+    }),
   ).toBeVisible();
   await expect(tabs).toBeVisible();
 });

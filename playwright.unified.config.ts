@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = Number(process.env.MAZI_UNIFIED_PORT || 8017);
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["unified.spec.ts", "entry.spec.ts"],
+  testMatch: ["unified.spec.ts", "entry.spec.ts", "features-redesign.spec.ts"],
   fullyParallel: false,
   workers: 1,
   timeout: 60000,
