@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+const port = Number(process.env.MAZI_TEST_PORT || 5173);
 const firefoxLaunchOptions = process.env.MAZI_FIREFOX_EXECUTABLE
   ? { executablePath: process.env.MAZI_FIREFOX_EXECUTABLE }
   : {};
@@ -8,7 +9,7 @@ export default defineConfig({
   fullyParallel: true,
   timeout: 30000,
   expect: { timeout: 7000 },
-  use: { baseURL: "http://127.0.0.1:5173", trace: "retain-on-failure" },
+  use: { baseURL: `http://127.0.0.1:${port}`, trace: "retain-on-failure" },
   projects: [
     {
       name: "desktop",
@@ -41,9 +42,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      "npm run build && MAZI_IMPORT_PORT=5173 .venv/bin/python -m tests.browser.sample_server",
-    url: "http://127.0.0.1:5173",
+    command: `npm run build && MAZI_IMPORT_PORT=${port} .venv/bin/python -m tests.browser.sample_server`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
   },
 });
