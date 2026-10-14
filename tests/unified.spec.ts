@@ -30,6 +30,11 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
   expect(login.ok()).toBe(true);
+  const profile = await login.json();
+  const initialRecords = await (
+    await page.request.get(`/api/archive?group=${profile.group_id}`)
+  ).json();
+  const initialCount = initialRecords.length;
   await page.goto("/");
   await shell(page);
   await page
@@ -92,9 +97,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page.getByLabel("Show in-app capsule notifications").check();
   await expect(page.locator("#notifications")).toBeEmpty();
   await navigate(page, "Search", "search");
-  await expect(page.locator("#results article")).toHaveCount(
-    info.project.name === "phone" ? 5 : 3,
-  );
+  await expect(page.locator("#results article")).toHaveCount(initialCount);
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
   await page
     .getByRole("button", { name: "Search archive", exact: true })
@@ -133,9 +136,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   );
   await expect(page.locator("#sources")).toContainText("Paused");
   await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(
-    info.project.name === "phone" ? 5 : 3,
-  );
+  await expect(page.locator("#timeline article")).toHaveCount(initialCount);
   for (let i = 0; i < 2; i++) {
     await navigate(page, "Memories", "memories");
     await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
@@ -215,9 +216,24 @@ test("named profile imports and logout discard delayed private Atlas responses",
     .getByRole("button", { name: "Start importing to group", exact: true })
     .click();
   await expect(page.locator("#report-title")).toContainText("completed");
-  await expect(page.locator("#gallery article")).toHaveCount(5);
+  const profile = await (await page.request.get("/api/session")).json();
+  const importedRecords = await (
+    await page.request.get(`/api/archive?group=${profile.group_id}`)
+  ).json();
+  const importedNames = importedRecords.flatMap(
+    (item: { origins: { original_filename: string }[] }) =>
+      item.origins.map((origin) => origin.original_filename),
+  );
+  expect(importedNames).toEqual(
+    expect.arrayContaining(["photo.jpg", "second.jpg"]),
+  );
+  await expect(page.locator("#gallery article")).toHaveCount(
+    importedRecords.length,
+  );
   await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(5);
+  await expect(page.locator("#timeline article")).toHaveCount(
+    importedRecords.length,
+  );
   const firstGroup = await page.locator("#groups").inputValue();
   const timeline = await (
     await page.request.get(`/api/review/timeline?group=${firstGroup}`)

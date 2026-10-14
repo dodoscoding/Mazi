@@ -1,4 +1,3 @@
-"""Named entry configuration for disposable browser archives."""
 import hashlib
 import time
 
