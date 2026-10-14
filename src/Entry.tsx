@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { EntrySky } from "./entry/EntrySky";
 import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
@@ -24,7 +25,13 @@ function ThemeToggle() {
   );
 }
 
-function Removed({ onRetry }: { onRetry: () => void }) {
+function Removed({
+  onRetry,
+  action,
+}: {
+  onRetry: () => void;
+  action: RefObject<HTMLButtonElement | null>;
+}) {
   return (
     <div role="alert" className="entry-removed">
       <p className="entry-removed-label">
@@ -49,6 +56,7 @@ function Removed({ onRetry }: { onRetry: () => void }) {
         If this is a mistake, ask a member to add you again.
       </p>
       <button
+        ref={action}
         type="button"
         className="button button--secondary"
         onClick={onRetry}
@@ -75,6 +83,10 @@ export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
   const showRemoved = removed && !dismissed;
   const showAlert = !!error && !removed;
   const wrongCode = error === WRONG_CODE;
+  const removedAction = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (showRemoved) removedAction.current?.focus();
+  }, [showRemoved]);
   useEffect(() => {
     if (!showRemoved && retrying.current) {
       retrying.current = false;
@@ -106,6 +118,7 @@ export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
         </div>
         {showRemoved ? (
           <Removed
+            action={removedAction}
             onRetry={() => {
               retrying.current = true;
               setCode("");

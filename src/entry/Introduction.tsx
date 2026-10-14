@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 import { useReducedMotion } from "../useRoute";
 import { IntroGlobe } from "./IntroGlobe";
@@ -25,7 +25,7 @@ function Copy({
   return (
     <div className={`intro-copy ${className}`} {...props}>
       <p className="intro-topic">{beat.topic}</p>
-      <h1>{beat.title}</h1>
+      <h1 tabIndex={-1}>{beat.title}</h1>
       <p className="intro-text">
         <span className="intro-long">{beat.copy}</span>
         <span className="intro-short">{beat.short}</span>
@@ -78,16 +78,36 @@ export function Introduction({
     dir: 0,
   });
   const primary = useRef<HTMLButtonElement>(null);
+  const section = useRef<HTMLElement>(null);
+  const refocus = useRef(false);
   const touch = useRef<{ x: number; y: number; id: number } | null>(null);
   const last = index === beats.length - 1;
   const step = `Step ${index + 1} of ${beats.length}`;
 
-  const go = (delta: number) =>
+  const go = (delta: number) => {
+    refocus.current = !!section.current?.contains(document.activeElement);
     setStep((current) => {
       const next = current.index + delta;
       if (next < 0 || next >= beats.length) return current;
       return { index: next, previous: current.index, dir: delta };
     });
+  };
+
+  useEffect(() => {
+    const active = document.activeElement;
+    if (!active || active === document.body)
+      section.current
+        ?.querySelector<HTMLElement>(".intro-copy.is-current h1")
+        ?.focus({ preventScroll: true });
+  }, []);
+
+  // A beat change can unmount the focused Back or skip button.
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    if (refocus.current && (!active || active === document.body))
+      primary.current?.focus();
+    refocus.current = false;
+  }, [index]);
 
   useEffect(() => {
     if (previous < 0) return;
@@ -133,6 +153,7 @@ export function Introduction({
 
   return (
     <section
+      ref={section}
       className="intro"
       data-beat={index + 1}
       aria-label="Introduction"

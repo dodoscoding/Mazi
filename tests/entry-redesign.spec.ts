@@ -79,7 +79,7 @@ test("a wrong code shows the designed alert and never shows a code", async ({
   await expect(code).toHaveAttribute("aria-invalid", "true");
   await expect(code).toHaveAccessibleDescription(/doesn’t open a circle/);
   await expect(page.locator("body")).not.toContainText(/prototype only/i);
-  await expect(page.locator("body")).not.toContainText(CODE);
+  await expect(code).toHaveAttribute("type", "password");
   await code.fill(CODE);
   await expect(code).toHaveAttribute("aria-invalid", "false");
 });
@@ -102,6 +102,9 @@ test("a removed member sees access removed and can try another code", async ({
   await expect(alert).toContainText("Access removed");
   await expect(alert).toContainText("You’re no longer in this circle");
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Enter a different code" }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Enter a different code" }).click();
   await expect(page.getByLabel("Shared code")).toBeFocused();
   await expect(page.getByRole("alert")).toHaveCount(0);
@@ -121,7 +124,15 @@ test("the beats advance by button and keyboard and the last one opens the Atlas"
   await expectBeat(page, 2);
   if (!isPhone(page))
     await expect(page.getByText("change the year")).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).focus();
   await page.keyboard.press("ArrowLeft");
+  await expectBeat(page, 1);
+  await page.keyboard.press("ArrowLeft");
+  await expectBeat(page, 0);
+  await expect(
+    page.getByRole("button", { name: "Next", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("ArrowRight");
   await expectBeat(page, 1);
   await page.getByRole("button", { name: "Back" }).click();
   await expectBeat(page, 0);
@@ -155,8 +166,9 @@ test("the beats advance by button and keyboard and the last one opens the Atlas"
   );
 });
 
-test("phone members swipe between beats", async ({ page }) => {
+test("phone members swipe between beats", async ({ page, browserName }) => {
   test.skip(!isPhone(page), "Swipe is the phone gesture.");
+  test.skip(browserName !== "chromium", "CDP touch events are Chromium-only.");
   await enterAsNewMember(page, "Swipe");
   await swipe(page, 320, 80);
   await expectBeat(page, 1);
@@ -289,4 +301,20 @@ test("captures evidence screenshots", async ({ page }) => {
     ).toBeVisible();
     await page.context().clearCookies();
   }
+});
+
+test("replaying the introduction puts focus on its first heading", async ({
+  page,
+}) => {
+  await enterAsNewMember(page, "Replay");
+  await page
+    .getByRole("button", { name: "Open the Atlas", exact: true })
+    .click();
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toBeVisible();
+  await page.goto("/#/introduction");
+  await expect(
+    page.getByRole("heading", { level: 1, name: beatTitles[0] }),
+  ).toBeFocused();
 });

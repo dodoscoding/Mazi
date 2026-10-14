@@ -1005,3 +1005,9 @@
     transition: opacity 200ms linear !important;
   }
 }
+
+@media (max-width: 600px) {
+  .shell .intro {
+    min-height: calc(100dvh - var(--header-height) - var(--tab-bar-height));
+  }
+}
