@@ -13,6 +13,12 @@ from .memories.memories import MemoryStore
 from .memories.server import handler_for as memory_handler
 from .sources.server import worker
 
+
+class AppServer(HTTPServer):
+    # One thread keeps the SQLite store safe; a deep backlog stops a page's
+    # parallel asset requests from being reset while one request is served.
+    request_queue_size = 128
+
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
 APP_PATHS = {'/', '/atlas', '/imports', '/review', '/timeline', '/places',
@@ -64,7 +70,7 @@ def main():
     store = MemoryStore(root)
     stop = threading.Event()
     background = threading.Thread(target=worker, args=(root, stop), daemon=True)
-    server = HTTPServer(('127.0.0.1', port), handler_for(store))
+    server = AppServer(('127.0.0.1', port), handler_for(store))
     background.start()
     print(f'Mazi: http://127.0.0.1:{port}', flush=True)
     try:
