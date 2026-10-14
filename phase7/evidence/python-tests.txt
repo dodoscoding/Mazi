@@ -1,0 +1,18 @@
+test_capsule_does_not_enter_ai_and_video_frames_decode (test_advanced.AdvancedTests.test_capsule_does_not_enter_ai_and_video_frames_decode) ... ok
+test_capsule_photo_and_owner_departure (test_advanced.AdvancedTests.test_capsule_photo_and_owner_departure) ... ok
+test_capsule_server_clock_isolation_and_departure (test_advanced.AdvancedTests.test_capsule_server_clock_isolation_and_departure) ... ok
+test_capsule_validation_delete_and_opt_in (test_advanced.AdvancedTests.test_capsule_validation_delete_and_opt_in) ... ok
+test_subevents_frames_video_and_revocation (test_advanced.AdvancedTests.test_subevents_frames_video_and_revocation) ... ok
+test_video_mid_render_revocation (test_advanced.AdvancedTests.test_video_mid_render_revocation) ... ok
+test_all_reads_recheck_hidden_rejected_withdrawn_and_membership (test_memories.MemoryTests.test_all_reads_recheck_hidden_rejected_withdrawn_and_membership) ... ok
+test_collaboration_conflicts_ownership_and_restart (test_memories.MemoryTests.test_collaboration_conflicts_ownership_and_restart) ... ok
+test_departure_removes_contribution (test_memories.MemoryTests.test_departure_removes_contribution) ... ok
+test_recap_approved_dated_only_and_live_corrections (test_memories.MemoryTests.test_recap_approved_dated_only_and_live_corrections) ... ok
+test_rejection_creator_departure_and_limits (test_memories.MemoryTests.test_rejection_creator_departure_and_limits) ... ok
+test_access_validation_conflicts_and_export (test_memories_http.ApiTests.test_access_validation_conflicts_and_export) ... ok
+test_t15_capsule_direct_paths_ignore_client_time (test_memories_http.ApiTests.test_t15_capsule_direct_paths_ignore_client_time) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 2.610s
+
+OK

@@ -83,3 +83,7 @@ To replay the migration in this dedicated synthetic database, run `npx supabase 
 The selected macOS environment cannot launch stock bundled Firefox because of its shared profile directory. [Firefox reproduction](work/poteto/m0-acceptance/FIREFOX_ENVIRONMENT.md) creates a temporary launcher without changing the installed browser or user profile. Set `MAZI_FIREFOX_EXECUTABLE` to that launcher when running `npm test`. Linux CI uses the bundled default. Firefox phone checks use a narrow touch-enabled desktop engine, not Android GeckoView. Physical Android Chrome/Firefox checks precede M1 pilot acceptance.
 
 CI runs formatting, build/typechecking, browser checks, document checks and the actual local provider suite. The GitHub run is reported by the PR; local verification does not claim its remote result.
+
+## Local Phase 7 advanced memories
+
+[Recaps and collaborative stories](phase7/README.md) extend the local archive with approved annual memories and shared recollections. Run `python3 -m phase7.server` and open `http://127.0.0.1:8005/memories`. The continuation includes isolated time capsules, ordered sub-events, manual slideshows, local AVI photo montages, and opt-in in-app capsule notices; production acceptance remains open.

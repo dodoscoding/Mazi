@@ -115,4 +115,4 @@ The local Phase 6 implementation uses a fixed extractive engine over eligible ph
 
 ## Capsule boundary
 
-At M7, a capsule adds a server-time unlock condition to the normal group access policy. Before unlock, original downloads, thumbnails, embeddings, search snippets, AI answers, recaps, and notifications cannot reveal locked content. Author editing and access rules must be decided separately before implementation. A browser timer is never the access control.
+At M7, a capsule adds a server-time unlock condition to the normal group access policy. Before unlock, original downloads, thumbnails, embeddings, search snippets, AI answers, recaps, and notifications cannot reveal locked content. For the local Phase 7 implementation, sealing is immutable with no author read bypass; the author can delete at any time while still a member. A locked receipt exposes only ID and opening time to the author. New capsule text/photos are isolated from archive ingestion, and author departure deletes the capsule. Production review of these choices remains open. A browser timer is never the access control.

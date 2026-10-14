@@ -129,6 +129,8 @@ Exit when T13 passes on the held-out questions and adversarial cases. Every fact
 
 ### M7. Ship advanced memories separately
 
+Local implementation, 14 October 2026: [Phase 7](../phase7/README.md) delivers the first separate increment: annual recaps from approved, fully visible memories and collaborative stories with member-owned recollections, revision conflicts, departure cleanup, and current-access JSON export. [Verification](../phase7/VERIFICATION.md) records synthetic API and browser checks. The continuation adds isolated server-time capsules, ordered sub-events, authorized manual slideshows, bounded local MJPEG AVI montage export, and opt-in in-app capsule notices. The local author/edit and format controls are recorded in Decisions; these are separate local increments, not production releases. M4/M6 production dependencies and M7 acceptance remain open.
+
 Prioritize annual recaps and collaborative stories using approved memories. Follow with server-enforced time capsules, richer sub-events, slideshows, and generated video as separate scoped releases. Run T15 before any capsule launch. Define quality, processing cost, and export controls for each generated format before implementation. Notifications are a separate opt-in increment.
 
 ## Apply the production gate
