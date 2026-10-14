@@ -1,5 +1,27 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
+from math import asin, cos, radians, sin, sqrt
+
+SAME_PLACE_KM = 50
+
+
+def _km(a, b):
+    lat1, lon1, lat2, lon2 = map(radians, (a[0], a[1], b[0], b[1]))
+    h = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
+    return 12742 * asin(sqrt(h))
+
+
+def _place(rows):
+    """One place only when every row names the same city within SAME_PLACE_KM."""
+    if len({(row['city'].casefold(), row['country']) for row in rows}) != 1:
+        return None
+    centre = (sum(row['latitude'] for row in rows) / len(rows),
+              sum(row['longitude'] for row in rows) / len(rows))
+    if any(_km(centre, (row['latitude'], row['longitude'])) > SAME_PLACE_KM for row in rows):
+        return None
+    spellings = [row['city'] for row in rows]
+    name = min(set(spellings), key=lambda city: (-spellings.count(city), city))
+    return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
 def atlas_view(store, user, group):
@@ -51,11 +73,7 @@ def atlas_view(store, user, group):
                         if value and key not in seen_messages:
                             seen_messages.add(key)
                             messages.append(dict(name=name, time=when, text=value))
-            place = None
-            if len({(row['city'], row['country']) for row in places}) == 1:
-                place = dict(name=places[0]['city'], country=places[0]['country'],
-                             latitude=sum(row['latitude'] for row in places) / len(places),
-                             longitude=sum(row['longitude'] for row in places) / len(places))
+            place = _place(places) if places else None
             people = dict(shared=sorted(shared),
                           conversation=sorted({message['name'] for message in messages} - {'Source participant'}))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,

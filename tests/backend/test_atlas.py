@@ -124,3 +124,53 @@ class AtlasTests(unittest.TestCase):
         card = self._memory()
         self.assertIn('Source participant', [message['name'] for message in card['messages']])
         self.assertEqual(card['people']['conversation'], ['Deniz', 'Maya'])
+
+    def test_city_spelling_case_still_agrees(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.25, 25.5, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'GR', 'naxos', 37.75, 25.0, None)
+        self.assertEqual(self._memory()['place'],
+                         {'name': 'Naxos', 'country': 'GR', 'latitude': 37.5, 'longitude': 25.25})
+
+    def test_same_name_far_apart_gives_no_place(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'US', 'Springfield', 39.8, -89.6, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'US', 'Springfield', 37.2, -93.3, None)
+        self.assertIsNone(self._memory()['place'])
+
+    def _ben_copy_of_red(self):
+        source = self.store.create_source(self.ben, self.group, 'apple', 'Photos', {
+            'start': '2020-01-01', 'end': '2030-01-01', 'albums': [], 'types': ['image']})
+        self.store.set_source(self.ben, source, True, 'authorized')
+        image = io.BytesIO()
+        Image.new('RGB', (20, 20), 'red').save(image, 'JPEG')
+        data = image.getvalue()
+        resource = self.store.begin_resource(self.ben, source, {
+            'item': 'ben-red', 'component': 'photo', 'version': 'original',
+            'filename': 'red.jpg', 'date': '2020-01-02', 'kind': 'image', 'albums': []
+        }, len(data), hashlib.sha256(data).hexdigest())
+        self.store.resource_chunk(self.ben, resource['id'], 0, data)
+        self.store.finish_resource(self.ben, resource['id'])
+        while self.store.work_once():
+            pass
+        origin = self.store.db.execute('SELECT id,asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()
+        self.assertEqual(origin['asset_id'], self.assets[0])
+        self.store.setup_shared(admin_name='Alice', group_id=self.group, mappings={'Alice': self.alice, 'Ben': self.ben})
+        return resource['id'], origin['id']
+
+    def _red_card(self):
+        return next(card for card in atlas_view(self.store, self.alice, self.group)['memories'] if card['title'] == 'Red')
+
+    def test_withdrawn_origin_hides_its_place_and_contributor(self):
+        resource, origin = self._ben_copy_of_red()
+        self.store.set_place(self.ben, origin, 'GR', 'Naxos', 37.1, 25.4, None)
+        self.assertEqual(self._red_card()['place']['name'], 'Naxos')
+        self.assertEqual(self._red_card()['people']['shared'], ['Alice', 'Ben'])
+        self.store.withdraw_resource(self.ben, resource)
+        self.assertIsNone(self._red_card()['place'])
+        self.assertEqual(self._red_card()['people']['shared'], ['Alice'])
+
+    def test_removed_member_place_and_name_leave_the_card(self):
+        _, origin = self._ben_copy_of_red()
+        self.store.set_place(self.ben, origin, 'GR', 'Naxos', 37.1, 25.4, None)
+        self.store.remove_member(self.alice, self.group, self.ben)
+        self.assertIsNone(self._red_card()['place'])
+        self.assertEqual(self._red_card()['people']['shared'], ['Alice'])
