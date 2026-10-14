@@ -162,7 +162,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   );
   expect(saves).toBe(1);
   await page
-    .getByRole("heading", { name: "Our memories, in our words.", exact: true })
+    .getByRole("heading", { name: "Memories", exact: true, level: 1 })
     .click();
   await page.evaluate(() =>
     (document.activeElement as HTMLElement | null)?.blur(),

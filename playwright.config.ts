@@ -12,6 +12,7 @@ export default defineConfig({
     "theme-shell.spec.ts",
     "atlas.spec.ts",
     "memory-detail.spec.ts",
+    "browse.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,
