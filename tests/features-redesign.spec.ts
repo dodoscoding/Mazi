@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
 
 async function enter(page: Page, name = "Ben") {
@@ -103,6 +104,56 @@ test("My Imports always says imports are shared at once and offers no publish st
   ).toHaveCount(0);
 });
 
+test("an import report has one technical confirm step and no publish gate", async ({
+  page,
+}, info) => {
+  await enter(page, `Importer ${info.project.name} ${Date.now()}`);
+  await page.request.post("/api/introduction/complete", { data: {} });
+  await page.goto("/#/imports");
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(64,48),'#5a7d4c').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('gate-check.jpg',p.getvalue()); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page.getByLabel("Source account label").fill("gate check");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "gate-check.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory" })
+    .click();
+  const report = page.locator("#report");
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  const visibleActions = () =>
+    report
+      .locator(".actions button")
+      .evaluateAll((buttons) =>
+        buttons
+          .filter((button) => (button as HTMLElement).offsetParent !== null)
+          .map((button) => button.textContent?.trim()),
+      );
+  // The inventory check is the only step before sharing; there is no review or publish step.
+  expect(await visibleActions()).toEqual([
+    "Start importing to group",
+    "Cancel remaining work",
+    "Download outcome report",
+  ]);
+  await expect(
+    page.getByRole("button", { name: /publish|approve|make visible/i }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Start importing to group" }).click();
+  await expect(page.locator("#report-title")).toContainText("completed");
+  expect(await visibleActions()).toEqual([
+    "Withdraw this contribution",
+    "Download outcome report",
+  ]);
+  await expect(page.locator('#gallery img[alt="gate-check.jpg"]')).toHaveCount(
+    1,
+  );
+});
+
 test("Our circle lists members without public or social counts", async ({
   page,
 }) => {
@@ -122,7 +173,9 @@ test("Ask streams the answer word by word, then cites its evidence", async ({
   page,
 }) => {
   await enter(page);
+  const reply = page.waitForResponse("**/api/answers/ask");
   await ask(page, "When was bicycle?");
+  const result = await (await reply).json();
   await expect(page.locator("#notice")).toHaveText("Evidence found.");
   const answer = page.locator("#answer");
   await expect(answer).toHaveAttribute("aria-busy", "true");
@@ -134,8 +187,24 @@ test("Ask streams the answer word by word, then cites its evidence", async ({
     { useInnerText: true },
   );
   await expect(answer).not.toHaveAttribute("aria-busy", "true");
+  // Once revealed, the visible text is exactly what the server answered.
+  const visible = (selector: string) =>
+    answer
+      .locator(selector)
+      .evaluateAll((nodes) =>
+        nodes.map((node) =>
+          (node as HTMLElement).innerText.replace(/\s+/g, " ").trim(),
+        ),
+      );
+  expect(await visible(".answer-lede")).toEqual([result.message]);
+  expect(await visible(".answer-text > p:not(.answer-lede)")).toEqual(
+    result.claims.map(
+      (claim: { text: string; evidence_ids: string[] }) =>
+        `${claim.text} ${claim.evidence_ids.map((_, i) => i + 1).join(" ")}`,
+    ),
+  );
+  expect(await visible(".answer-coverage")).toEqual([result.coverage]);
   await expect(answer).toContainText("2024-01-02");
-  await expect(answer).toContainText("incomplete", { useInnerText: true });
   const cite = answer.getByRole("link", {
     name: "View supporting record",
     exact: true,
