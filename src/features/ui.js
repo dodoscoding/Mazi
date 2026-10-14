@@ -79,8 +79,9 @@ export async function leaveWhile(node, offset, work) {
 
 /**
  * Turns a page's status line into the Motion sheet's toast: it rises above the
- * phone tab bar, stays five seconds, then fades. The text stays in the live
- * region, and the toast never takes pointer input from the page beneath it.
+ * phone tab bar, stays five seconds, then fades. Errors stay until the next
+ * status replaces them. The text stays in the live region, and the toast
+ * never takes pointer input from the page beneath it.
  */
 export function toastNotice(node, lifecycle) {
   node.classList.add("fx-toast", "is-hidden");
@@ -94,10 +95,8 @@ export function toastNotice(node, lifecycle) {
     }
     void node.offsetWidth;
     node.classList.add("is-in");
-    timer = window.setTimeout(
-      () => node.classList.add("is-hidden"),
-      node.dataset.tone === "error" ? 10000 : 5000,
-    );
+    if (node.dataset.tone !== "error")
+      timer = window.setTimeout(() => node.classList.add("is-hidden"), 5000);
   };
   const observer = new MutationObserver(show);
   observer.observe(node, {
