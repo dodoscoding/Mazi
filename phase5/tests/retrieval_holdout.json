@@ -1,0 +1,25 @@
+{
+  "description": "Fixed synthetic regression holdout authored after the v1 vocabulary was frozen. Never imported by the encoder. Not an independent or consented real-archive release evaluation.",
+  "scenes": [
+    {"id":"cycle","title":"Bicycle parked along a canal","queries":["bike by water","cycling pictures","our cycle","bisiklet","bicycle memories"]},
+    {"id":"coast","title":"Beach holiday with waves","queries":["seaside trip","ocean memories","coast photos","sahil","day at the shore"]},
+    {"id":"canine","title":"Dog playing with a ball","queries":["puppy playing","canine friend","köpek","dog photos","dogs with a ball"]},
+    {"id":"feline","title":"Cat sleeping on a sofa","queries":["kitten asleep","feline on a sofa","kedi","cats at home","cat pictures"]},
+    {"id":"summit","title":"Mountain trail and a summit","queries":["hiking trip","trekking adventure","dağ","hike on the trail","mountains"]},
+    {"id":"winter","title":"Snow covering a cabin","queries":["skiing holiday","winter cabin","kar","snowy memories","ski trip"]},
+    {"id":"party","title":"Birthday celebration around a table","queries":["cake celebration","candles on the table","doğumgünü","birthday pictures","birthdays"]},
+    {"id":"marriage","title":"Wedding ceremony in a courtyard","queries":["bride and groom","marriage ceremony","düğün","wedding photographs","groom at the courtyard"]},
+    {"id":"dining","title":"Meal at a long table","queries":["dinner together","lunch table","yemek","food memories","eating together"]},
+    {"id":"caffeine","title":"Coffee stop on a rainy afternoon","queries":["espresso stop","café afternoon","kahve","cafe memories","coffee break"]},
+    {"id":"woods","title":"Forest path after rainfall","queries":["woods after rain","woodland path","orman","trees outdoors","forest walk"]},
+    {"id":"flowers","title":"Garden in full bloom","queries":["flowers in bloom","floral memories","bahçe","flower pictures","garden day"]},
+    {"id":"rail","title":"Train arriving at a station","queries":["railway station","railroad journey","tren","rail trip","train arrival"]},
+    {"id":"sailing","title":"Boat moored at a harbor","queries":["sailing at the harbor","ferry memories","tekne","ship journey","sail trip"]},
+    {"id":"driving","title":"Car parked on a country road","queries":["automobile on a road","driving memories","araba","cars outside","car trip"]},
+    {"id":"stage","title":"Music performance on a stage","queries":["concert memories","gig on stage","müzik","guitar performance","music night"]},
+    {"id":"sport","title":"Football match in a stadium","queries":["soccer match","futbol","football stadium","soccer memories","football day"]},
+    {"id":"pool","title":"Swimming in an outdoor pool","queries":["swim outdoors","havuz","pool memories","swimming day","swim pictures"]},
+    {"id":"dusk","title":"Sunset above the rooftops","queries":["sundown rooftops","dusk memories","günbatımı","evening above town","sunset pictures"]},
+    {"id":"infant","title":"Baby resting in a cot","queries":["infant resting","newborn memories","bebek","baby pictures","infant in a cot"]}
+  ]
+}

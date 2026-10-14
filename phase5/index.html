@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>People & search · Mazi</title>
+    <link rel="stylesheet" href="/discovery.css" />
+    <script src="/discovery.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="/">Mazi</a>
+      <nav aria-label="Archive">
+        <a href="/">Imports & sign in</a><a href="/review">Archive review</a
+        ><a href="/places">Places</a
+        ><a href="/discover" aria-current="page">People & search</a>
+      </nav>
+    </header>
+    <main>
+      <p class="eyebrow">YOUR SHARED ARCHIVE</p>
+      <h1>A little closer to that memory.</h1>
+      <p class="intro">
+        Find photographs by their words, places and the people you have
+        confirmed. Only your accessible archive appears here.
+      </p>
+      <label>Group<select id="groups"></select></label>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <div id="private" hidden>
+        <form id="search-form" class="panel">
+          <h2>Find a memory</h2>
+          <label
+            >Search<input
+              id="query"
+              maxlength="200"
+              placeholder="A bicycle by the sea…"
+          /></label>
+          <div class="filters">
+            <label
+              >Country code<input id="country" maxlength="2" placeholder="NL"
+            /></label>
+            <label
+              >Search mode<select id="mode">
+                <option value="keyword">Words & filters</option>
+                <option value="semantic">
+                  Related concepts & colors (local baseline)
+                </option>
+              </select></label
+            >
+            <label
+              >Person<select id="person">
+                <option value="">Anyone</option>
+              </select></label
+            >
+            <label
+              >Place<input id="place" maxlength="200" placeholder="Amsterdam"
+            /></label>
+            <label
+              >Object or concept in text<input
+                id="object"
+                maxlength="200"
+                placeholder="Bicycle"
+            /></label>
+            <label>From<input id="start" type="date" /></label
+            ><label>Through<input id="end" type="date" /></label>
+            <label
+              >Source<select id="source">
+                <option value="">Any source</option>
+                <option value="manual">Manual</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="messenger">Messenger</option>
+                <option value="discord">Discord export / bot</option>
+                <option value="apple">Apple Photos</option>
+              </select></label
+            >
+          </div>
+          <button type="submit">Search archive</button
+          ><button id="clear-similar" type="button" hidden>
+            Clear similar-image search
+          </button>
+          <button id="build-index" type="button" hidden>
+            Build local search index
+          </button>
+          <button id="stop-index" type="button" hidden>Stop indexing</button>
+          <p id="index-progress" role="status"></p>
+          <p class="hint" id="model-help">
+            Related search uses a small offline vocabulary and image colors. It
+            does not recognize faces or infer objects in photographs. Words and
+            filters keep working with optional processing off.
+          </p>
+        </form>
+        <section aria-labelledby="results-heading">
+          <div class="section-title">
+            <h2 id="results-heading">Photographs</h2>
+            <p id="count" role="status"></p>
+          </div>
+          <div id="results" class="cards"></div>
+          <button id="more" type="button" hidden>Next page</button>
+        </section>
+        <section class="panel" aria-labelledby="people-heading">
+          <h2 id="people-heading">People, confirmed by you</h2>
+          <p>
+            These are person records, separate from sign-in accounts. No faces
+            are detected or clustered.
+          </p>
+          <div id="people" class="people"></div>
+          <form id="person-form">
+            <label
+              >Person’s name<input
+                id="new-name"
+                required
+                maxlength="100" /></label
+            ><button>Create person</button>
+          </form>
+          <div id="identities"></div>
+        </section>
+        <details class="panel">
+          <summary>My visibility & processing choices</summary>
+          <h3>Shared memories</h3>
+          <div id="memories"></div>
+          <h3>Hidden memories</h3>
+          <div id="hidden-memories"></div>
+          <h3>Hidden from my discovery</h3>
+          <p>
+            Hiding keeps a photograph out of your discovery views. Other members
+            retain access. You can restore it here.
+          </p>
+          <div id="hidden-items"></div>
+          <h3>Associations I removed</h3>
+          <div id="suppressed"></div>
+          <h3>Optional local processing</h3>
+          <p>
+            No media is sent to an external provider. All active contributors to
+            a photo and its corrected text must opt in before related search can
+            process it. Face recognition remains off.
+          </p>
+          <label class="check"
+            ><input id="contribution-processing" type="checkbox" />Allow local
+            related-search processing of my contributions</label
+          ><label id="group-control" class="check"
+            ><input id="group-processing" type="checkbox" />Enable optional
+            local processing for this group (admin)</label
+          >
+          <p id="processing-status"></p>
+        </details>
+        <details id="admin-tools" class="panel">
+          <summary>Identity & removal review (admin)</summary>
+          <p>
+            Verify an account/person mapping privately first. The member must
+            then confirm it. For a nonmember’s request, verify their identity
+            and request privately before recording removal; no evidence is
+            published here.
+          </p>
+          <form id="identity-form">
+            <label>Person record<select id="identity-person"></select></label
+            ><label>Member account<select id="identity-account"></select></label
+            ><button>Request identity confirmation</button>
+          </form>
+          <form id="nonmember-form">
+            <label
+              >Nonmember person<select id="nonmember-person"></select></label
+            ><label>Photograph<select id="nonmember-asset"></select></label
+            ><label class="check"
+              ><input id="verified-request" type="checkbox" required />I
+              privately verified the subject and their request</label
+            ><label
+              >Requested action<select id="nonmember-action">
+                <option value="remove">Remove and block association</option>
+                <option value="restore">
+                  Restore association (subject opt-in)
+                </option>
+              </select></label
+            ><button>Apply verified request</button>
+          </form>
+        </details>
+      </div>
+    </main>
+    <footer>
+      Private by membership. Personal by choice.
+      <span>Local Phase 5 experiment.</span>
+    </footer>
+  </body>
+</html>
