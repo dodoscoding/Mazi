@@ -35,7 +35,9 @@ test("every signed-out route is gated and named profiles resume across browsers"
   await page.getByLabel("Your name").fill(` ${name} `);
   await page.getByLabel("Shared code").fill("wrong");
   await page.getByRole("button", { name: "Enter Mazi" }).click();
-  await expect(page.getByRole("alert")).toContainText("incorrect");
+  await expect(page.getByRole("alert")).toContainText(
+    "That code doesn’t open a circle.",
+  );
   await page.getByLabel("Shared code").fill("synthetic-shared-code");
   await page.getByRole("button", { name: "Enter Mazi" }).click();
   await expect(
