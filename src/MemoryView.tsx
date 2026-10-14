@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 import type { Memory } from "./memories";
 import {
@@ -74,7 +74,8 @@ export function MemoryView({
       ? moments[position + 1]
       : undefined;
 
-  useEffect(() => {
+  // A layout effect, so Escape works from the first painted frame.
+  useLayoutEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
         event.key !== "Escape" ||
