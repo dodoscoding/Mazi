@@ -17,11 +17,15 @@ const empty: ArchiveState = {
   memories: [],
   error: "",
 };
-export function useArchive(path: string, demo: boolean) {
+export function useArchive(path: string, demo: boolean, groupId?: string) {
   const [state, setState] = useState<ArchiveState>(empty);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
   useEffect(() => {
+    if (!groupId) {
+      setState(empty);
+      return;
+    }
     if (demo) {
       setState({ ...empty, status: "ready", memories: samples });
       return;
@@ -39,6 +43,7 @@ export function useArchive(path: string, demo: boolean) {
         if (current !== generation || controller.signal.aborted) return;
         if (response.status === 403) {
           sessionStorage.removeItem("mazi.group");
+          window.dispatchEvent(new Event("mazi:access-lost"));
           setState({ ...empty, status: "signed-out" });
           return;
         }
@@ -46,12 +51,7 @@ export function useArchive(path: string, demo: boolean) {
           throw Error("Your archive could not load. Please retry.");
         const groups: Circle[] = await response.json();
         if (current !== generation || controller.signal.aborted) return;
-        const group =
-          groups.find(
-            (item) => item.id === sessionStorage.getItem("mazi.group"),
-          )?.id ||
-          groups[0]?.id ||
-          "";
+        const group = groups.find((item) => item.id === groupId)?.id || "";
         if (group) sessionStorage.setItem("mazi.group", group);
         let memories: Memory[] = [];
         if (group) {
@@ -59,6 +59,8 @@ export function useArchive(path: string, demo: boolean) {
             "/api/atlas?" + new URLSearchParams({ group }),
             { signal: controller.signal },
           );
+          if (result.status === 403)
+            window.dispatchEvent(new Event("mazi:access-lost"));
           if (!result.ok)
             throw Error(
               "Your archive changed or is unavailable. Refresh to check access.",
@@ -101,7 +103,7 @@ export function useArchive(path: string, demo: boolean) {
       window.removeEventListener("mazi:group", visibility);
       window.removeEventListener("mazi:access-lost", clear);
     };
-  }, [path, demo, version]);
+  }, [path, demo, groupId, version]);
   const chooseGroup = (id: string) => {
     sessionStorage.setItem("mazi.group", id);
     window.dispatchEvent(new Event("mazi:group"));

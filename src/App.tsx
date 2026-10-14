@@ -1,3 +1,5 @@
+import { useEntry } from "./useEntry";
+import { Entry, Introduction } from "./Entry";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { useArchive } from "./useArchive";
@@ -39,7 +41,17 @@ export default function App() {
   const reduced = useReducedMotion();
   const { route, navigate } = useRoute(reduced);
   const demo = new URLSearchParams(location.search).get("demo") === "1";
-  const archive = useArchive(route.path, demo);
+  const entry = useEntry();
+  const profile =
+    entry.state.status === "ready" ? entry.state.profile : undefined;
+  const archive = useArchive(route.path, demo && !!profile, profile?.group_id);
+  useLayoutEffect(() => {
+    if (
+      entry.state.status === "ready" &&
+      ["/login", "/welcome"].includes(route.path)
+    )
+      navigate("/", false, true);
+  }, [entry.state.status, route.path, navigate]);
   const memories = archive.memories;
   const memoryById = (id: string) => memories.find((item) => item.id === id);
   const memoryId = route.path.startsWith("/memory/") ? route.path.slice(8) : "";
@@ -102,7 +114,12 @@ export default function App() {
     "/answer-evidence",
     "/memories",
   ];
-  if (featurePaths.includes(route.path) || (route.path === "/search" && !demo))
+  if (route.path === "/about")
+    content = <Introduction onContinue={() => navigate("/")} />;
+  else if (
+    featurePaths.includes(route.path) ||
+    (route.path === "/search" && !demo)
+  )
     content = <FeaturePage key={route.path} path={route.path + route.search} />;
   else if (archive.status !== "ready")
     content = (
@@ -123,22 +140,7 @@ export default function App() {
           <button className="primary-action" onClick={archive.refresh}>
             Retry archive
           </button>
-        ) : (
-          archive.status === "signed-out" && (
-            <a
-              className="primary-action"
-              href="#/imports"
-              onClick={link("/imports")}
-            >
-              Sign in or create your circle <Arrow />
-            </a>
-          )
-        )}
-        {archive.status === "signed-out" && (
-          <a className="sample-link" href="/?demo=1">
-            Explore the sample Atlas
-          </a>
-        )}
+        ) : null}
       </section>
     );
   else if (route.path === "/" && !selected)
@@ -442,6 +444,27 @@ export default function App() {
         </a>
       </section>
     );
+  if (entry.state.status === "onboarding")
+    return (
+      <main className="entry-page">
+        <Introduction
+          pending={entry.state.pending}
+          error={entry.state.error}
+          onContinue={() => {
+            void entry.complete().then((completed) => {
+              if (completed) navigate("/");
+            });
+          }}
+        />
+      </main>
+    );
+  if (entry.state.status === "loading")
+    return (
+      <main className="entry-page">
+        <p role="status">Opening Mazi…</p>
+      </main>
+    );
+  if (entry.state.status !== "ready") return <Entry entry={entry} />;
   return (
     <>
       <a
@@ -500,6 +523,14 @@ export default function App() {
           {navLink("/review", "Archive review")}
           {navLink("/places", "Places & sources")}
           {navLink("/ask", "Ask your archive")}
+          {navLink("/about", "About")}
+          <button
+            onClick={() => {
+              void entry.logout();
+            }}
+          >
+            Sign out
+          </button>
         </nav>
         {!demo && archive.groups.length > 0 && (
           <label className="circle-picker">

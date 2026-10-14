@@ -41,8 +41,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    command:
+      "npm run build && MAZI_IMPORT_PORT=5173 .venv/bin/python -m tests.browser.sample_server",
     url: "http://127.0.0.1:5173",
-    reuseExistingServer: true,
+    reuseExistingServer: false,
   },
 });

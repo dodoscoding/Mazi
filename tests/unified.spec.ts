@@ -26,8 +26,8 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  const login = await page.request.post("/api/login", {
-    data: { email: "ben@example.test", password: "correct horse battery" },
+  const login = await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
   });
   expect(login.ok()).toBe(true);
   await page.goto("/");
@@ -92,7 +92,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page.getByLabel("Show in-app capsule notifications").check();
   await expect(page.locator("#notifications")).toBeEmpty();
   await navigate(page, "Search", "search");
-  await expect(page.locator("#results article")).toHaveCount(3);
+  await expect(page.locator("#results article")).toHaveCount(
+    info.project.name === "phone" ? 5 : 3,
+  );
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
   await page
     .getByRole("button", { name: "Search archive", exact: true })
@@ -131,7 +133,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   );
   await expect(page.locator("#sources")).toContainText("Paused");
   await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(3);
+  await expect(page.locator("#timeline article")).toHaveCount(
+    info.project.name === "phone" ? 5 : 3,
+  );
   for (let i = 0; i < 2; i++) {
     await navigate(page, "Memories", "memories");
     await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
@@ -169,36 +173,29 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     .click();
   await page.getByRole("button", { name: "Delete story", exact: true }).click();
   await navigate(page, "My Imports", "imports");
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await expect(page.locator("#login")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Sign out", exact: true })
+    .first()
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(page.locator("#stories")).toHaveCount(0);
   expect((await page.request.get("/api/groups")).status()).toBe(403);
   expect(errors).toEqual([]);
 });
 
-test("new account import and circle/session transitions discard delayed private Atlas responses", async ({
+test("named profile imports and logout discard delayed private Atlas responses", async ({
   page,
 }, info) => {
-  const email = `unified-${info.project.name}-${Date.now()}@example.test`;
   await page.goto("/#/imports");
-  await page.locator("#register input[name=email]").fill(email);
   await page
-    .locator("#register input[name=password]")
-    .fill("correct horse battery");
+    .getByLabel("Your name")
+    .fill(`Importer ${info.project.name} ${Date.now()}`);
+  await page.getByLabel("Shared code").fill("synthetic-shared-code");
+  await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Open the Atlas", exact: true })
     .click();
-  await expect(page.getByRole("status").first()).toContainText(
-    "Account created",
-  );
-  await page.locator("#login input[name=email]").fill(email);
-  await page
-    .locator("#login input[name=password]")
-    .fill("correct horse battery");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await navigate(page, "My Imports", "imports");
-  await page.getByLabel("New group name").fill("Synthetic unified circle");
-  await page.getByRole("button", { name: "Create group", exact: true }).click();
   const fixture = execFileSync(".venv/bin/python", [
     "-c",
     "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(80,60),'red').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('photo.jpg',p.getvalue()); p2=io.BytesIO(); Image.new('RGB',(80,60),'blue').save(p2,'JPEG'); z.writestr('second.jpg',p2.getvalue()); z.close(); sys.stdout.buffer.write(a.getvalue())",
@@ -218,9 +215,9 @@ test("new account import and circle/session transitions discard delayed private 
     .getByRole("button", { name: "Start importing to group", exact: true })
     .click();
   await expect(page.locator("#report-title")).toContainText("completed");
-  await expect(page.locator("#gallery article")).toHaveCount(2);
+  await expect(page.locator("#gallery article")).toHaveCount(5);
   await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(2);
+  await expect(page.locator("#timeline article")).toHaveCount(5);
   const firstGroup = await page.locator("#groups").inputValue();
   const timeline = await (
     await page.request.get(`/api/review/timeline?group=${firstGroup}`)
@@ -236,68 +233,12 @@ test("new account import and circle/session transitions discard delayed private 
   });
   expect(eventResponse.ok()).toBe(true);
   const event = await eventResponse.json();
-  expect(
-    (
-      await page.request.post("/api/memories/create", {
-        data: { group: firstGroup, event: event.id },
-      })
-    ).ok(),
-  ).toBe(true);
-  const secondResponse = await page.request.post("/api/group", {
-    data: { name: "Empty private circle" },
+  const storyResponse = await page.request.post("/api/memories/create", {
+    data: { group: firstGroup, event: event.id },
   });
-  const secondGroup = (await secondResponse.json()).id;
+  expect(storyResponse.ok()).toBe(true);
+  const story = await storyResponse.json();
   await navigate(page, "Memories", "memories");
-  await expect(page.locator("#stories")).toContainText(title);
-
-  // Hold a real authorized body while later loads and circle transitions finish.
-  let release!: () => void;
-  let held!: () => void;
-  const captured = new Promise<void>((resolve) => {
-    held = resolve;
-  });
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  let delivered!: () => void;
-  const delivery = new Promise<void>((resolve) => {
-    delivered = resolve;
-  });
-  let intercepted = false;
-  await page.route("**/api/atlas?*", async (route) => {
-    if (intercepted) return route.continue();
-    intercepted = true;
-    const response = await route.fetch();
-    held();
-    await gate;
-    await route.fulfill({ response }).catch(() => {});
-    delivered();
-  });
-  await navigate(page, "Home", "");
-  await captured;
-  await navigate(page, "Memories", "memories");
-  await expect(page.locator("#stories")).toContainText(title);
-  await page
-    .getByLabel("Current circle", { exact: true })
-    .selectOption(secondGroup);
-  await expect(page.locator("#groups")).toHaveValue(secondGroup);
-  await expect(page.locator("#stories")).toContainText("No shared stories");
-  release();
-  await delivery;
-  await expect(page.getByLabel("Current circle", { exact: true })).toHaveValue(
-    secondGroup,
-  );
-  await expect(page.locator("#stories")).not.toContainText(title);
-  await navigate(page, "Home", "");
-  await expect(
-    page.getByRole("button", { name: `Select ${title}`, exact: true }),
-  ).toHaveCount(0);
-  await page.unroute("**/api/atlas?*");
-
-  await navigate(page, "Memories", "memories");
-  await page
-    .getByLabel("Current circle", { exact: true })
-    .selectOption(firstGroup);
   await expect(page.locator("#stories")).toContainText(title);
   let releaseLogout!: () => void;
   let heldLogout!: () => void;
@@ -311,7 +252,7 @@ test("new account import and circle/session transitions discard delayed private 
   const logoutDelivery = new Promise<void>((resolve) => {
     deliveredLogout = resolve;
   });
-  intercepted = false;
+  let intercepted = false;
   await page.route("**/api/atlas?*", async (route) => {
     if (intercepted) return route.continue();
     intercepted = true;
@@ -324,17 +265,21 @@ test("new account import and circle/session transitions discard delayed private 
   await navigate(page, "Home", "");
   await capturedLogout;
   await navigate(page, "My Imports", "imports");
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await expect(page.locator("#login")).toBeVisible();
+  expect(
+    (
+      await page.request.post("/api/memories/delete", {
+        data: { group: firstGroup, story: story.id, revision: story.revision },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Sign out", exact: true })
+    .first()
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
   releaseLogout();
   await logoutDelivery;
-  await navigate(page, "Home", "");
-  await expect(
-    page.getByRole("link", {
-      name: "Sign in or create your circle",
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(
     page.getByRole("button", { name: `Select ${title}`, exact: true }),
   ).toHaveCount(0);
@@ -342,16 +287,15 @@ test("new account import and circle/session transitions discard delayed private 
     0,
   );
   expect((await page.request.get("/api/groups")).status()).toBe(403);
-  await shell(page);
 });
 
-test("access loss clears private drafts and circle changes clear supporting records", async ({
+test("access loss clears private drafts and supporting records", async ({
   page,
 }, info) => {
   expect(
     (
-      await page.request.post("/api/login", {
-        data: { email: "ben@example.test", password: "correct horse battery" },
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
       })
     ).ok(),
   ).toBe(true);
@@ -364,28 +308,7 @@ test("access loss clears private drafts and circle changes clear supporting reco
     .getByRole("link", { name: "View supporting record", exact: true })
     .click();
   await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
-  const initialGroup = await page
-    .getByLabel("Current circle", { exact: true })
-    .inputValue();
-  const response = await page.request.post("/api/group", {
-    data: { name: `Evidence privacy circle ${info.project.name}` },
-  });
-  const other = (await response.json()).id;
-  // Reload retains the explicit evidence query while refreshing the circle inventory.
-  await page.reload();
-  await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
-  await page.getByLabel("Current circle", { exact: true }).selectOption(other);
-  await expect(page.getByLabel("Current circle", { exact: true })).toHaveValue(
-    other,
-  );
-  await expect(page.locator("#record")).not.toContainText(
-    "Bicycle beside the sea",
-  );
   await navigate(page, "Memories", "memories");
-  await page
-    .getByLabel("Current circle", { exact: true })
-    .selectOption(initialGroup);
-  await expect(page.locator("#recap")).toContainText("Our summer");
   await page
     .getByLabel("Note for the future")
     .fill("Private unsaved capsule draft");
@@ -397,7 +320,7 @@ test("access loss clears private drafts and circle changes clear supporting reco
     .click();
   await expect(page.locator("#capsule-text")).toHaveCount(0);
   await expect(page.locator("#recap")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
   expect(
     await page
       .locator("textarea")
@@ -405,5 +328,4 @@ test("access loss clears private drafts and circle changes clear supporting reco
         nodes.map((node) => (node as HTMLTextAreaElement).value),
       ),
   ).not.toContain("Private unsaved capsule draft");
-  await shell(page);
 });

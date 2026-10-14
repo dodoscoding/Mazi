@@ -1,5 +1,15 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Sample", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+});
+
 test("capture stable Home and memory at the required review sizes", async ({
   page,
 }, testInfo) => {

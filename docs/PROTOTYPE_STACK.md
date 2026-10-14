@@ -15,12 +15,14 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 | `src/App.tsx`, `src/Atlas.tsx` | Shared navigation, Atlas selection, memory detail, timeline and renderer recovery. |
 | `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
 | `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
-| `mazi/identity/` | Accounts, sessions, groups, invitations and original pilot contracts. |
+| `mazi/identity/` | Shared profiles, transactional circle/code setup, sessions and retained legacy domain contracts. |
 | `mazi/imports/`, `mazi/archive/` | Resumable ingestion, provenance, correction, duplicates and accepted memories. |
 | `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
 | `mazi/discovery/`, `mazi/answers/` | People, hiding, consent, search and evidence-based answers. |
 | `mazi/memories/` | Recaps, stories, revisions, capsules, subevents, slideshows, video and notices. |
 | `tests/backend/`, `tests/browser/`, `tests/unified.spec.ts` | Domain regression contracts, fixture servers and integrated app journeys. |
+
+`src/useEntry.ts` owns loading, signed-out, onboarding, ready and connection-error states. `src/Entry.tsx` renders login and the reusable introduction. The entry gate precedes every route, including samples. Shared-mode inherited HTTP authorization requires a mapped profile and current configured-circle membership; other circle IDs and legacy entry endpoints are denied. The additive profile/policy tables preserve existing user UUIDs, ownership and credentials. Introduction completion persists per profile; browser sessions expire after 30 days.
 
 React owns routes and feature lifecycles. Existing feature workflows are scoped DOM modules with imported HTML fragments. Each mount owns its requests, timers and object URLs and disposes them on navigation or backgrounding. They are bundled application modules, without standalone pages, script injection or iframes. The migrated imperative modules remain JavaScript; the shared lifecycle, registry and Atlas code are TypeScript. Converting individual forms to React can happen within these feature boundaries.
 

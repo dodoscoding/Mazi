@@ -35,6 +35,10 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.answer_processing(alice, group, True)
     store.answer_processing(ben, group, True)
     store.review_event(alice, group, store._visible_ids(alice, group), 'Our summer', 'accept')
+    store.setup_shared(admin_name="Alice", group_id=group, mappings={"Alice": alice, "Ben": ben})
+    store.db.execute("UPDATE shared_policy SET code_digest=?", (hashlib.sha256(b"synthetic-shared-code").digest(),))
+    store.db.execute("UPDATE shared_profiles SET introduced_at=1")
+    store.db.commit()
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR'] = root
     main()

@@ -291,7 +291,7 @@ export function mount(root, lifecycle) {
       if (revision !== generation || currentGroup !== group) return;
       options(
         "#identity-account",
-        members.map((m) => ({ id: m.id, name: m.email })),
+        members.map((m) => ({ id: m.id, name: m.display_name || m.email })),
         "Choose a member",
       );
     }
