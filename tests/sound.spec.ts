@@ -1,0 +1,292 @@
+import { test, expect, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
+
+type AudioSpy = { contexts: number; calls: Record<string, number> };
+
+/** Counts every AudioContext and every node it creates, without touching output. */
+async function spyOnAudio(page: Page) {
+  await page.addInitScript(() => {
+    const spy: AudioSpy = { contexts: 0, calls: {} };
+    (window as unknown as { __audio: AudioSpy }).__audio = spy;
+    const Original = window.AudioContext;
+    if (!Original) return;
+    window.AudioContext = class extends Original {
+      constructor(...args: ConstructorParameters<typeof AudioContext>) {
+        super(...args);
+        spy.contexts++;
+      }
+    };
+    const proto = BaseAudioContext.prototype as unknown as Record<
+      string,
+      unknown
+    >;
+    for (const name of Object.getOwnPropertyNames(proto)) {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, name);
+      if (!name.startsWith("create") || typeof descriptor?.value !== "function")
+        continue;
+      const create = descriptor.value as (...args: unknown[]) => unknown;
+      proto[name] = function (this: unknown, ...args: unknown[]) {
+        spy.calls[name] = (spy.calls[name] || 0) + 1;
+        return create.apply(this, args);
+      };
+    }
+  });
+}
+
+const audio = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __audio: AudioSpy }).__audio);
+const calls = async (page: Page, name: string) =>
+  (await audio(page)).calls[name] || 0;
+
+async function signIn(page: Page) {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Sample", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+}
+
+async function remember(page: Page, key: string, value: string) {
+  await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [
+    key,
+    value,
+  ] as const);
+}
+
+async function openAtlas(page: Page) {
+  await page.goto("/?demo=1");
+  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
+}
+
+/** The sound toggle: in the header on wide screens, in More on phones. */
+async function soundToggle(page: Page) {
+  if (isPhone(page)) {
+    const more = page.getByRole("button", { name: "More", exact: true });
+    if ((await more.getAttribute("aria-expanded")) !== "true")
+      await more.click();
+    return page
+      .getByRole("dialog", { name: "More" })
+      .getByRole("button", { name: "Sound", exact: true });
+  }
+  return page
+    .locator(".site-header")
+    .getByRole("button", { name: "Sound", exact: true });
+}
+
+/** What the toggle shows: its pill label on phones, its tooltip on hover elsewhere. */
+async function expectShown(page: Page, text: "Sound off" | "Sound on") {
+  const toggle = await soundToggle(page);
+  if (isPhone(page)) {
+    await expect(toggle).toHaveText(text);
+    return;
+  }
+  await toggle.hover();
+  await expect(toggle.getByText(text)).toBeVisible();
+}
+
+test("sound is off until a member turns it on, and the choice survives a reload", async ({
+  page,
+}) => {
+  await signIn(page);
+  await openAtlas(page);
+  const toggle = await soundToggle(page);
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expectShown(page, "Sound off");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expectShown(page, "Sound on");
+  expect(await page.evaluate(() => localStorage.getItem("mazi.sound"))).toBe(
+    "on",
+  );
+  await page.reload();
+  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
+  await expect(await soundToggle(page)).toHaveAttribute("aria-pressed", "true");
+  await expectShown(page, "Sound on");
+});
+
+test("with sound off, browsing the atlas never creates an AudioContext", async ({
+  page,
+}) => {
+  await spyOnAudio(page);
+  await signIn(page);
+  await openAtlas(page);
+  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page).toHaveURL(/selected=lake-days/);
+  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await expect(page).toHaveURL(/view=portal/);
+  await page.keyboard.press("Escape");
+  await expect(page).not.toHaveURL(/view=portal/);
+  expect((await audio(page)).contexts).toBe(0);
+});
+
+test("with sound on, diving into the portal schedules a whoosh", async ({
+  page,
+}) => {
+  await spyOnAudio(page);
+  await remember(page, "mazi.sound", "on");
+  await signIn(page);
+  await openAtlas(page);
+  expect((await audio(page)).contexts).toBe(0);
+  // The browser lets audio start only after a gesture.
+  await page.keyboard.press("Shift");
+  await expect.poll(async () => (await audio(page)).contexts).toBe(1);
+  await expect.poll(() => calls(page, "createOscillator")).toBeGreaterThan(0);
+  expect(await calls(page, "createBufferSource")).toBe(0);
+  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
+  await expect.poll(() => calls(page, "createBufferSource")).toBe(1);
+  await page.keyboard.press("Escape");
+  await expect(page).not.toHaveURL(/view=portal/);
+  await expect.poll(() => calls(page, "createBufferSource")).toBe(2);
+  expect((await audio(page)).contexts).toBe(1);
+});
+
+test("under reduced motion the whoosh is dropped but a year step still ticks", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await spyOnAudio(page);
+  await remember(page, "mazi.sound", "on");
+  await signIn(page);
+  await openAtlas(page);
+  await page.keyboard.press("Shift");
+  await expect.poll(() => calls(page, "createOscillator")).toBeGreaterThan(0);
+  const before = await calls(page, "createOscillator");
+  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page).toHaveURL(/selected=lake-days/);
+  await expect
+    .poll(() => calls(page, "createOscillator"))
+    .toBeGreaterThan(before);
+  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await expect(page).toHaveURL(/view=portal/);
+  await page.waitForTimeout(300);
+  expect(await calls(page, "createBufferSource")).toBe(0);
+});
+
+test("Entry offers the sound toggle beside the theme toggle", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const header = page.locator(".entry-header");
+  const toggle = header.getByRole("button", { name: "Sound", exact: true });
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(toggle).toHaveText("Sound off");
+  await expect(
+    header.getByRole("button", { name: /^Switch to/ }),
+  ).toBeVisible();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(toggle).toHaveText("Sound on");
+});
+
+test("the headers with the sound toggle have no axe violations in night or day", async ({
+  page,
+}) => {
+  await signIn(page);
+  for (const theme of ["night", "day"] as const) {
+    await remember(page, "mazi.theme", theme);
+    await openAtlas(page);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    const toggle = await soundToggle(page);
+    for (const pressed of ["false", "true"]) {
+      await expect(toggle).toHaveAttribute("aria-pressed", pressed);
+      const scope = isPhone(page) ? ".more-sheet" : ".site-header";
+      expect(
+        (await new AxeBuilder({ page }).include(scope).analyze()).violations,
+        `${theme} ${scope} pressed=${pressed}`,
+      ).toEqual([]);
+      if (pressed === "false") await toggle.click();
+    }
+    await toggle.click();
+  }
+  await page.context().clearCookies();
+  for (const theme of ["night", "day"] as const) {
+    await remember(page, "mazi.theme", theme);
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    expect(
+      (await new AxeBuilder({ page }).include(".entry-header").analyze())
+        .violations,
+      `${theme} entry header`,
+    ).toEqual([]);
+  }
+});
+
+const evidence = "work/poteto/luminous-night/evidence/pr8";
+test("captures evidence screenshots", async ({ page }) => {
+  test.skip(!process.env.MAZI_EVIDENCE, "Set MAZI_EVIDENCE=1 to capture.");
+  test.setTimeout(120000);
+  const device = isPhone(page) ? "phone" : "desktop";
+  const shot = (name: string, header = false) =>
+    page.screenshot({
+      path: `${evidence}/${name}-${device}-${theme}.jpg`,
+      type: "jpeg",
+      quality: 80,
+      clip: header
+        ? { x: 0, y: 0, width: page.viewportSize()!.width, height: 140 }
+        : undefined,
+    });
+  await page.setViewportSize(
+    device === "phone"
+      ? { width: 390, height: 844 }
+      : { width: 1440, height: 900 },
+  );
+  let theme: "night" | "day" = "night";
+  for (theme of ["night", "day"] as const) {
+    await page.context().clearCookies();
+    await page.goto("/");
+    await page.evaluate((value) => {
+      localStorage.setItem("mazi.theme", value);
+      localStorage.removeItem("mazi.sound");
+      sessionStorage.setItem("mazi.intro", "seen");
+    }, theme);
+    await page.reload();
+    await expect(page.getByLabel("Shared code")).toBeVisible();
+    await shot("entry-sound-off");
+    await page
+      .locator(".entry-header")
+      .getByRole("button", { name: "Sound", exact: true })
+      .click();
+    await shot("entry-sound-on");
+    await page
+      .locator(".entry-header")
+      .getByRole("button", { name: "Sound", exact: true })
+      .click();
+    await signIn(page);
+    await openAtlas(page);
+    const toggle = await soundToggle(page);
+    if (device === "phone") {
+      await shot("more-sheet-sound-off");
+      await toggle.click();
+      await shot("more-sheet-sound-on");
+      await toggle.click();
+      continue;
+    }
+    await toggle.hover();
+    await shot("header-sound-off", true);
+    await toggle.click();
+    await toggle.hover();
+    await shot("header-sound-on", true);
+    await shot("atlas-sound-on");
+    for (const width of [1150, 800]) {
+      await page.setViewportSize({ width, height: 900 });
+      await toggle.hover();
+      await page.screenshot({
+        path: `${evidence}/header-sound-on-${width}-${theme}.jpg`,
+        type: "jpeg",
+        quality: 80,
+        clip: { x: 0, y: 0, width, height: 140 },
+      });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await toggle.click();
+  }
+});
