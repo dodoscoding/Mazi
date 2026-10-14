@@ -4,6 +4,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "MAZI_");
   return {
     plugins: [react()],
+    // The app's CSP has no font-src data:, so fonts must ship as files.
+    build: {
+      assetsInlineLimit: (file: string) =>
+        /\.woff2?$/.test(file) ? false : undefined,
+    },
     server: {
       port: 5173,
       strictPort: true,
