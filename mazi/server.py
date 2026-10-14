@@ -22,7 +22,7 @@ class AppServer(HTTPServer):
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
 APP_PATHS = {'/', '/atlas', '/imports', '/review', '/timeline', '/places',
-             '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/circle', '/search'}
+             '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/introduction', '/circle', '/search'}
 
 
 def handler_for(store, dist=None):
