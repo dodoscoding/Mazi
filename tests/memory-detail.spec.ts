@@ -329,6 +329,67 @@ test("related memories put the same place first and open that memory", async ({
   await expect(page).toHaveURL(/selected=naxos-morning/);
 });
 
+test("earlier and later follow the dates, with approximate memories in place", async ({
+  page,
+}, testInfo) => {
+  test.skip(isPhone(testInfo), "The phone bar hides the earlier/later links.");
+  const card = (
+    id: string,
+    title: string,
+    date: string,
+    year: number | null,
+  ) => ({
+    ...archive[1],
+    id,
+    shortTitle: title,
+    title,
+    date,
+    year,
+    approximate: year === null,
+  });
+  // The server sorts by (year or 0, date) newest first, so approximate cards trail.
+  const mixed = [
+    card("dated-2023", "Dated in 2023", "2023-06-02", 2023),
+    card("dated-2019", "Dated in 2019", "2019-05-01", 2019),
+    card("undated", "Never dated", "Date not recorded", null),
+    card(
+      "about-2024",
+      "About in 2024",
+      "2024-07-12 · some dates unknown",
+      null,
+    ),
+  ];
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories: mixed } }),
+  );
+  const nav = page.getByRole("navigation", { name: "Other memories" });
+  await open(page, "/memory/dated-2019");
+  await expect(nav).toContainText("Memory 1 of 4");
+  await expect(nav.getByRole("link", { name: /^Earlier memory/ })).toHaveCount(
+    0,
+  );
+  await expect(
+    nav.getByRole("link", { name: /^Later memory/ }),
+  ).toHaveAccessibleName(/Dated in 2023/);
+  await nav.getByRole("link", { name: /^Later memory/ }).click();
+  await expect(page).toHaveURL(/#\/memory\/dated-2023$/);
+  await expect(nav).toContainText("Memory 2 of 4");
+  await expect(
+    nav.getByRole("link", { name: /^Later memory/ }),
+  ).toHaveAccessibleName(/About in 2024/);
+  await open(page, "/memory/about-2024");
+  await expect(nav).toContainText("Memory 3 of 4");
+  await expect(
+    nav.getByRole("link", { name: /^Earlier memory/ }),
+  ).toHaveAccessibleName(/Dated in 2023/);
+  await expect(
+    nav.getByRole("link", { name: /^Later memory/ }),
+  ).toHaveAccessibleName(/Never dated/);
+  await open(page, "/memory/undated");
+  await expect(nav).toContainText("Memory 4 of 4");
+  await expect(nav.getByRole("link", { name: /^Later memory/ })).toHaveCount(0);
+});
+
 test("Escape goes back to the atlas with the memory selected", async ({
   page,
 }) => {
