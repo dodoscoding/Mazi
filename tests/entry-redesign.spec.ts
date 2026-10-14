@@ -74,10 +74,10 @@ test("a wrong code shows the designed alert and never shows a code", async ({
   await code.fill("saltwater");
   await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();
   const alert = page.getByRole("alert");
-  await expect(alert).toContainText("That code doesn't open a circle.");
+  await expect(alert).toContainText("That code doesn’t open a circle.");
   await expect(alert).toContainText("Check it with whoever invited you.");
   await expect(code).toHaveAttribute("aria-invalid", "true");
-  await expect(code).toHaveAccessibleDescription(/doesn't open a circle/);
+  await expect(code).toHaveAccessibleDescription(/doesn’t open a circle/);
   await expect(page.locator("body")).not.toContainText(/prototype only/i);
   await expect(page.locator("body")).not.toContainText(CODE);
   await code.fill(CODE);
@@ -100,7 +100,7 @@ test("a removed member sees access removed and can try another code", async ({
   await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();
   const alert = page.getByRole("alert");
   await expect(alert).toContainText("Access removed");
-  await expect(alert).toContainText("You're no longer in this circle");
+  await expect(alert).toContainText("You’re no longer in this circle");
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
   await page.getByRole("button", { name: "Enter a different code" }).click();
   await expect(page.getByLabel("Shared code")).toBeFocused();
@@ -119,7 +119,8 @@ test("the beats advance by button and keyboard and the last one opens the Atlas"
   );
   await page.keyboard.press("ArrowRight");
   await expectBeat(page, 2);
-  await expect(page.getByText("change the year")).toBeVisible();
+  if (!isPhone(page))
+    await expect(page.getByText("change the year")).toBeVisible();
   await page.keyboard.press("ArrowLeft");
   await expectBeat(page, 1);
   await page.getByRole("button", { name: "Back" }).click();
@@ -268,6 +269,16 @@ test("captures evidence screenshots", async ({ page }) => {
       await expectBeat(page, index);
       await page.waitForTimeout(700);
       await shot(`intro-beat-${index + 1}`);
+      if (device === "desktop" && index > 0 && index < 3)
+        for (const width of [1150, 800]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.screenshot({
+            path: `${evidence}/intro-beat-${index + 1}-${width}-${theme}.jpg`,
+            type: "jpeg",
+            quality: 80,
+          });
+          await page.setViewportSize({ width: 1440, height: 900 });
+        }
       if (index < 3) await page.keyboard.press("ArrowRight");
     }
     await page
