@@ -42,8 +42,8 @@ Model the Domain preserved D17 identity and privacy semantics. Prove It Works re
 
 ## Delivery
 
-Delivery uses the verified GitHub remote `https://github.com/dodoscoding/Mazi.git`; Origin could not resolve that repository. The ready pull request will contain coherent contract, implementation, and evidence commits. No merge or deployment is implied by PR creation.
+Delivery uses the verified GitHub remote `https://github.com/dodoscoding/Mazi.git`; Origin could not resolve that repository. [Ready pull request #28](https://github.com/dodoscoding/Mazi/pull/28) contains coherent contract, implementation, and evidence commits. No merge or deployment is implied by PR creation.
 
 - Contracts: `4bc8663` — hosted archive/recovery tests (initial missing-module red recorded in implementation evidence).
 - Implementation: `d091d6793d42a87651eb26079647bbdc7d0a981c` — hosted persistence, private bytes, restricted schema, and explicit transfer/recovery.
-- Evidence: the following documentation commit contains this record and screenshots.
+- Evidence: `a270e23` — cutover verification, operating limits, fingerprints, and screenshots. A subsequent documentation commit records the PR link and completes the delivery log.
