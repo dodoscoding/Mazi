@@ -557,18 +557,18 @@
 .locator-node {
   fill: var(--accent-node);
 }
-.people {
+.memory-detail .people {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin: 0;
 }
-.people dt {
+.memory-detail .people dt {
   margin-bottom: 8px;
   font-size: 13px;
   color: var(--text-secondary);
 }
-.people dd {
+.memory-detail .people dd {
   margin: 0;
 }
 .people-chips {
