@@ -41,7 +41,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
           signal: controller.signal,
         });
         if (current !== generation || controller.signal.aborted) return;
-        if (response.status === 403) {
+        if (response.status === 403 || response.status === 401) {
           sessionStorage.removeItem("mazi.group");
           window.dispatchEvent(new Event("mazi:access-lost"));
           setState({ ...empty, status: "signed-out" });
@@ -59,7 +59,8 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
             "/api/atlas?" + new URLSearchParams({ group }),
             { signal: controller.signal },
           );
-          if (result.status === 403)
+          if (current !== generation || controller.signal.aborted) return;
+          if (result.status === 403 || result.status === 401)
             window.dispatchEvent(new Event("mazi:access-lost"));
           if (!result.ok)
             throw Error(
