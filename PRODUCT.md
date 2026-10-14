@@ -45,7 +45,7 @@ Members can complete small-memory import, review, and browsing workflows entirel
 
 Mazi should feel warm, personal, and nostalgic, with photography as the focus. The ambition is bespoke studio quality: strong composition, careful detail, tasteful animation, and meaningful interactive 3D that makes memory exploration enjoyable. The owner's "$10,000 website" reference describes a quality aspiration, not an approved spending budget.
 
-The owner supplied [EnvolDev's HELIOS post](https://x.com/EnvolDev/status/2102793526287487066/video/1) as a reference for meaningful, tasteful 3D. Its [live demo](https://helios-solar-8fn.pages.dev/) was inspected: spatial exploration and object focus coexist with search and a details panel. The X video could not be played. On 14 October 2026 the owner approved a space theme and selected direction A, Luminous night, from the Claude Design canvas. [D18](docs/DECISIONS.md#luminous-night-visual-world-14-october-2026) owns that decision and its night-by-default theme, day toggle, evidence-only people lines and off-by-default ambient sound.
+The owner supplied [EnvolDev's HELIOS post](https://x.com/EnvolDev/status/2102793526287487066/video/1) as a reference for meaningful, tasteful 3D. Its [live demo](https://helios-solar-8fn.pages.dev/) was inspected: spatial exploration and object focus coexist with search and a details panel. The X video could not be played. On 14 October 2026 the owner approved a space theme and selected direction A, Luminous night, from the Claude Design canvas. [D19](docs/DECISIONS.md#luminous-night-visual-world-14-october-2026) owns that decision and its night-by-default theme, day toggle, evidence-only people lines and off-by-default ambient sound.
 
 ## Evidence on Hand
 
