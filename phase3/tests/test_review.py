@@ -82,6 +82,25 @@ class ReviewTests(unittest.TestCase):
         with self.assertRaises(Denied):
             self.store.event_suggestions(self.outsider, self.group)
 
+    def test_undo_uses_the_stored_event_after_one_photo_is_withdrawn(self):
+        from io import BytesIO
+        from PIL import Image
+        files = {}
+        for name, color in (("one.jpg", "red"), ("two.jpg", "blue"), ("three.jpg", "green")):
+            image = BytesIO()
+            Image.new("RGB", (8, 8), color).save(image, "JPEG")
+            files[name] = image.getvalue()
+        run = self.submit(files)
+        self.process(run)
+        ids = sorted(item["id"] for item in self.store.gallery(self.alice, self.group))
+        event = self.store.review_event(self.alice, self.group, ids, "Our trip", "accept")
+        origin = self.store.owned_origins(self.alice, self.group)[0]["id"]
+        self.store.delete_origin(self.alice, origin)
+        visible = self.store.reviewed_events(self.alice, self.group)[0]["assets"]
+        self.assertEqual(len(visible), 2)
+        self.store.review_event(self.alice, self.group, visible, "Our trip", "undo")
+        self.assertIsNone(self.store.db.execute("SELECT 1 FROM review_events WHERE id=?", (event,)).fetchone())
+
     def test_conflicting_source_dates_need_correction_before_event(self):
         from PIL import Image
         second = io.BytesIO()
