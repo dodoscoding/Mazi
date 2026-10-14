@@ -99,11 +99,11 @@ class AppServerTests(unittest.TestCase):
         self.assertEqual(self.request('/api/entry', {'name': 'Other'})[0], 403)
         for route in ('/api/login', '/api/register', '/api/group', '/api/accept'):
             self.assertEqual(self.request(route, {}, token)[0], 403)
-        outsider = self.store.register('unmapped@example.test', 'synthetic-password')
+        self.store.register('unmapped@example.test', 'synthetic-password')
         old = self.store.login('unmapped@example.test', 'synthetic-password')
         for route in ('/api/groups', '/api/atlas?group=' + self.group, '/api/members?group=' + self.group):
             self.assertEqual(self.request(route, token=old)[0], 403)
-        other = self.store.db.execute("INSERT INTO groups VALUES('other','Other',?)", (self.alice,))
+        self.store.db.execute("INSERT INTO groups VALUES('other','Other',?)", (self.alice,))
         self.store.db.execute("INSERT INTO members VALUES('other',?,'admin')", (self.alice,))
         self.store.db.commit()
         self.assertEqual(len(json.loads(self.request('/api/groups', token=self.token)[2])), 1)

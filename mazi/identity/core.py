@@ -150,7 +150,7 @@ class Store:
         if not isinstance(name, str):
             raise Denied("Enter a visible name")
         display = name.strip()
-        if not display or len(display) > 80 or any(unicodedata.category(c).startswith("C") for c in display):
+        if not display or len(display) > 80 or any(unicodedata.category(c).startswith("C") for c in name):
             raise Denied("Use a name of 1 to 80 characters without control characters")
         return display, display.casefold()
 
