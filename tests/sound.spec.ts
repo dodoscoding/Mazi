@@ -193,6 +193,8 @@ test("Entry offers the sound toggle beside the theme toggle", async ({
 test("the headers with the sound toggle have no axe violations in night or day", async ({
   page,
 }) => {
+  // Six axe passes over two atlas loads; CI draws the globe in software meanwhile.
+  test.setTimeout(120000);
   await signIn(page);
   for (const theme of ["night", "day"] as const) {
     await remember(page, "mazi.theme", theme);
