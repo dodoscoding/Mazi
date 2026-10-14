@@ -2,7 +2,7 @@
 
 A private, invite-only archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
 
-The repository contains product planning, a working Atlas design prototype, a [local Python memory-loop experiment](phase1/README.md), the [Phase 2 historical import engine](phase2/README.md), a [Phase 3 local archive review screen](phase3/README.md), [Phase 4 sources and places](phase4/README.md), and [Phase 5 People and retrieval](phase5/README.md). The import and review workflow uses synthetic tests; it is not connected to the Atlas or production providers. The Atlas prototype uses fictional memories and generated photographs. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
+The repository contains product planning, a working Atlas design prototype, a [local Python memory-loop experiment](phase1/README.md), the [Phase 2 historical import engine](phase2/README.md), a [Phase 3 local archive review screen](phase3/README.md), [Phase 4 sources and places](phase4/README.md), [Phase 5 People and retrieval](phase5/README.md), and [Phase 6 Memory answers](phase6/README.md). The import and review workflow uses synthetic tests; it is not connected to the Atlas or production providers. The Atlas prototype uses fictional memories and generated photographs. M0 is complete as of 5 October 2026; the manual pilot scope, production architecture and verified local access experiment are recorded in [M0 acceptance](docs/M0_ACCEPTANCE.md). No production infrastructure is provisioned.
 
 Start with the [confirmed product context](PRODUCT.md), [roadmap](docs/ROADMAP.md), and [product specification](docs/SPEC.md). The product direction and Atlas choice were confirmed on 3 October 2026.
 
@@ -45,6 +45,8 @@ For import plus post-import review in one local archive, run `.venv/bin/python -
 For Map, selected Discord intake and the macOS Photos companion, run `.venv/bin/python -m phase4.server` and open http://127.0.0.1:8002/places. The [Phase 4 guide](phase4/README.md) includes companion build, operator configuration and limits.
 
 For People, personal hiding and local related search, run `.venv/bin/python -m phase5.server` and open http://127.0.0.1:8003/discover. The [Phase 5 guide](phase5/README.md) explains manual identity verification, processing controls, the lightweight baseline and installation of the optional local CLIP model.
+
+For evidence-backed Memory answers, run `.venv/bin/python -m phase6.server` and open http://127.0.0.1:8004/ask. The [Phase 6 guide](phase6/README.md) explains consent, supported questions, usage limits and the local implementation boundary.
 
 Use Node 22.12+ (developed on 24.15.0).
 

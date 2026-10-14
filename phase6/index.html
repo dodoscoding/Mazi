@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Memory answers · Mazi</title>
+    <link rel="stylesheet" href="/discovery.css" />
+    <script src="/answers.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="/">Mazi</a>
+      <nav aria-label="Archive">
+        <a href="/">Imports & sign in</a><a href="/review">Archive review</a
+        ><a href="/discover">People & search</a
+        ><a href="/ask" aria-current="page">Memory answers</a>
+      </nav>
+    </header>
+    <main>
+      <p class="eyebrow">WORDS WITH SOMETHING BEHIND THEM</p>
+      <h1>What does our archive remember?</h1>
+      <p class="intro">
+        Find recorded dates and places, with a source for every answer. An
+        incomplete archive can’t tell your whole story.
+      </p>
+      <label>Group<select id="groups"></select></label>
+      <p id="notice" role="status"></p>
+      <div id="private" hidden>
+        <form id="ask-form" class="panel">
+          <label
+            >Ask the archive<input
+              id="question"
+              required
+              maxlength="500"
+              placeholder="When was bicycle?"
+          /></label>
+          <p>
+            Try “Where was dinner?” or “Earliest Amsterdam”. Answers quote
+            recorded metadata; they cannot explain motives or establish
+            first-ever events.
+          </p>
+          <button id="ask">Find evidence</button>
+        </form>
+        <section
+          id="answer"
+          aria-label="Archive answer"
+          aria-live="polite"
+        ></section>
+        <details class="panel">
+          <summary>Memory answer permissions</summary>
+          <p>
+            Memory answers run locally. No question, photograph or message goes
+            to a provider. Enable local processing in
+            <a href="/discover">People & search</a> first. Every contributor
+            must also opt in here before their records can support an answer.
+          </p>
+          <label class="check"
+            ><input id="personal" type="checkbox" />Allow Memory answers for me
+            and my contributions</label
+          ><label class="check" id="admin"
+            ><input id="group-enabled" type="checkbox" />Enable Memory answers
+            for this group (admin)</label
+          >
+        </details>
+        <p id="usage"></p>
+      </div>
+    </main>
+    <footer>
+      Evidence, with room for uncertainty.
+      <span>Local Phase 6 experiment.</span>
+    </footer>
+  </body>
+</html>
