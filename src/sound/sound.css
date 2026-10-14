@@ -1,0 +1,69 @@
+/* Speaker toggle: icon with a tooltip in headers, a labelled pill on Entry and in More. */
+.sound-toggle.icon-button {
+  position: relative;
+}
+.sound-toggle.icon-button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px var(--accent-atmosphere);
+}
+.sound-tip {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow:
+    var(--shadow-float),
+    inset 0 0 0 1px var(--line);
+  color: var(--text-primary);
+  font: 500 12px / 1.2 var(--font-ui);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--dur-quick) var(--ease-arrive),
+    transform var(--dur-quick) var(--ease-arrive);
+}
+.sound-toggle:hover .sound-tip,
+.sound-toggle:focus-visible .sound-tip {
+  opacity: 1;
+  transform: none;
+}
+.sound-toggle--pill:not(.button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-secondary);
+  font: 500 13px / 1.2 var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.sound-toggle--pill:not(.button):hover {
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+.sound-toggle--pill.theme-pill {
+  gap: 6px;
+}
+/* After the pill base so the pressed colour wins at equal specificity. */
+.sound-toggle[aria-pressed="true"],
+.sound-toggle--pill[aria-pressed="true"]:not(.button) {
+  color: var(--accent-atmosphere);
+}
+.sheet-controls {
+  display: flex;
+  gap: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sound-tip {
+    transform: none;
+  }
+}

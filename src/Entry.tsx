@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { EntrySky } from "./entry/EntrySky";
+import { SoundToggle } from "./sound/SoundToggle";
 import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
 import { Icon } from "./ui/icons";
@@ -104,6 +105,7 @@ export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
         </p>
         <div className="entry-header-actions">
           <ThemeToggle />
+          <SoundToggle variant="pill" />
         </div>
       </header>
       <main className="entry-main">
