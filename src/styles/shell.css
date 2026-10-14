@@ -1,0 +1,226 @@
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  left: 20px;
+  top: 10px;
+  transform: translateY(-200%);
+  padding: 12px;
+  background: var(--ink);
+  color: var(--ground);
+}
+.skip-link:focus {
+  transform: none;
+}
+.site-header {
+  height: 76px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+.wordmark {
+  font-size: 44px;
+  letter-spacing: -0.04em;
+  color: #f2d0ac;
+  line-height: 1;
+}
+.site-header nav {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
+  gap: 40px;
+}
+.site-header nav a {
+  display: flex;
+  align-items: center;
+  position: relative;
+  font-size: 16px;
+  min-height: 44px;
+}
+.site-header nav a[aria-current="page"] {
+  color: var(--copper);
+}
+.site-header nav a[aria-current="page"]:after {
+  content: "";
+  height: 2px;
+  background: var(--copper);
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+}
+.imports-link {
+  display: flex;
+}
+.circle-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  min-height: 44px;
+}
+.circle-emblem {
+  display: flex;
+  width: 42px;
+}
+.circle-emblem i {
+  height: 24px;
+  width: 24px;
+  flex: none;
+  border: 1px solid var(--copper);
+  border-radius: 50%;
+  background: var(--ground);
+  margin-right: -13px;
+}
+.circle-emblem i:nth-child(2) {
+  border-color: #a6b9bd;
+}
+.circle-emblem i:nth-child(3) {
+  border-color: #6d95a8;
+}
+footer {
+  max-width: 1800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid var(--line);
+  padding: 22px 36px;
+  font-family: var(--sans);
+  color: var(--muted);
+  font-size: 12px;
+}
+.footer-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--copper);
+  margin: 0 9px;
+  vertical-align: middle;
+}
+.mobile-imports {
+  display: none;
+}
+@media (max-width: 1150px) {
+  .site-header nav {
+    gap: 25px;
+  }
+  .site-header {
+    padding: 0 24px;
+  }
+}
+@media (max-width: 800px) {
+  .site-header {
+    height: 70px;
+    gap: 15px;
+    padding: 0 20px;
+  }
+  .site-header nav {
+    gap: 22px;
+  }
+  .site-header nav a {
+    font-size: 14px;
+  }
+  .circle-link {
+    font-size: 0;
+    gap: 4px;
+  }
+  .circle-emblem {
+    display: none;
+  }
+  .imports-link {
+    display: none;
+  }
+  .wordmark {
+    font-size: 38px;
+  }
+  footer {
+    flex-wrap: wrap;
+    padding: 22px 24px 26px;
+    gap: 10px;
+    font-size: 11px;
+  }
+  footer > span:nth-child(2) {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .mobile-imports {
+    display: block;
+    margin-left: auto;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    margin-top: -13px;
+    margin-bottom: -13px;
+  }
+}
+@media (max-width: 370px) {
+  .site-header nav {
+    gap: 16px;
+  }
+  .site-header {
+    padding: 0 16px;
+  }
+  .circle-link {
+    display: none;
+  }
+}
+.archive-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 12px 36px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+  font-size: 15px;
+}
+.archive-navigation nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.archive-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+.archive-navigation a[aria-current="page"] {
+  color: var(--copper);
+}
+.circle-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+.circle-picker select {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 8px;
+  font: inherit;
+  max-width: 220px;
+}
+@media (max-width: 700px) {
+  .archive-navigation {
+    padding: 10px 20px;
+  }
+  .archive-navigation nav {
+    gap: 6px 18px;
+  }
+  .circle-picker {
+    width: 100%;
+  }
+}
+.archive-navigation button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
