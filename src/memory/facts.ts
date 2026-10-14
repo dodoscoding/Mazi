@@ -166,13 +166,15 @@ export function relatedMemories(memory: Memory, all: Memory[]): Related[] {
   ].slice(0, 4);
 }
 
+/** The same rule as the feature pages: first letters of the first two words. */
 export function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return (
-    parts.length > 1
-      ? parts[0][0] + parts[parts.length - 1][0]
-      : name.slice(0, 2)
-  ).toUpperCase();
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0] || "")
+    .join("")
+    .toUpperCase();
 }
 
 /** A stable avatar tint per name, so a person keeps one colour everywhere. */
