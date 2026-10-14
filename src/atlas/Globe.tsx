@@ -907,18 +907,20 @@ function Overlay({
   const preview = focus && focus !== selected ? thumbnails[focus] : undefined;
   return (
     <div className="globe-overlay" ref={overlay} aria-hidden="true">
-      {places.map((place) => (
-        <span
-          key={place.id}
-          className={`globe-label ${place.id === selected ? "is-selected" : ""} ${place.id === focus ? "is-focus" : ""}`}
-          data-place={place.id}
-        >
-          <span>
-            {place.name}
-            {place.id === selected ? ` · ${place.count}` : ""}
+      {places
+        .filter((place) => !(preview && place.id === focus))
+        .map((place) => (
+          <span
+            key={place.id}
+            className={`globe-label ${place.id === selected ? "is-selected" : ""} ${place.id === focus ? "is-focus" : ""}`}
+            data-place={place.id}
+          >
+            <span>
+              {place.name}
+              {place.id === selected ? ` · ${place.count}` : ""}
+            </span>
           </span>
-        </span>
-      ))}
+        ))}
       {target && (
         <span
           className="globe-reticle"

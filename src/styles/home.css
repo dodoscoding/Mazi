@@ -155,7 +155,7 @@
 }
 .globe-preview-card {
   position: absolute;
-  left: 40px;
+  left: 44px;
   top: -35px;
   width: 236px;
   display: flex;
@@ -222,6 +222,7 @@
 }
 #flat-dots circle {
   fill: var(--text-muted);
+  r: 0.24px;
 }
 .flat-land-dots {
   opacity: 0.55;
@@ -231,6 +232,7 @@
 }
 :root[data-theme="day"] #flat-dots circle {
   fill: var(--text-secondary);
+  r: 0.2px;
 }
 .flat-arc {
   fill: none;
@@ -418,6 +420,9 @@
   gap: 6px;
   text-align: right;
   pointer-events: none;
+  text-shadow:
+    0 0 8px var(--bg-void),
+    0 0 2px var(--bg-void);
 }
 .readout-year {
   font: 400 var(--type-display-l) / 1 var(--font-display);
@@ -585,17 +590,9 @@
   letter-spacing: -0.01em;
 }
 .featured-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 8px;
   font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary);
-}
-.featured-meta span + span::before {
-  content: "·";
-  margin-right: 8px;
-  color: var(--text-muted);
 }
 .feature-info .primary-action {
   margin-top: 6px;
@@ -1718,16 +1715,19 @@
     display: none;
   }
   .flat-note {
-    top: calc(var(--atlas-top) + 44%);
+    top: calc(var(--atlas-top) + 104px);
     bottom: auto;
+    flex-wrap: wrap;
     font-size: 12.5px;
     padding: 10px 12px;
   }
-  .flat-note p b {
-    display: block;
+  .flat-note p {
+    flex-basis: calc(100% - 32px);
   }
   .flat-note .button {
-    padding: 0 12px;
+    margin-left: 30px;
+    min-height: var(--target);
+    padding: 0 14px;
   }
 
   .portal {

@@ -632,9 +632,13 @@ function AtlasHome({
           {selected.title}
         </h2>
         <p className="featured-meta">
-          <span>{shortDate(selected)}</span>
-          {selected.place && <span>{selected.place.name}</span>}
-          <span>{plural(selected.photos.length, "photo")}</span>
+          {[
+            shortDate(selected),
+            selected.place?.name,
+            plural(selected.photos.length, "photo"),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
         <a
           ref={openLink}
