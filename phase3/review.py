@@ -1,0 +1,414 @@
+"""Deterministic, permission-checked review on top of the Phase 2 archive.
+
+Suggestions never change source records. A review decision changes only the
+presentation grouping; every original remains accessible through its own ID.
+"""
+from __future__ import annotations
+
+import io
+import json
+import hashlib
+import zipfile
+from datetime import date, datetime
+import time
+
+from PIL import Image, ImageOps, ImageStat
+
+from phase1.core import Conflict, Denied
+from phase2.engine import ImportStore
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS review_pairs (
+ group_id TEXT NOT NULL, left_id TEXT NOT NULL, right_id TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('merged','dismissed')),
+ actor_id TEXT NOT NULL, updated_at TEXT NOT NULL,
+ PRIMARY KEY(group_id,left_id,right_id)
+);
+CREATE TABLE IF NOT EXISTS review_renditions (
+ group_id TEXT NOT NULL, asset_id TEXT NOT NULL PRIMARY KEY,
+ selected_id TEXT NOT NULL, actor_id TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS review_annotations (
+ asset_id TEXT PRIMARY KEY, group_id TEXT NOT NULL, title TEXT NOT NULL DEFAULT '',
+ capture_date TEXT, place TEXT NOT NULL DEFAULT '', anniversary INTEGER NOT NULL DEFAULT 0,
+ actor_id TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS review_events (
+ id TEXT PRIMARY KEY, group_id TEXT NOT NULL, asset_ids TEXT NOT NULL,
+ title TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('accepted','rejected')),
+ actor_id TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS review_events_group ON review_events(group_id,status);
+"""
+
+
+def signature(data):
+    with Image.open(io.BytesIO(data)) as raw:
+        image = ImageOps.exif_transpose(raw).convert("RGB")
+        ratio = image.width / image.height
+        mean = ImageStat.Stat(image.resize((16, 16))).mean
+        gray = image.convert("L").resize((9, 8))
+        pixels = list(gray.get_flattened_data())
+    fingerprint = sum((pixels[y * 9 + x] > pixels[y * 9 + x + 1]) << (y * 8 + x)
+                      for y in range(8) for x in range(8))
+    return fingerprint, mean, ratio
+
+
+class ReviewStore(ImportStore):
+    def __init__(self, root):
+        super().__init__(root)
+        self.db.executescript(SCHEMA)
+
+    def _visible_ids(self, user, group):
+        self._member(user, group)
+        return [row[0] for row in self.db.execute(
+            "SELECT a.id FROM archive_assets a WHERE a.group_id=? AND EXISTS "
+            "(SELECT 1 FROM archive_origins o JOIN members m ON m.user_id=o.owner_id "
+            "AND m.group_id=o.group_id WHERE o.asset_id=a.id AND o.withdrawn=0) "
+            "ORDER BY a.id", (group,))]
+
+    def duplicate_suggestions(self, user, group, limit=100):
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Invalid suggestion limit")
+        ids = self._visible_ids(user, group)
+        if len(ids) > 1000:
+            raise ValueError("Review set exceeds local limit")
+        signatures = {asset: signature(self.asset_bytes(user, asset)) for asset in ids}
+        result = []
+        for position, left in enumerate(ids):
+            for right in ids[position + 1:]:
+                left_hash, left_color, left_ratio = signatures[left]
+                right_hash, right_color, right_ratio = signatures[right]
+                distance = (left_hash ^ right_hash).bit_count()
+                if distance > 6 or max(abs(a - b) for a, b in zip(left_color, right_color)) > 24 or abs(left_ratio - right_ratio) > 0.05:
+                    continue
+                decision = self.db.execute(
+                    "SELECT status FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=?",
+                    (group, left, right)).fetchone()
+                if decision:
+                    continue
+                result.append({"left": left, "right": right, "distance": distance,
+                               "reason": "similar image pixels; review both originals"})
+                if len(result) == limit:
+                    return result
+        return result
+
+    def review_pair(self, user, group, first, second, action):
+        if action not in ("merge", "dismiss", "undo") or first == second:
+            raise ValueError("Invalid review decision")
+        left, right = sorted((first, second))
+        with self.transaction():
+            visible = set(self._visible_ids(user, group))
+            if left not in visible or right not in visible:
+                raise Denied("Media unavailable")
+            if action == "undo":
+                self.db.execute("DELETE FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=?",
+                                (group, left, right))
+            else:
+                self.db.execute("INSERT INTO review_pairs VALUES(?,?,?,?,?,datetime('now')) "
+                                "ON CONFLICT(group_id,left_id,right_id) DO UPDATE SET "
+                                "status=excluded.status,actor_id=excluded.actor_id,updated_at=excluded.updated_at",
+                                (group, left, right, "merged" if action == "merge" else "dismissed", user))
+                if action == "merge":
+                    choices = [self.db.execute("SELECT width,height,size FROM archive_assets WHERE id=?", (asset,)).fetchone()
+                               for asset in (left, right)]
+                    preferred = max(zip((left, right), choices), key=lambda item: (item[1]["width"] * item[1]["height"], item[1]["size"], item[0]))[0]
+                    for asset in (left, right):
+                        self.db.execute("INSERT INTO review_renditions VALUES(?,?,?,?) "
+                                        "ON CONFLICT(asset_id) DO UPDATE SET selected_id=excluded.selected_id,actor_id=excluded.actor_id",
+                                        (group, asset, preferred, user))
+            self._audit(user, "review." + action, left + ":" + right)
+
+    def reviewed_pairs(self, user, group):
+        visible = set(self._visible_ids(user, group))
+        return [{"left": row[0], "right": row[1], "status": row[2]}
+                for row in self.db.execute("SELECT left_id,right_id,status FROM review_pairs WHERE group_id=? ORDER BY updated_at DESC", (group,))
+                if row[0] in visible and row[1] in visible]
+
+    def owned_origins(self, user, group):
+        self._member(user, group)
+        return [{"id": row["id"], "asset": row["asset_id"],
+                 "filename": json.loads(row["payload"]).get("original_filename") or "Unnamed photograph"}
+                for row in self.db.execute("SELECT id,asset_id,payload FROM archive_origins "
+                                           "WHERE owner_id=? AND group_id=? AND withdrawn=0 ORDER BY rowid DESC LIMIT 1000",
+                                           (user, group))]
+
+    def group_metrics(self, user, group):
+        self._member(user, group, admin=True)
+        visible = len(self._visible_ids(user, group))
+        jobs = {row[0]: row[1] for row in self.db.execute(
+            "SELECT i.outcome,count(*) FROM import_items i JOIN import_runs r ON r.id=i.run_id "
+            "WHERE r.group_id=? AND r.withdrawn=0 GROUP BY i.outcome", (group,))}
+        queued = self.db.execute("SELECT min(r.created_at) FROM import_runs r JOIN import_items i ON i.run_id=r.id "
+                                 "WHERE r.group_id=? AND r.withdrawn=0 AND i.outcome IN ('PENDING','PROCESSING')", (group,)).fetchone()[0]
+        bytes_used = self.db.execute("SELECT coalesce(sum(a.size),0) FROM archive_assets a WHERE a.group_id=? AND EXISTS "
+                                     "(SELECT 1 FROM archive_origins o JOIN members m ON m.group_id=o.group_id "
+                                     "AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0)", (group,)).fetchone()[0]
+        return {"visible_assets": visible, "stored_original_bytes": bytes_used,
+                "item_outcomes": jobs, "oldest_active_age_seconds": int(time.time() - queued) if queued else None}
+
+    def delete_origin(self, user, origin):
+        with self.transaction():
+            row = self.db.execute("SELECT id,group_id,owner_id,run_id,occurrence,withdrawn FROM archive_origins WHERE id=?",
+                                  (origin,)).fetchone()
+            if not row or row["owner_id"] != user or row["withdrawn"]:
+                raise Denied("Contribution unavailable")
+            self._member(user, row["group_id"])
+            self.db.execute("UPDATE archive_origins SET withdrawn=1 WHERE id=?", (origin,))
+            self.db.execute("UPDATE import_items SET outcome='SKIPPED',reason='WITHDRAWN_BY_OWNER' "
+                            "WHERE run_id=? AND occurrence=? AND outcome='AVAILABLE_TO_GROUP'",
+                            (row["run_id"], row["occurrence"]))
+            self._audit(user, "review.origin.delete", origin)
+
+    def leave_group(self, user, group):
+        with self.transaction():
+            self._member(user, group)
+            role = self.db.execute("SELECT role FROM members WHERE group_id=? AND user_id=?", (group, user)).fetchone()[0]
+            if role == "admin":
+                raise Denied("Administrator departure needs a group closure decision")
+            for run in self.db.execute("SELECT id FROM import_runs WHERE owner_id=? AND group_id=?", (user, group)).fetchall():
+                self._cancel(run["id"])
+            self.db.execute("UPDATE import_runs SET withdrawn=1 WHERE owner_id=? AND group_id=?", (user, group))
+            self.db.execute("UPDATE archive_origins SET withdrawn=1 WHERE owner_id=? AND group_id=?", (user, group))
+            self.db.execute("DELETE FROM members WHERE group_id=? AND user_id=?", (group, user))
+            self.db.execute("DELETE FROM media_grants WHERE audience='selected' AND recipient_id=? "
+                            "AND media_id IN (SELECT id FROM media WHERE group_id=?)", (user, group))
+            self.db.execute("DELETE FROM memory_grants WHERE audience='selected' AND recipient_id=? "
+                            "AND memory_id IN (SELECT id FROM memories WHERE group_id=?)", (user, group))
+            self.db.execute("DELETE FROM media_grants WHERE media_id IN (SELECT id FROM media WHERE group_id=? AND owner_id=?)", (group, user))
+            self.db.execute("UPDATE media SET status='staged',policy_version=policy_version+1 "
+                            "WHERE group_id=? AND owner_id=? AND status='published'", (group, user))
+            self.db.execute("DELETE FROM memory_grants WHERE memory_id IN (SELECT id FROM memories WHERE group_id=? AND owner_id=?)", (group, user))
+            self.db.execute("UPDATE memories SET status='draft',policy_version=policy_version+1 "
+                            "WHERE group_id=? AND owner_id=? AND status='published'", (group, user))
+            self._audit(user, "membership.leave", group)
+
+    def select_rendition(self, user, group, asset, selected):
+        with self.transaction():
+            visible = set(self._visible_ids(user, group))
+            if asset not in visible or selected not in visible:
+                raise Denied("Media unavailable")
+            if selected != asset:
+                pair = tuple(sorted((asset, selected)))
+                reviewed = self.db.execute("SELECT status FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=?",
+                                           (group, *pair)).fetchone()
+                if not reviewed or reviewed[0] != "merged":
+                    raise Conflict("Rendition must be an approved merge")
+            self.db.execute("INSERT INTO review_renditions VALUES(?,?,?,?) "
+                            "ON CONFLICT(asset_id) DO UPDATE SET selected_id=excluded.selected_id,actor_id=excluded.actor_id",
+                            (group, asset, selected, user))
+            if selected != asset:
+                self.db.execute("INSERT INTO review_renditions VALUES(?,?,?,?) "
+                                "ON CONFLICT(asset_id) DO UPDATE SET selected_id=excluded.selected_id,actor_id=excluded.actor_id",
+                                (group, selected, selected, user))
+            self._audit(user, "review.rendition", asset)
+
+    def rendition_bytes(self, user, asset):
+        original = self._asset(user, asset)
+        selected = self.db.execute("SELECT selected_id FROM review_renditions WHERE asset_id=? AND group_id=?",
+                                   (asset, original["group_id"])).fetchone()
+        if selected and selected[0] != asset:
+            pair = tuple(sorted((asset, selected[0])))
+            approved = self.db.execute("SELECT 1 FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=? AND status='merged'",
+                                       (original["group_id"], *pair)).fetchone()
+            if approved:
+                try:
+                    return self.asset_bytes(user, selected[0])
+                except Denied:
+                    pass
+        return self.asset_bytes(user, asset)
+
+    def event_suggestions(self, user, group, limit=100):
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Invalid suggestion limit")
+        visible = set(self._visible_ids(user, group))
+        if len(visible) > 1000:
+            raise ValueError("Review set exceeds local limit")
+        evidence = {}
+        for row in self.db.execute("SELECT o.asset_id,o.payload FROM archive_origins o "
+                                   "JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id "
+                                   "WHERE o.group_id=? AND o.withdrawn=0", (group,)):
+            if row[0] not in visible:
+                continue
+            payload = json.loads(row[1])
+            day, place = self._date_place(row[0], payload)
+            if not day:
+                continue
+            evidence.setdefault(row[0], set()).add((day, place))
+        buckets = {}
+        for asset, keys in evidence.items():
+            # Conflicting source dates or cities need manual correction first.
+            if len(keys) == 1:
+                buckets.setdefault(next(iter(keys)), set()).add(asset)
+        result = []
+        for (day, place), assets in sorted(buckets.items()):
+            if len(assets) < 2:
+                continue
+            ids = sorted(assets)
+            candidate = self._event_id(group, ids)
+            reviewed = self.db.execute("SELECT 1 FROM review_events WHERE id=?", (candidate,)).fetchone()
+            if reviewed:
+                continue
+            result.append({"id": candidate, "date": day, "place": place or None,
+                           "assets": ids, "reason": "same evidenced calendar day" + (" and city" if place else "")})
+            if len(result) == limit:
+                break
+        return result
+
+    @staticmethod
+    def _event_id(group, ids):
+        return hashlib.sha256(json.dumps([group, sorted(ids)]).encode()).hexdigest()
+
+    def _date_place(self, asset, payload):
+        annotation = self.db.execute("SELECT capture_date,place FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
+        if annotation and annotation["capture_date"]:
+            day = annotation["capture_date"][:10]
+        else:
+            assertions = payload.get("capture_assertions") or []
+            stamp = next((a.get("local") for a in assertions if a.get("local")), None)
+            if not stamp:
+                day = None
+            else:
+                try:
+                    day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).date().isoformat()
+                except ValueError:
+                    day = None
+        places = payload.get("location_assertions") or []
+        inferred = next((str(p.get("city", "")).strip().casefold() for p in places
+                         if isinstance(p, dict) and p.get("city")), "")
+        return day, (annotation["place"].casefold() if annotation and annotation["place"] else inferred)
+
+    def _all_origins(self, user, asset):
+        result = []
+        offset = 0
+        while True:
+            page = self.origins(user, asset, offset)
+            result.extend(page["items"])
+            if page["next_offset"] is None:
+                return result
+            offset = page["next_offset"]
+
+    def correct_asset(self, user, asset, *, title, capture_date, place, anniversary=False):
+        row = self._asset(user, asset)
+        if not isinstance(title, str) or len(title) > 200 or not isinstance(place, str) or len(place) > 200:
+            raise ValueError("Invalid title or place")
+        if capture_date is not None:
+            if not isinstance(capture_date, str) or len(capture_date) != 10:
+                raise ValueError("Use a precise YYYY-MM-DD date")
+            try:
+                if date.fromisoformat(capture_date).isoformat() != capture_date:
+                    raise ValueError()
+            except ValueError:
+                raise ValueError("Use a precise YYYY-MM-DD date") from None
+        if type(anniversary) is not bool or (anniversary and not capture_date):
+            raise ValueError("Anniversary needs an approved date")
+        with self.transaction():
+            self._asset(user, asset)
+            self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,datetime('now')) "
+                            "ON CONFLICT(asset_id) DO UPDATE SET title=excluded.title,capture_date=excluded.capture_date,"
+                            "place=excluded.place,anniversary=excluded.anniversary,actor_id=excluded.actor_id,"
+                            "updated_at=excluded.updated_at",
+                            (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user))
+            self._audit(user, "review.correct", asset)
+
+    def timeline(self, user, group, offset=0, limit=30, query=""):
+        if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100 or not isinstance(query, str) or len(query) > 200:
+            raise ValueError("Invalid timeline page")
+        ids = self._visible_ids(user, group)
+        if len(ids) > 1000:
+            raise ValueError("Timeline exceeds local limit")
+        items = []
+        for asset in ids:
+            records = self._all_origins(user, asset)
+            if not records:
+                continue
+            annotation = self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
+            facts = {self._date_place(asset, record) for record in records}
+            day, place = next(iter(facts)) if len(facts) == 1 else (None, "")
+            title = annotation["title"] if annotation else ""
+            searchable = " ".join([title, place, *[str(p.get("original_filename") or "") for p in records],
+                                   *[str(c.get("text") or "") for p in records for c in p.get("context", [])]])
+            if query.casefold() not in searchable.casefold():
+                continue
+            items.append({"id": asset, "title": title, "date": day, "place": place or None,
+                          "date_basis": "reviewed correction" if annotation and annotation["capture_date"] else
+                                        "conflicting source evidence" if len(facts) > 1 else
+                                        "source capture evidence" if day else "undated",
+                          "origin_count": len(records),
+                          "anniversary": bool(annotation["anniversary"]) if annotation else False})
+        items.sort(key=lambda item: (item["date"] or "", item["id"]), reverse=True)
+        return {"items": items[offset:offset + limit], "total": len(items),
+                "next_offset": offset + limit if offset + limit < len(items) else None}
+
+    def review_event(self, user, group, assets, title, decision):
+        if decision not in ("accept", "reject", "undo") or not isinstance(assets, list) or len(assets) < 2 or len(assets) > 100 or len(set(assets)) != len(assets):
+            raise ValueError("Invalid event review")
+        if not isinstance(title, str) or len(title.strip()) > 200:
+            raise ValueError("Invalid event title")
+        event_id = self._event_id(group, assets)
+        with self.transaction():
+            visible = set(self._visible_ids(user, group))
+            if not set(assets) <= visible:
+                raise Denied("Media unavailable")
+            if decision == "undo":
+                wanted = sorted(assets)
+                matches = [row["id"] for row in self.db.execute("SELECT id, asset_ids FROM review_events WHERE group_id=?", (group,))
+                           if sorted(asset for asset in json.loads(row["asset_ids"]) if asset in visible) == wanted]
+                if len(matches) == 1:
+                    event_id = matches[0]
+                self.db.execute("DELETE FROM review_events WHERE id=? AND group_id=?", (event_id, group))
+            else:
+                self.db.execute("INSERT INTO review_events VALUES(?,?,?,?,?,?,datetime('now')) "
+                                "ON CONFLICT(id) DO UPDATE SET title=excluded.title,status=excluded.status,"
+                                "actor_id=excluded.actor_id,updated_at=excluded.updated_at",
+                                (event_id, group, json.dumps(sorted(assets)), title.strip(),
+                                 "accepted" if decision == "accept" else "rejected", user))
+            self._audit(user, "review.event." + decision, event_id)
+        return event_id
+
+    def reviewed_events(self, user, group):
+        visible = set(self._visible_ids(user, group))
+        result = []
+        for row in self.db.execute("SELECT id,asset_ids,title,status FROM review_events WHERE group_id=? ORDER BY updated_at DESC", (group,)):
+            assets = [asset for asset in json.loads(row["asset_ids"]) if asset in visible]
+            if len(assets) >= 2:
+                result.append({"id": row["id"], "title": row["title"], "assets": assets, "status": row["status"]})
+        return result
+
+    def accepted_events(self, user, group):
+        return [event for event in self.reviewed_events(user, group) if event["status"] == "accepted"]
+
+    def on_this_day(self, user, group, today=None):
+        today = today or date.today()
+        if not isinstance(today, date):
+            raise ValueError("Invalid day")
+        matches = []
+        offset = 0
+        while True:
+            page = self.timeline(user, group, offset=offset, limit=100)
+            matches.extend(item for item in page["items"]
+                           if item["anniversary"] and item["date"] and item["date"][5:] == today.isoformat()[5:]
+                           and item["date"][:4] != today.isoformat()[:4])
+            if page["next_offset"] is None:
+                return matches
+            offset = page["next_offset"]
+
+    def export_archive(self, user, group):
+        ids = self._visible_ids(user, group)
+        if len(ids) > 1000:
+            raise ValueError("Export exceeds local limit")
+        if sum(self._asset(user, asset)["size"] for asset in ids) > 128 * 1024 * 1024:
+            raise ValueError("Export exceeds local size limit")
+        output = io.BytesIO()
+        manifest = []
+        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:
+            for asset in ids:
+                row = self._asset(user, asset)
+                data = self.asset_bytes(user, asset, original=True)
+                archive.writestr("originals/" + asset, data)
+                origins = self._all_origins(user, asset)
+                manifest.append({"id": asset, "sha256": hashlib.sha256(data).hexdigest(),
+                                 "mime": row["mime"], "origins": origins,
+                                 "annotation": dict(self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone() or {})})
+            archive.writestr("manifest.json", json.dumps({"group": group, "assets": manifest}, ensure_ascii=False))
+        return output.getvalue()

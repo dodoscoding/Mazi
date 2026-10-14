@@ -1,8 +1,8 @@
 # Mazi roadmap
 
-Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization and conversational AI remain later proposals.
+Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization now has a local Phase 4 implementation; production native release and conversational AI remain later gates.
 
-Status on 6 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, website-only current scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](../phase2/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open; M3-M7 remain unstarted. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
+Status on 13 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, the initial website-only scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](../phase1/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](../phase2/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open. Local Phase 3 and Phase 4 implementations are recorded below; M3/M4 production acceptance and M5-M7 remain open. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
 ## Use the planning assumptions
 
@@ -28,7 +28,7 @@ flowchart LR
     M6 --> M7
 ```
 
-Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Manual-format research starts in M0; promised chat-export support requires representative M2 fixtures. Native research and delivery are deferred until a new scope decision; they are not current website launch gates. M4 native tasks below describe that conditional future path.
+Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Manual-format research starts in M0; promised chat-export support requires representative M2 fixtures. The 13 October Phase 4 request authorizes the local macOS implementation below; native production delivery and iOS remain conditional and are not website launch gates.
 
 ## Deliver each milestone
 
@@ -82,6 +82,8 @@ Exit when T03, T04, T06, T07, and T09 pass, every discovered item has an outcome
 
 ### M3. Launch the production archive
 
+Local implementation, 6 October: [Phase 3 local archive review](../phase3/README.md) adds a review screen, corrections, Timeline/search, duplicate and event review, approved On This Day, individual source removal, member departure, current-visibility export, local health/metrics and an offline restore drill to the Phase 2 local archive. [Verification](../phase3/VERIFICATION.md) separates those synthetic checks from production acceptance. It is not integrated into the production stack or release candidate; all M3 acceptance and production gates below remain open.
+
 - [ ] Add perceptual duplicate suggestions, explicit merge review, split/undo, and authorized rendition selection.
 - [ ] Add explainable event suggestions using time, permitted location, and available grouping metadata.
 - [ ] Add improved timestamp review, place normalization, approved On This Day, and virtualized timeline views.
@@ -93,7 +95,7 @@ Exit when T01 through T10 and T14 pass against the release candidate, the produc
 
 ### M4. Add continuous sources and places
 
-This is a future proposal. Native work requires a new scope decision under D07/D13; it is outside the confirmed website-only work.
+Local implementation, 13 October 2026: the owner requested Phase 4 implementation, extending the earlier website-only implementation scope with the proposed macOS-first companion. [Phase 4](../phase4/README.md) adds native metadata selection and foreground resumable resource transfer, operator-approved selected-channel Discord polling, and an offline map with country/city filters and optional visible-place paths. Permission changes fence new work; original, edited and Live Photo resources retain separate identities. [Verification](../phase4/VERIFICATION.md) records synthetic and build evidence. This does not approve an iOS release, production deployment or M4 acceptance. Real-device/source fixtures and M3 production dependencies remain open; the release checkboxes below stay unchecked.
 
 - [ ] Ship one native platform first. The proposed default is macOS for bulk imports, followed by iOS after device validation.
 - [ ] Add metadata-first selection, album/date/type filters, foreground resumable uploads, change tracking, and permission-revocation handling.
