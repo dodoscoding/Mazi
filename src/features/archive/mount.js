@@ -15,7 +15,14 @@ export function mount(root, lifecycle) {
   let offset = 0;
   let query = "";
   let groupRoles = new Map();
-  const counts = { needs: 0, pairs: 0, events: 0, total: 0, complete: false };
+  const counts = {
+    needs: 0,
+    loaded: 0,
+    pairs: 0,
+    events: 0,
+    total: 0,
+    complete: false,
+  };
 
   root.querySelectorAll("[data-icon]").forEach((slot) => {
     slot.replaceWith(icon(slot.dataset.icon, 26));
@@ -74,16 +81,44 @@ export function mount(root, lifecycle) {
   function params(extra = "") {
     return `group=${encodeURIComponent(group)}${extra}`;
   }
+  // The timeline API pages 30 items and has no "needs review" total, and
+  // undated items sort last, so the date-and-place count only covers the
+  // photographs loaded so far and says so until every page is loaded.
   function updateSummary() {
-    $("count-items").textContent = counts.needs ? String(counts.needs) : "";
+    const partial = counts.loaded < counts.total;
+    $("count-items").textContent = counts.needs
+      ? `${counts.needs}${partial ? "+" : ""}`
+      : "";
+    $("count-items").title = partial
+      ? `In the first ${counts.loaded} of ${counts.total} photographs`
+      : "";
     $("count-duplicates").textContent = counts.pairs
       ? String(counts.pairs)
       : "";
     $("count-events").textContent = counts.events ? String(counts.events) : "";
-    const waiting = counts.needs + counts.pairs + counts.events;
-    $("review-sub").textContent = waiting
-      ? `${waiting} ${waiting === 1 ? "item needs" : "items need"} a person. Changes are shared with the circle, and every choice can be revisited.`
+    const parts = [];
+    if (counts.needs)
+      parts.push(
+        partial
+          ? `${counts.needs} of the first ${counts.loaded} photographs ${counts.needs === 1 ? "needs" : "need"} a date or place`
+          : `${counts.needs} ${counts.needs === 1 ? "photograph needs" : "photographs need"} a date or place`,
+      );
+    else if (partial)
+      parts.push(
+        `The first ${counts.loaded} of ${counts.total} photographs have a date and place`,
+      );
+    if (counts.pairs)
+      parts.push(
+        `${counts.pairs} possible ${counts.pairs === 1 ? "duplicate" : "duplicates"}`,
+      );
+    if (counts.events)
+      parts.push(
+        `${counts.events} possible ${counts.events === 1 ? "event" : "events"}`,
+      );
+    $("review-sub").textContent = parts.length
+      ? `${parts.join(" · ")}. Changes are shared with the circle, and every choice can be revisited.`
       : "Fix dates and places, settle duplicates and group events. Changes are shared with the circle, and every choice can be revisited.";
+    const waiting = counts.needs + counts.pairs + counts.events;
     const done = counts.complete && counts.total > 0 && !waiting;
     $("done").hidden = !done;
     if (done)
@@ -158,12 +193,14 @@ export function mount(root, lifecycle) {
       offset = 0;
       $("timeline").replaceChildren();
       counts.needs = 0;
+      counts.loaded = 0;
     }
     const page = await api(
       `/api/review/timeline?${params(`&offset=${offset}&q=${encodeURIComponent(query)}`)}`,
     );
     $("count").textContent = `${page.total} photographs`;
     counts.total = page.total;
+    counts.loaded += page.items.length;
     counts.complete = page.next_offset === null && !query;
     for (const item of page.items) {
       const [issue, why] = issueOf(item);
@@ -229,14 +266,19 @@ export function mount(root, lifecycle) {
       if (item.date_basis === "reviewed correction")
         actions.append(
           button("Clear date correction", async () => {
+            // Only the date changes; unsaved edits in the form are not sent.
             await api("/api/review/correct", {
               asset: item.id,
-              title: title.value,
+              title: item.title,
               capture_date: null,
-              place: place.value,
+              place: item.place || "",
               anniversary: false,
             });
-            notice("Date correction cleared. Source dates apply again.");
+            notice(
+              item.anniversary
+                ? "Date correction cleared. Source dates apply again, and the On this day approval was removed."
+                : "Date correction cleared. Source dates apply again.",
+            );
             await refreshGroup();
           }),
         );
