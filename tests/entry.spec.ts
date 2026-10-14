@@ -35,7 +35,9 @@ test("every signed-out route is gated and named profiles resume across browsers"
   await page.getByLabel("Your name").fill(` ${name} `);
   await page.getByLabel("Shared code").fill("wrong");
   await page.getByRole("button", { name: "Enter Mazi" }).click();
-  await expect(page.getByRole("alert")).toContainText("incorrect");
+  await expect(page.getByRole("alert")).toContainText(
+    "That code doesn’t open a circle.",
+  );
   await page.getByLabel("Shared code").fill("synthetic-shared-code");
   await page.getByRole("button", { name: "Enter Mazi" }).click();
   await expect(
@@ -51,6 +53,11 @@ test("every signed-out route is gated and named profiles resume across browsers"
   ).toBeVisible();
   const original = await (await page.request.get("/api/session")).json();
   await followShellLink(page, "About");
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Replay introduction" })
+    .click();
+  await expect(page).toHaveURL(/#\/introduction/);
   await expect(
     page.getByRole("button", { name: "Open the Atlas" }),
   ).toBeVisible();

@@ -160,7 +160,8 @@ test("scene=off shows the flat map with the same selection", async ({
 });
 
 test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
-  await openAtlas(page);
+  // The intro runs on a clock from mount, so look for it before waiting on the globe.
+  await page.goto("/?demo=1");
   const skip = page.getByRole("button", { name: "Skip intro" });
   await expect(skip).toBeVisible();
   await page.keyboard.press("Escape");
@@ -169,6 +170,19 @@ test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
   await page.reload();
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
   await expect(skip).toHaveCount(0);
+});
+
+test("leaving the atlas during the intro counts as seeing it", async ({
+  page,
+}) => {
+  await page.goto("/?demo=1");
+  const home = page.locator(".atlas-home");
+  await expect(home).toHaveAttribute("data-phase", "intro");
+  await page.goto("/?demo=1#/memory/lake-days");
+  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await expect(home).toBeVisible();
+  // A replayed intro would end in "done"; a returning visit opens in "return".
+  await expect(home).toHaveAttribute("data-phase", "return");
 });
 
 test("reduced motion holds the title briefly instead of the cinematic intro", async ({

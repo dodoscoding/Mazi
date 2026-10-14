@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
+import { About } from "./About";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
 import { FeaturePage } from "./features";
@@ -79,8 +80,25 @@ export default function App() {
     navigate(`/?selected=${id}`, false, true);
   const backUrl = `/?selected=${memory?.id || selected?.id || ""}`;
   let content: ReactNode;
-  if (route.path === "/about")
+  if (route.path === "/introduction")
     content = <Introduction onContinue={() => navigate("/")} />;
+  else if (route.path === "/about")
+    content = (
+      <About
+        profileName={profile?.display_name || ""}
+        circle={
+          demo
+            ? "Sample Atlas"
+            : archive.groups.find((group) => group.id === archive.group)
+                ?.name || "your circle"
+        }
+        link={link}
+        heading={heading}
+        onSignOut={() => {
+          void entry.logout();
+        }}
+      />
+    );
   else if (
     featurePaths.includes(route.path) ||
     (route.path === "/search" && !demo)

@@ -1,3 +1,4 @@
+import { initials } from "./ui/initials";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "./theme/useTheme";
@@ -152,6 +153,7 @@ export function Shell({
     [
       "/circle",
       "/about",
+      "/introduction",
       "/answer-evidence",
       ...tools.map(([url]) => url),
     ].includes(path);
@@ -227,7 +229,7 @@ export function Shell({
               role="img"
               aria-label={`Signed in as ${profileName}`}
             >
-              {profileName.trim().slice(0, 2).toUpperCase()}
+              {initials(profileName)}
             </span>
           </div>
         </header>
@@ -285,7 +287,12 @@ export function Shell({
           </nav>
           {circlePicker}
           <div className="more-footer">
-            {navLink("/about", "Replay introduction", "replay-link", closeMore)}
+            {navLink(
+              "/introduction",
+              "Replay introduction",
+              "replay-link",
+              closeMore,
+            )}
             {demo && <a href="/">Leave sample Atlas</a>}
             <button
               type="button"

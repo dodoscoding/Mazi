@@ -13,6 +13,7 @@ export default defineConfig({
     "atlas.spec.ts",
     "memory-detail.spec.ts",
     "browse.spec.ts",
+    "entry-redesign.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,

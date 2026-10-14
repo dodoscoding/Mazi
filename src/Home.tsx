@@ -198,8 +198,8 @@ function EmptyAtlas({
           </a>
           <a
             className="button button--secondary"
-            href="#/about"
-            onClick={link("/about")}
+            href="#/introduction"
+            onClick={link("/introduction")}
           >
             Replay introduction
           </a>
