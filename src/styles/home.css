@@ -118,13 +118,20 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--text-body);
-  text-shadow:
-    0 0 6px var(--bg-void),
-    0 0 2px var(--bg-void);
+  isolation: isolate;
   transition: color var(--dur-instant) ease-out;
+}
+.globe-label > span::before {
+  inset: -5px -9px;
+  border-radius: 12px;
+  filter: blur(3px);
 }
 .globe-label.is-focus > span {
   color: var(--accent-node);
+}
+/* Day accent-node is under 4.5:1 for 10px text on paper; the focus shows in the reticle. */
+:root[data-theme="day"] .globe-label.is-focus > span {
+  color: var(--text-primary);
 }
 .globe-label.is-selected > span {
   left: 38px;
@@ -279,7 +286,16 @@
   font-family: var(--font-mono);
   letter-spacing: 0.16em;
   fill: var(--text-body);
+  stroke: var(--bg-void);
+  stroke-linejoin: round;
+  paint-order: stroke;
   pointer-events: none;
+}
+/* The index keeps a page-coloured backing so stars, the limb glow or the flat map never
+   show through its small mono dates. */
+.atlas-index .index-list {
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--bg-void) 92%, transparent);
 }
 .flat-label.is-selected {
   fill: var(--text-primary);
@@ -420,9 +436,23 @@
   gap: 6px;
   text-align: right;
   pointer-events: none;
-  text-shadow:
-    0 0 8px var(--bg-void),
-    0 0 2px var(--bg-void);
+  isolation: isolate;
+}
+/* HUD text never sits bare on the halftone: a feathered scrim of the page colour
+   (void at night, paper by day) sits behind it, solid where the glyphs are. */
+.atlas-readout::before,
+.globe-label > span::before,
+.atlas-timebar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--bg-void);
+}
+.atlas-readout::before {
+  inset: -14px -22px;
+  border-radius: 28px;
+  filter: blur(9px);
 }
 .readout-year {
   font: 400 var(--type-display-l) / 1 var(--font-display);
@@ -509,6 +539,11 @@
 }
 .index-row:hover {
   background: var(--bg-raised);
+}
+/* Day bg.raised drops the warning-coloured "About" dates below 4.5:1, so hover lifts to surface. */
+:root[data-theme="day"] .index-row:hover {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
 }
 .index-row:focus-visible {
   outline-offset: 2px;
@@ -694,6 +729,15 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  isolation: isolate;
+}
+.atlas-timebar::before {
+  inset: -28px -40px -22px -28px;
+  background: linear-gradient(
+    to top,
+    var(--bg-void) calc(100% - 64px),
+    transparent
+  );
 }
 .timebar-row {
   display: grid;
@@ -1621,10 +1665,13 @@
   .timebar-row {
     display: block;
   }
+  .atlas-sheet .atlas-timebar::before {
+    display: none;
+  }
   .scrubber {
     height: 44px;
     border-radius: 10px;
-    background: var(--overlay-hud);
+    background: var(--surface);
     box-shadow: inset 0 0 0 1px var(--line-soft);
   }
   .scrubber-track {
@@ -1644,7 +1691,7 @@
   }
   .scrubber .scrubber-head {
     top: 5px;
-    height: 18px;
+    height: 14px;
   }
   .scrubber-years span {
     top: 22px;

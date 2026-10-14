@@ -176,7 +176,10 @@ export function FlatMap({
                   className={`flat-label ${isSelected ? "is-selected" : ""}`}
                   x={x + 12 / unit}
                   y={y + 4 / unit}
-                  style={{ fontSize: `${10 / unit}px` }}
+                  style={{
+                    fontSize: `${10 / unit}px`,
+                    strokeWidth: `${5 / unit}px`,
+                  }}
                 >
                   {place.name.toUpperCase()}
                   {isSelected ? ` · ${place.count}` : ""}
