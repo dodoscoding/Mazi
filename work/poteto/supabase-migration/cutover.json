@@ -1,0 +1,14 @@
+{
+  "source_records_unchanged": true,
+  "all_44_domain_tables_equal": true,
+  "identity_policy_sessions_equal": true,
+  "counts": {
+    "users": 2,
+    "groups": 1,
+    "shared_profiles": 2,
+    "archive_assets": 0,
+    "media": 0
+  },
+  "retained_files_transferred": 0,
+  "local_source_and_restricted_backup_preserved": true
+}

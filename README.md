@@ -4,7 +4,7 @@ A private, shared-code archive for one friend group of 8-10 people. Mazi connect
 
 Mazi runs as one local application. The Atlas interface reads the same authorized archive as imports, review, people, places, answers, recaps, stories and capsules. React/TypeScript lives in `src/`; the Python archive engine lives in `mazi/` under domain names. The numbered prototype folders have been retired. Historical evidence lives in [docs/history](docs/history).
 
-This is a local application with synthetic verification. Production hosting, provider integration and milestone acceptance remain separate work.
+The application runs locally with either hosted Supabase PostgreSQL/private Storage or explicit SQLite/file mode. Hosted behavior has synthetic verification; public production deployment and milestone acceptance remain separate work.
 Start with the [confirmed product context](PRODUCT.md), [roadmap](docs/ROADMAP.md), and [product specification](docs/SPEC.md). The product direction and Atlas choice were confirmed on 3 October 2026.
 
 The existing [project plan](PROJECT_PLAN.md) is preserved. M0 reconciles its technology choices in the [decision register](docs/DECISIONS.md) and [acceptance record](docs/M0_ACCEPTANCE.md); the original plan remains preserved.
@@ -14,6 +14,7 @@ The existing [project plan](PROJECT_PLAN.md) is preserved. M0 reconciles its tec
 | [Product context](PRODUCT.md) | Confirmed audience, website scope, sharing, navigation, design ambition, and open decisions. |
 | [Visual direction proposal](docs/DESIGN_PROPOSAL.md) | Selected Atlas concept and historical direction exploration. |
 | [Implemented design](DESIGN.md) | Atlas colors, typography, layout, components and motion extracted from the prototype. |
+| [Hosted Supabase setup](docs/SUPABASE_SETUP.md) | Server configuration, explicit archive transfer, recovery and Free-plan limits. |
 | [Prototype stack](docs/PROTOTYPE_STACK.md) | Chosen experiment stack, alternatives, scope and run instructions. |
 | [Prototype verification](work/design/atlas/VERIFICATION.md) | Runtime checks, screenshots, review and remaining limits. |
 | [Home-to-memory interactions](docs/HOME_MEMORY_INTERACTIONS.md) | Responsive layout, meaningful 3D, navigation, motion, recovery, and prototype evidence requirements. |
@@ -33,7 +34,7 @@ Milestone status is owned by the roadmap. Privacy policy is owned by the privacy
 
 ## M0 delivery boundary
 
-M1 accepts manual JPEG/PNG for up to 10 members and 10,000 items, within a 20 GiB group cap. Production uses Next.js, PostgreSQL, Supabase Auth/private Storage, and one worker with database leases. The current local app uses React, Python and SQLite; it does not implement that production deployment. Chrome and Firefox on desktop and Android are the selected targets; iOS is deferred. Archive exports, HEIC, and video require later fixture-based acceptance.
+M1 accepts manual JPEG/PNG for up to 10 members and 10,000 items, within a 20 GiB group cap. D01 proposed Next.js/Supabase Auth for production. D18 keeps the current React/Python app and D17 sessions while using hosted PostgreSQL/private Storage; explicit local mode remains available. This is not a public production deployment. The Free project does not establish the planned 20 GiB capacity. Chrome and Firefox on desktop and Android are the selected targets; iOS is deferred. Archive exports, HEIC, and video require later fixture-based acceptance.
 
 Dev A owns shared migrations, authentication, policies, APIs, deployment configuration, and CI. Dev B owns normalization, worker stages, adapters, UI, fixtures, and browser/device evidence. `npm run build` includes typechecking; `npm test` runs Playwright; `npm run check:docs` checks planning documents. `npm run lint` checks Prettier formatting, and `npm run typecheck` checks TypeScript. See [M0 acceptance](docs/M0_ACCEPTANCE.md) for limits, policy, cost allocations, verified evidence and limits, and the two-developer estimate.
 
@@ -44,9 +45,10 @@ Use Node 22.12+ and Python 3.11+.
 ```sh
 npm ci
 npm run setup
-.venv/bin/python -m mazi.identity.setup_shared --root .mazi-imports --admin-name "Your name"
 npm run dev
 ```
+
+If `.env.supabase` exists, normal startup uses its hosted archive and `.mazi-hosted` scratch. See [hosted setup](docs/SUPABASE_SETUP.md) for server secrets and explicit archive transfer. `npm run dev:local` and `npm run start:local` retain SQLite/files; `MAZI_BACKEND=local` prevents automatic environment-file loading. A checkout without hosted configuration stays local. A fresh local archive first needs `.venv/bin/python -m mazi.identity.setup_shared --root .mazi-imports --admin-name "Your name"`.
 
 Open http://127.0.0.1:5173. One command starts the interface and archive worker. Enter your visible name and the shared code printed by setup. New names create member profiles immediately; an existing name resumes that profile on any device. The introduction appears once per profile and remains available in **About**. Import a ZIP, inspect its inventory, and start importing. Photographs appear in Atlas and Timeline. **Archive review** lets you correct metadata and approve memories. **Memories** contains annual recaps, shared stories, sub-events, slideshows, AVI exports, sealed capsules and in-app notifications. **Search**, **Places & sources**, and **Ask your archive** use the same circle and session.
 
@@ -60,9 +62,9 @@ For an existing archive, setup requires its circle UUID and explicit mappings. I
 .venv/bin/python -m mazi.identity.setup_shared --root /path/to/archive --admin-name "Owner" --group-id GROUP_UUID --map-name "Owner=EXISTING_ADMIN_UUID" --map-name "Friend=EXISTING_MEMBER_UUID"
 ```
 
-Repeated setup retains the code and mappings. `--rotate` generates a replacement entry code; it does not revoke existing sessions. Setup prints a generated code only on creation or rotation and stores only its digest in SQLite. Missing setup fails closed. Browsers retain a 30-day HttpOnly cookie; sign-out revokes that browser session. Anyone holding the code can resume any name, including the owner. This accepted local identity tradeoff does not establish a person's identity.
+Repeated setup retains the code and mappings. `--rotate` generates a replacement entry code; it does not revoke existing sessions. Setup prints a generated code only on creation or rotation and stores only its digest in the configured database. Missing setup fails closed. Browsers retain a 30-day HttpOnly cookie; sign-out revokes that browser session. Anyone holding the code can resume any name, including the owner. This accepted D17 identity tradeoff does not establish a person's identity.
 
-The data directory remains `.mazi-imports`. Existing accounts, archive files, corrections, permissions, stories and capsules retain their IDs and storage format. Set `MAZI_IMPORT_DATA_DIR` to select another complete data directory. `MAZI_IMPORT_PORT` changes the backend port; development keeps the browser on 5173. `MAZI_PYTHON` selects a Python interpreter. Normal startup never seeds demo data or merges the separate historical `.mazi-pilot` directory.
+Local mode retains `.mazi-imports` and its compatible format. Hosted mode stores durable rows and bytes in Supabase, with separate `.mazi-hosted` scratch. Existing IDs are preserved only by explicit transfer; startup never copies the local archive. `MAZI_IMPORT_DATA_DIR` selects the local archive or hosted scratch directory for the chosen mode. `MAZI_IMPORT_PORT` changes the backend port; development keeps the browser on 5173. `MAZI_PYTHON` selects a Python interpreter. Normal startup never seeds demo data or merges the separate historical `.mazi-pilot` directory.
 
 ```sh
 npm run test:backend
