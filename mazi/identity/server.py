@@ -42,12 +42,14 @@ def handler_for(store: Store):
                 return None
 
         def user(self):
-            return store.user_for_token(self.token())
+            return store.shared_session(self.token())["user_id"] if store.shared_mode else store.user_for_token(self.token())
 
         def do_GET(self):
             parts = urlsplit(self.path)
             path = parts.path
             try:
+                if path == "/api/session":
+                    return self.json(200, store.shared_session(self.token()))
                 user = self.user()
                 query = parse_qs(parts.query)
                 if path == "/api/groups":
@@ -96,6 +98,19 @@ def handler_for(store: Store):
                 body = json.loads(self.rfile.read(length))
                 if not isinstance(body, dict):
                     raise ValueError("Expected object")
+                if path == "/api/entry":
+                    profile, token = store.enter_shared(code=body.get("code"), name=body.get("name"))
+                    secure = "; Secure" if origin == f"https://{host}" else ""
+                    return self.json(200, profile, f"mazi_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000{secure}")
+                if store.shared_mode and path in {"/api/register", "/api/login", "/api/accept", "/api/group", "/api/invite", "/api/invite/revoke"}:
+                    raise Denied("Use shared-code entry")
+                if path == "/api/logout":
+                    if self.token():
+                        store.logout(self.token())
+                    return self.json(200, {"ok": True}, "mazi_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                if path == "/api/introduction/complete":
+                    store.complete_introduction(self.token())
+                    return self.json(200, store.shared_session(self.token()))
                 if path == "/api/register":
                     store.register(body["email"], body["password"])
                     return self.json(201, {"ok": True})

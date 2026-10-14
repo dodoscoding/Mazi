@@ -81,6 +81,8 @@ Account and group deletion report what was removed, what remains because of inde
 
 ## M0 experiment boundary
 
+The local Atlas entry flow follows [D17](DECISIONS.md#shared-code-entry-decision-14-october-2026). Possession of the shared code permits immediate joining and resumption of any existing named profile. The owner accepted this impersonation tradeoff. Persistent browser sessions store an opaque credential, while profile IDs and introduction completion remain on the server. Signed-out visitors receive no introduction or archive view. The earlier expiring, single-use invitation requirements remain production planning history; they do not describe this local entry flow. Group authorization and contribution ownership checks remain required, but a name is not evidence of the human operating the account.
+
 Use synthetic actors and media for the local database/Auth/private Storage experiment. No paid provisioning or real archive is required for the narrowed JPEG/PNG pilot contract. Keep optional AI and face recognition off. M1 needs object backups as well as database backups; a provider database backup alone cannot satisfy recovery.
 
 EU hosting is accepted. Verify actual regions, provider terms, hosting security, and privacy disclosures before real imports or hosted provisioning. The €75 monthly ceiling is a planning constraint and does not prove provider deletion or backup expiry. [M0 acceptance](M0_ACCEPTANCE.md) separates accepted targets from pending evidence.

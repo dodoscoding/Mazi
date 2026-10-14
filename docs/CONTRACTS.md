@@ -26,6 +26,8 @@ Each contribution retains a recoverable reference to its own submitted file and 
 
 ## Identity and automatic group sharing
 
+For the local Atlas application, [D17](DECISIONS.md#shared-code-entry-decision-14-october-2026) replaces single-use invitation entry with the shared-code profile flow. A normalized visible name is unique within the configured circle. Valid code plus name atomically creates or resumes the same profile. Sessions reference the persistent user ID; introduction completion belongs to that profile. This is a trusted-group identity convention, not proof of the person's identity. Source-message display names remain unverified and cannot claim an account. Existing membership, contribution, and optional-processing checks still apply.
+
 The group is the identity and read-access scope. After validation, exact deduplication may reuse retained bytes and reconcile matching contributions within that group while preserving genuine new origins. Another group's matching material cannot be revealed through responses, counts, hashes, or rendition selection.
 
 Each successfully ingested contribution becomes available to all current active group members automatically. There is no owner-only archive draft, recipient selector, component grant, or manual publication transaction. Import UI states this behavior before submission. Readiness is per item, so a failed or unfinished neighbor never holds an otherwise available item for review.

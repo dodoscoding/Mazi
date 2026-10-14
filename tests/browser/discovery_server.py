@@ -5,6 +5,7 @@ import tempfile
 from PIL import Image
 from mazi.discovery.discovery import DiscoveryStore
 from mazi.server import main
+from .shared_fixture import configure_shared
 
 with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store = DiscoveryStore(root)
@@ -29,6 +30,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
         asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
         store.correct_asset(alice, asset, title=['Bicycle beside the sea','Dinner with friends','Garden in the morning'][index], capture_date='2024-01-02', place=['Amsterdam','Istanbul','Amsterdam'][index])
         store.tag(alice, person, asset, True)
+    configure_shared(store, group, {"Alice": alice, "Ben": ben})
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR'] = root
     main()

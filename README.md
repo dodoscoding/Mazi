@@ -1,6 +1,6 @@
 # Mazi
 
-A private, invite-only archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
+A private, shared-code archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
 
 Mazi runs as one local application. The Atlas interface reads the same authorized archive as imports, review, people, places, answers, recaps, stories and capsules. React/TypeScript lives in `src/`; the Python archive engine lives in `mazi/` under domain names. The numbered prototype folders have been retired. Historical evidence lives in [docs/history](docs/history).
 
@@ -44,14 +44,23 @@ Use Node 22.12+ and Python 3.11+.
 ```sh
 npm ci
 npm run setup
+.venv/bin/python -m mazi.identity.setup_shared --root .mazi-imports --admin-name "Your name"
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. One command starts the interface and archive worker. Sign in or create an account in **My Imports**, then create or join a circle. Import a ZIP, inspect its inventory, and start importing. Photographs appear in Atlas and Timeline. **Archive review** lets you correct metadata and approve memories. **Memories** contains annual recaps, shared stories, sub-events, slideshows, AVI exports, sealed capsules and in-app notifications. **Search**, **Places & sources**, and **Ask your archive** use the same circle and session.
+Open http://127.0.0.1:5173. One command starts the interface and archive worker. Enter your visible name and the shared code printed by setup. New names create member profiles immediately; an existing name resumes that profile on any device. The introduction appears once per profile and remains available in **About**. Import a ZIP, inspect its inventory, and start importing. Photographs appear in Atlas and Timeline. **Archive review** lets you correct metadata and approve memories. **Memories** contains annual recaps, shared stories, sub-events, slideshows, AVI exports, sealed capsules and in-app notifications. **Search**, **Places & sources**, and **Ask your archive** use the same circle and session.
 
-The sample Atlas remains available at `/?demo=1`. Its fictional photographs are separate from your archive. An empty archive shows an invitation to import photographs.
+The synthetic sample Atlas at `/?demo=1` also requires shared-code entry. Its fictional photographs are separate from your archive. An empty archive shows an invitation to import photographs.
 
 For the built app, use `npm start`. It builds the UI and serves it with the API at http://127.0.0.1:5173. Stop the development server first. `npm run preview` previews static assets only; use `npm start` to exercise the complete app.
+
+For an existing archive, setup requires its circle UUID and explicit mappings. It never infers names from email addresses or changes ownership.
+
+```sh
+.venv/bin/python -m mazi.identity.setup_shared --root /path/to/archive --admin-name "Owner" --group-id GROUP_UUID --map-name "Owner=EXISTING_ADMIN_UUID" --map-name "Friend=EXISTING_MEMBER_UUID"
+```
+
+Repeated setup retains the code and mappings. `--rotate` generates a replacement entry code; it does not revoke existing sessions. Setup prints a generated code only on creation or rotation and stores only its digest in SQLite. Missing setup fails closed. Browsers retain a 30-day HttpOnly cookie; sign-out revokes that browser session. Anyone holding the code can resume any name, including the owner. This accepted local identity tradeoff does not establish a person's identity.
 
 The data directory remains `.mazi-imports`. Existing accounts, archive files, corrections, permissions, stories and capsules retain their IDs and storage format. Set `MAZI_IMPORT_DATA_DIR` to select another complete data directory. `MAZI_IMPORT_PORT` changes the backend port; development keeps the browser on 5173. `MAZI_PYTHON` selects a Python interpreter. Normal startup never seeds demo data or merges the separate historical `.mazi-pilot` directory.
 

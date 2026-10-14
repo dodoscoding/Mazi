@@ -1,0 +1,50 @@
+[
+  {
+    "screen": "desktop",
+    "state": "login",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "desktop",
+    "state": "welcome",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "desktop",
+    "state": "about",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "desktop",
+    "profileResumption": "pass",
+    "browserRemembered": "pass",
+    "pageErrors": []
+  },
+  {
+    "screen": "phone",
+    "state": "login",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "phone",
+    "state": "welcome",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "phone",
+    "state": "about",
+    "violations": [],
+    "overflow": false
+  },
+  {
+    "screen": "phone",
+    "profileResumption": "pass",
+    "browserRemembered": "pass",
+    "pageErrors": []
+  }
+]

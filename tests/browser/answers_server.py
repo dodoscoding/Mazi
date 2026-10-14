@@ -5,6 +5,7 @@ import tempfile
 from PIL import Image
 from mazi.answers.answers import AnswerStore as DiscoveryStore
 from mazi.server import main
+from .shared_fixture import configure_shared
 
 with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store = DiscoveryStore(root)
@@ -34,6 +35,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.answer_processing(alice, group, True, group_wide=True)
     store.answer_processing(alice, group, True)
     store.answer_processing(ben, group, True)
+    configure_shared(store, group, {"Alice": alice, "Ben": ben})
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR'] = root
     main()

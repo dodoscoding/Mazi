@@ -1,0 +1,4 @@
+PASS actual base-schema migration preserves users/ownership/grants; repeat setup; 30-day expiry boundary; introduction isolation; atomic entry rollback
+PASS unconfigured entry fails without account creation
+
+exit: 0

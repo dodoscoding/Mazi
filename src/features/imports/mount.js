@@ -55,14 +55,10 @@ export function mount(root, lifecycle) {
     try {
       groups = await api("/api/groups");
     } catch {
-      $("auth").hidden = false;
       $("workspace").hidden = true;
-      $("logout").hidden = true;
       return;
     }
-    $("auth").hidden = true;
     $("workspace").hidden = false;
-    $("logout").hidden = false;
     $("groups").replaceChildren();
     for (const item of groups) {
       const option = textElement("option", item.name);
@@ -88,13 +84,14 @@ export function mount(root, lifecycle) {
     gallerySignature = "";
     $("report").hidden = true;
     $("group-work").hidden = !group;
-    $("invite").hidden = group?.role !== "admin";
-    $("invitation").textContent = "";
     $("members").replaceChildren();
     if (!group) return;
     const members = await api("/api/members?group=" + group.id);
     for (const member of members) {
-      const row = textElement("p", member.email + " · " + member.role + " ");
+      const row = textElement(
+        "p",
+        (member.display_name || member.email) + " · " + member.role + " ",
+      );
       if (group.role === "admin" && member.role !== "admin") {
         row.append(
           button("Remove member", async () => {
@@ -283,54 +280,6 @@ export function mount(root, lifecycle) {
       );
   }
 
-  $("register").onsubmit = (event) => {
-    event.preventDefault();
-    run(async () => {
-      await api(
-        "/api/register",
-        Object.fromEntries(new FormData(event.target)),
-      );
-      notice("Account created. Sign in to continue.");
-      event.target.reset();
-    });
-  };
-  $("login").onsubmit = (event) => {
-    event.preventDefault();
-    run(async () => {
-      await api("/api/login", Object.fromEntries(new FormData(event.target)));
-      window.dispatchEvent(new Event("mazi:session"));
-      event.target.reset();
-      await refresh();
-      notice("Signed in.");
-    });
-  };
-  $("logout").onclick = () =>
-    run(async () => {
-      await api("/api/logout", {});
-      lifecycle.sessionChanged();
-    });
-  $("create-group").onsubmit = (event) => {
-    event.preventDefault();
-    run(async () => {
-      await api("/api/group", Object.fromEntries(new FormData(event.target)));
-      event.target.reset();
-      await refresh();
-    });
-  };
-  $("join").onsubmit = (event) => {
-    event.preventDefault();
-    run(async () => {
-      await api("/api/accept", Object.fromEntries(new FormData(event.target)));
-      event.target.reset();
-      await refresh();
-    });
-  };
-  $("invite").onclick = () =>
-    run(async () => {
-      const result = await api("/api/invite", { group: group.id });
-      $("invitation").textContent =
-        "Share privately. Expires in 24 hours: " + result.token;
-    });
   $("upload").onsubmit = (event) => {
     event.preventDefault();
     run(async () => {

@@ -8,8 +8,8 @@ test("learned model indexes locally and keeps keyword fallback", async ({
     !process.env.MAZI_EMBEDDING_MODEL_DIR,
     "Run explicitly with verified local model files",
   );
-  await page.request.post("/api/login", {
-    data: { email: "alice@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
   });
   await page.goto("/#/discover");
   await page

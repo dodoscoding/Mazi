@@ -6,8 +6,8 @@ test("People, combined retrieval, hiding and consent work without recognition", 
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.request.post("/api/login", {
-    data: { email: "alice@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
   });
   await page.goto("/#/discover");
   await expect(page.locator("#results article")).toHaveCount(3);
@@ -85,8 +85,8 @@ test("People, combined retrieval, hiding and consent work without recognition", 
     ).status(),
   ).toBe(403);
   await page.request.post("/api/logout", { data: {} });
-  await page.request.post("/api/login", {
-    data: { email: "ben@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.reload();
   await page
@@ -105,9 +105,13 @@ test("People, combined retrieval, hiding and consent work without recognition", 
     .click();
   await expect(page.locator("#suppressed")).toBeEmpty();
   await page.request.post("/api/logout", { data: {} });
-  await page.request.post("/api/login", {
-    data: { email: "outsider@example.test", password: "correct horse battery" },
-  });
+  await page.context().addCookies([
+    {
+      name: "mazi_session",
+      value: "synthetic-unmapped-session",
+      url: new URL(page.url()).origin,
+    },
+  ]);
   const denied = await page.request.get("/api/discovery/search?group=" + group);
   expect(denied.status()).toBe(403);
   expect(await denied.text()).not.toContain("Amsterdam");

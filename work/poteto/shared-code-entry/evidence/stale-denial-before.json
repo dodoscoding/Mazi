@@ -1,0 +1,16 @@
+{
+  "revision": "c90974f",
+  "before": {
+    "entry": "ready",
+    "archive": "ready",
+    "requests": 2
+  },
+  "after": {
+    "entry": "signed-out",
+    "archive": "loading",
+    "requests": 2,
+    "staleSignalAborted": false
+  },
+  "errors": [],
+  "verdict": "REPRODUCED: stale Atlas 403 signs out the newer successful load"
+}

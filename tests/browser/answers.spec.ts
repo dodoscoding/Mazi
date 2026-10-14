@@ -4,8 +4,8 @@ import AxeBuilder from "@axe-core/playwright";
 test("Grounded answers, live evidence, abstention and safe rendering", async ({
   page,
 }, testInfo) => {
-  await page.request.post("/api/login", {
-    data: { email: "ben@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.goto("/#/ask");
   await page.getByLabel("Ask the archive").fill("When was bicycle?");
@@ -30,9 +30,8 @@ test("Grounded answers, live evidence, abstention and safe rendering", async ({
     data: { asset: query.get("asset"), enabled: true },
   });
   await page.reload();
-  await expect(page.getByRole("status")).toContainText(
-    "Your session or access changed",
-  );
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.getByRole("navigation")).toHaveCount(0);
   await expect(page.locator("#record")).toHaveCount(0);
   await page.request.post("/api/discovery/hide", {
     data: { asset: query.get("asset"), enabled: false },

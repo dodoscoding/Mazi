@@ -32,6 +32,10 @@ Use Alice, Ben, and Cara as active members of the same group, an active administ
 | T14 | Load the release profile; restore database and objects; deploy and roll back; exercise quota limits, provider outage, monitoring, and redacted logs. | Budgets below pass, originals recover, no sensitive log payloads appear, optional model outage does not block core imports, alert/support owners respond in a drill. | M3 |
 | T15 | Open a capsule using a changed client clock, direct URL, search, thumbnails, AI, export, notifications, and a removed member before/after unlock. | Server time and current group policy decide access on every path. Locked bytes and metadata never enter an accessible derivative. | M7 |
 
+## Local shared-code entry acceptance
+
+[D17](DECISIONS.md#shared-code-entry-decision-14-october-2026) replaces invitation entry for the local Atlas app. Extend T01 with wrong-code denial, atomic normalized-name creation, immediate existing-name resumption on another browser, session persistence/expiry/logout, current configured-group membership, and stable legacy user ownership. Preserve the production invitation scenarios separately. Test introduction completion once per profile across browser changes and About revisits. Signed-out direct routes, hash routes, and sample mode must show only entry. Run desktop and phone checks against temporary synthetic archives. Accepted code-holder impersonation is a product constraint, not a failed check.
+
 ## First design experiment
 
 D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
