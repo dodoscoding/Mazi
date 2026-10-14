@@ -126,9 +126,13 @@ async function enter(page: Page) {
   );
 }
 
+/**
+ * Waits for the memory page itself. The archive-loading screen has its own
+ * visually hidden h1, so a bare h1 check can pass before the memory mounts.
+ */
 async function open(page: Page, path: string) {
   await page.goto(`/#${path}`);
-  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.locator(".memory-detail h1, .not-found h1")).toBeVisible();
 }
 
 /** Waits until no animation runs, so axe and screenshots see final colours. */
@@ -473,7 +477,9 @@ test("capture memory evidence screenshots", async ({ page }, testInfo) => {
     for (const [state, path] of states) {
       // A new query string forces a full load, so the stored theme applies.
       await page.goto(`/?evidence=${theme}#${path}`);
-      await expect(page.locator("h1")).toBeVisible();
+      await expect(
+        page.locator(".memory-detail h1, .not-found h1"),
+      ).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await settled(page);
       await page.evaluate(() => document.fonts.ready);
@@ -503,7 +509,9 @@ test("capture memory evidence at the responsive widths", async ({
   for (const width of [1680, 1150, 800]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/?width=${width}#/memory/harbour-night?photo=1`);
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(
+      page.locator(".memory-detail h1, .not-found h1"),
+    ).toBeVisible();
     await settled(page);
     await page.screenshot({
       path: `${evidence}/uncertain-night-${width}-full.jpg`,
