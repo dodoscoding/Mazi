@@ -152,6 +152,7 @@ export function Shell({
     [
       "/circle",
       "/about",
+      "/introduction",
       "/answer-evidence",
       ...tools.map(([url]) => url),
     ].includes(path);
@@ -285,7 +286,12 @@ export function Shell({
           </nav>
           {circlePicker}
           <div className="more-footer">
-            {navLink("/about", "Replay introduction", "replay-link", closeMore)}
+            {navLink(
+              "/introduction",
+              "Replay introduction",
+              "replay-link",
+              closeMore,
+            )}
             {demo && <a href="/">Leave sample Atlas</a>}
             <button
               type="button"
