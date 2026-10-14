@@ -6,8 +6,8 @@ test("authorized places, filters, optional paths, source controls and privacy", 
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.request.post("/api/login", {
-    data: { email: "alice@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
   });
   await page.goto("/#/places");
   await expect(page.locator("#places article")).toHaveCount(2);
@@ -66,9 +66,13 @@ test("authorized places, filters, optional paths, source controls and privacy", 
     ).status(),
   ).toBe(403);
   await page.request.post("/api/logout", { data: {} });
-  await page.request.post("/api/login", {
-    data: { email: "outsider@example.test", password: "correct horse battery" },
-  });
+  await page.context().addCookies([
+    {
+      name: "mazi_session",
+      value: "synthetic-unmapped-session",
+      url: new URL(page.url()).origin,
+    },
+  ]);
   const response = await page.request.get("/api/places?group=" + group);
   expect(response.status()).toBe(403);
   expect(await response.text()).not.toContain("Amsterdam");

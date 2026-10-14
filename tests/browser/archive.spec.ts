@@ -9,25 +9,16 @@ test("import, correct, review, export, and withdraw", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   const unique = `${testInfo.project.name}-${Date.now()}`;
   await page.goto("/#/imports");
+  await page.getByLabel("Your name").fill(unique);
+  await page.getByLabel("Shared code").fill("synthetic-shared-code");
+  await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();
   await page
-    .locator("#register input[name=email]")
-    .fill(`${unique}@example.test`);
-  await page
-    .locator("#register input[name=password]")
-    .fill("correct horse battery");
-  await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Open the Atlas", exact: true })
     .click();
-  await expect(page.getByRole("status").first()).toContainText(
-    "Account created",
-  );
-  await page.locator("#login input[name=email]").fill(`${unique}@example.test`);
   await page
-    .locator("#login input[name=password]")
-    .fill("correct horse battery");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.getByLabel("New group name").fill("Review circle");
-  await page.getByRole("button", { name: "Create group", exact: true }).click();
+    .getByRole("link", { name: "My Imports", exact: true })
+    .first()
+    .click();
   const fixture = execFileSync(process.env.MAZI_PYTHON || "python3", [
     "-c",
     `

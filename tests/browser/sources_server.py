@@ -5,6 +5,7 @@ import tempfile
 from PIL import Image
 from mazi.sources.sources import SourceStore
 from mazi.server import main
+from .shared_fixture import configure_shared
 
 with tempfile.TemporaryDirectory(prefix='mazi-places-browser-') as root:
     store = SourceStore(root)
@@ -25,6 +26,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-places-browser-') as root:
     waiting = store.begin_resource(alice, source, dict(item='partial', component='photo', version='original', filename='partial.jpg', date='2024-01-02', kind='image', albums=[]), len(partial), hashlib.sha256(partial).hexdigest())
     store.resource_chunk(alice, waiting['id'], 0, partial[:8])
     store.set_source(alice, source, False, 'authorized')
+    configure_shared(store, group, {"Alice": alice})
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR']=root
     main()

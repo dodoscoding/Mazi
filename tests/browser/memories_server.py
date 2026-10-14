@@ -5,6 +5,7 @@ import tempfile
 from PIL import Image
 from mazi.memories.memories import MemoryStore as DiscoveryStore
 from mazi.server import main
+from .shared_fixture import configure_shared
 
 with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store = DiscoveryStore(root)
@@ -35,10 +36,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.answer_processing(alice, group, True)
     store.answer_processing(ben, group, True)
     store.review_event(alice, group, store._visible_ids(alice, group), 'Our summer', 'accept')
-    store.setup_shared(admin_name="Alice", group_id=group, mappings={"Alice": alice, "Ben": ben})
-    store.db.execute("UPDATE shared_policy SET code_digest=?", (hashlib.sha256(b"synthetic-shared-code").digest(),))
-    store.db.execute("UPDATE shared_profiles SET introduced_at=1")
-    store.db.commit()
+    configure_shared(store, group, {"Alice": alice, "Ben": ben})
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR'] = root
     main()

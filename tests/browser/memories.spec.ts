@@ -3,8 +3,8 @@ import AxeBuilder from "@axe-core/playwright";
 test("Annual recap and collaborative story editing", async ({
   page,
 }, testInfo) => {
-  await page.request.post("/api/login", {
-    data: { email: "ben@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.goto("/#/memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
@@ -50,8 +50,8 @@ test("Annual recap and collaborative story editing", async ({
 });
 
 test("Capsules stay sealed with a changed browser clock", async ({ page }) => {
-  await page.request.post("/api/login", {
-    data: { email: "ben@example.test", password: "correct horse battery" },
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.goto("/#/memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
