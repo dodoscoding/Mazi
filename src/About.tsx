@@ -52,9 +52,9 @@ function SignOutDialog({
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
-    if (open && !node.open) {
+    if (open) {
       setClosing(false);
-      node.showModal();
+      if (!node.open) node.showModal();
       stay.current?.focus();
     } else if (!open && node.open) {
       setClosing(true);
@@ -76,6 +76,8 @@ function SignOutDialog({
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-body`}
       className={`about-dialog ${closing ? "is-closing" : ""}`}
+      // While it fades out after Stay or Escape, nothing inside can be pressed.
+      inert={!open}
       onCancel={(event) => {
         event.preventDefault();
         onCancel();
@@ -94,7 +96,9 @@ function SignOutDialog({
           <button
             type="button"
             className="button button--primary"
-            onClick={onConfirm}
+            onClick={() => {
+              if (open) onConfirm();
+            }}
           >
             Sign out
           </button>
