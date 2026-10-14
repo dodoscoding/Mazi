@@ -1,9 +1,40 @@
+import {
+  el,
+  formatDay,
+  icon,
+  reducedMotion,
+  sourceIcons,
+  sourceNames,
+  toastNotice,
+} from "../ui.js";
+
+const regionNames = (() => {
+  try {
+    return new Intl.DisplayNames([navigator.language], { type: "region" });
+  } catch {
+    return null;
+  }
+})();
+function countryName(code) {
+  try {
+    return regionNames?.of(String(code).toUpperCase()) || code;
+  } catch {
+    return code;
+  }
+}
+function sourceKey(type) {
+  const value = String(type || "").toLowerCase();
+  if (value.startsWith("apple")) return "apple";
+  return value;
+}
+
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (selector) => root.querySelector(selector);
   let group = "";
   let generation = 0;
   let land;
+  toastNotice($("#notice"), lifecycle);
   async function api(path, body) {
     const response = await fetch(
       path,
@@ -27,6 +58,7 @@ export function mount(root, lifecycle) {
           "#origins",
           "#country",
           "#city",
+          "#origin-counts",
         ])
           $(id).replaceChildren();
         $("#place-count").textContent =
@@ -43,24 +75,27 @@ export function mount(root, lifecycle) {
       element.setAttribute(key, value);
     return element;
   }
-  function action(label, handler) {
-    const button = node("button", label, { type: "button" });
+  function action(label, handler, className = "fx-button fx-button--quiet") {
+    const button = node("button", label, { type: "button", class: className });
     button.onclick = () => run(handler);
     return button;
   }
-  async function run(handler) {
+  async function run(handler, saved = "Changes saved.") {
     try {
       await handler();
-      $("#notice").textContent = "Changes saved.";
+      if (!saved) return;
+      $("#notice").dataset.tone = "success";
+      $("#notice").textContent = saved;
     } catch (error) {
+      $("#notice").dataset.tone = "error";
       $("#notice").textContent = error.message;
     }
   }
-  function options(select, values, first) {
+  function options(select, values, first, label = (value) => value) {
     const old = select.value;
     select.replaceChildren(
       node("option", first, { value: "" }),
-      ...values.map((value) => node("option", value, { value })),
+      ...values.map((value) => node("option", label(value), { value })),
     );
     select.value = values.includes(old) ? old : "";
   }
@@ -69,6 +104,11 @@ export function mount(root, lifecycle) {
     for (const [key, value] of Object.entries(attributes))
       element.setAttribute(key, value);
     return element;
+  }
+  function setView(canvas, x, y, width, height) {
+    canvas.setAttribute("viewBox", `${x} ${y} ${width} ${height}`);
+    // Node radius and labels are in map units; keep them a constant on-screen size.
+    canvas.style.setProperty("--k", String(width / 720));
   }
   async function map() {
     const revision = ++generation;
@@ -83,15 +123,31 @@ export function mount(root, lifecycle) {
     });
     const result = await api("/api/places?" + query);
     if (revision !== generation) return;
-    options($("#country"), result.countries, "All countries");
+    options($("#country"), result.countries, "All countries", (code) =>
+      code ? `${countryName(code)}` : code,
+    );
     options($("#city"), result.cities, "All cities");
+    const cities = new Set(result.points.map((p) => `${p.city}|${p.country}`));
+    const countries = new Set(result.points.map((p) => p.country));
     $("#place-count").textContent = result.points.length
-      ? `${result.points.length} shared locations`
+      ? `${result.points.length} shared locations · ${cities.size} ${cities.size === 1 ? "place" : "places"} in ${countries.size} ${countries.size === 1 ? "country" : "countries"}`
       : "No shared places here yet. Photographs without a shared location remain in the archive.";
+    $("#jump-places").textContent = `· ${cities.size}`;
     const canvas = $("#map");
-    canvas.setAttribute("viewBox", "0 0 720 360");
+    setView(canvas, 0, 0, 720, 360);
     if (!land) land = await (await fetch("/land.geojson")).json();
     if (revision !== generation) return;
+    const graticule = svg("g", { class: "graticule", "aria-hidden": "true" });
+    for (let x = 0; x <= 720; x += 60)
+      graticule.append(
+        svg("line", { x1: x, y1: 0, x2: x, y2: 360, class: "grid" }),
+      );
+    for (let y = 0; y <= 360; y += 60)
+      graticule.append(
+        svg("line", { x1: 0, y1: y, x2: 720, y2: y, class: "grid" }),
+      );
+    canvas.append(graticule);
+    const landLayer = svg("g", { "aria-hidden": "true" });
     for (const feature of land.features) {
       const polygons =
         feature.geometry.type === "Polygon"
@@ -109,30 +165,25 @@ export function mount(root, lifecycle) {
                 .join(" ") + "Z",
           )
           .join(" ");
-        canvas.append(svg("path", { d, class: "land" }));
+        landLayer.append(svg("path", { d, class: "land" }));
       }
     }
-    $("#world-map").onclick = () =>
-      canvas.setAttribute("viewBox", "0 0 720 360");
+    canvas.append(landLayer);
+    $("#world-map").onclick = () => setView(canvas, 0, 0, 720, 360);
     $("#fit-map").onclick = () => {
       if (!result.points.length) return;
       const xs = result.points.map((p) => (p.longitude + 180) * 2),
         ys = result.points.map((p) => (90 - p.latitude) * 2);
       const width = Math.max(40, Math.max(...xs) - Math.min(...xs) + 24);
       const height = Math.max(30, Math.max(...ys) - Math.min(...ys) + 24);
-      canvas.setAttribute(
-        "viewBox",
-        `${Math.min(...xs) - 12} ${Math.min(...ys) - 12} ${width} ${height}`,
+      setView(
+        canvas,
+        Math.min(...xs) - 12,
+        Math.min(...ys) - 12,
+        width,
+        height,
       );
     };
-    for (let x = 0; x <= 720; x += 60)
-      canvas.append(
-        svg("line", { x1: x, y1: 0, x2: x, y2: 360, class: "grid" }),
-      );
-    for (let y = 0; y <= 360; y += 60)
-      canvas.append(
-        svg("line", { x1: 0, y1: y, x2: 720, y2: y, class: "grid" }),
-      );
     const xy = (p) => [(p.longitude + 180) * 2, (90 - p.latitude) * 2];
     for (const [a, b] of result.paths) {
       const left = result.points.find((p) => p.origin === a),
@@ -142,9 +193,22 @@ export function mount(root, lifecycle) {
         [x2, y2] = xy(right);
       canvas.append(svg("line", { x1, y1, x2, y2, class: "route" }));
     }
+    const perPlace = new Map();
+    for (const point of result.points) {
+      const key = `${point.city}|${point.country}`;
+      perPlace.set(key, (perPlace.get(key) || 0) + 1);
+    }
+    const labelled = new Set();
     for (const [index, point] of result.points.entries()) {
       const [cx, cy] = xy(point);
-      const dot = svg("circle", { cx, cy, r: 5 });
+      const key = `${point.city}|${point.country}`;
+      const weight = Math.min(3, Math.sqrt(perPlace.get(key)));
+      const dot = svg("circle", {
+        cx,
+        cy,
+        class: "node",
+        style: `--w: ${weight.toFixed(2)}`,
+      });
       const title = svg("title", {});
       title.textContent = `${index + 1}. ${point.city}, ${point.country}`;
       dot.append(title);
@@ -154,16 +218,100 @@ export function mount(root, lifecycle) {
       });
       link.append(dot);
       canvas.append(link);
-      const card = node("article");
+      if (!labelled.has(key)) {
+        labelled.add(key);
+        const label = svg("text", {
+          x: cx,
+          y: cy,
+          class: "node-label",
+          "aria-hidden": "true",
+        });
+        label.textContent = `${point.city.toUpperCase()} ${perPlace.get(key)}`;
+        canvas.append(label);
+      }
+      const card = node("article", undefined, { class: "place-row" });
+      card.style.setProperty("--i", String(Math.min(index, 8)));
+      const name = node("h3");
+      name.append(
+        `${index + 1}. ${point.city}, ${point.country}`,
+        node("span", ` ${countryName(point.country)}`, {
+          class: "place-country",
+          "aria-hidden": "true",
+        }),
+      );
       card.append(
-        node("h3", `${index + 1}. ${point.city}, ${point.country}`),
-        node("p", point.day || "Date not shared"),
-        node("p", `${point.latitude}, ${point.longitude}`),
+        name,
+        node("p", point.day ? formatDay(point.day) : "Date not shared", {
+          class: "place-day",
+        }),
+        node("p", `${point.latitude}, ${point.longitude}`, {
+          class: "place-coords",
+        }),
         node("a", "Open photograph", {
           href: `/api/archive/${encodeURIComponent(point.asset_id)}/preview`,
+          class: "fx-text-link",
         }),
       );
       $("#places").append(card);
+    }
+    if (!result.points.length)
+      $("#places").append(
+        node("p", "Shared locations will be listed here.", {
+          class: "fx-empty",
+        }),
+      );
+  }
+  async function originCounts() {
+    const selectedGroup = group;
+    const tally = new Map();
+    let items = 0;
+    // The archive pages 30 items at a time; the local prototype caps groups at 1,000.
+    for (let offset = 0; offset < 1020;) {
+      const page = await api(
+        `/api/archive?group=${encodeURIComponent(group)}&offset=${offset}`,
+      );
+      if (group !== selectedGroup) return;
+      for (const item of page) {
+        items++;
+        const kinds = new Set(
+          item.origins.map((o) => sourceKey(o.source_type)),
+        );
+        for (const kind of kinds) tally.set(kind, (tally.get(kind) || 0) + 1);
+      }
+      if (page.length < 30) break;
+      offset += page.length;
+    }
+    const rows = [...tally.entries()].sort((a, b) => b[1] - a[1]);
+    $("#jump-sources").textContent = `· ${rows.length}`;
+    $("#origin-sub").textContent = items
+      ? `Where all ${items} shared ${items === 1 ? "item" : "items"} came from. An item shared from two sources counts under both.`
+      : "Nothing has been shared yet. Items appear here as imports finish.";
+    const list = $("#origin-counts");
+    list.replaceChildren();
+    const max = Math.max(1, ...rows.map(([, count]) => count));
+    for (const [kind, count] of rows) {
+      const row = node("div", undefined, { class: "origin-row" });
+      const head = node("p", undefined, { class: "origin-head" });
+      head.append(
+        icon(sourceIcons[kind] || "zip", 18),
+        node("b", sourceNames[kind] || kind.replaceAll("_", " ")),
+        node("span", count.toLocaleString(), { class: "origin-count" }),
+      );
+      const bar = node("span", undefined, {
+        class: "origin-bar",
+        "aria-hidden": "true",
+      });
+      bar.style.setProperty("--share", `${(count * 100) / max}%`);
+      row.append(
+        head,
+        bar,
+        node(
+          "p",
+          `${count} of ${items} shared ${items === 1 ? "item" : "items"}`,
+          { class: "fx-small" },
+        ),
+      );
+      list.append(row);
     }
   }
   async function loadSources() {
@@ -173,25 +321,41 @@ export function mount(root, lifecycle) {
     const items = await api("/api/sources?" + new URLSearchParams({ group }));
     if (group !== selectedGroup) return;
     for (const source of items) {
-      const card = node("article");
+      const card = node("article", undefined, { class: "connection" });
+      const head = node("div", undefined, { class: "connection-head" });
+      const badge = node("span", undefined, { class: "source-badge" });
+      badge.append(icon(source.kind === "apple" ? "photo" : "discord", 18));
+      head.append(
+        badge,
+        node("h4", source.label),
+        node("span", source.enabled ? "On" : "Paused", {
+          class: `connection-state ${source.enabled ? "is-on" : ""}`,
+        }),
+      );
       card.append(
-        node("h3", source.label),
+        head,
         node(
           "p",
           `${source.kind} · ${source.enabled ? "On" : "Paused"} · permission: ${source.permission}`,
+          { class: "fx-small" },
         ),
-        node("p", `${source.scope.start} – ${source.scope.end}`),
+        node("p", `${source.scope.start} – ${source.scope.end}`, {
+          class: "fx-small",
+        }),
         node("code", source.id),
       );
+      const actions = node("div", undefined, { class: "fx-actions" });
       if (
         source.kind === "apple" &&
         !["authorized", "limited"].includes(source.permission)
       ) {
         card.append(
-          node("p", "Authorize this source in the macOS companion to begin."),
+          node("p", "Authorize this source in the macOS companion to begin.", {
+            class: "fx-small",
+          }),
         );
       } else
-        card.append(
+        actions.append(
           action(
             source.enabled ? "Pause source" : "Enable source",
             async () => {
@@ -210,9 +374,10 @@ export function mount(root, lifecycle) {
           node(
             "p",
             "Open the macOS companion and paste this source ID. Photos permission is checked on your Mac before transfer.",
+            { class: "fx-small" },
           ),
         );
-      card.append(
+      actions.append(
         action("View transfers", async () => {
           $("#resources").replaceChildren();
           for (const resource of await api(
@@ -233,50 +398,69 @@ export function mount(root, lifecycle) {
                 ? "Paused · resume from companion"
                 : labels[resource.state] ||
                   resource.state.toLowerCase().replaceAll("_", " ");
-            const item = node("article");
+            const item = node("article", undefined, { class: "resource" });
             item.append(
-              node("h3", resource.metadata.filename),
+              node("h4", resource.metadata.filename),
               node(
                 "p",
                 `${resource.metadata.component} · ${resource.metadata.version}`,
+                { class: "fx-small" },
               ),
               node(
                 "p",
                 `${stateLabel} · ${resource.received} / ${resource.size} bytes`,
+                { class: "fx-small" },
               ),
             );
+            const links = node("div", undefined, { class: "fx-actions" });
             if (
               !resource.withdrawn &&
               ["AVAILABLE_TO_GROUP", "RETAINED_NO_PREVIEW"].includes(
                 resource.state,
               )
             )
-              item.append(
+              links.append(
                 node("a", "Download original resource", {
                   href:
                     "/api/sources/original?" +
                     new URLSearchParams({ id: resource.id }),
                   download: resource.metadata.filename,
+                  class: "fx-text-link",
                 }),
               );
             if (!resource.withdrawn)
-              item.append(
-                action("Withdraw resource", async () => {
-                  await api("/api/sources/withdraw", { id: resource.id });
-                  await refresh();
-                }),
+              links.append(
+                action(
+                  "Withdraw resource",
+                  async () => {
+                    await api("/api/sources/withdraw", { id: resource.id });
+                    await refresh();
+                  },
+                  "fx-button fx-button--danger-quiet",
+                ),
               );
+            item.append(links);
             $("#resources").append(item);
           }
         }),
       );
+      card.append(actions);
       $("#sources").append(card);
     }
+    if (!items.length)
+      $("#sources").append(
+        node("p", "No connections yet.", { class: "fx-empty" }),
+      );
   }
   async function refresh() {
     $("#origins").replaceChildren();
     await map();
     await loadSources();
+    try {
+      await originCounts();
+    } catch {
+      $("#origin-counts").replaceChildren();
+    }
     const origins = await api(
       "/api/review/my-contributions?" + new URLSearchParams({ group }),
     );
@@ -286,16 +470,32 @@ export function mount(root, lifecycle) {
       ),
     );
   }
+  root.querySelectorAll("[data-jump]").forEach((jump) =>
+    jump.addEventListener("click", () => {
+      root
+        .querySelectorAll("[data-jump]")
+        .forEach((other) =>
+          other.setAttribute("aria-current", String(other === jump)),
+        );
+      const target = $(`#${jump.dataset.jump}`);
+      target.tabIndex = -1;
+      target.scrollIntoView({
+        behavior: reducedMotion() ? "auto" : "smooth",
+        block: "start",
+      });
+      target.focus({ preventScroll: true });
+    }),
+  );
   $("#filters").onsubmit = (event) => {
     event.preventDefault();
-    run(map);
+    run(map, null);
   };
   $("#country").onchange = () => {
     $("#city").value = "";
-    run(map);
+    run(map, null);
   };
-  $("#city").onchange = () => run(map);
-  $("#paths").onchange = () => run(map);
+  $("#city").onchange = () => run(map, null);
+  $("#paths").onchange = () => run(map, null);
   $("#place-form").onsubmit = (event) => {
     event.preventDefault();
     run(async () => {
@@ -351,7 +551,7 @@ export function mount(root, lifecycle) {
     group = lifecycle.selectGroup($("#groups"));
     $("#country").value = "";
     $("#city").value = "";
-    run(refresh);
+    run(refresh, null);
   };
   (async () => {
     try {
@@ -361,11 +561,13 @@ export function mount(root, lifecycle) {
       $("#groups").replaceChildren(
         ...groups.map((g) => node("option", g.name, { value: g.id })),
       );
+      $(".places-group").classList.toggle("is-single", groups.length < 2);
       group = lifecycle.selectGroup($("#groups"));
       $("#workspace").hidden = false;
       await refresh();
     } catch (error) {
       $("#signed-out").hidden = false;
+      $("#notice").dataset.tone = "error";
       $("#notice").textContent = error.message;
     }
   })();

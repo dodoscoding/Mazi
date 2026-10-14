@@ -1,134 +1,198 @@
-<h1>Remember where.</h1>
-<p>
-  Explore places shared with your group, and choose what comes into your
-  archive.
-</p>
-<p id="notice" role="status" aria-live="polite"></p>
-<p id="signed-out" hidden>
-  <a href="/">Sign in on the imports page</a> to explore your group.
-</p>
-<div id="workspace" hidden>
-  <label
-    >Group
-    <select id="groups"></select
-  ></label>
-  <section aria-labelledby="map-title">
-    <h2 id="map-title">Shared places</h2>
-    <p>
-      Only locations explicitly shared by their contributor appear here. The
-      list below is an alternative to the map.
+<div class="fx fx-places">
+  <header class="fx-head">
+    <h1>Places &amp; sources</h1>
+    <p class="fx-sub">
+      Where the circle’s memories happened, and where every item came from.
     </p>
-    <form id="filters">
-      <label
-        >Country
-        <select id="country">
-          <option value="">All countries</option>
-        </select></label
-      ><label
-        >City
-        <select id="city">
-          <option value="">All cities</option>
-        </select></label
-      ><label
-        ><input id="paths" type="checkbox" /> Show travel paths by date</label
-      ><button>Refresh places</button>
-    </form>
-    <p id="place-count"></p>
-    <button id="world-map" type="button">World view</button
-    ><button id="fit-map" type="button">Fit shared places</button>
-    <svg
-      id="map"
-      viewBox="0 0 720 360"
-      role="group"
-      aria-label="Shared places on a longitude and latitude map"
-    >
-      <title>Shared places</title>
-    </svg>
-    <div id="places" class="cards"></div>
-  </section>
-  <section aria-labelledby="share-title">
-    <h2 id="share-title">Share a location</h2>
-    <p>
-      Choose one of your contributions. Coordinates are shared with the whole
-      group; removing the location keeps the photograph.
-    </p>
-    <form id="place-form" class="fields">
-      <label
-        >Photograph
-        <select name="origin" id="origins" required></select></label
-      ><label
-        >Country code
-        <input name="country" maxlength="2" placeholder="NL" required /></label
-      ><label>City <input name="city" maxlength="200" required /></label
-      ><label
-        >Latitude
-        <input
-          name="latitude"
-          type="number"
-          min="-90"
-          max="90"
-          step="any"
-          required /></label
-      ><label
-        >Longitude
-        <input
-          name="longitude"
-          type="number"
-          min="-180"
-          max="180"
-          step="any"
-          required /></label
-      ><label>Date (optional) <input name="day" type="date" /></label
-      ><button>Share location</button
-      ><button type="button" id="remove-place">Remove location</button>
-    </form>
-  </section>
-  <section aria-labelledby="source-title">
-    <h2 id="source-title">Your sources</h2>
-    <p>
-      New connections start paused. Choose a date range and turn a source on
-      when ready. Pausing stops new transfers and keeps completed contributions.
-    </p>
-    <form id="source-form" class="fields">
-      <label
-        >Source
-        <select name="kind" id="kind">
-          <option value="apple">Apple Photos · macOS companion</option>
-          <option value="discord">Discord · server channels</option>
-        </select></label
-      ><label>Name <input name="label" required maxlength="200" /></label
-      ><label>From <input name="start" type="date" required /></label
-      ><label>Through <input name="end" type="date" required /></label>
-      <div id="apple-fields">
-        <label
-          >Album IDs (comma separated; blank means all albums)
-          <input name="albums" /></label
-        ><label
-          >Media
-          <select name="types">
-            <option value="image,video">Photos and videos</option>
-            <option value="image">Photos</option>
-            <option value="video">Videos</option>
-          </select></label
-        >
-      </div>
-      <div id="discord-fields" hidden>
-        <label>Server ID <input name="guild" inputmode="numeric" /></label
-        ><label>Channel IDs (comma separated) <input name="channels" /></label>
-        <p>
-          A server operator must connect the bot before intake can run. Only
-          selected text channels are read.
+  </header>
+  <p id="notice" role="status" aria-live="polite"></p>
+  <p id="signed-out" class="fx-panel" hidden>
+    <a href="/">Sign in on the imports page</a> to explore your group.
+  </p>
+  <div id="workspace" hidden>
+    <nav class="places-switch" aria-label="Places and sources sections">
+      <button type="button" data-jump="map-title" aria-current="true">
+        Places <span id="jump-places"></span>
+      </button>
+      <button type="button" data-jump="source-title">
+        Sources <span id="jump-sources"></span>
+      </button>
+    </nav>
+    <div class="places-layout">
+      <section aria-labelledby="map-title" class="places-main">
+        <div class="fx-section-row">
+          <h2 id="map-title" class="fx-section-title">Shared places</h2>
+          <label class="fx-field places-group"
+            >Group
+            <select id="groups"></select
+          ></label>
+        </div>
+        <p id="place-count" class="fx-sub"></p>
+        <p class="fx-small">
+          Only locations explicitly shared by their contributor appear here. The
+          list below is an alternative to the map.
         </p>
-      </div>
-      <button>Create paused source</button>
-    </form>
-    <div id="sources" class="cards"></div>
-    <h3>Transfer outcomes</h3>
-    <p>
-      Originals, edited versions and Live Photo components are listed
-      separately. Some formats are retained for download without a preview. At
-      most 1,000 transfer records are shown per connection.
-    </p>
-    <div id="resources" class="cards"></div>
-  </section>
+        <form id="filters" class="places-filters">
+          <label class="fx-field"
+            >Country
+            <select id="country">
+              <option value="">All countries</option>
+            </select></label
+          ><label class="fx-field"
+            >City
+            <select id="city">
+              <option value="">All cities</option>
+            </select></label
+          ><label class="fx-check"
+            ><input id="paths" type="checkbox" /> Show travel paths by
+            date</label
+          ><button class="fx-button fx-button--quiet">Refresh places</button>
+        </form>
+        <div class="map-frame">
+          <svg
+            id="map"
+            viewBox="0 0 720 360"
+            role="group"
+            aria-label="Shared places on a longitude and latitude map"
+          >
+            <title>Shared places</title>
+          </svg>
+          <div class="map-controls">
+            <button id="world-map" type="button" class="fx-pill-button">
+              World view</button
+            ><button id="fit-map" type="button" class="fx-pill-button">
+              Fit shared places
+            </button>
+          </div>
+        </div>
+        <div class="place-rows-head" aria-hidden="true">
+          <span>Place</span><span>Date</span><span>Coordinates</span>
+        </div>
+        <div id="places" class="place-rows"></div>
+        <details class="share-place">
+          <summary>
+            <span id="share-title">Share a location</span>
+            <span class="fx-small">for one of your photographs</span>
+          </summary>
+          <p class="fx-small">
+            Choose one of your contributions. Coordinates are shared with the
+            whole group; removing the location keeps the photograph.
+          </p>
+          <form id="place-form" class="fx-fields">
+            <label class="fx-field"
+              >Photograph
+              <select name="origin" id="origins" required></select></label
+            ><label class="fx-field"
+              >Country code
+              <input
+                name="country"
+                maxlength="2"
+                placeholder="NL"
+                required /></label
+            ><label class="fx-field"
+              >City <input name="city" maxlength="200" required /></label
+            ><label class="fx-field"
+              >Latitude
+              <input
+                name="latitude"
+                type="number"
+                min="-90"
+                max="90"
+                step="any"
+                required /></label
+            ><label class="fx-field"
+              >Longitude
+              <input
+                name="longitude"
+                type="number"
+                min="-180"
+                max="180"
+                step="any"
+                required /></label
+            ><label class="fx-field"
+              >Date (optional) <input name="day" type="date"
+            /></label>
+            <div class="fx-actions">
+              <button class="fx-button fx-button--primary">
+                Share location</button
+              ><button
+                type="button"
+                id="remove-place"
+                class="fx-button fx-button--quiet"
+              >
+                Remove location
+              </button>
+            </div>
+          </form>
+        </details>
+      </section>
+      <section aria-labelledby="source-title" class="places-sources">
+        <h2 id="source-title" class="fx-section-title">Your sources</h2>
+        <p id="origin-sub" class="fx-sub">Where every shared item came from.</p>
+        <div id="origin-counts" class="origin-counts"></div>
+        <a href="/imports" class="fx-text-link">Manage imports in My Imports</a>
+        <h3 class="fx-label connect-title">Connected sources</h3>
+        <p class="fx-small">
+          New connections start paused. Choose a date range and turn a source on
+          when ready. Pausing stops new transfers and keeps completed
+          contributions.
+        </p>
+        <div id="sources" class="source-connections"></div>
+        <div class="connect-source">
+          <h3 class="fx-label">Connect Apple Photos or a Discord server</h3>
+          <form id="source-form" class="fx-fields">
+            <label class="fx-field"
+              >Source
+              <select name="kind" id="kind">
+                <option value="apple">Apple Photos · macOS companion</option>
+                <option value="discord">Discord · server channels</option>
+              </select></label
+            ><label class="fx-field"
+              >Name <input name="label" required maxlength="200" /></label
+            ><label class="fx-field"
+              >From <input name="start" type="date" required /></label
+            ><label class="fx-field"
+              >Through <input name="end" type="date" required
+            /></label>
+            <div id="apple-fields" class="fx-fields">
+              <label class="fx-field"
+                >Album IDs (comma separated; blank means all albums)
+                <input name="albums" /></label
+              ><label class="fx-field"
+                >Media
+                <select name="types">
+                  <option value="image,video">Photos and videos</option>
+                  <option value="image">Photos</option>
+                  <option value="video">Videos</option>
+                </select></label
+              >
+            </div>
+            <div id="discord-fields" class="fx-fields" hidden>
+              <label class="fx-field"
+                >Server ID <input name="guild" inputmode="numeric" /></label
+              ><label class="fx-field"
+                >Channel IDs (comma separated) <input name="channels"
+              /></label>
+              <p class="fx-small">
+                A server operator must connect the bot before intake can run.
+                Only selected text channels are read.
+              </p>
+            </div>
+            <div class="fx-actions">
+              <button class="fx-button fx-button--primary">
+                Create paused source
+              </button>
+            </div>
+          </form>
+        </div>
+        <h3 class="fx-label">Transfer outcomes</h3>
+        <p class="fx-small">
+          Originals, edited versions and Live Photo components are listed
+          separately. Some formats are retained for download without a preview.
+          At most 1,000 transfer records are shown per connection.
+        </p>
+        <div id="resources" class="resource-list"></div>
+      </section>
+    </div>
+  </div>
 </div>

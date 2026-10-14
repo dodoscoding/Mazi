@@ -1,127 +1,253 @@
-<h1>Bring back your history.</h1>
-<p class="intro">
-  Photos and the conversations around them, gathered into one shared place.
-</p>
-<p class="boundary">
-  Local experiment · Use synthetic archives. Export compatibility is still being
-  verified.
-</p>
-<p id="notice" role="status" aria-live="polite"></p>
-<div id="workspace" hidden>
-  <section aria-labelledby="circle-title">
-    <h2 id="circle-title">Your circle</h2>
-    <label>Group<select id="groups"></select></label>
-    <div id="members"></div>
-  </section>
-  <div id="group-work" hidden>
-    <section aria-labelledby="import-title">
-      <h2 id="import-title">Add a chapter</h2>
-      <p>
-        Imported photos, originals, filenames, dates, locations and nearby
-        messages become visible to every active group member as each photo
-        finishes.
-      </p>
-      <form id="upload">
-        <div class="columns">
-          <label
-            >Source<select name="source">
-              <option value="whatsapp">WhatsApp chat export</option>
-              <option value="messenger">Messenger JSON export</option>
-              <option value="discord">Discord user data package</option>
-              <option value="manual">Manual photos in a ZIP</option>
-            </select></label
-          >
-          <label
-            >Source account label<input
-              name="namespace"
-              maxlength="200"
-              required
-              placeholder="e.g. my WhatsApp account"
-            /><small
-              >Reuse this label for future exports from the same account.</small
-            ></label
-          >
+<div class="fx fx-imports" data-mode="imports">
+  <header class="fx-head">
+    <h1 id="page-title">My Imports</h1>
+    <p class="fx-sub" id="page-sub">
+      Photos and the conversations around them, gathered into one shared place.
+    </p>
+  </header>
+  <p id="notice" role="status" aria-live="polite"></p>
+  <div id="workspace" hidden>
+    <div class="circle-layout" id="circle-view" hidden>
+      <section aria-labelledby="circle-title" class="circle-main">
+        <div class="fx-section-row">
+          <h2 id="circle-title" class="fx-section-title">Members</h2>
+          <button
+            type="button"
+            id="circle-picker"
+            class="fx-pill-button"
+            aria-haspopup="dialog"
+            hidden
+          ></button>
         </div>
-        <label
-          >WhatsApp date order<select name="date_order">
-            <option value="">Leave ambiguous dates unresolved</option>
-            <option value="DMY">Day / month / year</option>
-            <option value="MDY">Month / day / year</option>
-          </select></label
-        >
-        <label
-          >Export ZIP<input
-            name="file"
-            type="file"
-            accept=".zip,application/zip"
-            required
-        /></label>
-        <p class="muted">
-          Up to 128 MiB compressed / 512 MiB expanded. JPEG and PNG photos up to
-          25 MiB and 24 megapixels. Video, HEIC, animation and other formats
-          receive an unsupported outcome. Remote attachments are never
-          downloaded.
+        <label class="fx-field" hidden
+          >Group<select id="groups"></select
+        ></label>
+        <ul id="members" class="member-grid" aria-label="Members"></ul>
+      </section>
+      <aside class="circle-aside" aria-label="About this circle">
+        <section class="fx-panel" aria-labelledby="circles-title">
+          <h3 id="circles-title" class="fx-label">Your circles</h3>
+          <div id="circle-list" class="circle-list"></div>
+          <p class="fx-small">
+            Each circle is its own private atlas. Nothing crosses between them.
+          </p>
+        </section>
+        <section class="fx-panel" aria-labelledby="joining-title">
+          <h3 id="joining-title" class="fx-label">How people join</h3>
+          <p class="fx-small">
+            New members enter with a visible name and the circle’s shared code.
+            Share the code only in person or in your own chat. A name is not
+            proof of who is using it: anyone with the code can enter under any
+            name.
+          </p>
+        </section>
+        <p class="fx-small fx-quiet">
+          Removing someone closes the atlas for them at once and withdraws what
+          they added. Copies other members imported themselves stay.
         </p>
-        <button id="upload-button">Upload and inspect inventory</button
-        ><progress
-          id="transfer"
-          value="0"
-          max="100"
-          aria-label="Archive transfer progress"
-        ></progress>
-        <p class="muted">
-          If transfer stops, select the same file and account label to resume.
-          Inspect the inventory before starting group ingestion.
+      </aside>
+    </div>
+    <div id="group-work" hidden>
+      <div class="share-note" role="note">
+        <span class="share-note-icon" data-icon="people"></span>
+        <p>
+          <b>Imports are shared with the whole circle immediately.</b>
+          <span class="share-note-short"
+            >Every member sees each item the moment it is processed. Check an
+            export before you add it.</span
+          >
+          <span class="share-note-long"
+            >Each photo, its original, filename, dates, locations and the
+            messages around it become visible to every member the moment it is
+            processed, before the import finishes. There is no private stage, so
+            check an export before adding it. You can withdraw your contribution
+            afterwards.</span
+          >
         </p>
-      </form>
-    </section>
-    <section aria-labelledby="reports-title">
-      <h2 id="reports-title">My imports</h2>
-      <div id="imports"></div>
-      <div id="report" hidden>
-        <h3 id="report-title" tabindex="-1"></h3>
-        <p id="report-summary" role="status" aria-live="polite"></p>
-        <p id="coverage"></p>
-        <div class="actions">
-          <button id="confirm">Start importing to group</button
-          ><button id="cancel" class="secondary">Cancel remaining work</button
-          ><button id="withdraw" class="secondary">
-            Withdraw this contribution</button
-          ><button id="download" class="secondary">
-            Download outcome report
+      </div>
+      <section aria-labelledby="import-title" class="import-add">
+        <div id="first-import" class="first-import" hidden>
+          <p class="fx-display-s">Start the atlas with your first export</p>
+          <p>
+            Pick where your photos and chats live. Each source shows how to
+            export from that app.
+          </p>
+        </div>
+        <h2 id="import-title" class="fx-section-title">Add a chapter</h2>
+        <div
+          id="source-cards"
+          class="source-cards"
+          role="group"
+          aria-label="Choose a source"
+        ></div>
+        <form id="upload" class="upload-form">
+          <div class="upload-fields">
+            <label class="fx-field"
+              >Source<select name="source">
+                <option value="whatsapp">WhatsApp chat export</option>
+                <option value="messenger">Messenger JSON export</option>
+                <option value="discord">Discord user data package</option>
+                <option value="manual">Manual photos in a ZIP</option>
+              </select></label
+            >
+            <label class="fx-field"
+              >Source account label<input
+                name="namespace"
+                maxlength="200"
+                required
+                placeholder="e.g. my WhatsApp account"
+              /><small
+                >Reuse this label for future exports from the same
+                account.</small
+              ></label
+            >
+            <label class="fx-field" id="date-order"
+              >WhatsApp date order<select name="date_order">
+                <option value="">Leave ambiguous dates unresolved</option>
+                <option value="DMY">Day / month / year</option>
+                <option value="MDY">Month / day / year</option>
+              </select></label
+            >
+            <label class="fx-field fx-file"
+              >Export ZIP<input
+                name="file"
+                type="file"
+                accept=".zip,application/zip"
+                required
+            /></label>
+          </div>
+          <p class="fx-small">
+            Up to 128 MiB compressed / 512 MiB expanded. JPEG and PNG photos up
+            to 25 MiB and 24 megapixels. Video, HEIC, animation and other
+            formats receive an unsupported outcome. Remote attachments are never
+            downloaded.
+          </p>
+          <div class="upload-actions">
+            <button id="upload-button" class="fx-button fx-button--primary">
+              Upload and inspect inventory
+            </button>
+            <progress
+              id="transfer"
+              value="0"
+              max="100"
+              aria-label="Archive transfer progress"
+            ></progress>
+          </div>
+          <p class="fx-small">
+            If transfer stops, select the same file and account label to resume.
+            Inspect the inventory before starting group ingestion.
+          </p>
+        </form>
+      </section>
+      <section aria-labelledby="reports-title" class="import-reports">
+        <h2 id="reports-title" class="fx-section-title">My imports</h2>
+        <div id="report" class="report" hidden>
+          <p class="fx-label report-state" id="report-state"></p>
+          <h3 id="report-title" tabindex="-1"></h3>
+          <div
+            class="report-bar"
+            id="report-bar"
+            role="progressbar"
+            aria-label="Import progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <i></i>
+          </div>
+          <p id="report-summary" role="status" aria-live="polite"></p>
+          <ol id="report-steps" class="report-steps"></ol>
+          <div id="report-error" class="report-error" hidden>
+            <p class="fx-label report-error-label">
+              <span data-icon="alert"></span>Import stopped
+            </p>
+            <p id="report-error-text"></p>
+            <div class="report-error-actions">
+              <button
+                type="button"
+                id="choose-again"
+                class="fx-button fx-button--primary"
+              >
+                Choose another file
+              </button>
+              <button
+                type="button"
+                id="how-to"
+                class="fx-button fx-button--link"
+              >
+                How to export
+              </button>
+            </div>
+          </div>
+          <p id="coverage" class="fx-small"></p>
+          <div class="actions">
+            <button id="confirm" class="fx-button fx-button--primary">
+              Start importing to group</button
+            ><button id="cancel" class="fx-button fx-button--quiet">
+              Cancel remaining work</button
+            ><button id="withdraw" class="fx-button fx-button--danger">
+              Withdraw this contribution</button
+            ><button id="download" class="fx-button fx-button--quiet">
+              Download outcome report
+            </button>
+          </div>
+          <div
+            class="table-wrap"
+            tabindex="0"
+            role="region"
+            aria-label="Scrollable import outcomes"
+          >
+            <table>
+              <caption>
+                Every discovered item and its current outcome
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Item</th>
+                  <th scope="col">Outcome</th>
+                  <th scope="col">Details</th>
+                </tr>
+              </thead>
+              <tbody id="items"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <button id="previous" class="fx-button fx-button--quiet">
+              Previous 100 items</button
+            ><button id="next" class="fx-button fx-button--quiet">
+              Next 100 items
+            </button>
+          </div>
+        </div>
+        <div id="history" class="history">
+          <div class="history-head" aria-hidden="true">
+            <span>Export</span><span>Status</span><span>Added</span>
+          </div>
+          <div id="imports" class="history-rows"></div>
+        </div>
+      </section>
+      <section aria-labelledby="gallery-title" class="import-gallery">
+        <div class="fx-section-row">
+          <h2 id="gallery-title" class="fx-section-title">
+            Shared photographs
+          </h2>
+          <button
+            id="refresh-gallery"
+            class="fx-button fx-button--quiet"
+            type="button"
+          >
+            Refresh photographs
           </button>
         </div>
-        <div
-          class="table-wrap"
-          tabindex="0"
-          role="region"
-          aria-label="Scrollable import outcomes"
-        >
-          <table>
-            <caption>
-              Every discovered item and its current outcome
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Item</th>
-                <th scope="col">Outcome</th>
-                <th scope="col">Details</th>
-              </tr>
-            </thead>
-            <tbody id="items"></tbody>
-          </table>
-        </div>
-        <button id="previous" class="secondary">Previous 100 items</button
-        ><button id="next" class="secondary">Next 100 items</button>
-      </div>
-    </section>
-    <section aria-labelledby="gallery-title">
-      <h2 id="gallery-title">Shared photographs</h2>
-      <button id="refresh-gallery" class="secondary">
-        Refresh photographs
-      </button>
-      <div id="gallery" class="gallery"></div>
-      <button id="more" class="secondary">More photographs</button>
-    </section>
+        <div id="gallery" class="gallery"></div>
+        <button id="more" class="fx-button fx-button--quiet" type="button">
+          More photographs
+        </button>
+      </section>
+      <p class="fx-small fx-quiet">
+        Local experiment · Use synthetic archives. Export compatibility is still
+        being verified.
+      </p>
+    </div>
   </div>
 </div>
