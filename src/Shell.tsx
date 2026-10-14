@@ -1,3 +1,4 @@
+import { initials } from "./ui/initials";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "./theme/useTheme";
@@ -228,7 +229,7 @@ export function Shell({
               role="img"
               aria-label={`Signed in as ${profileName}`}
             >
-              {profileName.trim().slice(0, 2).toUpperCase()}
+              {initials(profileName)}
             </span>
           </div>
         </header>

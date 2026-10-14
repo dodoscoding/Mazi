@@ -1,3 +1,4 @@
+import { initials } from "./ui/initials";
 import { useEffect, useId, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { useTheme } from "./theme/useTheme";
@@ -222,7 +223,7 @@ export function About({
           </h2>
           <div className="about-person">
             <span className="about-avatar" aria-hidden="true">
-              {profileName.trim().slice(0, 2).toUpperCase()}
+              {initials(profileName)}
             </span>
             <span>
               <b>
