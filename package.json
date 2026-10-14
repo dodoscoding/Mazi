@@ -37,8 +37,9 @@
     "archive:hosted": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.hosted_ops', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --"
   },
   "dependencies": {
-    "@fontsource/libre-caslon-text": "5.3.0",
-    "@fontsource/source-sans-3": "5.3.0",
+    "@fontsource/geist": "5.3.0",
+    "@fontsource/geist-mono": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
     "@react-three/fiber": "9.8.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
