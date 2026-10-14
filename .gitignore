@@ -14,3 +14,4 @@ __pycache__/
 .impeccable/questions/*.log
 
 phase4/macos/build/
+.models/
