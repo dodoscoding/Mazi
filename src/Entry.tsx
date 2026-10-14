@@ -140,6 +140,7 @@ export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
                 id="entry-code"
                 ref={codeField}
                 className="entry-code"
+                type="password"
                 value={code}
                 onChange={(event) => {
                   setCode(event.target.value);
