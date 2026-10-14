@@ -18,18 +18,22 @@
   pointer-events: none;
 }
 .atlas-intro h1 {
-  font-size: 24px;
-  margin-bottom: 6px;
+  font-size: var(--type-display-m);
+  line-height: 1.05;
+  margin-bottom: 8px;
 }
 .atlas-intro p {
-  font-size: 14px;
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 .copper-rule {
   display: inline-block;
-  width: 19px;
-  height: 2px;
-  background: var(--copper);
+  width: 20px;
+  height: 1px;
+  background: var(--accent-node);
   vertical-align: middle;
 }
 .atlas-intro .copper-rule {
@@ -63,15 +67,16 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  color: var(--muted);
-  font-size: 16px;
-  font-style: italic;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
   min-height: 44px;
   pointer-events: auto;
   padding: 0;
 }
 .atlas-years button[aria-pressed="true"] {
-  color: var(--copper);
+  color: var(--accent-node);
 }
 .atlas-years button span {
   display: block;
@@ -80,13 +85,13 @@
   background: var(--line);
 }
 .atlas-years button[aria-pressed="true"] span {
-  background: var(--copper);
+  background: var(--accent-node);
 }
 .atlas-foot {
   position: absolute;
   bottom: 29px;
   left: 36px;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: 14px;
 }
 .atlas-foot p {
@@ -97,17 +102,17 @@
   content: "";
   display: inline-block;
   width: 18px;
-  height: 2px;
+  height: 1px;
   margin-right: 10px;
   vertical-align: middle;
-  background: var(--copper);
+  background: var(--accent-node);
 }
 .scene-loading {
   position: absolute;
   left: 20%;
   top: 45%;
-  color: var(--muted);
-  font-family: var(--sans);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
 }
 .flat-atlas {
   position: absolute;
@@ -118,11 +123,16 @@
   gap: 15px;
 }
 .flat-atlas p:first-child {
-  font-size: 24px;
+  font: 400 var(--type-display-s) / 1.1 var(--font-display);
 }
 .flat-atlas button {
-  padding: 12px 20px;
+  min-height: var(--target);
+  padding: 0 18px;
   align-self: start;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 .featured {
   min-width: 0;
@@ -140,13 +150,13 @@
   padding-top: 22px;
 }
 .feature-info h2 {
-  font-size: clamp(24px, 2.22vw, 38px);
-  line-height: 1.3;
-  letter-spacing: -0.025em;
+  font-size: clamp(28px, 2.6vw, 44px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
   text-wrap: pretty;
 }
 .memories-section {
-  border-top: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--line-soft);
   padding: 19px 36px 30px;
   max-width: 1800px;
   margin: auto;
@@ -159,7 +169,7 @@
   margin-bottom: 17px;
 }
 .section-heading h2 {
-  font-size: 15px;
+  font-size: var(--type-display-s);
   display: flex;
   align-items: center;
   gap: 18px;
@@ -168,8 +178,9 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--accent-atmosphere);
+  font-size: 13px;
+  font-weight: 500;
   min-height: 44px;
 }
 .memory-list {
@@ -184,36 +195,40 @@
   gap: 20px;
   position: relative;
   min-width: 0;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius-panel);
+  background: var(--bg-deep);
+}
+.memory-choice:not(:disabled):hover {
+  background: var(--bg-raised);
 }
 .memory-choice[aria-pressed="true"] {
-  border-color: var(--copper);
-  outline: 1px solid var(--copper);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--accent-node);
 }
 .memory-choice img {
   width: 35%;
   height: 110px;
   object-fit: cover;
-  border-radius: 2px;
+  border-radius: var(--radius-photo);
 }
 .choice-copy {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
   padding: 10px 26px 10px 0;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 .choice-title {
-  font-size: 17px;
-  color: var(--ink);
-  margin-bottom: 9px;
+  font: 400 var(--type-display-s) / 1.1 var(--font-display);
+  color: var(--text-primary);
+  margin-bottom: 6px;
 }
 .choice-meta {
-  font-size: 11px;
+  font-size: 12px;
 }
 .selection-ring {
   position: absolute;
@@ -221,18 +236,18 @@
   top: 21px;
   width: 17px;
   height: 17px;
-  border: 1px solid var(--muted);
+  border: 1px solid var(--text-secondary);
   border-radius: 50%;
 }
 .memory-choice[aria-pressed="true"] .selection-ring {
-  border-color: var(--copper);
+  border-color: var(--accent-node);
 }
 .memory-choice[aria-pressed="true"] .selection-ring:after {
   content: "";
   position: absolute;
   inset: 3px;
   border-radius: 50%;
-  background: var(--copper);
+  background: var(--accent-node);
 }
 @media (min-width: 1600px) {
   .home-grid {
@@ -242,7 +257,7 @@
     min-height: 790px;
   }
   .feature-info h2 {
-    font-size: 38px;
+    font-size: 44px;
   }
 }
 @media (max-width: 1150px) {
@@ -286,10 +301,7 @@
     gap: 12px;
   }
   .choice-title {
-    font-size: 15px;
-  }
-  .choice-meta {
-    font-size: 10px;
+    font-size: 20px;
   }
   .memory-choice img {
     height: 105px;
@@ -329,7 +341,7 @@
     padding-top: 20px;
   }
   .feature-info h2 {
-    font-size: 31px;
+    font-size: var(--type-display-m);
     max-width: 650px;
   }
   .feature-info .primary-action {
@@ -357,7 +369,7 @@
     text-align: left;
   }
   .atlas-foot p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .atlas-foot > span {
     font-size: 12px;
@@ -383,14 +395,14 @@
     height: 88px;
   }
   .choice-title {
-    font-size: 17px;
+    font-size: 20px;
     margin-bottom: 4px;
   }
   .choice-copy {
     font-size: 12px;
   }
   .choice-meta {
-    font-size: 11px;
+    font-size: 12px;
   }
   .selection-ring {
     top: 18px;
@@ -400,11 +412,11 @@
     margin-bottom: 14px;
   }
   .section-heading h2 {
-    font-size: 14px;
+    font-size: 20px;
     gap: 10px;
   }
   .section-heading > a {
-    font-size: 11px;
+    font-size: 13px;
     gap: 5px;
   }
   .section-heading > a svg {
@@ -439,7 +451,7 @@
     width: 88px;
   }
   .choice-title {
-    font-size: 15px;
+    font-size: 18px;
   }
   .choice-copy {
     padding-right: 19px;
@@ -456,5 +468,5 @@
 }
 .archive-welcome .welcome-kicker {
   font-size: 16px;
-  color: var(--copper);
+  color: var(--accent-node);
 }
