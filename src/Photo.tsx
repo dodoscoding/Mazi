@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { MouseEventHandler } from "react";
 import type { Photo as PhotoData } from "./memories";
+import { Glyph } from "./memory/glyphs";
 export function Photo({
   photo,
   continuity = false,
@@ -35,14 +36,20 @@ export function Photo({
   );
   return (
     <div
-      className={`photo-frame ${loaded ? "is-loaded" : ""}`}
+      className={`photo-frame${loaded ? " is-loaded" : ""}${failed ? " is-failed" : ""}`}
       style={continuity ? { viewTransitionName: "memory-photo" } : undefined}
       aria-busy={!loaded && !failed}
     >
       {failed ? (
-        <div className="photo-error">
-          <p>This photo could not load.</p>
+        <div className="photo-error" role="alert">
+          <Glyph name="photo-failed" size={34} stroke={1.5} />
+          <p className="photo-error-title">This photo could not load.</p>
+          <p className="photo-error-hint">
+            The connection may have dropped. Try again in a moment.
+          </p>
           <button
+            type="button"
+            className="button button--primary"
             onClick={() => {
               setFailed(false);
               setAttempt((a) => a + 1);
@@ -55,7 +62,7 @@ export function Photo({
         <>
           {!loaded && (
             <span className="photo-loading" role="status">
-              Loading photograph…
+              <span className="visually-hidden">Loading photograph…</span>
             </span>
           )}
           {openMemory ? (

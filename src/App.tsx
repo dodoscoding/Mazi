@@ -106,6 +106,7 @@ export default function App() {
     content = (
       <MemoryView
         memory={memory}
+        memories={memories}
         photo={route.photo}
         demo={demo}
         backUrl={backUrl}
