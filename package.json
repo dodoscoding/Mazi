@@ -14,8 +14,8 @@
     "test:ui": "playwright test --ui",
     "check:docs": "python3 work/poteto/product-plan/verify_docs.py",
     "typecheck": "tsc -b",
-    "lint": "prettier --check src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts phase5/discovery.js phase5/discovery.css phase5/index.html phase5/playwright.config.ts phase5/tests/browser.spec.ts phase5/tests/browser-learned.spec.ts phase6/answers.js phase6/evidence.js phase6/index.html phase6/evidence.html phase6/playwright.config.ts phase6/tests/browser.spec.ts",
-    "format": "prettier --write src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts phase5/discovery.js phase5/discovery.css phase5/index.html phase5/playwright.config.ts phase5/tests/browser.spec.ts phase5/tests/browser-learned.spec.ts phase6/answers.js phase6/evidence.js phase6/index.html phase6/evidence.html phase6/playwright.config.ts phase6/tests/browser.spec.ts",
+    "lint": "prettier --check src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts phase5/discovery.js phase5/discovery.css phase5/index.html phase5/playwright.config.ts phase5/tests/browser.spec.ts phase5/tests/browser-learned.spec.ts phase6/answers.js phase6/evidence.js phase6/index.html phase6/evidence.html phase6/playwright.config.ts phase6/tests/browser.spec.ts phase7/memories.js phase7/index.html phase7/playwright.config.ts phase7/tests/browser.spec.ts phase7/advanced.js phase7/memories.css",
+    "format": "prettier --write src tests vite.config.ts playwright.config.ts package.json phase2/imports.js phase2/imports.css phase2/index.html phase2/playwright.config.ts phase2/tests/browser.spec.ts phase3/review.js phase3/review.css phase3/index.html phase3/playwright.config.ts phase3/tests/browser.spec.ts phase4/sources.js phase4/sources.css phase4/index.html phase4/playwright.config.ts phase4/tests/browser.spec.ts phase5/discovery.js phase5/discovery.css phase5/index.html phase5/playwright.config.ts phase5/tests/browser.spec.ts phase5/tests/browser-learned.spec.ts phase6/answers.js phase6/evidence.js phase6/index.html phase6/evidence.html phase6/playwright.config.ts phase6/tests/browser.spec.ts phase7/memories.js phase7/index.html phase7/playwright.config.ts phase7/tests/browser.spec.ts phase7/advanced.js phase7/memories.css",
     "m0:start": "supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "m0:stop": "supabase stop",
     "test:m0": "node --test tests/m0/*.test.mjs",
@@ -38,7 +38,10 @@
     "dev:answers": "python3 -m phase6.server",
     "test:answers": "python3 -m unittest discover -s phase6/tests -v",
     "test:answers:browser": "playwright test --config phase6/playwright.config.ts",
-    "eval:answers": "python3 -m phase6.evaluate"
+    "eval:answers": "python3 -m phase6.evaluate",
+    "dev:memories": "python3 -m phase7.server",
+    "test:memories": "python3 -m unittest discover -s phase7/tests -v",
+    "test:memories:browser": "playwright test --config phase7/playwright.config.ts"
   },
   "dependencies": {
     "@fontsource/libre-caslon-text": "5.3.0",

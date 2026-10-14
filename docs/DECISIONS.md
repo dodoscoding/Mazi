@@ -60,7 +60,7 @@ Implementation boundary, 6 October 2026: the requested Phase 2 import engine is 
 | Nonmember/minor identity handling | No recognition until policy is accepted. | M5 recognition | Keep recognition disabled. |
 | Model provider and processing location | No provider selected. | M5 | Deterministic archive features remain available. |
 | Export compatibility | Conditional on representative source fixtures. | M2 fixture gate and each adapter release | Reduce advertised support rather than infer missing content. |
-| Capsule author access and edits | Unspecified. | M7 capsule design | Capsule implementation cannot start. |
+| Capsule author access and edits | Local continuation: immutable after seal; no author read bypass; author can delete. | Production M7 capsule review | Local rules below; production T15 remains open. |
 
 ## Risk register
 
@@ -101,3 +101,13 @@ The owner requested implementation of Phase 5. The [local implementation](../pha
 ## Phase 5 learned local retrieval, 14 October 2026
 
 The owner's continuation request extends local Phase 5 with optional pinned CLIP ONNX inference. Model installation is explicit; inference has no network path. Existing group/contributor processing controls apply to learned embeddings, and a monotonic consent generation fences in-flight index work. Learned indexing runs in small batches outside database write locks, followed by current-policy checks; ordinary searches use matching cached vectors and retain keyword fallback. The [model instructions](../phase5/README.md) and [verification](../phase5/VERIFICATION.md) record the pinned source, English-query limitation and the generated-image evaluation. Production deployment, recognition and independent real-archive acceptance remain unapproved/open.
+
+## Local advanced-memory increment, 14 October 2026
+
+The Phase 7 implementation request follows M7's separate-increment sequence. The [local implementation contract](../phase7/README.md) delivers deterministic annual recaps and collaborative stories first. Engineering choices for this increment: approved archive events are the source, all original photos must remain visible, annual recaps omit unknown/conflicting/cross-year dates, each member owns their own story contribution, and the story creator owns deletion. Current-access JSON export is explicit; no external processing or generated media is enabled. These choices extend the local Python harness, not D01 production infrastructure. Capsule rules, generated-format quality/cost/export decisions, and M7 production acceptance remain open.
+
+## Phase 7 continuation contract, 14 October 2026
+
+The owner requested continuing the remaining M7 work. Local engineering defaults: capsules contain newly supplied text and an optional JPEG/PNG, isolated from the shared import archive. Sealing is immediate and immutable; no author read/edit exception exists before server UTC unlock. The author may delete at any time while still a member; departure deletes their capsules. Only the author receives a content-free locked receipt. Unlocked reads require current group membership. This resolves the local capsule author/edit choice; production acceptance still requires T15 against production infrastructure.
+
+Generated-format contract before implementation: slideshow frames are current-access JPEGs, manually advanced with no automatic motion. Video export is a deterministic silent MJPEG AVI montage, 640×480 letterboxed, 1 frame/second, 3 seconds/photo, at most 20 photos/60 seconds. No synthetic scenes, audio, external provider, or paid processing. Frames are generated locally, source access is checked before generation and before delivery, output is bounded to 32 MiB and not persisted. Download is explicit and downloaded copies cannot be recalled. CPU/infrastructure cost remains unmeasured; one synchronous export at a time follows the local server's serialization. These limits define local format quality, not production performance. Notifications are opt-in, in-app only, computed from currently unlocked capsules; no email/push dispatch occurs.
