@@ -294,9 +294,10 @@ test("named profile imports and logout discard delayed private Atlas responses",
   await expect(
     page.getByRole("button", { name: `Select ${title}`, exact: true }),
   ).toHaveCount(0);
-  await expect(page.getByLabel("Current circle", { exact: true })).toHaveCount(
+  await expect(page.getByRole("button", { name: "Archive tools" })).toHaveCount(
     0,
   );
+  await expect(page.getByRole("button", { name: "More" })).toHaveCount(0);
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });
 

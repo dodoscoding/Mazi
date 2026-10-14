@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
@@ -72,6 +72,14 @@ export function Shell({
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const closeMore = () => setMoreOpen(false);
+  useEffect(() => {
+    const phone = matchMedia("(max-width: 600px)");
+    const close = () => {
+      if (!phone.matches) setMoreOpen(false);
+    };
+    phone.addEventListener("change", close);
+    return () => phone.removeEventListener("change", close);
+  }, []);
   const main = useRef<HTMLElement>(null);
   const lastPath = useRef(path);
   useLayoutEffect(() => {
