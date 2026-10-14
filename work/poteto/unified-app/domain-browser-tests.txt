@@ -1,0 +1,50 @@
+
+Running 16 tests using 1 worker
+
+(node:95517) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.4s)
+(node:95537) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   2 [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.3s)
+(node:95564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   3 [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (4.6s)
+(node:95612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   4 [archive-phone] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (4.7s)
+(node:95729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [sources-desktop] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (1.1s)
+(node:95743) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [sources-phone] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (1.3s)
+(node:95757) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   7 [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+  ✓   8 [discovery-desktop] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (1.5s)
+(node:95775) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   9 [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+  ✓  10 [discovery-phone] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (1.6s)
+(node:95792) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 [answers-desktop] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (953ms)
+(node:95809) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 [answers-phone] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (966ms)
+(node:95823) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [memories-desktop] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (1.2s)
+  ✓  14 [memories-desktop] › tests/browser/memories.spec.ts:52:1 › Capsules stay sealed with a changed browser clock (465ms)
+(node:95843) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [memories-phone] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (1.3s)
+  ✓  16 [memories-phone] › tests/browser/memories.spec.ts:52:1 › Capsules stay sealed with a changed browser clock (401ms)
+
+  2 skipped
+  14 passed (36.5s)

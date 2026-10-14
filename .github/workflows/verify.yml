@@ -6,26 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  prototype:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run check:docs
-      - run: npm test
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: browser-failures
-          path: test-results/
-  imports:
+  unified-app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,16 +17,27 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: python3 -m pip install -r phase1/requirements.txt
       - run: npm ci
-      - run: npm run test:imports
-      - run: python3 -m unittest discover -s phase1/tests -v
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:imports:browser
+      - run: npm run setup
+      - run: npx playwright install --with-deps chromium firefox
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run check:docs
+      - run: npm run test:backend
+      - run: npm run eval:retrieval
+      - run: npm run eval:answers
+      - run: npm test
+      - run: npm run test:app
+        env:
+          MAZI_PYTHON: .venv/bin/python
+      - run: npm run test:domains
+        env:
+          MAZI_PYTHON: .venv/bin/python
+          MAZI_BROWSER_RESULTS_DIR: ${{ github.workspace }}/test-results/domains
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: import-browser-evidence
+          name: unified-browser-evidence
           path: test-results/
   m0-access:
     runs-on: ubuntu-latest
@@ -61,88 +53,43 @@ jobs:
       - run: npx supabase db advisors --local --type security --fail-on error
       - run: npx supabase stop
         if: always()
-  continuous-sources:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: python3 -m pip install -r phase1/requirements.txt
-      - run: npm ci
-      - run: npm run test:sources
-      - run: python3 -m unittest discover -s phase3/tests -v
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:sources:browser
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: source-browser-evidence
-          path: test-results/
   macos-companion:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sh phase4/macos/build.sh
-  people-retrieval:
+      - run: sh tools/apple-photos/build.sh
+  learned-retrieval:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: python3 -m pip install -r phase1/requirements.txt
       - run: npm ci
-      - run: npm run test:discovery
-      - run: npm run eval:retrieval
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:discovery:browser
-      - run: python3 -m pip install -r phase5/requirements-clip.txt
+      - run: npm run setup
+      - run: .venv/bin/python -m pip install -r mazi/discovery/requirements-clip.txt
       - uses: actions/cache@v4
         with:
           path: .models/clip-vit-base-patch32
           key: clip-b32-d15189d7028b43f1d3e65039190477f6af591c2a
-      - run: python3 -m phase5.download_model
-      - run: python3 -m unittest discover -s phase5/tests -p test_clip_runtime.py -v
+      - run: npm run setup:discovery:model
+      - run: .venv/bin/python -m unittest tests.backend.discovery.test_clip_runtime -v
         env:
           MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
       - run: npm run eval:retrieval:clip
-      - run: npx playwright test --config phase5/playwright.config.ts --grep 'learned model'
-        env:
-          MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: discovery-browser-evidence
-          path: test-results/
-
-  memory-answers:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: python3 -m pip install -r phase1/requirements.txt
-      - run: npm ci
-      - run: npm run test:answers
-      - run: npm run eval:answers
+      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:answers:browser
+      - run: npm run test:domains -- --project discovery-desktop --project discovery-phone --grep 'learned model'
+        env:
+          MAZI_PYTHON: .venv/bin/python
+          MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
+          MAZI_BROWSER_RESULTS_DIR: ${{ github.workspace }}/test-results/learned
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: answer-browser-evidence
+          name: learned-browser-evidence
           path: test-results/

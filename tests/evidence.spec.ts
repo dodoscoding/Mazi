@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
 
 test("capture stable Home and memory at the required review sizes", async ({
   page,
@@ -14,19 +13,18 @@ test("capture stable Home and memory at the required review sizes", async ({
     height: name === "mobile" ? 844 : 1024,
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
-  await mkdir(".impeccable/review", { recursive: true });
   await page.screenshot({
-    path: `.impeccable/review/${name}.png`,
+    path: testInfo.outputPath(`${name}.png`),
     fullPage: true,
   });
   await page.getByRole("link", { name: "Open memory", exact: true }).click();
   await expect(page.locator(".gallery .photo-frame")).toHaveClass(/is-loaded/);
   await page.screenshot({
-    path: `.impeccable/review/${name}-detail.png`,
+    path: testInfo.outputPath(`${name}-detail.png`),
     fullPage: true,
   });
 });
@@ -44,7 +42,7 @@ test("resting atlas stops requesting animation frames", async ({
       });
     Object.defineProperty(window, "__atlasFrameCount", { get: () => frames });
   });
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await page.getByRole("button", { name: "Select Lake days" }).click();
   // A bounded measurement window after the selection has settled.

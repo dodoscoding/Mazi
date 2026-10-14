@@ -7,16 +7,17 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   BufferGeometry,
   Float32BufferAttribute,
   Group,
   SRGBColorSpace,
   TextureLoader,
+  Texture,
   Vector3,
 } from "three";
-import { memories } from "./memories";
+import type { Memory } from "./memories";
 
 function point(longitude: number, latitude: number, offset = 0) {
   const r = 5 + offset;
@@ -53,17 +54,32 @@ function ChartGrid() {
   );
 }
 function MemoryPlane({
+  memory,
   index,
   selected,
   onSelect,
 }: {
+  memory: Memory;
   index: number;
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
-  const memory = memories[index];
-  const texture = useLoader(TextureLoader, memory.photos[0].src);
-  texture.colorSpace = SRGBColorSpace;
+  const [texture, setTexture] = useState<Texture>();
+  useEffect(() => {
+    let disposed = false;
+    const loaded = new TextureLoader().load(memory.photos[0].src, (value) => {
+      if (disposed) {
+        value.dispose();
+        return;
+      }
+      value.colorSpace = SRGBColorSpace;
+      setTexture(value);
+    });
+    return () => {
+      disposed = true;
+      loaded.dispose();
+    };
+  }, [memory.photos[0].src]);
   const longitude = [0.07, -0.22, 0.18][index];
   const latitude = [0.43, 0.015, -0.43][index];
   const position = point(longitude, latitude, 0.11);
@@ -109,6 +125,7 @@ function MemoryPlane({
   );
 }
 function Scene({
+  memories,
   selected,
   onSelect,
   reduced,
@@ -116,6 +133,7 @@ function Scene({
   onReady,
   onLost,
 }: {
+  memories: Memory[];
   selected: string;
   onSelect: (id: string) => void;
   reduced: boolean;
@@ -168,6 +186,7 @@ function Scene({
       {memories.map((memory, i) => (
         <MemoryPlane
           key={memory.id}
+          memory={memory}
           index={i}
           selected={selected === memory.id}
           onSelect={onSelect}
@@ -192,14 +211,25 @@ class SceneBoundary extends Component<
   }
 }
 export default function Atlas({
+  memories: allMemories,
   selected,
   onSelect,
   reduced,
 }: {
+  memories: Memory[];
   selected: string;
   onSelect: (id: string) => void;
   reduced: boolean;
 }) {
+  const selectedIndex = Math.max(
+    0,
+    allMemories.findIndex((memory) => memory.id === selected),
+  );
+  const start = Math.max(
+    0,
+    Math.min(selectedIndex - 1, allMemories.length - 3),
+  );
+  const memories = allMemories.slice(start, start + 3);
   const [failed, setFailed] = useState(
     () => new URLSearchParams(location.search).get("scene") === "off",
   );
@@ -263,6 +293,7 @@ export default function Atlas({
               >
                 <Suspense fallback={null}>
                   <Scene
+                    memories={memories}
                     selected={selected}
                     onSelect={onSelect}
                     reduced={reduced}
@@ -282,7 +313,7 @@ export default function Atlas({
                 aria-pressed={selected === memory.id}
                 onClick={() => onSelect(memory.id)}
               >
-                {memory.year}
+                {memory.year || "Undated"}
                 <span />
               </button>
             ))}

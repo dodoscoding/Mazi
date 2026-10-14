@@ -13,5 +13,7 @@ __pycache__/
 .impeccable/questions/*.state.json
 .impeccable/questions/*.log
 
-phase4/macos/build/
+tools/apple-photos/build/
 .models/
+
+work/poteto/unified-app/browser-results/

@@ -1,0 +1,276 @@
+import hashlib
+import io
+import json
+import tempfile
+import unittest
+
+from PIL import Image
+
+from mazi.identity.core import Conflict, Denied
+from mazi.imports.engine import ImportStore
+from tests.backend.imports.test_adapters import zip_bytes
+
+
+def picture():
+    output = io.BytesIO()
+    Image.new("RGB", (8, 8), "red").save(output, "JPEG")
+    return output.getvalue()
+
+
+class EngineTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.store = ImportStore(self.temp.name)
+        self.alice = self.store.register("alice@example.test", "correct horse battery")
+        self.ben = self.store.register("ben@example.test", "correct horse battery")
+        self.outsider = self.store.register("outsider@example.test", "correct horse battery")
+        self.group = self.store.create_group(self.alice, "Friends")
+        self.store.accept(self.ben, self.store.invite(self.alice, self.group))
+
+    def tearDown(self):
+        self.store.close()
+        self.temp.cleanup()
+
+    def submit(self, files=None, source="manual", user=None, group=None, data=None):
+        data = data or zip_bytes(files or {"photo.jpg": picture()})
+        user, group = user or self.alice, group or self.group
+        run = self.store.begin_import(user, group, source, "synthetic-account", len(data), hashlib.sha256(data).hexdigest(), {})
+        status = self.store.report(user, run)
+        if status["state"] == "UPLOADING":
+            for offset in range(0, len(data), 512 * 1024):
+                self.store.write_chunk(user, run, offset, data[offset:offset + 512 * 1024])
+            self.store.finish_transfer(user, run)
+        self.store.scan(run)
+        return run
+
+    def process(self, run, user=None):
+        self.store.confirm(user or self.alice, run)
+        while self.store.work_once():
+            pass
+
+    def test_upload_resume_scan_restart_and_manual_shared_pipeline(self):
+        data = zip_bytes({"a.jpg": picture(), "bad.jpg": b"bad", "movie.mp4": b"video"})
+        run = self.store.begin_import(self.alice, self.group, "manual", "account", len(data), hashlib.sha256(data).hexdigest(), {})
+        midpoint = len(data) // 2
+        self.store.write_chunk(self.alice, run, 0, data[:midpoint])
+        self.store.close()
+        self.store = ImportStore(self.temp.name)
+        self.assertEqual(self.store.report(self.alice, run)["received"], midpoint)
+        self.store.write_chunk(self.alice, run, 0, data[:midpoint])
+        self.store.write_chunk(self.alice, run, midpoint, data[midpoint:])
+        self.store.finish_transfer(self.alice, run)
+        self.store.scan(run, batch_size=1)
+        self.assertEqual(self.store.report(self.alice, run)["checkpoint"], 1)
+        self.store.close()
+        self.store = ImportStore(self.temp.name)
+        self.store.scan(run)
+        self.assertEqual(self.store.report(self.alice, run)["discovered"], 3)
+        self.assertFalse(self.store.work_once())
+        self.process(run)
+        report = self.store.report(self.alice, run)
+        self.assertEqual(report["state"], "COMPLETED")
+        self.assertEqual(report["counts"], {"AVAILABLE_TO_GROUP": 1, "FAILED": 1, "UNSUPPORTED": 1})
+        gallery = self.store.gallery(self.ben, self.group)
+        self.assertEqual(len(gallery), 1)
+        self.assertEqual(self.store.asset_bytes(self.ben, gallery[0]["id"], True), picture())
+        with self.assertRaises(Denied):
+            self.store.asset_bytes(self.outsider, gallery[0]["id"], True)
+
+    def test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays(self):
+        text = "01/01/2020, 12:00 - Ana: a.jpg (file attached)\n02/01/2020, 12:00 - Ana: a.jpg (file attached)"
+        files = {"chat.txt": text, "a.jpg": picture()}
+        run = self.submit(files, "whatsapp")
+        self.process(run)
+        self.assertEqual(self.submit(files, "whatsapp"), run)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 2)
+        partial = self.submit({"chat.txt": text.splitlines()[1], "a.jpg": picture()}, "whatsapp")
+        self.process(partial)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 3)
+
+    def test_lease_fencing_cancel_and_membership_revocation(self):
+        run = self.submit({"a.jpg": picture(), "b.jpg": picture()}, user=self.ben)
+        self.store.confirm(self.ben, run)
+        old = self.store.claim(now=100)
+        replacement = self.store.claim(now=200)
+        with self.assertRaises(Conflict):
+            self.store.complete(old, now=201)
+        self.store.complete(replacement, now=201)
+        self.store.cancel(self.ben, run)
+        report = self.store.report(self.ben, run)
+        self.assertEqual(report["counts"], {"AVAILABLE_TO_GROUP": 1, "CANCELLED": 1})
+        self.assertEqual(len(self.store.gallery(self.alice, self.group)), 1)
+        self.store.remove_member(self.alice, self.group, self.ben)
+        self.assertEqual(self.store.gallery(self.alice, self.group), [])
+        self.store.accept(self.ben, self.store.invite(self.alice, self.group))
+        self.assertEqual(self.store.gallery(self.alice, self.group), [])
+
+    def test_late_completion_after_cancel_and_departure_denied(self):
+        for action in ("cancel", "remove"):
+            run = self.submit({f"{action}.jpg": picture()}, user=self.ben)
+            self.store.confirm(self.ben, run)
+            job = self.store.claim()
+            if action == "cancel":
+                self.store.cancel(self.ben, run)
+            else:
+                self.store.remove_member(self.alice, self.group, self.ben)
+            with self.assertRaises((Conflict, Denied)):
+                self.store.complete(job)
+        self.assertEqual(self.store.gallery(self.alice, self.group), [])
+
+    def test_recovery_after_object_write_and_retry_backoff(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        prepared = self.store.prepare(job)
+        self.store.close()
+        self.store = ImportStore(self.temp.name)
+        recovered = self.store.claim(now=200)
+        self.store.complete(recovered, now=201)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+        with self.assertRaises(Conflict):
+            self.store.complete(job, prepared, now=201)
+        self.store.reconcile()
+        self.assertEqual(self.store.asset_bytes(self.ben, self.store.gallery(self.ben, self.group)[0]["id"], True), picture())
+
+    def test_withdraw_independent_contributions_and_owner_only_report(self):
+        first = self.submit()
+        self.process(first)
+        second = self.submit(user=self.ben)
+        self.process(second, self.ben)
+        with self.assertRaises(Denied):
+            self.store.report(self.ben, first)
+        with self.assertRaises(Denied):
+            self.store.cancel(self.ben, first)
+        self.store.withdraw(self.alice, first)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 1)
+        self.store.withdraw(self.ben, second)
+        self.assertEqual(self.store.gallery(self.alice, self.group), [])
+        self.assertEqual(self.submit(), first)
+        with self.assertRaises(Conflict):
+            self.store.confirm(self.alice, first)
+
+    def test_stable_ids_replay_and_conflicting_payload(self):
+        def files(content, extra=""):
+            return {"messages/c1/messages.csv": f'ID,Timestamp,Contents,Attachments\n1,2020-01-01 12:00:00,{content},a.jpg\n',
+                    "a.jpg": picture(), "extra.txt": extra}
+        first = self.submit(files("hello"), "discord")
+        self.process(first)
+        repeated = self.submit(files("hello", "different manifest"), "discord")
+        self.process(repeated)
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 1)
+        changed = self.submit(files("changed", "third manifest"), "discord")
+        self.process(changed)
+        report = self.store.report(self.alice, changed)
+        self.assertEqual(report["items"][0]["reason"], "IDENTITY_CONFLICT")
+
+    def test_twenty_thousand_manifest_replay_accounts_for_every_item(self):
+        text = "ID,Timestamp,Contents,Attachments\n" + "".join(
+            f"{i},2020-01-01 12:00:00,message {i},https://example.test/{i}.jpg\n" for i in range(20_000))
+        files = {"messages/c1/messages.csv": text}
+        run = self.submit(files, "discord")
+        self.process(run)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"MISSING_MEDIA": 20_000})
+        self.assertEqual(self.submit(files, "discord"), run)
+        self.assertEqual(self.store.db.execute("SELECT count(*) FROM import_items").fetchone()[0], 20_000)
+        self.assertEqual(self.store.db.execute("SELECT count(*) FROM archive_origins").fetchone()[0], 0)
+
+    def test_retry_backoff_attempt_cap_and_explicit_retry(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        self.store.fail(job, now=101)
+        self.assertIsNone(self.store.claim(now=102))
+        second = self.store.claim(now=103)
+        self.store.fail(second, now=104)
+        third = self.store.claim(now=108)
+        self.store.fail(third, now=109)
+        self.assertEqual(self.store.report(self.alice, run)["items"][0]["reason"], "RETRY_LIMIT")
+        self.store.retry(self.alice, run, job["id"])
+        self.store.work_once()
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1})
+
+    def test_two_workers_claim_once_and_reject_post_commit_replay(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        other = ImportStore(self.temp.name)
+        try:
+            job = self.store.claim()
+            self.assertIsNone(other.claim())
+            other.complete(job)
+            with self.assertRaises(Conflict):
+                self.store.complete(job)
+        finally:
+            other.close()
+        self.assertEqual(self.store.db.execute("SELECT count(*) FROM archive_origins").fetchone()[0], 1)
+
+    def test_other_group_has_independent_asset_and_no_foreign_metadata(self):
+        run = self.submit()
+        self.process(run)
+        other_group = self.store.create_group(self.outsider, "Other")
+        other = self.submit(user=self.outsider, group=other_group)
+        self.process(other, self.outsider)
+        first_asset = self.store.gallery(self.alice, self.group)[0]["id"]
+        other_asset = self.store.gallery(self.outsider, other_group)[0]["id"]
+        self.assertNotEqual(first_asset, other_asset)
+        with self.assertRaises(Denied):
+            self.store.asset_bytes(self.alice, other_asset)
+        with self.assertRaises(Denied):
+            self.store.gallery(self.outsider, self.group)
+
+    def test_exif_capture_time_preserved_separately_and_preview_stripped(self):
+        output = io.BytesIO()
+        exif = Image.Exif()
+        exif[306] = "2010:02:03 04:05:06"
+        Image.new("RGB", (8, 8), "blue").save(output, "JPEG", exif=exif)
+        run = self.submit({"chat.txt": "01/01/2020, 12:00 - Ana: a.jpg (file attached)", "a.jpg": output.getvalue()}, "whatsapp")
+        self.process(run)
+        asset = self.store.gallery(self.ben, self.group)[0]
+        origin = asset["origins"][0]
+        self.assertEqual(origin["capture_assertions"][0]["local"], "2010-02-03T04:05:06")
+        self.assertEqual(origin["shared_at_assertion"]["local"], "2020-01-01T12:00:00")
+        with Image.open(io.BytesIO(self.store.asset_bytes(self.ben, asset["id"]))) as preview:
+            self.assertFalse(preview.getexif())
+
+    def test_cancel_twenty_thousand_record_run_preserves_finished_prefix(self):
+        text = "ID,Timestamp,Contents,Attachments\n" + "".join(
+            f"{i},2020-01-01 12:00:00,message {i},a.jpg\n" for i in range(20_000))
+        run = self.submit({"messages/c1/messages.csv": text, "a.jpg": picture()}, "discord")
+        self.store.confirm(self.alice, run)
+        self.store.work_once()
+        self.store.cancel(self.alice, run)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1, "CANCELLED": 19_999})
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+
+    def test_checksum_mismatch_can_restart_and_unsafe_archive_fails_closed(self):
+        data = zip_bytes({"a.jpg": picture()})
+        run = self.store.begin_import(self.alice, self.group, "manual", "account", len(data), hashlib.sha256(data).hexdigest(), {})
+        self.store.write_chunk(self.alice, run, 0, b"x" * len(data))
+        with self.assertRaises(Conflict):
+            self.store.finish_transfer(self.alice, run)
+        self.assertEqual(self.store.report(self.alice, run)["received"], 0)
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        self.store.scan(run)
+        bad = self.submit({"../outside.jpg": picture()})
+        self.assertEqual(self.store.report(self.alice, bad)["state"], "FAILED")
+        self.assertIn("Unsafe", self.store.report(self.alice, bad)["error"])
+        with self.assertRaises(Conflict):
+            self.store.confirm(self.alice, bad)
+
+    def test_all_source_records_remain_accessible_through_pages(self):
+        line = "01/01/2020, 12:00 - Ana: a.jpg (file attached)"
+        run = self.submit({"chat.txt": "\n".join([line] * 102), "a.jpg": picture()}, "whatsapp")
+        self.process(run)
+        asset = self.store.gallery(self.ben, self.group)[0]
+        self.assertEqual(asset["origin_count"], 102)
+        self.assertEqual(len(asset["origins"]), 100)
+        rest = self.store.origins(self.ben, asset["id"], asset["next_origin_offset"])
+        self.assertEqual(len(rest["items"]), 2)
+        self.assertIsNone(rest["next_offset"])
+        with self.assertRaises(Denied):
+            self.store.origins(self.outsider, asset["id"])
+
+
+if __name__ == "__main__":
+    unittest.main()

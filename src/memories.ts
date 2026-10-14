@@ -1,10 +1,13 @@
 export type Photo = { src: string; alt: string; caption: string };
 export type Memory = {
   id: string;
+  kind?: "memory" | "photo";
+  source?: string;
+  dateBasis?: string;
   shortTitle: string;
   title: string;
   date: string;
-  year: number;
+  year: number | null;
   approximate: boolean;
   by: string;
   description: string;

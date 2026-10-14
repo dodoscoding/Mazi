@@ -1,0 +1,178 @@
+{
+  "config": {
+    "argv": [
+      "/Users/altanesmer/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/Users/altanesmer/Desktop/Ales/Mazi/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "playwright.unified.config.ts",
+      "--grep",
+      "access loss"
+    ],
+    "configFile": "/Users/altanesmer/Desktop/Ales/Mazi/playwright.unified.config.ts",
+    "rootDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "unified.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "unified.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "work/poteto/unified-app/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run build && MAZI_IMPORT_PORT=8017 .venv/bin/python -m tests.browser.memories_server",
+      "url": "http://127.0.0.1:8017",
+      "reuseExistingServer": false,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "unified.spec.ts",
+      "file": "unified.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "access loss clears private drafts and circle changes clear supporting records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 535,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T11:50:17.117Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-c3a377d6fbcf4a9ebb7f",
+          "file": "unified.spec.ts",
+          "line": 330,
+          "column": 1
+        },
+        {
+          "title": "access loss clears private drafts and circle changes clear supporting records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 500,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-14T11:50:17.932Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-c196152b78474a163225",
+          "file": "unified.spec.ts",
+          "line": 330,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-14T11:50:16.026Z",
+    "duration": 2511.1620000000003,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

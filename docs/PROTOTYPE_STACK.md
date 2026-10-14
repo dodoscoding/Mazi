@@ -1,35 +1,37 @@
-# Atlas prototype stack and experiment
+# Local app architecture
 
-Status: selected for the local experiment on 3 October 2026 under the owner's request to choose the stack and build the Atlas journey. This is D16, not acceptance of the production architecture.
+Mazi combines the Atlas interface and the complete local archive engine in one app as of 14 October 2026. This supersedes the separate Atlas and numbered phase runtimes. Production architecture and acceptance in D01 remain separate.
 
-The owner approved the delivered prototype and authorized a pull request and merge on 3 October 2026. Acceptance is limited to the synthetic browsing experiment; the validation limits below remain open.
+## Runtime
 
-## Decisions
+`npm run dev` supervises a Vite interface and a loopback Python API/worker. Vite forwards `/api`, `/health` and `/land.geojson` without rewriting the browser Host, preserving Origin validation. The browser uses one origin and one HttpOnly session cookie. `npm start` builds the interface and serves both assets and APIs from Python.
 
-| Concern | Choice | Reason and boundary |
-| --- | --- | --- |
-| Application | React 19.2, TypeScript, Vite; exact versions in package-lock.json | Small client-only experiment, fast local feedback, reusable typed UI. No server rendering or server data needed. Node 22.12+; developed on Node 24.15.0. |
-| 3D | React Three Fiber 9 / Three.js; procedural chart and photographic planes | One selection state drives HTML and real pickable geometry. Fiber 9 matches React 19 per [official documentation](https://r3f.docs.pmnd.rs/getting-started/introduction). No purchased model, physics engine or 3D helper library. |
-| Styling | Plain CSS with shared custom properties | Reproduce Atlas's blue, ivory and copper world without a component framework. Self-host Libre Caslon Text and Source Sans 3 through Fontsource, retaining bundled OFL licenses. |
-| Motion | Demand-rendered chart pose interpolation; browser View Transitions for photo continuity; CSS for control feedback | One owner per beat. Navigation is immediate when unsupported or reduced motion is requested. New input skips the previous transition; no blocking completion callback. [Platform API](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition). |
-| Routes | Hash URLs with browser history | Portable static hosting and direct links without server rewrite rules. Memory and photo selection encoded in URL; Home selection encoded too. Native links retain normal open-in-new-tab behavior. |
-| Data | Typed, checked-in synthetic fixtures | No backend, credentials, personal archives, cookies, remote analytics or persistence requirement. User content cannot be uploaded. Counts reflect actual fixture photos. |
-| Assets | Local AI-generated fictional photographs, WebP delivery; procedural geometry retained as source | No runtime image service or personal photo exposure. Generation prompts and provenance under work/design/atlas and public/media. |
-| Quality | TypeScript build, Playwright desktop and phone emulation, axe checks, visual/browser review | Proves this experiment only. Real iOS/Android hardware, representative low-end GPU profiling and friend feedback remain separate evidence. |
-| Delivery | Local Vite development and preview servers | No hosting account or public deployment selected. Share only the synthetic build after choosing a delivery target. Never use this unauthenticated demo for real archives. |
+`python -m mazi` is the backend entry point. The app stores data in `.mazi-imports`, with the existing SQLite schema and original/preview file keys. The background worker uses a separate connection. No database conversion or automatic sample seeding occurs. The historical `.mazi-pilot` archive remains separate.
 
-React/Three, native Three without React, and a full server-rendered framework were considered. React/Fiber keeps selection and rendering coupled with a small component boundary. A full server framework would add setup without testing authentication or ingestion; vanilla Three would require more manual UI/scene synchronization. Production D01/D10 remain open.
+## Ownership
 
-## Experiment contract
+| Directory | Responsibility |
+| --- | --- |
+| `src/App.tsx`, `src/Atlas.tsx` | Shared navigation, Atlas selection, memory detail, timeline and renderer recovery. |
+| `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
+| `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
+| `mazi/identity/` | Accounts, sessions, groups, invitations and original pilot contracts. |
+| `mazi/imports/`, `mazi/archive/` | Resumable ingestion, provenance, correction, duplicates and accepted memories. |
+| `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
+| `mazi/discovery/`, `mazi/answers/` | People, hiding, consent, search and evidence-based answers. |
+| `mazi/memories/` | Recaps, stories, revisions, capsules, subevents, slideshows, video and notices. |
+| `tests/backend/`, `tests/browser/`, `tests/unified.spec.ts` | Domain regression contracts, fixture servers and integrated app journeys. |
 
-Home to select dated memory → open → explore actual fixture photos → expand attached conversation → Back restores memory, focus and scroll. Keyboard and touch have HTML equivalents for every scene action. The camera has no orbit/drag interaction; selection alone retargets a bounded shallow chart rotation. On phones, the selected photograph leads; a compact chart and dated list follow.
+React owns routes and feature lifecycles. Existing feature workflows are scoped DOM modules with imported HTML fragments. Each mount owns its requests, timers and object URLs and disposes them on navigation or backgrounding. They are bundled application modules, without standalone pages, script injection or iframes. The migrated imperative modules remain JavaScript; the shared lifecycle, registry and Atlas code are TypeScript. Converting individual forms to React can happen within these feature boundaries.
 
-Renderer initialization failure/context loss yields a flat dated view with retry. Photo failure preserves metadata/context and offers retry. Unknown routes show a recoverable state. Reduced motion applies live. Hidden scenes pause; settled scenes render on demand. Initial bounds: one canvas, DPR 1-1.5, three memory planes, no postprocessing or shadow maps. The atlas's grid is a date index, not inferred geography or relationships.
+## Atlas data and appearance
 
-Timeline and Search, if presented as links, browse only the same demo fixtures. My Imports/group settings are explicitly unavailable. Product import behavior in D14 is unaffected.
+Atlas retains Libre Caslon Text, Source Sans 3, navy/ivory/copper colors and the procedural Fiber/Three chart. The chart displays at most three current memory planes. It is a chronological visual index, not inferred geography. Private textures are owned and disposed by the mounted scene. Keyboard/touch HTML controls and flat-view recovery remain available.
 
-## Delivery and acceptance
+The server builds cards from authorized photographs and fully visible approved events. Cross-year and undated records remain available with honest date labels. It never borrows fictional messages or dates. A hidden or partially inaccessible event cannot expose its title through Atlas. The explicit `?demo=1` sample uses checked-in synthetic fixtures; a new personal archive stays empty.
 
-Run `npm ci`, `npm run dev`, `npm run build`, `npm test`, `npm run check:docs`, and `git diff --check`. Use `npm run dev -- --host 0.0.0.0` only on a trusted local network for physical-phone testing. The demo has no authentication.
+## Local scope
 
-Evidence and remaining limits are recorded in [the prototype verification](../work/design/atlas/VERIFICATION.md). User study: give 2-3 friends the three tasks (find/open a memory, change photos/read context, return/find another), observe unaided completion and ask whether they would revisit. Do not infer enjoyment from an automated pass.
+Imports support the existing synthetic archive formats and JPEG/PNG validation. People use manual associations and confirmed identities. Related search has an offline baseline and optional local CLIP model. Answers are extractive and preserve abstention, consent and live evidence checks. Capsules use server UTC unlock. Video remains a silent, bounded MJPEG AVI download. Notifications remain opt-in and in-app.
+
+These integrations do not establish production authentication, hosted storage, provider compatibility, physical-device performance or production milestone acceptance. See [the consolidation evidence](../work/poteto/unified-app/VERIFICATION.md) and [README](../README.md) for commands.

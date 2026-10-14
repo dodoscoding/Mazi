@@ -1,0 +1,64 @@
+"""Authorized Atlas cards from the shared archive, without synthetic content."""
+import json
+
+
+def atlas_view(store, user, group):
+    with store.transaction():
+        store._member(user, group)
+        items, offset = {}, 0
+        while True:
+            page = store.timeline(user, group, offset=offset, limit=100)
+            items.update((item['id'], item) for item in page['items'])
+            if page['next_offset'] is None:
+                break
+            offset = page['next_offset']
+        hidden_assets = set()
+        for row in store.db.execute(
+            'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h '
+            'ON h.event=e.id WHERE h.user=? AND e.group_id=?', (user, group)
+        ):
+            hidden_assets.update(json.loads(row[0]))
+        cards, grouped = [], set()
+
+        def card(identifier, title, assets, kind):
+            records = [items[asset] for asset in assets]
+            dates = sorted({item['date'] for item in records if item['date']})
+            complete_dates = len([item for item in records if item['date']]) == len(records)
+            date_label = 'Date not recorded'
+            if dates:
+                date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
+                if not complete_dates:
+                    date_label += ' · some dates unknown'
+            photos, messages, sources = [], [], set()
+            seen_messages = set()
+            for item in records:
+                photos.append(dict(src='/api/review/rendition/' + item['id'],
+                                   alt=item['title'] or 'Archive photograph',
+                                   caption=item['title'] or 'Untitled photograph'))
+                for origin in store._all_origins(user, item['id']):
+                    sources.add(origin.get('source') or 'archive')
+                    for message in origin.get('context', []):
+                        value = message.get('text', '')
+                        name = message.get('sender', {}).get('label') or 'Source participant'
+                        when = str(message.get('shared_at') or '')
+                        key = (name, when, value)
+                        if value and key not in seen_messages:
+                            seen_messages.add(key)
+                            messages.append(dict(name=name, time=when, text=value))
+            return dict(id=identifier, kind=kind, shortTitle=title, title=title,
+                        date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
+                        approximate=not complete_dates, by='Your circle',
+                        description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
+                        source=', '.join(sorted(sources)), photos=photos, messages=messages,
+                        dateBasis=', '.join(sorted({item['date_basis'] for item in records})))
+
+        for event in store._approved(user, group):
+            assets = event['assets']
+            if assets and all(asset in items and asset not in hidden_assets for asset in assets):
+                cards.append(card(event['id'], event['title'] or 'Untitled memory', assets, 'memory'))
+                grouped.update(assets)
+        for asset, item in items.items():
+            if asset not in grouped and asset not in hidden_assets:
+                cards.append(card('photo-' + asset, item['title'] or 'Untitled photograph', [asset], 'photo'))
+        cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
+        return {'memories': cards}

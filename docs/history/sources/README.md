@@ -1,0 +1,40 @@
+# Phase 4: continuous sources and places
+
+Historical experiment record. The active application now runs with `python -m mazi`; source and test links below point to their consolidated locations. Original acceptance claims and evidence remain historical.
+
+This extends the Phase 3 **local** archive with a macOS Photos companion, selected-channel Discord intake, and a map of explicitly shared places. Run `.venv/bin/python -m mazi` from the repository root, then open `http://127.0.0.1:8002/places`. Imports (`/`) and review (`/review`) use the same store. Stop the Phase 2/3 server first. Register/sign in and create a group on the imports page.
+
+## Apple Photos on macOS
+
+1. Create an Apple source on Places & sources. Choose its date range, media types and, optionally, album identifiers. New sources are paused.
+2. Run `sh tools/apple-photos/build.sh`; open `tools/apple-photos/build/MaziPhotos.app`. It is locally ad-hoc signed, not notarized or distributed.
+3. Sign in with the same local Mazi account and paste the source ID. The companion connects only to `http://127.0.0.1:8002`; credentials and session cookies are memory-only.
+4. Grant Photos access. Album/date/type filters enumerate up to 1,000 metadata records without fetching image bytes. Select individual items and press Transfer / Resume selected. This is the explicit foreground import switch.
+5. All PhotoKit resources are enumerated: original, edited, paired video and adjustment resources retain separate component identities and byte-checksummed versions. JPEG/PNG enter the existing gallery. Other formats remain downloadable originals with an explicit “preview unavailable” outcome; this does not claim HEIC or video playback support. Every resource is limited to 25 MiB. Oversized resources are reported, not uploaded.
+6. Stop or restart the companion and reselect the same items to resume persisted server offsets. Saved selection IDs/source ID are stored in local preferences; photo bytes are not saved there. The companion may retrieve the same selected resource from Photos/iCloud again before resuming its upload.
+
+The companion requests iCloud downloads only after selection, displays progress, checks authorization and asset availability before reads/chunks/finalization, and pauses on PhotoKit change notifications. The user reviews changes and explicitly resumes; there is no background sync or iOS implementation. Source deletion does not delete already-imported Mazi contributions. A resource version is scoped to one connection; use that same connection when resuming. Apple People labels are not imported.
+
+## Discord operator setup
+
+Create a Discord source with the exact server, text-channel IDs and inclusive date range. Continuous intake stays paused until enabled. To authorize a particular member's connection, the local server operator must independently verify that member may import those channels, then set both `MAZI_DISCORD_BOT_TOKEN` and `MAZI_DISCORD_SOURCES` (comma-separated approved source IDs) in the server environment. Do not paste tokens into the UI, repository or logs. Only an installed, authorized bot account is supported; never a personal-user token. Restart the local server after changing the operator allowlist.
+
+The worker polls only enabled, operator-approved sources every 30 seconds. It verifies the bot's effective View Channel and Read Message History permissions, including channel overwrites, before reading each selected channel, before each attachment transfer and again at image availability. Missing permissions stop that source. Only ordinary text and announcement channels are supported; threads/forums are rejected. Discord Message Content access must be configured for the bot to receive applicable content/attachments; empty attachment lists are explicitly recorded as “no media or content unavailable”, not proof of complete coverage.
+
+Snowflake checkpoints scan backwards from the selected upper UTC bound in 100-message pages, persist only after a handled page, and replay without repeated occurrences. A completed sweep establishes a high-water mark for the next sweep so a busy channel does not skip its backlog. Completed past-date ranges stop polling. Date ranges remain bounded even with continuous intake on. Oversized/invalid attachments receive explicit outcomes. API rate limits defer retries; attachment downloads accept only HTTPS Discord CDN URLs, reject redirects, and never receive the bot token. This is forward intake: it does not back-propagate source deletions or discover edits to older messages already behind the checkpoint. Replaying an edited message preserves a distinct version if it is supplied again. Coverage is partial, not a mirror of Discord.
+
+## Places and access
+
+Share or remove a coordinate from one of your own active contributions. Location sharing is explicit: neither raw EXIF nor a photograph's visibility automatically creates a point. Map points, filter choices and optional dated paths are computed from active contributions owned by current group members. Withdrawing that origin removes its location even when a different contributor supplied the same photo. Paths start off and exclude undated locations and same-day ordering guesses. The text list is a keyboard-accessible alternative; map points open their photograph. World and fit controls use an offline [Natural Earth basemap](MAP_DATA.md).
+
+Pause fences incomplete transfers and queued work without removing completed contributions. Withdrawal and membership departure deny new reads. Retained unsupported resources also obey departure tombstones after rejoining. Group export includes currently visible opaque resources and shared places. Offline backups now include source-transfer files, including resumable partial files. Stop server and workers before using [the offline backup commands](../archive/OPERATIONS.md).
+
+## Checks and limits
+
+- `.venv/bin/python -m unittest discover -s tests/backend/sources -t . -v`
+- `MAZI_PYTHON="$PWD/.venv/bin/python" npm run test:sources:browser`
+- `sh tools/apple-photos/build.sh`
+
+For an installed Chrome instead of Playwright's bundled Chromium, set `MAZI_CHROME_CHANNEL=chrome`. Limits: 25 MiB per resource, 2 GiB source-byte budget per group (raw and ZIP copies consume additional disk space), 1,000 displayed transfer outcomes and map locations, 128 MiB group export. Files remain on local disk after withdrawal; physical retention/purge remains the existing local-harness limitation. No external geocoding, tiles or model calls are made for Map.
+
+This is a runnable local implementation, not M4 production acceptance. Real-device interrupted PhotoKit/iCloud transfer, revoked/limited library permission tests, representative Live Photo/edited resources, a permission-changing real Discord guild, notarization, supported macOS versions and production provider integration remain acceptance gates. See [verification](VERIFICATION.md). Existing M1–M3 production gates remain open.

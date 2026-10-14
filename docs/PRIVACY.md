@@ -34,7 +34,7 @@ Memory and sub-event metadata use the same group audience. Parent links cannot r
 
 ## Optional processing and future People features
 
-The following are later-feature policies, not initial audience controls. The owner-requested [local Phase 5 implementation](../phase5/README.md) exercises manual People, personal hiding, subject suppression and opt-in local embeddings in the Python archive; production enforcement remains a separate gate. Sharing with the friend group does not by itself select an external AI provider or enable recognition.
+The following are later-feature policies, not initial audience controls. The owner-requested [local Phase 5 implementation](history/discovery/README.md) exercises manual People, personal hiding, subject suppression and opt-in local embeddings in the Python archive; production enforcement remains a separate gate. Sharing with the friend group does not by itself select an external AI provider or enable recognition.
 
 Optional AI analysis, external model processing, face detection/recognition, have separate purpose controls. Deterministic validation and thumbnail generation are necessary archive processing and are explained during import. If optional processing is off, the import and automatic group-sharing loop still works.
 

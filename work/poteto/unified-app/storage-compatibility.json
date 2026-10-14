@@ -1,0 +1,14 @@
+{
+  "baseline": "ab42a0f",
+  "result": "PASS",
+  "preserved": [
+    "session",
+    "membership",
+    "asset IDs",
+    "original bytes",
+    "corrections",
+    "story revision and contribution",
+    "personal hiding",
+    "sealed capsule"
+  ]
+}

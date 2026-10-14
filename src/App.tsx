@@ -1,6 +1,7 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
-import { memories, memoryById } from "./memories";
+import { useArchive } from "./useArchive";
+import { FeaturePage } from "./features";
 import type { Memory } from "./memories";
 import { Photo } from "./Photo";
 import { useReducedMotion, useRoute } from "./useRoute";
@@ -28,13 +29,19 @@ function Meta({ memory }: { memory: Memory }) {
       <span>
         {memory.photos.length} {memory.photos.length === 1 ? "photo" : "photos"}
       </span>
-      <span>Added by {memory.by}</span>
+      <span>
+        {memory.source ? "Shared with your circle" : `Added by ${memory.by}`}
+      </span>
     </p>
   );
 }
 export default function App() {
   const reduced = useReducedMotion();
   const { route, navigate } = useRoute(reduced);
+  const demo = new URLSearchParams(location.search).get("demo") === "1";
+  const archive = useArchive(route.path, demo);
+  const memories = archive.memories;
+  const memoryById = (id: string) => memories.find((item) => item.id === id);
   const memoryId = route.path.startsWith("/memory/") ? route.path.slice(8) : "";
   const memory = memoryById(memoryId);
   const selected = memoryById(route.selected) || memories[0];
@@ -71,7 +78,7 @@ export default function App() {
       window.scrollTo(0, 0);
       heading.current?.focus({ preventScroll: true });
     }
-  }, [route.path]);
+  }, [route.path, memory?.id]);
   const chooseMemory = (id: string) =>
     navigate(`/?selected=${id}`, false, true);
   const navLink = (url: string, label: string) => (
@@ -83,9 +90,80 @@ export default function App() {
       {label}
     </a>
   );
-  const backUrl = `/?selected=${memory?.id || selected.id}`;
+  const backUrl = `/?selected=${memory?.id || selected?.id || ""}`;
   let content: ReactNode;
-  if (route.path === "/")
+  const featurePaths = [
+    "/imports",
+    "/circle",
+    "/review",
+    "/places",
+    "/discover",
+    "/ask",
+    "/answer-evidence",
+    "/memories",
+  ];
+  if (featurePaths.includes(route.path) || (route.path === "/search" && !demo))
+    content = <FeaturePage key={route.path} path={route.path + route.search} />;
+  else if (archive.status !== "ready")
+    content = (
+      <section className="archive-welcome">
+        <div className="welcome-globe" aria-hidden="true" />
+        <p className="welcome-kicker">A place for your circle</p>
+        <h1 ref={heading} tabIndex={-1}>
+          The Atlas of Us
+        </h1>
+        <p>
+          {archive.status === "loading"
+            ? "Opening your archive…"
+            : archive.status === "error"
+              ? archive.error
+              : "Your photographs, shared stories and the places that bring you back. Together in one private archive."}
+        </p>
+        {archive.status === "error" ? (
+          <button className="primary-action" onClick={archive.refresh}>
+            Retry archive
+          </button>
+        ) : (
+          archive.status === "signed-out" && (
+            <a
+              className="primary-action"
+              href="#/imports"
+              onClick={link("/imports")}
+            >
+              Sign in or create your circle <Arrow />
+            </a>
+          )
+        )}
+        {archive.status === "signed-out" && (
+          <a className="sample-link" href="/?demo=1">
+            Explore the sample Atlas
+          </a>
+        )}
+      </section>
+    );
+  else if (route.path === "/" && !selected)
+    content = (
+      <section className="archive-welcome">
+        <div className="welcome-globe" aria-hidden="true" />
+        <h1 ref={heading} tabIndex={-1}>
+          The Atlas of Us
+        </h1>
+        <p>
+          {archive.group
+            ? "Your Atlas is ready for its first photographs. Import an archive, then gather your photographs into memories."
+            : "Create or join your circle to start your shared archive."}
+        </p>
+        <a
+          className="primary-action"
+          href="#/imports"
+          onClick={link("/imports")}
+        >
+          {archive.group ? "Add photographs" : "Create or join a circle"}{" "}
+          <Arrow />
+        </a>
+      </section>
+    );
+  else if (route.path === "/" && selected)
     content = (
       <>
         <div className="home-grid">
@@ -103,6 +181,7 @@ export default function App() {
               }
             >
               <Atlas
+                memories={memories}
                 selected={selected.id}
                 onSelect={chooseMemory}
                 reduced={reduced}
@@ -142,7 +221,8 @@ export default function App() {
         <section className="memories-section" aria-labelledby="demo-title">
           <div className="section-heading">
             <h2 id="demo-title">
-              Demo memories <span className="copper-rule" />
+              {demo ? "Demo memories" : "Our archive"}{" "}
+              <span className="copper-rule" />
             </h2>
             <a href="#/timeline" onClick={link("/timeline")}>
               View all memories <Arrow />
@@ -163,8 +243,8 @@ export default function App() {
                   <span>{item.date}</span>
                   <span className="choice-meta">
                     {item.photos.length}{" "}
-                    {item.photos.length === 1 ? "photo" : "photos"} · Added by{" "}
-                    {item.by}
+                    {item.photos.length === 1 ? "photo" : "photos"} ·{" "}
+                    {item.source ? "Shared archive" : `Added by ${item.by}`}
                   </span>
                 </span>
                 <span className="selection-ring" aria-hidden="true" />
@@ -193,6 +273,18 @@ export default function App() {
             {memory.title}
           </h1>
           <Meta memory={memory} />
+          {!demo && (
+            <div className="memory-tools">
+              <a href="#/review" onClick={link("/review")}>
+                Review this archive
+              </a>
+              {memory.kind === "memory" && (
+                <a href="#/memories" onClick={link("/memories")}>
+                  Write a shared story
+                </a>
+              )}
+            </div>
+          )}
         </header>
         <div className="detail-grid">
           <section
@@ -298,7 +390,9 @@ export default function App() {
           {isSearch ? "Find a memory" : "Our memories through time"}
         </h1>
         <p className="muted">
-          Three fictional memories, a few familiar feelings.
+          {demo
+            ? "Three fictional memories, a few familiar feelings."
+            : "Photographs and approved memories from your shared archive."}
         </p>
         {isSearch && (
           <label className="search-field">
@@ -318,7 +412,7 @@ export default function App() {
               href={`#/memory/${item.id}`}
               onClick={link(`/memory/${item.id}`)}
             >
-              <span className="timeline-year">{item.year}</span>
+              <span className="timeline-year">{item.year || "Undated"}</span>
               <img src={item.photos[0].src} alt="" />
               <div>
                 <h2>{item.title}</h2>
@@ -330,25 +424,10 @@ export default function App() {
         </div>
         {isSearch && filtered.length === 0 && (
           <p role="status">
-            No demo memories match “{query}”. Try a year or a different word.
+            No {demo ? "demo memories" : "archive photographs"} match “{query}”.
+            Try a year or a different word.
           </p>
         )}
-      </section>
-    );
-  } else if (route.path === "/imports" || route.path === "/circle") {
-    content = (
-      <section className="simple-page">
-        <h1 ref={heading} tabIndex={-1}>
-          {route.path === "/imports" ? "My Imports" : "Our circle"}
-        </h1>
-        <p>
-          {route.path === "/imports"
-            ? "Importing is not part of this prototype. Explore the demo memories to try the Atlas experience."
-            : "This is a fictional friend group for the design experiment. Invitations, accounts and group settings are not connected."}
-        </p>
-        <a className="primary-action" href="#/" onClick={link("/")}>
-          Back to atlas <Arrow />
-        </a>
       </section>
     );
   } else
@@ -357,7 +436,7 @@ export default function App() {
         <h1 ref={heading} tabIndex={-1}>
           Memory not found
         </h1>
-        <p>This link does not point to a demo memory.</p>
+        <p>This memory is unavailable or you no longer have access to it.</p>
         <a className="primary-action" href="#/" onClick={link("/")}>
           Back to atlas <Arrow />
         </a>
@@ -411,6 +490,35 @@ export default function App() {
           </svg>
         </a>
       </header>
+      <div
+        className="archive-navigation"
+        role="region"
+        aria-label="Archive navigation"
+      >
+        <nav aria-label="Archive tools">
+          {navLink("/memories", "Memories")}
+          {navLink("/review", "Archive review")}
+          {navLink("/places", "Places & sources")}
+          {navLink("/ask", "Ask your archive")}
+        </nav>
+        {!demo && archive.groups.length > 0 && (
+          <label className="circle-picker">
+            Current circle
+            <select
+              aria-label="Current circle"
+              value={archive.group}
+              onChange={(event) => archive.chooseGroup(event.target.value)}
+            >
+              {archive.groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {demo && <a href="/">Leave sample Atlas</a>}
+      </div>
       <main id="main-content" tabIndex={-1}>
         {content}
       </main>
@@ -419,7 +527,9 @@ export default function App() {
           Mazi <span className="footer-dot" /> The Atlas of Us
         </span>
         <span>
-          Interactive prototype · Fictional memories & AI-generated photographs
+          {demo
+            ? "Sample Atlas · Fictional memories & AI-generated photographs"
+            : "Your shared archive · Stored on this computer"}
         </span>
         <a
           className="mobile-imports"
@@ -453,8 +563,12 @@ function Context({ memory }: { memory: Memory }) {
         <div>
           <dt>Source</dt>
           <dd>
-            Synthetic demo archive
-            <span>Story and conversation are fictional</span>
+            {memory.source || "Synthetic demo archive"}
+            <span>
+              {memory.source
+                ? memory.dateBasis
+                : "Story and conversation are fictional"}
+            </span>
           </dd>
         </div>
       </dl>

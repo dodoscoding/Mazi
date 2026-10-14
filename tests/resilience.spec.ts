@@ -5,7 +5,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await page.getByRole("button", { name: "Select Lake days" }).focus();
   await page.keyboard.press("Space");
   await expect(
@@ -45,7 +45,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
 test("actual WebGL context loss retains selection and allows retry", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?demo=1");
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await page.getByRole("button", { name: "Select Lake days" }).click();
   const canvas = page.locator("canvas");
@@ -79,7 +79,7 @@ test("actual WebGL context loss retains selection and allows retry", async ({
 test("narrow widths and long content do not overflow; search and empty result are usable", async ({
   page,
 }) => {
-  await page.goto("/#/search");
+  await page.goto("/?demo=1#/search");
   await page.getByRole("searchbox").fill("no such moment");
   await expect(page.getByRole("status")).toContainText(
     "No demo memories match",
