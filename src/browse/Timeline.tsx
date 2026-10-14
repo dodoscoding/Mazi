@@ -5,13 +5,20 @@ import type {
   PointerEvent,
   RefObject,
 } from "react";
+import { AtlasStage } from "../atlas/AtlasStage";
+import { buildAtlas, placeIdOf } from "../atlas/model";
+import { useLayout } from "../atlas/useLayout";
 import type { Memory } from "../memories";
+import { useTheme } from "../theme/useTheme";
 import { Icon } from "../ui/icons";
 import { useReducedMotion } from "../useRoute";
 import type { LinkFor } from "../useRoute";
 import { byYear, dateLabel, placeLabel, plural, sharedLine } from "./model";
 
 type Order = "oldest" | "newest";
+const noBirths: Record<string, number> = {};
+const noThumbnails = {};
+const ignore = () => {};
 const stagger = (index: number) => ({ "--i": index }) as CSSProperties;
 
 /** The journey leg into each memory: from the previous place, in date order. */
@@ -49,6 +56,10 @@ export function Timeline({
     [groups],
   );
   const journey = useMemo(() => legs(memories), [memories]);
+  const atlas = useMemo(() => buildAtlas(memories), [memories]);
+  const chronological = useMemo(() => byYear(memories, "oldest"), [memories]);
+  const layout = useLayout();
+  const { theme } = useTheme();
   const [year, setYear] = useState<number | null>(null);
   const [replaying, setReplaying] = useState(false);
   const list = useRef<HTMLOListElement>(null);
@@ -174,6 +185,12 @@ export function Timeline({
   const route = inViewMemories
     .map((memory) => journey.get(memory.id))
     .find(Boolean);
+  // The globe centres on the year's first place in date order.
+  const firstPlace =
+    chronological
+      .find((group) => group.year === current)
+      ?.memories.map(placeIdOf)
+      .find(Boolean) ?? null;
   const previous =
     current === null ? undefined : years[years.indexOf(current) - 1];
   const next = current === null ? undefined : years[years.indexOf(current) + 1];
@@ -295,7 +312,32 @@ export function Timeline({
         </ol>
       </div>
       <aside ref={aside} className="timeline-aside" aria-label="Year in view">
-        <div className="timeline-globe" data-year={current ?? ""}>
+        <div
+          className={`timeline-globe${reduced ? "" : " has-globe"}`}
+          data-year={current ?? ""}
+        >
+          {/* Reduced motion keeps the still year card; otherwise the globe follows the year. */}
+          {!reduced && (
+            <AtlasStage
+              compact
+              atlas={atlas}
+              selectedPlace={firstPlace}
+              focusPlace={null}
+              year={current}
+              day={theme === "day"}
+              reduced={reduced}
+              layout={layout}
+              portal={false}
+              introStart={null}
+              born={noBirths}
+              thumbnails={noThumbnails}
+              view="globe"
+              onView={ignore}
+              onPick={ignore}
+              onFailedChange={ignore}
+              retryKey={0}
+            />
+          )}
           <div className="globe-fallback">
             <span className="hud-label">In view</span>
             <span className="globe-year">{current ?? "Undated"}</span>

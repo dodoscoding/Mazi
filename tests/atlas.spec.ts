@@ -259,3 +259,43 @@ test("the atlas, flat map and portal have no axe violations in night or day", as
     ).toEqual([]);
   }
 });
+
+test("the Timeline shows the globe for the year in view, flat when 3D is off", async ({
+  page,
+}) => {
+  await skipIntro(page);
+  await page.goto("/?demo=1#/timeline");
+  const panel = page.locator(".timeline-globe");
+  await expect(panel.locator("canvas")).toHaveCount(1);
+  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await expect(panel).toHaveAttribute("data-year", "2022");
+  await expect(panel).toContainText("Nicosia, Cyprus");
+  if (isPhone(page))
+    await page.getByRole("button", { name: "Next year, 2023" }).click();
+  else {
+    await page.getByRole("slider", { name: "Year" }).focus();
+    await page.keyboard.press("ArrowRight");
+  }
+  await expect(panel).toHaveAttribute("data-year", "2023");
+  await expect(panel).toContainText("Nicosia → Bohinj");
+  await expect(panel.locator("canvas")).toHaveCount(1);
+
+  await page.goto("/?demo=1&scene=off#/timeline");
+  await expect(
+    page.getByRole("img", { name: /Flat map .* Nicosia 2022 selected/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("3D isn't available here; same timeline, flat map."),
+  ).toBeVisible();
+});
+
+test("reduced motion keeps the still year card in the Timeline", async ({
+  page,
+}) => {
+  await skipIntro(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=1#/timeline");
+  const panel = page.locator(".timeline-globe");
+  await expect(panel).toContainText("Nicosia, Cyprus");
+  await expect(panel.locator("canvas")).toHaveCount(0);
+});
