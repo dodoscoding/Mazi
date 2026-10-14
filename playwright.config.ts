@@ -11,6 +11,7 @@ export default defineConfig({
     "evidence.spec.ts",
     "theme-shell.spec.ts",
     "atlas.spec.ts",
+    "memory-detail.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,
