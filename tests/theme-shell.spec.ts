@@ -139,6 +139,8 @@ test("Archive tools opens, is keyboard operable and closes on Escape", async ({
 });
 
 test("Home has no axe violations in night or day", async ({ page }) => {
+  // The first-visit Atlas intro fades the HUD in; this audit is of the settled Home.
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHome(page);
   for (const theme of ["night", "day"] as const) {

@@ -10,6 +10,7 @@ export default defineConfig({
     "resilience.spec.ts",
     "evidence.spec.ts",
     "theme-shell.spec.ts",
+    "atlas.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,

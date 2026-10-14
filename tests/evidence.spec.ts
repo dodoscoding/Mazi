@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openFullMemory } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -31,7 +32,7 @@ test("capture stable Home and memory at the required review sizes", async ({
     path: testInfo.outputPath(`${name}.png`),
     fullPage: true,
   });
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openFullMemory(page);
   await expect(page.locator(".gallery .photo-frame")).toHaveClass(/is-loaded/);
   await page.screenshot({
     path: testInfo.outputPath(`${name}-detail.png`),
@@ -39,9 +40,11 @@ test("capture stable Home and memory at the required review sizes", async ({
   });
 });
 
-test("resting atlas stops requesting animation frames", async ({
+// The live globe animates its stars and light packets; under reduced motion it draws only on change.
+test("resting atlas stops requesting animation frames under reduced motion", async ({
   page,
 }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => {
     let frames = 0;
     const request = window.requestAnimationFrame.bind(window);

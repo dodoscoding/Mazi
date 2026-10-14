@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openFullMemory } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -25,13 +26,18 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   await page
     .getByRole("link", { name: "Open memory", exact: true })
     .press("Enter");
+  await page
+    .getByRole("region", { name: "Lake days" })
+    .getByRole("link", { name: "Open memory", exact: true })
+    .press("Enter");
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeFocused();
   await page.getByRole("link", { name: "Back to atlas" }).click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.getByRole("button", { name: "Select The last ferry" }).click();
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openFullMemory(page);
+  await page.goBack();
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "The Atlas of Us" }),
@@ -42,7 +48,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
       configurable: true,
     }),
   );
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openFullMemory(page);
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeFocused();
@@ -80,7 +86,8 @@ test("actual WebGL context loss retains selection and allows retry", async ({
   await expect(
     page.getByRole("button", { name: "Select Lake days" }),
   ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openFullMemory(page);
+  await expect(page).toHaveURL(/memory\/lake-days/);
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();
