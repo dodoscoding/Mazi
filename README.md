@@ -1,97 +1,83 @@
 # Mazi
 
-A private, shared-code archive for one friend group of 8-10 people. Mazi connects media, source conversations, people, places, and memories. Imported content becomes available to the whole signed-in group automatically; review supports later corrections.
+<img src="docs/assets/mazi-logo.png" alt="Mazi logo" width="160">
 
-Mazi runs as one local application. The Atlas interface reads the same authorized archive as imports, review, people, places, answers, recaps, stories and capsules. React/TypeScript lives in `src/`; the Python archive engine lives in `mazi/` under domain names. The numbered prototype folders have been retired. Historical evidence lives in [docs/history](docs/history).
+Mazi is a private memory archive for one small circle of friends. Bring your photographs and conversations together, then revisit them through a visual Atlas, a timeline, and shared stories.
 
-The application runs locally with either hosted Supabase PostgreSQL/private Storage or explicit SQLite/file mode. Hosted behavior has synthetic verification; public production deployment and milestone acceptance remain separate work.
-Start with the [confirmed product context](PRODUCT.md), [roadmap](docs/ROADMAP.md), and [product specification](docs/SPEC.md). The product direction and Atlas choice were confirmed on 3 October 2026.
+Everyone in the circle uses a shared entry code. Imported content becomes available to the signed-in circle automatically; archive review lets you correct it later.
 
-The existing [project plan](PROJECT_PLAN.md) is preserved. M0 reconciles its technology choices in the [decision register](docs/DECISIONS.md) and [acceptance record](docs/M0_ACCEPTANCE.md); the original plan remains preserved.
+## What you can do
 
-| Document | Purpose |
-| --- | --- |
-| [Product context](PRODUCT.md) | Confirmed audience, website scope, sharing, navigation, design ambition, and open decisions. |
-| [Visual direction proposal](docs/DESIGN_PROPOSAL.md) | Selected Atlas concept and historical direction exploration. |
-| [Implemented design](DESIGN.md) | Atlas colors, typography, layout, components and motion extracted from the prototype. |
-| [Hosted Supabase setup](docs/SUPABASE_SETUP.md) | Server configuration, explicit archive transfer, recovery and Free-plan limits. |
-| [Prototype stack](docs/PROTOTYPE_STACK.md) | Chosen experiment stack, alternatives, scope and run instructions. |
-| [Prototype verification](work/design/atlas/VERIFICATION.md) | Runtime checks, screenshots, review and remaining limits. |
-| [Home-to-memory interactions](docs/HOME_MEMORY_INTERACTIONS.md) | Responsive layout, meaningful 3D, navigation, motion, recovery, and prototype evidence requirements. |
-| [Roadmap](docs/ROADMAP.md) | Delivery order, dependencies, staffing assumptions, estimates, and release gates. |
-| [Two-developer plan](docs/TWO_DEVELOPER_PLAN.md) | Parallel task ownership, dependency handoffs, and acceptance gates for two developers starting at M0. |
-| [Product specification](docs/SPEC.md) | User journeys, release scope, navigation, and traceability to the brief. |
-| [Architecture](docs/ARCHITECTURE.md) | Proposed components, data flow, scale, and operational design. |
-| [Contracts](docs/CONTRACTS.md) | Domain relationships, publication rules, import states, and retry semantics. |
-| [Privacy](docs/PRIVACY.md) | Access matrix, consent, revocation, retention, and deletion. |
-| [Imports](docs/IMPORTS.md) | Adapter behavior, source limitations, fixtures, and platform evidence. |
-| [Test plan](docs/TEST_PLAN.md) | Acceptance scenarios, proposed budgets, and production evidence. |
-| [Decisions and risks](docs/DECISIONS.md) | Proposed defaults, alternatives, open decisions, and risk owners. |
-| [Source register](docs/SOURCES.md) | External evidence and limits of verification. |
-| [Original product brief](docs/source/PRODUCT_BRIEF.md) | Unchanged source supplied by the user. |
+- Import photographs and supported conversation archives from ZIP files.
+- Browse memories in Atlas and Timeline, with links to people, places, and sources.
+- Correct metadata and approve memories in Archive review.
+- Search the archive and ask questions with links back to the evidence.
+- Create recaps, stories, slideshows, and sealed time capsules.
 
-Milestone status is owned by the roadmap. Privacy policy is owned by the privacy document. Technical choices remain proposals until their listed evidence gates pass. Future implementation should update these documents when it changes a contract.
+This is a local prototype with synthetic regression checks. Public production deployment and milestone acceptance remain separate work. See the [roadmap](docs/ROADMAP.md) for release gates and the [privacy contract](docs/PRIVACY.md) for requirements and limits.
 
-## M0 delivery boundary
+## Run locally
 
-M1 accepts manual JPEG/PNG for up to 10 members and 10,000 items, within a 20 GiB group cap. D01 proposed Next.js/Supabase Auth for production. D18 keeps the current React/Python app and D17 sessions while using hosted PostgreSQL/private Storage; explicit local mode remains available. This is not a public production deployment. The Free project does not establish the planned 20 GiB capacity. Chrome and Firefox on desktop and Android are the selected targets; iOS is deferred. Archive exports, HEIC, and video require later fixture-based acceptance.
-
-Dev A owns shared migrations, authentication, policies, APIs, deployment configuration, and CI. Dev B owns normalization, worker stages, adapters, UI, fixtures, and browser/device evidence. `npm run build` includes typechecking; `npm test` runs Playwright; `npm run check:docs` checks planning documents. `npm run lint` checks Prettier formatting, and `npm run typecheck` checks TypeScript. See [M0 acceptance](docs/M0_ACCEPTANCE.md) for limits, policy, cost allocations, verified evidence and limits, and the two-developer estimate.
-
-## Run Mazi
-
-Use Node 22.12+ and Python 3.11+.
+Use Node 22.12+ and Python 3.11+. Run these commands from the repository root for a fresh local archive.
 
 ```sh
 npm ci
 npm run setup
-npm run dev
+MAZI_BACKEND=local .venv/bin/python -m mazi.identity.setup_shared \
+  --root .mazi-imports --admin-name "Your name"
+npm run dev:local
 ```
 
-If `.env.supabase` exists, normal startup uses its hosted archive and `.mazi-hosted` scratch. See [hosted setup](docs/SUPABASE_SETUP.md) for server secrets and explicit archive transfer. `npm run dev:local` and `npm run start:local` retain SQLite/files; `MAZI_BACKEND=local` prevents automatic environment-file loading. A checkout without hosted configuration stays local. A fresh local archive first needs `.venv/bin/python -m mazi.identity.setup_shared --root .mazi-imports --admin-name "Your name"`.
+Open http://127.0.0.1:5173. Enter your name and the shared code printed by setup. The app starts with an empty archive. Import a ZIP to add photographs.
 
-Open http://127.0.0.1:5173. One command starts the interface and archive worker. Enter your visible name and the shared code printed by setup. New names create member profiles immediately; an existing name resumes that profile on any device. The introduction appears once per profile and remains available in **About**. Import a ZIP, inspect its inventory, and start importing. Photographs appear in Atlas and Timeline. **Archive review** lets you correct metadata and approve memories. **Memories** contains annual recaps, shared stories, sub-events, slideshows, AVI exports, sealed capsules and in-app notifications. **Search**, **Places & sources**, and **Ask your archive** use the same circle and session.
+New names create member profiles. An existing name resumes that profile on any device. Anyone with the code can resume any profile, including the owner. The code does not verify a person's identity.
 
-The synthetic sample Atlas at `/?demo=1` also requires shared-code entry. Its fictional photographs are separate from your archive. An empty archive shows an invitation to import photographs.
+For an existing archive, setup requires its circle UUID and explicit profile mappings. Follow the [development guide](docs/DEVELOPMENT.md) before running setup against existing data. That guide also covers code rotation, sessions, archive paths, and runtime settings.
 
-For the built app, use `npm start`. It builds the UI and serves it with the API at http://127.0.0.1:5173. Stop the development server first. `npm run preview` previews static assets only; use `npm start` to exercise the complete app.
-
-For an existing archive, setup requires its circle UUID and explicit mappings. It never infers names from email addresses or changes ownership.
+To run the built app, stop the development server and run:
 
 ```sh
-.venv/bin/python -m mazi.identity.setup_shared --root /path/to/archive --admin-name "Owner" --group-id GROUP_UUID --map-name "Owner=EXISTING_ADMIN_UUID" --map-name "Friend=EXISTING_MEMBER_UUID"
+npm run start:local
 ```
 
-Repeated setup retains the code and mappings. `--rotate` generates a replacement entry code; it does not revoke existing sessions. Setup prints a generated code only on creation or rotation and stores only its digest in the configured database. Missing setup fails closed. Browsers retain a 30-day HttpOnly cookie; sign-out revokes that browser session. Anyone holding the code can resume any name, including the owner. This accepted D17 identity tradeoff does not establish a person's identity.
+The built app uses the same browser address. `npm run preview` serves static assets only.
 
-Local mode retains `.mazi-imports` and its compatible format. Hosted mode stores durable rows and bytes in Supabase, with separate `.mazi-hosted` scratch. Existing IDs are preserved only by explicit transfer; startup never copies the local archive. `MAZI_IMPORT_DATA_DIR` selects the local archive or hosted scratch directory for the chosen mode. `MAZI_IMPORT_PORT` changes the backend port; development keeps the browser on 5173. `MAZI_PYTHON` selects a Python interpreter. Normal startup never seeds demo data or merges the separate historical `.mazi-pilot` directory.
+For fictional sample photographs, open `http://127.0.0.1:5173/?demo=1` after shared-code entry. Samples remain separate from your archive.
+
+## Use a hosted archive
+
+The app can use hosted Supabase PostgreSQL and private Storage while the interface and worker run on your computer. Follow [hosted setup](docs/SUPABASE_SETUP.md) for configuration, explicit archive transfer, and recovery.
+
+When `.env.supabase` exists, `npm run dev` and `npm start` automatically use its hosted configuration. The `dev:local` and `start:local` commands above keep SQLite and files in `.mazi-imports`. Startup never transfers your local archive.
+
+## Check changes
+
+Run the relevant checks for your change:
 
 ```sh
+npm run check:docs
+npm run build
+npm run lint
 npm run test:backend
 npx playwright install chromium firefox
 npm test
 npm run test:app
-npm run build
-npm run lint
-npm run check:docs
 git diff --check
 ```
 
-The unified browser tests use a temporary synthetic archive. Optional learned search requires a separately installed local model; keyword search works without it. Existing source companion, consent and format limits are documented in [the historical guides](docs/history) and [the local app architecture](docs/PROTOTYPE_STACK.md).
+Browser checks use synthetic fixtures. See [Firefox setup on macOS](work/poteto/m0-acceptance/FIREFOX_ENVIRONMENT.md) if the bundled browser cannot launch. The separate [M0 access experiment](work/poteto/m0-acceptance/VERIFICATION.md) records provider checks and their limits.
 
-## Run the M0 access experiment
+## Read more
 
-Use Docker or OrbStack and run from this checkout. The project `mazi-m0-experiment` contains only synthetic users, records and objects. It is separate from the Atlas interface and any hosted Supabase project.
+| Guide                                                                                          | What it covers                                                |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [Product context](PRODUCT.md) and [specification](docs/SPEC.md)                                | Who Mazi serves and how the archive works.                    |
+| [Development guide](docs/DEVELOPMENT.md) and [hosted setup](docs/SUPABASE_SETUP.md)            | Run the app and manage an archive.                            |
+| [App architecture](docs/PROTOTYPE_STACK.md)                                                    | React interface, Python domains, storage, and current limits. |
+| [Roadmap](docs/ROADMAP.md) and [decisions](docs/DECISIONS.md)                                  | Delivery gates, accepted choices, and open risks.             |
+| [Contracts](docs/CONTRACTS.md), [privacy](docs/PRIVACY.md), and [imports](docs/IMPORTS.md)     | Data rules, access, consent, and supported sources.           |
+| [Design](DESIGN.md) and [interaction guide](docs/HOME_MEMORY_INTERACTIONS.md)                  | Atlas appearance and behavior.                                |
+| [Test plan](docs/TEST_PLAN.md) and [prototype verification](work/design/atlas/VERIFICATION.md) | Acceptance scenarios and recorded evidence.                   |
+| [Historical guides](docs/history)                                                              | Earlier experiments, source companions, and format limits.    |
 
-```sh
-npm run m0:start
-npm run test:m0
-npx supabase db advisors --local --type security --fail-on error
-npm run m0:stop
-```
-
-To replay the migration in this dedicated synthetic database, run `npx supabase db reset --local` after starting it, then rerun `npm run test:m0`. Schema lives in `supabase/migrations`, bucket setup in `supabase/seed.sql`, provider tests and fixture inventory in `tests/m0`, and evidence in [M0 verification](work/poteto/m0-acceptance/VERIFICATION.md). Dev A owns migrations; Dev B proposes dependent changes. Never link or deploy this experiment configuration as production policy.
-
-The selected macOS environment cannot launch stock bundled Firefox because of its shared profile directory. [Firefox reproduction](work/poteto/m0-acceptance/FIREFOX_ENVIRONMENT.md) creates a temporary launcher without changing the installed browser or user profile. Set `MAZI_FIREFOX_EXECUTABLE` to that launcher when running `npm test`. Linux CI uses the bundled default. Firefox phone checks use a narrow touch-enabled desktop engine, not Android GeckoView. Physical Android Chrome/Firefox checks precede M1 pilot acceptance.
-
-CI runs formatting, build/typechecking, browser checks, document checks and the actual local provider suite. The GitHub run is reported by the PR; local verification does not claim its remote result.
+The [original project plan](PROJECT_PLAN.md) and [source brief](docs/source/PRODUCT_BRIEF.md) remain preserved. The [decision register](docs/DECISIONS.md) records changes to the plan.
