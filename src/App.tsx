@@ -4,6 +4,7 @@ import { About } from "./About";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
 import { FeaturePage } from "./features";
+import { isFeaturePath } from "./featureRoutes";
 import { ArchiveStatus, Home } from "./Home";
 import { MemoryNotFound, MemoryView } from "./MemoryView";
 import { Shell } from "./Shell";
@@ -11,17 +12,6 @@ import { SoundController } from "./sound/SoundController";
 import { useArchive } from "./useArchive";
 import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
-
-const featurePaths = [
-  "/imports",
-  "/circle",
-  "/review",
-  "/places",
-  "/discover",
-  "/ask",
-  "/answer-evidence",
-  "/memories",
-];
 
 export default function App() {
   const reduced = useReducedMotion();
@@ -100,10 +90,7 @@ export default function App() {
         }}
       />
     );
-  else if (
-    featurePaths.includes(route.path) ||
-    (route.path === "/search" && !demo)
-  )
+  else if (isFeaturePath(route.path, demo))
     content = <FeaturePage key={route.path} path={route.path + route.search} />;
   else if (archive.status !== "ready")
     content = <ArchiveStatus archive={archive} heading={heading} />;
