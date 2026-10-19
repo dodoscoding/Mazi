@@ -71,8 +71,10 @@ class CapacityHttpTests(unittest.TestCase):
                 self.assertEqual((status, search['total'], len(search['items']), search['next_offset']),
                                  (200, 1001, 1, None))
                 self.assertEqual(request(f'/api/discovery/search?group={group}', authenticated=False)[0], 403)
+                status, evidence = request(f'/api/answers/evidence?group={group}&asset={asset}')
+                self.assertEqual((status, evidence['id']), (200, asset))
+                self.assertEqual(request(f'/api/answers/evidence?group={group}&asset={asset}', authenticated=False)[0], 403)
                 checks = [
-                    (f'/api/answers/evidence?group={group}&asset={asset}', None, 'Local Memory answers support up to 1,000 visible photographs'),
                     (f'/api/discovery/search?group={group}&mode=semantic', None, 'Local search limit is 1,000 items'),
                     ('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'}, 'Local Memory answers support up to 1,000 visible photographs'),
                     (f'/api/review/events?group={group}', None, 'Review set exceeds local limit'),
