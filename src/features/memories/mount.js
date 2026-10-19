@@ -23,7 +23,11 @@ export function mount(root, lifecycle) {
         : {},
     );
     const data = await response.json();
-    if (!response.ok) throw Error(data.error || "Request failed");
+    if (!response.ok) {
+      const error = Error(data.error || "Request failed");
+      error.status = response.status;
+      throw error;
+    }
     return data;
   }
   const mediaUrls = new Set();
@@ -52,10 +56,16 @@ export function mount(root, lifecycle) {
     const panel = node("article", "");
     panel.className = "panel";
     panel.append(node("h3", story.event.title), node("p", story.notice));
-    for (const entry of story.contributions)
-      panel.append(
-        node("p", (entry.editable ? "You: " : "Group member: ") + entry.text),
+    const contributions = node("div", "");
+    function updateContributions() {
+      contributions.replaceChildren(
+        ...story.contributions.map((entry) =>
+          node("p", (entry.editable ? "You: " : "Group member: ") + entry.text),
+        ),
       );
+    }
+    updateContributions();
+    panel.append(contributions);
     const form = node("form", ""),
       label = node("label", "Your recollection"),
       input = node("textarea", "");
@@ -63,25 +73,86 @@ export function mount(root, lifecycle) {
     input.value =
       story.contributions.find((entry) => entry.editable)?.text || "";
     label.append(input);
-    form.append(label, node("button", "Save my recollection"));
-    form.onsubmit = (event) => {
-      event.preventDefault();
-      mutate("/api/memories/write", {
-        story: story.id,
-        revision: story.revision,
-        text: input.value,
-      });
-    };
-    panel.append(form);
+    const save = node("button", "Save my recollection");
     const remove = node("button", "Remove my recollection");
     remove.type = "button";
-    remove.onclick = () =>
-      mutate("/api/memories/write", {
-        story: story.id,
-        revision: story.revision,
-        text: "",
-      });
-    panel.append(remove);
+    let saving = false;
+    let conflicted = false;
+    const refreshSaved = node("button", "Refresh saved story");
+    refreshSaved.type = "button";
+    refreshSaved.hidden = true;
+    refreshSaved.onclick = async () => {
+      if (refreshSaved.disabled) return;
+      refreshSaved.disabled = true;
+      const current = generation;
+      try {
+        const stories = await api(
+          "/api/memories/stories?" +
+            new URLSearchParams({ group, year: $("year").value }),
+        );
+        if (current !== generation || !panel.isConnected) return;
+        const updated = stories.find((item) => item.id === story.id);
+        if (!updated) throw Error("This story is no longer available.");
+        Object.assign(story, updated);
+        updateContributions();
+        conflicted = false;
+        if (document.activeElement === refreshSaved)
+          input.focus({ preventScroll: true });
+        refreshSaved.hidden = true;
+        save.disabled = remove.disabled = false;
+        $("notice").textContent =
+          "Saved recollections refreshed. Your draft is unchanged; review them before saving again.";
+      } catch (error) {
+        if (current === generation && panel.isConnected)
+          $("notice").textContent = error.message + " Your draft is kept.";
+      } finally {
+        refreshSaved.disabled = false;
+      }
+    };
+    async function writeRecollection(text) {
+      if (saving || conflicted) return;
+      saving = true;
+      save.disabled = remove.disabled = true;
+      const current = generation;
+      const draft = input.value;
+      $("notice").textContent = "";
+      try {
+        const updated = await api("/api/memories/write", {
+          group,
+          story: story.id,
+          revision: story.revision,
+          text,
+        });
+        if (current !== generation || !panel.isConnected) return;
+        Object.assign(story, updated);
+        updateContributions();
+        if (input.value === draft)
+          input.value =
+            story.contributions.find((entry) => entry.editable)?.text || "";
+        $("notice").textContent = "Recollection saved.";
+      } catch (error) {
+        if (current === generation && panel.isConnected) {
+          conflicted = error.status === 409;
+          refreshSaved.hidden = !conflicted;
+          $("notice").textContent =
+            error.message +
+            (conflicted
+              ? " Your draft is kept. Refresh the saved story before retrying."
+              : " Your draft is kept. Try saving again.");
+        }
+      } finally {
+        saving = false;
+        save.disabled = remove.disabled = conflicted;
+      }
+    }
+    form.append(label, save);
+    form.onsubmit = (event) => {
+      event.preventDefault();
+      void writeRecollection(input.value);
+    };
+    panel.append(form);
+    remove.onclick = () => void writeRecollection("");
+    panel.append(remove, refreshSaved);
     const download = node("button", "Export story JSON");
     download.type = "button";
     download.onclick = async () => {
