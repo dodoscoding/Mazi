@@ -120,14 +120,18 @@ class DiscoveryStore(SourceStore):
             return self.asset_bytes(user, asset)
         return super().rendition_bytes(user, asset)
 
+    def _places_query(self, user, group):
+        clause, params = super()._places_query(user, group)
+        return clause + ' AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=o.asset_id)', (*params, user)
+
     def places(self, user, group, country='', city='', paths=False):
         self._member(user, group)
         if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
             raise ValueError('Invalid filters')
-        rows = [dict(row) for row in self.db.execute(
-            'SELECT p.*,o.asset_id FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.group_id=? AND o.withdrawn=0 AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=o.asset_id) ORDER BY p.day,p.origin LIMIT 1001', (group, user))]
+        clause, params = self._places_query(user, group)
+        rows = [dict(row) for row in self.db.execute('SELECT p.*,o.asset_id' + clause + ' ORDER BY p.day,p.origin LIMIT 1001', params)]
         if len(rows) > 1000:
-            raise ValueError('Local map limit is 1,000 shared locations')
+            raise CapacityExceeded('Local map supports up to 1,000 shared location records')
         visible = set(self._visible_ids(user, group))
         points = [row for row in rows if row['asset_id'] in visible]
         countries = sorted({p['country'] for p in points})
@@ -640,8 +644,8 @@ class DiscoveryStore(SourceStore):
             return dict(items=result[offset:offset + limit], total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
-    def export_archive(self, user, group):
-        output = io.BytesIO(super().export_archive(user, group))
+    def _build_export_archive(self, user, group, ids):
+        output = io.BytesIO(super()._build_export_archive(user, group, ids))
         with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
             archive.writestr('people.json', json.dumps(self.people(user, group)))
             archive.writestr('personal-discovery.json', json.dumps(dict(hidden=self.hidden(user, group), hidden_memories=self.hidden_events(user, group), suppressed=self.suppressed(user, group), processing=self.settings(user, group))))

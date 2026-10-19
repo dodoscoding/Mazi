@@ -36,6 +36,12 @@ export function mount(root, lifecycle) {
   let land;
   let counted = "";
   let countRequest = 0;
+  let sourceRequest = 0;
+  let resourceRequest = 0;
+  let originRequest = 0;
+  let runRequest = 0;
+  let originReady = false;
+  const active = () => root.isConnected && !root.hidden;
   toastNotice($("#notice"), lifecycle);
   async function api(path, body) {
     const response = await fetch(
@@ -50,7 +56,7 @@ export function mount(root, lifecycle) {
     );
     const value = await response.json();
     if (!response.ok) {
-      if (response.status === 403) {
+      if (response.status === 401 || response.status === 403) {
         generation++;
         for (const id of [
           "#places",
@@ -66,7 +72,10 @@ export function mount(root, lifecycle) {
         $("#place-count").textContent =
           "Access unavailable. Sign in again to refresh your archive.";
       }
-      throw Error(value.error || "Request failed");
+      throw Object.assign(new Error(value.error || "Request failed"), {
+        status: response.status,
+        code: value.code,
+      });
     }
     return value;
   }
@@ -83,12 +92,19 @@ export function mount(root, lifecycle) {
     return button;
   }
   async function run(handler, saved = "Changes saved.") {
+    const request = ++runRequest;
+    if (active()) {
+      $("#notice").textContent = "";
+      $("#notice").dataset.tone = "";
+    }
     try {
       await handler();
-      if (!saved) return;
+      if (!saved || request !== runRequest || !active()) return;
       $("#notice").dataset.tone = "success";
       $("#notice").textContent = saved;
     } catch (error) {
+      if (request !== runRequest || !active() || error.name === "AbortError")
+        return;
       $("#notice").dataset.tone = "error";
       $("#notice").textContent = error.message;
     }
@@ -161,14 +177,33 @@ export function mount(root, lifecycle) {
     $("#places").replaceChildren();
     $("#map").replaceChildren();
     $("#place-count").textContent = "Loading places…";
+    $("#places-error").hidden = true;
+    $("#map-warning").hidden = true;
+    $("#world-map").disabled = $("#fit-map").disabled = true;
     const query = new URLSearchParams({
       group,
       country: $("#country").value,
       city: $("#city").value,
       paths: $("#paths").checked ? "1" : "0",
     });
-    const result = await api("/api/places?" + query);
-    if (revision !== generation) return;
+    let result;
+    try {
+      result = await api("/api/places?" + query);
+    } catch (error) {
+      if (revision !== generation || !active() || error.name === "AbortError")
+        return;
+      $("#place-count").textContent = "Shared places unavailable.";
+      $("#jump-places").textContent = "";
+      $("#places-error").textContent =
+        error.code === "capacity_exceeded"
+          ? `${error.message}. The map limit applies before filters. Sources and location controls load separately below; removing a shared location keeps its photograph. Refresh places to retry.`
+          : "Shared places could not load. Sources and location controls load separately below. Refresh places to retry.";
+      $("#places-error").hidden = false;
+      throw error;
+    }
+    if (revision !== generation || !active()) return;
+    $("#places-error").hidden = true;
+    $("#world-map").disabled = $("#fit-map").disabled = false;
     options($("#country"), result.countries, "All countries", (code) =>
       code ? `${countryName(code)}` : code,
     );
@@ -357,11 +392,32 @@ export function mount(root, lifecycle) {
     return true;
   }
   async function loadSources() {
+    const request = ++sourceRequest;
+    resourceRequest++;
     const selectedGroup = group;
     $("#sources").replaceChildren();
     $("#resources").replaceChildren();
-    const items = await api("/api/sources?" + new URLSearchParams({ group }));
-    if (group !== selectedGroup) return;
+    let items;
+    try {
+      items = await api("/api/sources?" + new URLSearchParams({ group }));
+    } catch (error) {
+      if (
+        request !== sourceRequest ||
+        group !== selectedGroup ||
+        !active() ||
+        error.name === "AbortError"
+      )
+        return;
+      $("#sources").replaceChildren(
+        node("p", "Sources could not load. Refresh places to retry.", {
+          role: "status",
+          class: "fx-small",
+        }),
+      );
+      throw error;
+    }
+    if (request !== sourceRequest || group !== selectedGroup || !active())
+      return;
     for (const source of items) {
       const card = node("article", undefined, { class: "connection" });
       const head = node("div", undefined, { class: "connection-head" });
@@ -421,11 +477,19 @@ export function mount(root, lifecycle) {
         );
       actions.append(
         action("View transfers", async () => {
+          const request = ++resourceRequest;
           $("#resources").replaceChildren();
-          for (const resource of await api(
+          const resources = await api(
             "/api/sources/resources?" +
               new URLSearchParams({ connection: source.id }),
-          )) {
+          );
+          if (
+            request !== resourceRequest ||
+            group !== selectedGroup ||
+            !active()
+          )
+            return;
+          for (const resource of resources) {
             const labels = {
               AVAILABLE_TO_GROUP: "Shared with group",
               RETAINED_NO_PREVIEW: "Original retained · preview unavailable",
@@ -495,32 +559,78 @@ export function mount(root, lifecycle) {
         node("p", "No connections yet.", { class: "fx-empty" }),
       );
   }
-  async function refresh() {
-    $("#origins").replaceChildren();
-    await map();
-    await loadSources();
-    // The bounded source overview runs once per circle or after a withdrawal.
-    if (counted !== group) {
-      const request = ++countRequest;
-      try {
-        if (await originCounts(request)) counted = group;
-      } catch {
-        if (request === countRequest && root.isConnected && !root.hidden) {
-          $("#origin-counts").replaceChildren();
-          $("#origin-sub").textContent =
-            "Source overview could not load. Refresh places to retry.";
-        }
+  function originControls() {
+    $("#origins").disabled = !originReady;
+    const disabled = !originReady || !$("#origins").value;
+    $("#place-form button").disabled = disabled;
+    $("#remove-place").disabled = disabled;
+  }
+  async function loadOrigins() {
+    const request = ++originRequest;
+    const selectedGroup = group;
+    originReady = false;
+    originControls();
+    $("#origins-status").textContent = "Loading your contributions…";
+    try {
+      const origins = await api(
+        "/api/review/my-contributions?" + new URLSearchParams({ group }),
+      );
+      if (request !== originRequest || group !== selectedGroup || !active())
+        return;
+      const selected = $("#origins").value;
+      $("#origins").replaceChildren(
+        ...origins.map((origin) =>
+          node("option", origin.filename, { value: origin.id }),
+        ),
+      );
+      if (selected)
+        $("#origins").value = origins.some((origin) => origin.id === selected)
+          ? selected
+          : "";
+      originReady = true;
+      originControls();
+      $("#origins-status").textContent =
+        selected && !$("#origins").value
+          ? "The selected contribution is no longer available. Choose another contribution."
+          : origins.length
+            ? ""
+            : "You have no available contributions in this circle.";
+    } catch (error) {
+      if (
+        request !== originRequest ||
+        group !== selectedGroup ||
+        !active() ||
+        error.name === "AbortError"
+      )
+        return;
+      $("#origins-status").textContent =
+        "Your contributions could not load. Your draft is still here. Refresh places to retry.";
+      throw error;
+    }
+  }
+  async function loadOverview() {
+    if (counted === group) return;
+    const request = ++countRequest;
+    try {
+      if (await originCounts(request)) counted = group;
+    } catch {
+      if (request === countRequest && active()) {
+        $("#origin-counts").replaceChildren();
+        $("#origin-sub").textContent =
+          "Source overview could not load. Refresh places to retry.";
       }
     }
-    const origins = await api(
-      "/api/review/my-contributions?" + new URLSearchParams({ group }),
-    );
-    $("#origins").replaceChildren(
-      ...origins.map((origin) =>
-        node("option", origin.filename, { value: origin.id }),
-      ),
-    );
   }
+  async function refresh() {
+    await Promise.allSettled([
+      map(),
+      loadSources(),
+      loadOrigins(),
+      loadOverview(),
+    ]);
+  }
+  $("#origins").onchange = originControls;
+  originControls();
   root.querySelectorAll("[data-jump]").forEach((jump) =>
     jump.addEventListener("click", () => {
       root
@@ -549,6 +659,7 @@ export function mount(root, lifecycle) {
   $("#paths").onchange = () => run(map, null);
   $("#place-form").onsubmit = (event) => {
     event.preventDefault();
+    if (!originReady || !$("#origins").value) return;
     run(async () => {
       const data = Object.fromEntries(new FormData(event.target));
       await api("/api/places", {
@@ -557,18 +668,22 @@ export function mount(root, lifecycle) {
         longitude: Number(data.longitude),
         day: data.day || null,
       });
-      await map();
+      // The write is complete; map() reports refresh failures in its own panel.
+      await Promise.allSettled([map()]);
     });
   };
-  $("#remove-place").onclick = () =>
-    run(async () => {
+  $("#remove-place").onclick = () => {
+    if (!originReady || !$("#origins").value) return;
+    return run(async () => {
       await api("/api/places", {
         origin: $("#origins").value,
         latitude: null,
         longitude: null,
       });
-      await map();
+      // The write is complete; map() reports refresh failures in its own panel.
+      await Promise.allSettled([map()]);
     });
+  };
   $("#kind").onchange = () => {
     $("#apple-fields").hidden = $("#kind").value !== "apple";
     $("#discord-fields").hidden = $("#kind").value !== "discord";
@@ -604,9 +719,12 @@ export function mount(root, lifecycle) {
     $("#city").value = "";
     run(refresh, null);
   };
-  (async () => {
+  async function loadWorkspace() {
+    const restoreFocus = document.activeElement === $("#retry-workspace");
+    $("#retry-workspace").disabled = true;
     try {
       const groups = await api("/api/groups");
+      if (!active()) return;
       if (!groups.length)
         throw Error("Create or join a group on the imports page.");
       $("#groups").replaceChildren(
@@ -614,12 +732,26 @@ export function mount(root, lifecycle) {
       );
       $(".places-group").classList.toggle("is-single", groups.length < 2);
       group = lifecycle.selectGroup($("#groups"));
+      $("#signed-out").hidden = true;
+      $("#retry-workspace").hidden = true;
+      $("#notice").textContent = "";
       $("#workspace").hidden = false;
+      if (restoreFocus) {
+        $("h1").tabIndex = -1;
+        $("h1").focus();
+      }
       await refresh();
     } catch (error) {
-      $("#signed-out").hidden = false;
+      if (!active() || error.name === "AbortError") return;
+      const denied = error.status === 401 || error.status === 403;
+      $("#signed-out").hidden = !denied;
+      $("#retry-workspace").hidden = denied;
       $("#notice").dataset.tone = "error";
       $("#notice").textContent = error.message;
+    } finally {
+      if (active()) $("#retry-workspace").disabled = false;
     }
-  })();
+  }
+  $("#retry-workspace").onclick = loadWorkspace;
+  loadWorkspace();
 }

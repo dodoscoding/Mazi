@@ -1,6 +1,7 @@
 """Local Map and Sources UI; extends the existing archive, never binds publicly."""
 import base64
 
+from mazi.capacity import CapacityExceeded
 from mazi.persistence import ArchiveBusy
 from mazi.http_origin import validate_origin
 import json
@@ -36,6 +37,8 @@ def handler_for(store):
                 if parts.path == '/api/sources/original':
                     return self.send(200, store.resource_bytes(user, query.get('id', [''])[0]), 'application/octet-stream')
                 return self.json(404, {'error': 'Not found'})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
