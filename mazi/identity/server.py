@@ -21,16 +21,19 @@ from .core import Conflict, Denied, Store
 
 def handler_for(store: Store):
     class Handler(BaseHTTPRequestHandler):
-        def send(self, status: int, body: bytes, content_type: str = "application/json", cookie: str | None = None):
+        def send_headers(self, status: int, length: int, content_type: str, cookie: str | None = None):
             self.send_response(status)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Content-Length", str(length))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
             if cookie is not None:
                 self.send_header("Set-Cookie", cookie)
             self.end_headers()
+
+        def send(self, status: int, body: bytes, content_type: str = "application/json", cookie: str | None = None):
+            self.send_headers(status, len(body), content_type, cookie)
             self.wfile.write(body)
 
         def json(self, status: int, value, cookie: str | None = None):

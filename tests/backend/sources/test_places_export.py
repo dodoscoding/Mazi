@@ -162,10 +162,15 @@ class PlacesBudgetTests(PlacesFixture):
             if member._zinfo.filename == 'places.json':
                 writes.append((member._fileobj.tell(), len(data)))
             return original(member, data)
-        with patch.object(review, 'EXPORT_BYTES', limit), patch.object(zipfile._ZipWriteFile, 'write', observe):
-            with self.assertRaisesRegex(CapacityExceeded, '128 MiB archive limit'):
-                self.store.export_archive(self.alice, self.group)
-        self.assertTrue(writes)
+        with patch.object(zipfile._ZipWriteFile, 'write', observe):
+            with self.exported() as archive:
+                self.assertEqual(archive.read('places.json'), raw)
+            self.assertTrue(writes)
+            writes.clear()
+            with patch.object(review, 'EXPORT_BYTES', limit):
+                with self.assertRaisesRegex(CapacityExceeded, '128 MiB archive limit'):
+                    self.store.export_archive(self.alice, self.group)
+        # Buffered metadata may be rejected before its first file write.
         self.assertTrue(all(offset + count <= limit for offset, count in writes), writes)
 
     def test_serialized_utf8_row_ceiling_accepts_exact_and_rejects_one_more_byte(self):

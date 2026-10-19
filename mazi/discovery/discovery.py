@@ -6,11 +6,9 @@ mutations. Vectors are derivatives, never an authorization source.
 import hashlib
 from mazi.persistence import initialize_schema
 
-import io
 import json
 import time
 import uuid
-import zipfile
 from datetime import date
 
 from mazi.capacity import CapacityExceeded
@@ -654,8 +652,6 @@ class DiscoveryStore(SourceStore):
         super()._capture_export_metadata(user, group, ids, fingerprint)
         self._export_discovery(user, group, fingerprint)
 
-    def _build_export_archive(self, user, group, ids, fingerprint):
-        with io.BytesIO(super()._build_export_archive(user, group, ids, fingerprint)) as output:
-            with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
-                self._export_discovery(user, group, fingerprint, archive)
-            return output.getvalue()
+    def _write_export_archive(self, user, group, ids, fingerprint, archive, output):
+        super()._write_export_archive(user, group, ids, fingerprint, archive, output)
+        self._export_discovery(user, group, fingerprint, archive)

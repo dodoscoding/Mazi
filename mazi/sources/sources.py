@@ -18,6 +18,7 @@ from pathlib import Path
 from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.adapters import MAX_FILE, NormalizedImportItem, digest
+from mazi.archive.export import write_export_object
 from mazi.archive.review import ReviewStore
 
 PLACES_EXPORT_ROW_BYTES = 2 * 1024
@@ -305,7 +306,7 @@ class SourceStore(ReviewStore):
                     for row in self.db.execute('SELECT * FROM source_outcomes WHERE connection=? ORDER BY ' + insertion_order(self.db, '') + ' LIMIT 1000', (connection,))]
         return (transfers + rejected)[:1000]
 
-    def resource_bytes(self, user, resource):
+    def _resource_locator(self, user, resource):
         row = self.db.execute('SELECT r.*,s.owner_id,s.group_id FROM source_resources r JOIN continuous_sources s ON s.id=r.connection WHERE r.id=?', (resource,)).fetchone()
         if not row or row['withdrawn']:
             raise Denied('Resource unavailable')
@@ -315,11 +316,15 @@ class SourceStore(ReviewStore):
         self._member(user, row['group_id'])
         self._member(row['owner_id'], row['group_id'])
         if row['state'] == 'RETAINED_NO_PREVIEW':
-            return self.objects.read("source-resources", resource)
+            return "source-resources", resource
         origin = self.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=? AND withdrawn=0', (resource,)).fetchone()
         if not origin:
             raise Denied('Resource unavailable')
-        return self.asset_bytes(user, origin[0], original=True)
+        _, namespace, key = self._asset_locator(user, origin[0], original=True)
+        return namespace, key
+
+    def resource_bytes(self, user, resource):
+        return self.objects.read(*self._resource_locator(user, resource))
 
     def withdraw_resource(self, user, resource):
         with self.transaction():
@@ -374,16 +379,17 @@ class SourceStore(ReviewStore):
     def _export_resources(self, user, group, fingerprint, archive=None, output=None):
         self._member(user, group)
         resources = self.db.execute("SELECT r.*,s.owner_id,s.group_id FROM source_resources r JOIN continuous_sources s ON s.id=r.connection JOIN members m ON m.group_id=s.group_id AND m.user_id=s.owner_id JOIN import_runs i ON i.id=r.id WHERE s.group_id=? AND r.withdrawn=0 AND i.withdrawn=0 AND r.state='RETAINED_NO_PREVIEW'", (group,)).fetchall()
-        self._check_export_size(sum(row['size'] for row in resources) + (output.getbuffer().nbytes if output is not None else 0))
+        self._check_export_size(sum(row['size'] for row in resources) + (output.tell() if output is not None else 0))
         manifest = []
         for row in resources:
             identity = {key: row[key] for key in ('id', 'connection', 'identity', 'owner_id', 'group_id', 'sha256', 'size')}
             identity.update(namespace='source-resources', key=row['id'])
             if archive is not None:
-                data = self.objects.read(identity['namespace'], identity['key'])
-                if hashlib.sha256(data).hexdigest() != identity['sha256']:
+                namespace, key = self._resource_locator(user, row['id'])
+                if (namespace, key) != (identity['namespace'], identity['key']):
                     raise Conflict('Stored resource changed while preparing export; retry')
-                archive.writestr('resources/' + row['id'], data)
+                write_export_object(self.objects, identity, archive, 'resources/' + row['id'],
+                                    'Stored resource changed while preparing export; retry')
             fingerprint.identity('resource', identity)
             manifest.append({'id': row['id'], 'sha256': row['sha256'], 'metadata': json.loads(row['metadata'])})
         fingerprint.json_member('resources.json', manifest, archive)
@@ -393,12 +399,10 @@ class SourceStore(ReviewStore):
         self._export_resources(user, group, fingerprint)
         fingerprint.member('places.json', self._scan_export_places(user, group, ids))
 
-    def _build_export_archive(self, user, group, ids, fingerprint):
-        with io.BytesIO(super()._build_export_archive(user, group, ids, fingerprint)) as output:
-            with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
-                self._export_resources(user, group, fingerprint, archive, output)
-                self._write_export_places(user, group, ids, archive, output, fingerprint)
-            return output.getvalue()
+    def _write_export_archive(self, user, group, ids, fingerprint, archive, output):
+        super()._write_export_archive(user, group, ids, fingerprint, archive, output)
+        self._export_resources(user, group, fingerprint, archive, output)
+        self._write_export_places(user, group, ids, archive, output, fingerprint)
 
     def _write_export_places(self, user, group, ids, archive, output, fingerprint):
         started = time.perf_counter()

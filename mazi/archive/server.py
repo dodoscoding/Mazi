@@ -16,6 +16,7 @@ from mazi.identity.core import Conflict, Denied
 from mazi.imports.server import handler_for as import_handler
 from mazi.imports.server import worker
 from .review import ReviewStore
+from .export import EXPORT_COPY_BYTES
 
 
 
@@ -56,7 +57,7 @@ def handler_for(store):
                 if path == "/api/review/on-this-day":
                     return self.json(200, store.on_this_day(user, group))
                 if path == "/api/review/export":
-                    return self.send(200, store.export_archive(user, group), "application/zip")
+                    return self.send_export(user, group)
                 if path.startswith("/api/review/rendition/"):
                     return self.send(200, store.rendition_bytes(user, path.rsplit("/", 1)[1]), "image/jpeg")
                 self.json(404, {"error": "Not found"})
@@ -72,6 +73,27 @@ def handler_for(store):
                 self.json(400, {"error": "Invalid request"})
             except OSError:
                 self.json(503, {"error": "Stored file unavailable; retry later"})
+
+        def send_export(self, user, group):
+            headers_started = False
+            try:
+                with store.export_archive_file(user, group) as output:
+                    size = output.seek(0, 2)
+                    output.seek(0)
+                    headers_started = True
+                    self.send_headers(200, size, "application/zip")
+                    remaining = size
+                    while remaining:
+                        chunk = output.read(min(EXPORT_COPY_BYTES, remaining))
+                        if not chunk or self.wfile.write(chunk) != len(chunk):
+                            raise OSError('Incomplete archive transfer')
+                        remaining -= len(chunk)
+            except Exception:
+                if not headers_started:
+                    raise
+                # Headers or body may already be on the wire. A second response
+                # would conceal the truncation indicated by Content-Length.
+                self.close_connection = True
 
         def do_POST(self):
             path = urlsplit(self.path).path

@@ -4,6 +4,7 @@ import hashlib
 import json
 import unittest
 import zipfile
+from contextlib import contextmanager
 
 from PIL import Image
 
@@ -209,12 +210,14 @@ class ExportAdmissionTests(unittest.TestCase):
         self.store.set_place(self.alice, origin, 'NL', 'Amsterdam', 52.37, 4.9, '2024-01-01')
         self.store.correct_asset(self.alice, self.asset, title='A title', capture_date='2024-01-01', place='A place', anniversary=True)
         reads = []
-        read = self.store.objects.read
+        materialize = self.store.objects.materialize
+        @contextmanager
         def observe(namespace, key):
             self.assertFalse(self.store.db.in_transaction)
             reads.append((namespace, key))
-            return read(namespace, key)
-        self.store.objects.read = observe
+            with materialize(namespace, key) as path:
+                yield path
+        self.store.objects.materialize = observe
         statuses, headers, body = self.http_export()
         self.assertEqual(statuses, [200])
         self.assertEqual(headers['Content-Type'], 'application/zip')
