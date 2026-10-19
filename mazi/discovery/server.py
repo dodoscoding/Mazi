@@ -2,6 +2,7 @@
 import json
 
 from mazi.persistence import ArchiveBusy
+from mazi.http_origin import validate_origin
 import os
 import threading
 from http.server import HTTPServer
@@ -48,9 +49,7 @@ def handler_for(store):
             if not path.startswith('/api/discovery/'):
                 return super().do_POST()
             try:
-                origin = self.headers.get('Origin')
-                if origin and origin != 'http://' + self.headers.get('Host', ''):
-                    raise Denied('Invalid origin')
+                validate_origin(self.headers.get('Origin'), self.headers.get('Host', ''))
                 if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
                     raise ValueError('JSON required')
                 size = int(self.headers.get('Content-Length', '0'))
