@@ -1,6 +1,7 @@
 """Local review screen and API. Bind only to localhost."""
 from __future__ import annotations
 
+from mazi.capacity import CapacityExceeded
 from mazi.persistence import ArchiveBusy
 from mazi.http_origin import validate_origin
 
@@ -59,6 +60,8 @@ def handler_for(store):
                 if path.startswith("/api/review/rendition/"):
                     return self.send(200, store.rendition_bytes(user, path.rsplit("/", 1)[1]), "image/jpeg")
                 self.json(404, {"error": "Not found"})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:

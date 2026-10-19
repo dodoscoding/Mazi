@@ -13,6 +13,7 @@ import uuid
 import zipfile
 from datetime import date
 
+from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.sources.sources import SourceStore
 from . import embeddings as model
@@ -381,7 +382,7 @@ class DiscoveryStore(SourceStore):
         with self.transaction():
             ids = self._visible_ids(user, group)
             if len(ids) > 1000:
-                raise ValueError('Local index limit is 1,000 items')
+                raise CapacityExceeded('Local index limit is 1,000 items')
         indexed, discarded = 0, 0
         attempted = 0
         for asset in ids:
@@ -432,7 +433,7 @@ class DiscoveryStore(SourceStore):
         with self.transaction():
             visible = self._visible_ids(user, group)
             if len(visible) > 1000:
-                raise ValueError('Local search limit is 1,000 items')
+                raise CapacityExceeded('Local search limit is 1,000 items')
             people = self.people(user, group)
             person_assets = next((set(p['assets']) for p in people if p['id'] == person), set())
             semantic = mode == 'semantic' and self._enabled(group, '*') and self.encoder.ready

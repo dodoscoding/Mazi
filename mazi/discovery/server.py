@@ -1,6 +1,7 @@
 """Local People/search UI with the complete existing archive routes."""
 import json
 
+from mazi.capacity import CapacityExceeded
 from mazi.persistence import ArchiveBusy
 from mazi.http_origin import validate_origin
 import os
@@ -35,6 +36,8 @@ def handler_for(store):
                 return self.json(404, {'error': 'Not found'})
             except Conflict as exc:
                 self.json(409, {'error': str(exc)})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
@@ -89,6 +92,8 @@ def handler_for(store):
                 else:
                     return self.json(404, {'error': 'Not found'})
                 self.json(200, {'ok': True})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:

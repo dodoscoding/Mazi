@@ -77,7 +77,9 @@ export async function mountFeature(
       );
       return new Response(
         JSON.stringify(
-          value instanceof Error ? { error: value.message } : value,
+          value instanceof Error
+            ? { error: value.message, code: value.code }
+            : value,
         ),
         {
           status: value instanceof Error ? value.status || 503 : 200,

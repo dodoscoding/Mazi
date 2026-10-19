@@ -76,6 +76,16 @@
           </svg>
         </button>
       </div>
+      <p class="hint">
+        Search supports up to 1,000 visible photographs per circle. The limit
+        applies before words and filters, including dates or places.
+      </p>
+      <p id="search-recovery" class="hint" hidden>
+        This circle is above the local search limit. No partial results are
+        shown. Your search and filters are still here.
+        <a href="#/memories">Browse photographs</a> or
+        <a href="#/review">search the review timeline</a> instead.
+      </p>
       <div class="disc-tools">
         <div
           id="result-types"
@@ -136,7 +146,15 @@
         </button>
         <button id="stop-index" type="button" hidden>Stop indexing</button>
       </div>
+      <p class="hint">
+        Local indexing also supports up to 1,000 visible photographs per circle.
+      </p>
       <p id="index-progress" role="status"></p>
+      <p id="index-recovery" class="hint" hidden>
+        Indexing is unavailable above 1,000 visible photographs.
+        <a href="#/memories">Browse photographs</a> or
+        <a href="#/review">search the review timeline</a> instead.
+      </p>
       <p class="hint" id="model-help">
         Related search uses a small offline vocabulary and image colors. It does
         not recognize faces or infer objects in photographs. Words and filters

@@ -32,6 +32,7 @@ export function mount(root, lifecycle) {
     if (!response.ok)
       throw Object.assign(Error(data.error || "Request failed"), {
         status: response.status,
+        code: data.code,
       });
     return data;
   }
@@ -62,6 +63,7 @@ export function mount(root, lifecycle) {
   function clear() {
     revision++;
     $("answer").replaceChildren();
+    $("answer-recovery").hidden = true;
     $("answer").removeAttribute("aria-busy");
     $("notice").textContent = "";
     $("notice").dataset.state = "";
@@ -393,6 +395,9 @@ export function mount(root, lifecycle) {
         $("answer").replaceChildren();
         $("notice").dataset.state = "";
         $("notice").textContent = error.message;
+        $("answer-recovery").hidden = !(
+          error.status === 400 && error.code === "capacity_exceeded"
+        );
       }
     } finally {
       if (current === revision) {
