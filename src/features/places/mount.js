@@ -111,6 +111,50 @@ export function mount(root, lifecycle) {
     // Node radius and labels are in map units; keep them a constant on-screen size.
     canvas.style.setProperty("--k", String(width / 720));
   }
+  async function decorateMap(canvas, revision) {
+    const current = () =>
+      revision === generation && root.isConnected && !root.hidden;
+    try {
+      if (!land) {
+        const response = await fetch("/land.geojson");
+        if (!response.ok) throw Error("Map outlines unavailable");
+        const data = await response.json();
+        if (!current()) return;
+        if (!Array.isArray(data?.features)) throw Error("Invalid map outlines");
+        land = data;
+      }
+      if (!current()) return;
+      const landLayer = svg("g", { "aria-hidden": "true" });
+      for (const feature of land.features) {
+        const polygons =
+          feature.geometry.type === "Polygon"
+            ? [feature.geometry.coordinates]
+            : feature.geometry.coordinates;
+        for (const polygon of polygons) {
+          const d = polygon
+            .map(
+              (ring) =>
+                ring
+                  .map(
+                    ([lon, lat], i) =>
+                      `${i ? "L" : "M"}${(lon + 180) * 2},${(90 - lat) * 2}`,
+                  )
+                  .join(" ") + "Z",
+            )
+            .join(" ");
+          landLayer.append(svg("path", { d, class: "land" }));
+        }
+      }
+      canvas.insertBefore(landLayer, canvas.children[1] || null);
+      $("#map-warning").hidden = true;
+    } catch (error) {
+      if (!current() || error.name === "AbortError") return;
+      land = null;
+      $("#map-warning").textContent =
+        "Map outlines could not load. Shared places and sources still work. Refresh places to retry.";
+      $("#map-warning").hidden = false;
+    }
+  }
   async function map() {
     const revision = ++generation;
     $("#places").replaceChildren();
@@ -136,8 +180,6 @@ export function mount(root, lifecycle) {
     $("#jump-places").textContent = `· ${cities.size}`;
     const canvas = $("#map");
     setView(canvas, 0, 0, 720, 360);
-    if (!land) land = await (await fetch("/land.geojson")).json();
-    if (revision !== generation) return;
     const graticule = svg("g", { class: "graticule", "aria-hidden": "true" });
     for (let x = 0; x <= 720; x += 60)
       graticule.append(
@@ -148,28 +190,7 @@ export function mount(root, lifecycle) {
         svg("line", { x1: 0, y1: y, x2: 720, y2: y, class: "grid" }),
       );
     canvas.append(graticule);
-    const landLayer = svg("g", { "aria-hidden": "true" });
-    for (const feature of land.features) {
-      const polygons =
-        feature.geometry.type === "Polygon"
-          ? [feature.geometry.coordinates]
-          : feature.geometry.coordinates;
-      for (const polygon of polygons) {
-        const d = polygon
-          .map(
-            (ring) =>
-              ring
-                .map(
-                  ([lon, lat], i) =>
-                    `${i ? "L" : "M"}${(lon + 180) * 2},${(90 - lat) * 2}`,
-                )
-                .join(" ") + "Z",
-          )
-          .join(" ");
-        landLayer.append(svg("path", { d, class: "land" }));
-      }
-    }
-    canvas.append(landLayer);
+
     $("#world-map").onclick = () => setView(canvas, 0, 0, 720, 360);
     $("#fit-map").onclick = () => {
       if (!result.points.length) return;
@@ -261,6 +282,7 @@ export function mount(root, lifecycle) {
           class: "fx-empty",
         }),
       );
+    void decorateMap(canvas, revision);
   }
   async function originCounts() {
     const selectedGroup = group;
