@@ -18,6 +18,7 @@ import time
 
 from PIL import Image, ImageOps, ImageStat
 
+from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.engine import ImportStore
 
@@ -76,7 +77,7 @@ class ReviewStore(ImportStore):
             raise ValueError("Invalid suggestion limit")
         ids = self._visible_ids(user, group)
         if len(ids) > 1000:
-            raise ValueError("Review set exceeds local limit")
+            raise CapacityExceeded("Review set exceeds local limit")
         signatures = {asset: signature(self.asset_bytes(user, asset)) for asset in ids}
         result = []
         for position, left in enumerate(ids):
@@ -227,7 +228,7 @@ class ReviewStore(ImportStore):
             raise ValueError("Invalid suggestion limit")
         visible = set(self._visible_ids(user, group))
         if len(visible) > 1000:
-            raise ValueError("Review set exceeds local limit")
+            raise CapacityExceeded("Review set exceeds local limit")
         evidence = {}
         for row in self.db.execute("SELECT o.asset_id,o.payload FROM archive_origins o "
                                    "JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id "

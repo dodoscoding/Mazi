@@ -12,6 +12,7 @@ import time
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
+from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.discovery.discovery import DiscoveryStore, text
 
@@ -77,7 +78,7 @@ class AnswerStore(DiscoveryStore):
         self._authorize_answer(user, group)
         ids = self._visible_ids(user, group)
         if len(ids) > 1000:
-            raise ValueError('Local Memory answers support up to 1,000 visible photographs')
+            raise CapacityExceeded('Local Memory answers support up to 1,000 visible photographs')
         records = []
         for asset in ids:
             doc = self._document(user, asset)

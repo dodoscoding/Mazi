@@ -1,6 +1,7 @@
 """Loopback-only Memory answers, inheriting import/review/discovery routes."""
 import json
 
+from mazi.capacity import CapacityExceeded
 from mazi.persistence import ArchiveBusy
 from mazi.http_origin import validate_origin
 import os
@@ -29,6 +30,8 @@ def handler_for(store):
                 if parts.path == '/api/answers/evidence':
                     return self.json(200, store.evidence(user, query['group'], query['asset']))
                 return self.json(404, {'error': 'Not found'})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
@@ -57,6 +60,8 @@ def handler_for(store):
                     store.answer_processing(user, body['group'], body['enabled'], body.get('group_wide', False))
                     return self.json(200, {'ok': True})
                 return self.json(404, {'error': 'Not found'})
+            except CapacityExceeded as exc:
+                return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:

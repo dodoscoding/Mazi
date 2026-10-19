@@ -43,8 +43,39 @@ export function mount(root, lifecycle) {
           },
     );
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Request failed");
+    if (!response.ok)
+      throw Object.assign(new Error(data.error || "Request failed"), {
+        status: response.status,
+        code: data.code,
+      });
     return data;
+  }
+  async function suggestionList(path) {
+    try {
+      return await api(path);
+    } catch (error) {
+      if (error.status === 400 && error.code === "capacity_exceeded")
+        return null;
+      throw error;
+    }
+  }
+  function unavailableSuggestions(container, retry) {
+    container.append(
+      element(
+        "p",
+        "Suggestions are unavailable above 1,000 visible photographs. The timeline and reviewed decisions remain available.",
+        "fx-small",
+      ),
+      button("Retry suggestions", async (retryButton) => {
+        retryButton.disabled = true;
+        try {
+          await retry();
+          updateSummary();
+        } finally {
+          retryButton.disabled = false;
+        }
+      }),
+    );
   }
   function notice(message, tone = "info") {
     $("notice").dataset.tone = tone;
@@ -117,11 +148,16 @@ export function mount(root, lifecycle) {
       parts.push(
         `${counts.events} possible ${counts.events === 1 ? "event" : "events"}`,
       );
+    if (counts.pairs === null) parts.push("Duplicate suggestions unavailable");
+    if (counts.events === null) parts.push("Event suggestions unavailable");
     $("review-sub").textContent = parts.length
       ? `${parts.join(" · ")}. Changes are shared with the circle, and every choice can be revisited.`
       : "Fix dates and places, settle duplicates and group events. Changes are shared with the circle, and every choice can be revisited.";
     const waiting = counts.needs + counts.pairs + counts.events;
-    const done = counts.complete && counts.total > 0 && !waiting;
+    const suggestionsAvailable =
+      counts.pairs !== null && counts.events !== null;
+    const done =
+      counts.complete && counts.total > 0 && !waiting && suggestionsAvailable;
     $("done").hidden = !done;
     if (done)
       $("done-text").textContent =
@@ -343,13 +379,13 @@ export function mount(root, lifecycle) {
   }
   async function duplicates() {
     const [pairs, reviewed] = await Promise.all([
-      api(`/api/review/duplicates?${params()}`),
+      suggestionList(`/api/review/duplicates?${params()}`),
       api(`/api/review/reviewed-pairs?${params()}`),
     ]);
-    counts.pairs = pairs.length;
+    counts.pairs = pairs?.length ?? null;
     $("duplicates").replaceChildren();
     $("reviewed-pairs").replaceChildren();
-    for (const pair of pairs) {
+    for (const pair of pairs || []) {
       const card = document.createElement("article");
       card.className = "pair-card";
       card.append(
@@ -409,7 +445,8 @@ export function mount(root, lifecycle) {
       card.append(links, actions);
       $("duplicates").append(card);
     }
-    empty($("duplicates"), "No unreviewed suggestions.");
+    if (pairs === null) unavailableSuggestions($("duplicates"), duplicates);
+    else empty($("duplicates"), "No unreviewed suggestions.");
     for (const pair of reviewed) {
       const card = document.createElement("article");
       card.className = "pair-card is-reviewed";
@@ -465,13 +502,13 @@ export function mount(root, lifecycle) {
 
   async function events() {
     const [candidates, reviewed] = await Promise.all([
-      api(`/api/review/events?${params()}`),
+      suggestionList(`/api/review/events?${params()}`),
       api(`/api/review/reviewed-events?${params()}`),
     ]);
-    counts.events = candidates.length;
+    counts.events = candidates?.length ?? null;
     $("events").replaceChildren();
     $("reviewed-events").replaceChildren();
-    for (const candidate of candidates) {
+    for (const candidate of candidates || []) {
       const card = document.createElement("article");
       card.className = "event-card";
       card.append(
@@ -586,7 +623,8 @@ export function mount(root, lifecycle) {
       );
       $("reviewed-events").append(card);
     }
-    empty($("events"), "No unreviewed event suggestions.");
+    if (candidates === null) unavailableSuggestions($("events"), events);
+    else empty($("events"), "No unreviewed event suggestions.");
     empty($("reviewed-events"), "No reviewed events yet.");
   }
   async function today() {

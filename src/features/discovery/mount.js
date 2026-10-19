@@ -46,6 +46,7 @@ export function mount(root, lifecycle) {
     generation++;
     indexRun++;
     $("#index-progress").textContent = "";
+    $("#index-recovery").hidden = true;
     $("#stop-index").hidden = true;
     for (const id of [
       "#memories",
@@ -69,6 +70,7 @@ export function mount(root, lifecycle) {
       $(id).replaceChildren();
     $("#search-loading").hidden = true;
     $("#search-none").hidden = true;
+    $("#search-recovery").hidden = true;
     $("#result-types").hidden = true;
     $("#result-total").textContent = "";
     $("#count").textContent = "";
@@ -95,7 +97,10 @@ export function mount(root, lifecycle) {
         group = "";
         $("#private").hidden = true;
       }
-      throw Error(value.error || "Request failed");
+      throw Object.assign(Error(value.error || "Request failed"), {
+        status: response.status,
+        code: value.code,
+      });
     }
     return value;
   }
@@ -208,6 +213,8 @@ export function mount(root, lifecycle) {
   }
   async function search(offset = 0) {
     const revision = ++generation;
+    $("#notice").textContent = "";
+    $("#search-recovery").hidden = true;
     $("#results").replaceChildren();
     $("#more").hidden = true;
     $("#count").textContent = "Searching…";
@@ -219,11 +226,24 @@ export function mount(root, lifecycle) {
     }
     try {
       await searchPage(revision, offset);
+      if (revision === generation && $("#search-none").hidden)
+        $("#search-groups").hidden = false;
+    } catch (error) {
+      if (revision !== generation) return;
+      next = null;
+      $("#count").textContent = "Search unavailable.";
+      $("#result-total").textContent = "";
+      $("#result-types").hidden = true;
+      $("#search-groups").hidden = true;
+      $("#search-none").hidden = true;
+      $("#search-recovery").hidden = !(
+        error.status === 400 && error.code === "capacity_exceeded"
+      );
+      throw error;
     } finally {
       if (revision === generation) {
         $("#search-loading").hidden = true;
         $("#search-loading").replaceChildren();
-        if ($("#search-none").hidden) $("#search-groups").hidden = false;
       }
     }
   }
@@ -534,6 +554,8 @@ export function mount(root, lifecycle) {
       const runId = ++indexRun,
         targetGroup = group;
       let completed = 0;
+      $("#notice").textContent = "";
+      $("#index-recovery").hidden = true;
       $("#build-index").disabled = true;
       $("#stop-index").hidden = false;
       try {
@@ -556,6 +578,14 @@ export function mount(root, lifecycle) {
             break;
           }
         }
+      } catch (error) {
+        if (runId !== indexRun || group !== targetGroup) return;
+        if (error.status === 400 && error.code === "capacity_exceeded") {
+          $("#index-progress").textContent =
+            "Indexing stopped at the local capacity limit.";
+          $("#index-recovery").hidden = false;
+        }
+        throw error;
       } finally {
         $("#build-index").disabled = false;
         $("#stop-index").hidden = true;
