@@ -436,7 +436,8 @@ class ReviewStore(ImportStore):
         ids = self._visible_ids(user, group)
         if len(ids) > 1000:
             raise CapacityExceeded("Export supports up to 1,000 photographs")
-        self._check_export_size(sum(self._asset(user, asset)["size"] for asset in ids))
+        for asset in ids:
+            self._asset(user, asset)
         captured = ExportFingerprint(self._check_export_size)
         with export_cleanup(tempfile.TemporaryFile(mode='w+b')) as output:
             self._build_export_archive(user, group, ids, captured, output)
@@ -482,13 +483,13 @@ class ReviewStore(ImportStore):
                         key=key, sha256=row['sha256'], size=row['size'], origins=identities)
         return metadata, identity
 
-    def _export_manifest(self, user, group, ids, fingerprint, archive=None):
+    def _export_manifest(self, user, group, ids, fingerprint, archive=None, output=None):
         fingerprint.identity('visible-assets', ids)
         manifest = []
         for asset in ids:
             metadata, identity = self._export_asset(user, asset)
             if archive is not None:
-                write_export_object(self.objects, identity, archive, "originals/" + asset,
+                write_export_object(self.objects, identity, archive, output, "originals/" + asset,
                                     "Stored original changed while preparing export; retry")
             fingerprint.identity('original', identity)
             manifest.append(metadata)
@@ -503,4 +504,4 @@ class ReviewStore(ImportStore):
             self._write_export_archive(user, group, ids, fingerprint, archive, output)
 
     def _write_export_archive(self, user, group, ids, fingerprint, archive, output):
-        self._export_manifest(user, group, ids, fingerprint, archive)
+        self._export_manifest(user, group, ids, fingerprint, archive, output)
