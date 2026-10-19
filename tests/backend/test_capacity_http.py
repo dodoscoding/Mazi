@@ -74,9 +74,19 @@ class CapacityHttpTests(unittest.TestCase):
                 status, evidence = request(f'/api/answers/evidence?group={group}&asset={asset}')
                 self.assertEqual((status, evidence['id']), (200, asset))
                 self.assertEqual(request(f'/api/answers/evidence?group={group}&asset={asset}', authenticated=False)[0], 403)
+                status, answer = request('/api/answers/ask', {'group': group, 'question': 'png'})
+                self.assertEqual(status, 200, answer)
+                self.assertEqual((answer['status'], answer['matching_records'], answer['shown']),
+                                 ('supported', 1001, 5))
+                self.assertEqual(len(answer['claims']), 5)
+                self.assertEqual(answer['usage']['requests'], 1)
+                for claim, citation in zip(answer['claims'], answer['evidence']):
+                    self.assertEqual(claim['evidence_ids'], [citation['id']])
+                    self.assertEqual(request(citation['url']), (200, citation))
+                self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'},
+                                         authenticated=False)[0], 403)
                 checks = [
                     (f'/api/discovery/search?group={group}&mode=semantic', None, 'Local search limit is 1,000 items'),
-                    ('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'}, 'Local Memory answers support up to 1,000 visible photographs'),
                     (f'/api/review/events?group={group}', None, 'Review set exceeds local limit'),
                     (f'/api/review/duplicates?group={group}', None, 'Review set exceeds local limit'),
                 ]
@@ -92,18 +102,26 @@ class CapacityHttpTests(unittest.TestCase):
                                      (400, {'code': 'capacity_exceeded', 'error': 'Local index limit is 1,000 items'}))
                 finally:
                     store.encoder = original_encoder
-                # An oversized synthetic source record fails the whole keyword request.
+                # Oversized source metadata fails both complete retrieval operations.
                 origin = store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=? LIMIT 1', (asset,)).fetchone()
                 store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?',
                                  (json.dumps({'context': [{'text': 'x' * (64 * 1024)}]}), origin['id']))
                 store.db.commit()
+                before_usage = request(f'/api/answers/state?group={group}')[1]['usage']
                 try:
+                    self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'}),
+                                     (400, {'code': 'capacity_exceeded',
+                                            'error': 'Memory answers exceeded the 64 KiB metadata limit per origin. No partial answer was returned.'}))
+                    self.assertEqual(request(f'/api/answers/state?group={group}')[1]['usage'], before_usage)
                     self.assertEqual(request(f'/api/discovery/search?group={group}'),
                                      (400, {'code': 'capacity_exceeded',
                                             'error': 'Words & filters metadata exceeds the 64 KiB per-origin limit'}))
                 finally:
                     store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (origin['payload'], origin['id']))
                     store.db.commit()
+                status, recovered = request('/api/answers/ask', {'group': group, 'question': 'png'})
+                self.assertEqual((status, recovered['matching_records'], recovered['shown']), (200, 1001, 5))
+                self.assertEqual(recovered['usage']['requests'], before_usage['requests'] + 1)
                 for path, body in [
                     (f'/api/discovery/search?group={group}&offset=bad', None),
                     (f'/api/review/timeline?group={group}&offset=bad', None),

@@ -31,7 +31,7 @@ test("answer capacity explains the limit and preserves the question for recovery
       if (path === "/api/answers/ask")
         return unavailable
           ? capacity(
-              "Local Memory answers support up to 1,000 visible photographs",
+              "Memory answers exceeded the local processing budget. No partial answer was returned.",
             )
           : {
               status: "abstained",
@@ -51,10 +51,13 @@ test("answer capacity explains the limit and preserves the question for recovery
   $("#question").value = "When was the lake photograph?";
   submit(feature, "#ask-form");
   await until(
-    () => $("#notice").textContent.includes("1,000"),
+    () => $("#notice").textContent.includes("processing budget"),
     "capacity error",
   );
   assert.equal($("#answer-recovery")?.hidden, false);
+  assert.match($("#answer-recovery").textContent, /processing budget/);
+  assert.doesNotMatch($("#ask-form").textContent, /up to 1,000/);
+  assert.match($("#ask-form").textContent, /three complete evidence checks/);
   assert.equal($("#answer-recovery a")?.getAttribute("href"), "#/memories");
   assert.equal($("#question").value, "When was the lake photograph?");
   assert.equal($("#ask").disabled, false);
@@ -68,6 +71,65 @@ test("answer capacity explains the limit and preserves the question for recovery
     () => $("#answer").textContent.includes("No matching source evidence."),
     "answer recovered",
   );
+  assert.equal($("#answer-recovery").hidden, true);
+});
+
+test("answer processing exhaustion clears prior citations and allows an explicit retry", async (t) => {
+  let requests = 0;
+  const evidence = {
+    id: "budget-photo",
+    title: "Previously supported photograph",
+    date: "2024-01-02",
+    dates: ["2024-01-02"],
+    date_basis: "source capture date",
+    place: "Synthetic place",
+    url: `/api/answers/evidence?group=${group.id}&asset=budget-photo`,
+  };
+  const feature = await mountFeature(
+    t,
+    "answers",
+    (path) => {
+      if (path === "/api/groups") return [group];
+      if (path.startsWith("/api/answers/state")) return answerSettings;
+      if (path === "/api/answers/ask") {
+        requests++;
+        if (requests === 2)
+          return capacity(
+            "Memory answers exceeded the local processing budget. No partial answer was returned.",
+          );
+        return {
+          status: "supported",
+          message: "Recorded evidence.",
+          uncertainty: [],
+          coverage: "Synthetic archive",
+          usage: answerSettings.usage,
+          claims: [{ text: "Recorded date.", evidence_ids: [evidence.id] }],
+          evidence: [evidence],
+          matching_records: 1001,
+          shown: 1,
+        };
+      }
+      throw Error(`Unexpected ${path}`);
+    },
+    { realLifecycle: true },
+  );
+  const { $ } = feature;
+  await until(() => !$("#ask").disabled, "ready to ask");
+  $("#question").value = "When was the photograph?";
+  submit(feature, "#ask-form");
+  await until(() => $("#answer .cite"), "prior supported evidence");
+  assert.equal($("#evidence-panel").hidden, false);
+  submit(feature, "#ask-form");
+  await until(() => !$("#answer-recovery").hidden, "budget failure");
+  assert.equal($("#answer").textContent, "");
+  assert.equal($("#evidence-panel").hidden, true);
+  assert.equal($("#evidence-list").textContent, "");
+  assert.equal($("#question").value, "When was the photograph?");
+  assert.equal($("#ask").disabled, false);
+  assert.equal(requests, 2);
+  submit(feature, "#ask-form");
+  await until(() => $("#answer .cite"), "successful explicit retry");
+  assert.equal(requests, 3);
   assert.equal($("#answer-recovery").hidden, true);
 });
 
