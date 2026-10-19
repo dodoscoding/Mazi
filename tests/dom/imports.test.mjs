@@ -254,3 +254,226 @@ test("an already completed archive keeps its report without transferring again",
   assert.match($("#report-title").textContent, /completed/);
   assert.equal($("#imports").children.length, 1);
 });
+
+test("overlapping gallery refreshes keep only the newest page and cursor", async (t) => {
+  const gate = deferred();
+  let archiveCalls = 0;
+  const offsets = [];
+  const asset = (id) => ({
+    id,
+    origins: [],
+    origin_count: 0,
+    next_origin_offset: null,
+  });
+  const { $, root } = setup(t, async (path) => {
+    if (path.startsWith("/api/archive?")) {
+      offsets.push(
+        Number(new URL(path, "http://test").searchParams.get("offset")),
+      );
+      archiveCalls++;
+      if (archiveCalls === 2) await gate.promise;
+      return Array.from({ length: 30 }, (_, index) => asset(`asset-${index}`));
+    }
+    return baseResponse(path);
+  });
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 30,
+    "initial gallery",
+  );
+  $("#refresh-gallery").click();
+  await until(() => archiveCalls === 2, "delayed refresh");
+  $("#refresh-gallery").click();
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 30,
+    "newer refresh",
+  );
+  gate.resolve();
+  await delay(0);
+  assert.equal(root.querySelectorAll("#gallery article").length, 30);
+  $("#more").click();
+  await until(() => archiveCalls === 4, "next page request");
+  assert.equal(offsets.at(-1), 30);
+});
+
+test("a late report page cannot replace the most recently requested page", async (t) => {
+  const gate = deferred();
+  let waiting = false;
+  let page100Calls = 0;
+  const { $ } = setup(t, async (path) => {
+    if (path.startsWith("/api/imports/older")) {
+      const offset = Number(
+        new URL(path, "http://test").searchParams.get("offset"),
+      );
+      if (offset === 200) {
+        waiting = true;
+        await gate.promise;
+      }
+      if (offset === 100) page100Calls++;
+      return {
+        ...report("older"),
+        items: [
+          {
+            filename: `page-${offset}`,
+            outcome: "AVAILABLE_TO_GROUP",
+            reason: "",
+            warnings: [],
+          },
+        ],
+        next_offset: offset + 100,
+      };
+    }
+    return baseResponse(path);
+  });
+  await until(() => $(".history-row"), "history");
+  $(".history-row").click();
+  await until(() => $("#items").textContent.includes("page-0"), "first page");
+  $("#next").click();
+  await until(() => $("#items").textContent.includes("page-100"), "next page");
+  $("#next").click();
+  await until(() => waiting, "delayed next page");
+  $("#previous").click();
+  await until(() => page100Calls === 2, "previous page requested last");
+  await delay(0);
+  gate.resolve();
+  await delay(0);
+  assert.match($("#items").textContent, /page-100/);
+  assert.doesNotMatch($("#items").textContent, /page-200/);
+});
+
+test("repeated load-more clicks request and append each gallery page once", async (t) => {
+  const gate = deferred();
+  const offsets = [];
+  const { $, root } = setup(t, async (path) => {
+    if (path.startsWith("/api/archive?")) {
+      const offset = Number(
+        new URL(path, "http://test").searchParams.get("offset"),
+      );
+      offsets.push(offset);
+      if (offset === 30) await gate.promise;
+      return Array.from({ length: 30 }, (_, index) => ({
+        id: `asset-${offset + index}`,
+        origins: [],
+        origin_count: 0,
+        next_origin_offset: null,
+      }));
+    }
+    return baseResponse(path);
+  });
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 30,
+    "first page",
+  );
+  $("#more").click();
+  $("#more").click();
+  await until(() => offsets.includes(30), "next page");
+  gate.resolve();
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 60,
+    "second page",
+  );
+  await delay(0);
+  assert.deepEqual(offsets, [0, 30]);
+  assert.equal(
+    new Set(
+      [...root.querySelectorAll("#gallery img")].map((image) => image.src),
+    ).size,
+    60,
+  );
+});
+
+test("a failed load-more request releases the control and retries the same cursor", async (t) => {
+  const offsets = [];
+  let failed = false;
+  const { $, root } = setup(t, (path) => {
+    if (path.startsWith("/api/archive?")) {
+      const offset = Number(
+        new URL(path, "http://test").searchParams.get("offset"),
+      );
+      offsets.push(offset);
+      if (offset === 30 && !failed) {
+        failed = true;
+        return new Error("Synthetic page failure");
+      }
+      return Array.from({ length: 30 }, (_, index) => ({
+        id: `asset-${offset + index}`,
+        origins: [],
+        origin_count: 0,
+        next_origin_offset: null,
+      }));
+    }
+    return baseResponse(path);
+  });
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 30,
+    "first page",
+  );
+  $("#more").click();
+  await until(
+    () => $("#notice").textContent.includes("Synthetic page failure"),
+    "visible failure",
+  );
+  assert.equal(root.querySelectorAll("#gallery article").length, 30);
+  $("#more").click();
+  await until(
+    () => root.querySelectorAll("#gallery article").length === 60,
+    "retry next page",
+  );
+  assert.deepEqual(offsets, [0, 30, 30]);
+});
+
+test("source-record pagination prevents duplicate requests and can retry a failure", async (t) => {
+  const gate = deferred();
+  let calls = 0;
+  const { $, root } = setup(t, async (path) => {
+    if (path.startsWith("/api/archive?"))
+      return [
+        {
+          id: "asset",
+          origins: [],
+          origin_count: 101,
+          next_origin_offset: 100,
+        },
+      ];
+    if (path === "/api/archive/asset/origins?offset=100") {
+      calls++;
+      if (calls === 1) {
+        await gate.promise;
+        return new Error("Synthetic source-page failure");
+      }
+      return {
+        items: [
+          {
+            source_type: "manual",
+            sender: { label: "Synthetic source" },
+            shared_at_assertion: {},
+            capture_assertions: [],
+            context: [],
+            reactions: [],
+            warnings: [],
+          },
+        ],
+        next_offset: null,
+      };
+    }
+    return baseResponse(path);
+  });
+  await until(() => $("#gallery button"), "source pagination");
+  const more = $("#gallery button");
+  more.click();
+  more.click();
+  await until(() => calls > 0, "source request");
+  assert.equal(calls, 1);
+  gate.resolve();
+  await until(
+    () => $("#notice").textContent.includes("Synthetic source-page failure"),
+    "source failure",
+  );
+  assert.equal(more.disabled, false);
+  more.click();
+  await until(
+    () => root.querySelectorAll(".source-records p").length === 1,
+    "one source record",
+  );
+  assert.equal(calls, 2);
+  assert.equal(more.hidden, true);
+});
