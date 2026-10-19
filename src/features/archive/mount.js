@@ -14,6 +14,8 @@ export function mount(root, lifecycle) {
   let group = null;
   let offset = 0;
   let query = "";
+  let timelineRequest = 0;
+  let timelineLoading = false;
   let groupRoles = new Map();
   const counts = {
     needs: 0,
@@ -189,128 +191,138 @@ export function mount(root, lifecycle) {
   }
 
   async function timeline(more = false) {
-    if (!more) {
-      offset = 0;
-      $("timeline").replaceChildren();
-      counts.needs = 0;
-      counts.loaded = 0;
-    }
-    const page = await api(
-      `/api/review/timeline?${params(`&offset=${offset}&q=${encodeURIComponent(query)}`)}`,
-    );
-    $("count").textContent = `${page.total} photographs`;
-    counts.total = page.total;
-    counts.loaded += page.items.length;
-    counts.complete = page.next_offset === null && !query;
-    for (const item of page.items) {
-      const [issue, why] = issueOf(item);
-      const open = !item.date || !item.place;
-      if (open) counts.needs++;
-      const card = document.createElement("article");
-      card.className = `review-card ${open ? "needs-review" : "is-settled"}`;
-      const figure = element("figure", "", "review-photo");
-      figure.append(
-        image(item.id, item.title || "Archive photograph"),
-        element("span", issue, `issue-badge ${open ? "is-open" : ""}`),
+    if (more && timelineLoading) return;
+    const request = ++timelineRequest;
+    timelineLoading = true;
+    try {
+      if (!more) {
+        offset = 0;
+        $("timeline").replaceChildren();
+        counts.needs = 0;
+        counts.loaded = 0;
+      }
+      const page = await api(
+        `/api/review/timeline?${params(`&offset=${offset}&q=${encodeURIComponent(query)}`)}`,
       );
-      const body = element("div", "", "review-body");
-      const heading = element("h3", item.title || "Untitled photograph");
-      body.append(
-        heading,
-        element(
-          "p",
-          `${item.date || "Date unknown"} · ${titleCase(item.place) || "Place unknown"} · ${item.origin_count} source records`,
-          "review-meta",
-        ),
-        element("p", why, "review-why"),
-      );
-      const original = element("a", "Download original", "fx-text-link");
-      original.href = `/api/archive/${encodeURIComponent(item.id)}/original`;
-      original.download = item.id;
-      const form = document.createElement("form");
-      form.className = "fix-form";
-      const title = document.createElement("input");
-      title.name = "title";
-      title.maxLength = 200;
-      title.value = item.title;
-      const date = document.createElement("input");
-      date.name = "capture_date";
-      date.type = "date";
-      date.value = item.date || "";
-      const place = document.createElement("input");
-      place.name = "place";
-      place.maxLength = 200;
-      place.value = item.place || "";
-      const anniversary = document.createElement("input");
-      anniversary.name = "anniversary";
-      anniversary.type = "checkbox";
-      anniversary.checked = item.anniversary;
-      const when = element("fieldset", "", "fix-group");
-      when.append(
-        element("legend", "When was this taken?", "fx-label"),
-        field("Capture date", date),
-      );
-      const where = element("fieldset", "", "fix-group");
-      where.append(
-        element("legend", "Where", "fx-label"),
-        field("Place", place),
-      );
-      const save = element(
-        "button",
-        "Save correction",
-        "fx-button fx-button--primary",
-      );
-      save.type = "submit";
-      const actions = element("div", "", "fix-actions");
-      actions.append(save);
-      if (item.date_basis === "reviewed correction")
-        actions.append(
-          button("Clear date correction", async () => {
-            // Only the date changes; unsaved edits in the form are not sent.
+      if (request !== timelineRequest) return;
+      $("count").textContent = `${page.total} photographs`;
+      counts.total = page.total;
+      counts.loaded += page.items.length;
+      counts.complete = page.next_offset === null && !query;
+      for (const item of page.items) {
+        const [issue, why] = issueOf(item);
+        const open = !item.date || !item.place;
+        if (open) counts.needs++;
+        const card = document.createElement("article");
+        card.className = `review-card ${open ? "needs-review" : "is-settled"}`;
+        const figure = element("figure", "", "review-photo");
+        figure.append(
+          image(item.id, item.title || "Archive photograph"),
+          element("span", issue, `issue-badge ${open ? "is-open" : ""}`),
+        );
+        const body = element("div", "", "review-body");
+        const heading = element("h3", item.title || "Untitled photograph");
+        body.append(
+          heading,
+          element(
+            "p",
+            `${item.date || "Date unknown"} · ${titleCase(item.place) || "Place unknown"} · ${item.origin_count} source records`,
+            "review-meta",
+          ),
+          element("p", why, "review-why"),
+        );
+        const original = element("a", "Download original", "fx-text-link");
+        original.href = `/api/archive/${encodeURIComponent(item.id)}/original`;
+        original.download = item.id;
+        const form = document.createElement("form");
+        form.className = "fix-form";
+        const title = document.createElement("input");
+        title.name = "title";
+        title.maxLength = 200;
+        title.value = item.title;
+        const date = document.createElement("input");
+        date.name = "capture_date";
+        date.type = "date";
+        date.value = item.date || "";
+        const place = document.createElement("input");
+        place.name = "place";
+        place.maxLength = 200;
+        place.value = item.place || "";
+        const anniversary = document.createElement("input");
+        anniversary.name = "anniversary";
+        anniversary.type = "checkbox";
+        anniversary.checked = item.anniversary;
+        const when = element("fieldset", "", "fix-group");
+        when.append(
+          element("legend", "When was this taken?", "fx-label"),
+          field("Capture date", date),
+        );
+        const where = element("fieldset", "", "fix-group");
+        where.append(
+          element("legend", "Where", "fx-label"),
+          field("Place", place),
+        );
+        const save = element(
+          "button",
+          "Save correction",
+          "fx-button fx-button--primary",
+        );
+        save.type = "submit";
+        const actions = element("div", "", "fix-actions");
+        actions.append(save);
+        if (item.date_basis === "reviewed correction")
+          actions.append(
+            button("Clear date correction", async () => {
+              // Only the date changes; unsaved edits in the form are not sent.
+              await api("/api/review/correct", {
+                asset: item.id,
+                title: item.title,
+                capture_date: null,
+                place: item.place || "",
+                anniversary: false,
+              });
+              notice(
+                item.anniversary
+                  ? "Date correction cleared. Source dates apply again, and the On this day approval was removed."
+                  : "Date correction cleared. Source dates apply again.",
+              );
+              await refreshGroup();
+            }),
+          );
+        actions.append(original);
+        form.append(
+          when,
+          where,
+          field("Title", title, "fix-title"),
+          field("Approved for On this day", anniversary, "fix-check"),
+          actions,
+        );
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          act(async () => {
             await api("/api/review/correct", {
               asset: item.id,
-              title: item.title,
-              capture_date: null,
-              place: item.place || "",
-              anniversary: false,
+              title: title.value,
+              capture_date: date.value || null,
+              place: place.value,
+              anniversary: anniversary.checked,
             });
-            notice(
-              item.anniversary
-                ? "Date correction cleared. Source dates apply again, and the On this day approval was removed."
-                : "Date correction cleared. Source dates apply again.",
-            );
+            notice("Correction saved for the group.", "success");
             await refreshGroup();
-          }),
-        );
-      actions.append(original);
-      form.append(
-        when,
-        where,
-        field("Title", title, "fix-title"),
-        field("Approved for On this day", anniversary, "fix-check"),
-        actions,
-      );
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        act(async () => {
-          await api("/api/review/correct", {
-            asset: item.id,
-            title: title.value,
-            capture_date: date.value || null,
-            place: place.value,
-            anniversary: anniversary.checked,
           });
-          notice("Correction saved for the group.", "success");
-          await refreshGroup();
         });
-      });
-      body.append(form);
-      card.append(figure, body);
-      $("timeline").append(card);
+        body.append(form);
+        card.append(figure, body);
+        $("timeline").append(card);
+      }
+      offset = page.next_offset ?? 0;
+      $("more").hidden = page.next_offset === null;
+      empty($("timeline"), "No photographs match this search.");
+    } catch (error) {
+      if (request === timelineRequest) throw error;
+    } finally {
+      if (request === timelineRequest) timelineLoading = false;
     }
-    offset = page.next_offset ?? 0;
-    $("more").hidden = page.next_offset === null;
-    empty($("timeline"), "No photographs match this search.");
   }
 
   function pairFigures(pair) {
