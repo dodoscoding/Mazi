@@ -74,6 +74,29 @@ class AnswerStore(DiscoveryStore):
         if not all((self._answer_enabled(group, '*'), self._answer_enabled(group, user), self._enabled(group, '*'))):
             raise Denied('Enable group local processing and Memory answers, and opt in to Memory answers first')
 
+    def _evidence_record(self, user, group, asset):
+        doc = self._document(user, asset)
+        owners = [r[0] for r in self.db.execute('SELECT DISTINCT owner_id FROM archive_origins WHERE asset_id=? AND withdrawn=0', (asset,))]
+        annotation = self.db.execute('SELECT * FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
+        subjects = owners + ([annotation['actor_id']] if annotation else [])
+        if not doc['eligible'] or not all(self._answer_enabled(group, subject) for subject in subjects):
+            return None
+        dates = set()
+        for origin in self._all_origins(user, asset):
+            for assertion in origin.get('capture_assertions', []):
+                try:
+                    dates.add(datetime.fromisoformat(assertion['local'].replace('Z', '+00:00')).date().isoformat())
+                except (KeyError, ValueError, TypeError, AttributeError):
+                    pass
+        corrected = annotation['capture_date'] if annotation else None
+        if corrected:
+            dates = {corrected}
+        day = next(iter(dates)) if len(dates) == 1 else None
+        record = dict(id=asset, title=doc['title'] or 'Untitled photograph', date=day, dates=sorted(dates), place=doc['place'],
+                      date_basis='reviewed correction' if corrected else 'conflicting source dates' if len(dates) > 1 else 'source capture date' if dates else 'date unknown',
+                      url='/api/answers/evidence?' + urlencode(dict(group=group, asset=asset)))
+        return dict(evidence=record, content=doc['content'], fingerprint=doc['fingerprint'])
+
     def _records(self, user, group):
         self._authorize_answer(user, group)
         ids = self._visible_ids(user, group)
@@ -81,27 +104,9 @@ class AnswerStore(DiscoveryStore):
             raise CapacityExceeded('Local Memory answers support up to 1,000 visible photographs')
         records = []
         for asset in ids:
-            doc = self._document(user, asset)
-            owners = [r[0] for r in self.db.execute('SELECT DISTINCT owner_id FROM archive_origins WHERE asset_id=? AND withdrawn=0', (asset,))]
-            annotation = self.db.execute('SELECT * FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
-            subjects = owners + ([annotation['actor_id']] if annotation else [])
-            if not doc['eligible'] or not all(self._answer_enabled(group, subject) for subject in subjects):
-                continue
-            dates = set()
-            for origin in self._all_origins(user, asset):
-                for assertion in origin.get('capture_assertions', []):
-                    try:
-                        dates.add(datetime.fromisoformat(assertion['local'].replace('Z', '+00:00')).date().isoformat())
-                    except (KeyError, ValueError, TypeError, AttributeError):
-                        pass
-            corrected = annotation['capture_date'] if annotation else None
-            if corrected:
-                dates = {corrected}
-            day = next(iter(dates)) if len(dates) == 1 else None
-            record = dict(id=asset, title=doc['title'] or 'Untitled photograph', date=day, dates=sorted(dates), place=doc['place'],
-                          date_basis='reviewed correction' if corrected else 'conflicting source dates' if len(dates) > 1 else 'source capture date' if dates else 'date unknown',
-                          url='/api/answers/evidence?' + urlencode(dict(group=group, asset=asset)))
-            records.append(dict(evidence=record, content=doc['content'], fingerprint=doc['fingerprint']))
+            record = self._evidence_record(user, group, asset)
+            if record is not None:
+                records.append(record)
         records.sort(key=lambda row: row['evidence']['id'])
         return records
 
@@ -115,11 +120,15 @@ class AnswerStore(DiscoveryStore):
 
     def evidence(self, user, group, asset):
         with self.transaction():
-            rows = self._records(user, group)
-            row = next((r['evidence'] for r in rows if r['evidence']['id'] == asset), None)
-            if row is None:
+            self._authorize_answer(user, group)
+            asset_row = self._asset(user, asset)
+            if asset_row['group_id'] != group or self.db.execute(
+                    'SELECT 1 FROM discovery_hidden WHERE "user"=? AND asset=?', (user, asset)).fetchone():
                 raise Denied('Evidence no longer available')
-            return row
+            record = self._evidence_record(user, group, asset)
+            if record is None:
+                raise Denied('Evidence no longer available')
+            return record['evidence']
 
     def answer(self, user, group, question):
         question = text(question, 500)
