@@ -100,11 +100,11 @@ test("pending saves keep newer and neighboring drafts and use the returned revis
     );
   input.value = "First draft";
   inputs[1].value = "Neighbor draft";
-  const subevent = form.parentElement.querySelector("input");
+  const subevent = form.closest("article").querySelector("input");
   subevent.value = "Unfinished sub-event";
   submit();
   submit();
-  [...form.parentElement.querySelectorAll("button")]
+  [...form.closest("article").querySelectorAll("button")]
     .find((button) => button.textContent === "Remove my recollection")
     .click();
   await until(() => writes.length > 0, "one pending write");
@@ -259,3 +259,72 @@ for (const editWhileRemoving of [false, true]) {
     assert.equal(writes[1].revision, 2);
   });
 }
+
+test("saved recollections and the live draft have separate named regions without moving story actions", async (t) => {
+  const { $, root } = await mountFeature(t, "memories", response);
+  await until(() => $("#stories textarea"), "story draft");
+  const saved = $('#stories [aria-label="Saved recollections"]');
+  const draft = $('#stories [aria-label="Your recollection"]');
+  assert.equal(saved?.textContent, "You: Saved recollection");
+  assert.equal(draft?.querySelector("textarea").value, "Saved recollection");
+  assert.deepEqual(
+    [...root.querySelectorAll("#stories button")].map(
+      (button) => button.textContent,
+    ),
+    [
+      "Save my recollection",
+      "Remove my recollection",
+      "Refresh saved story",
+      "Export story JSON",
+      "Show slideshow",
+      "Previous photo",
+      "Next photo",
+      "Download video (AVI)",
+      "Add sub-event",
+      "Clear sub-events",
+    ],
+  );
+  const input = draft.querySelector("textarea");
+  input.focus();
+  assert.equal(root.ownerDocument.activeElement, input);
+  assert.equal(input.maxLength, 2000);
+  assert.equal(
+    draft.querySelector('[type="button"]').textContent,
+    "Remove my recollection",
+  );
+});
+
+test("the creator can still delete their story from its secondary tools", async (t) => {
+  const writes = [];
+  const { $, root } = await mountFeature(t, "memories", (path, body) => {
+    if (path.startsWith("/api/memories/stories"))
+      return writes.length
+        ? []
+        : [{ ...structuredClone(story), can_delete: true }];
+    if (path === "/api/memories/delete") {
+      writes.push(body);
+      return { ok: true };
+    }
+    return response(path);
+  });
+  await until(() => $("#stories textarea"), "creator's story");
+  const buttons = [...root.querySelectorAll("#stories button")];
+  const remove = buttons.find(
+    (button) => button.textContent === "Delete story",
+  );
+  assert.equal(remove.type, "button");
+  assert.equal(
+    remove.closest('[aria-label="Photos and exports"]')?.tagName,
+    "SECTION",
+  );
+  assert.equal(
+    buttons.indexOf(remove),
+    buttons.findIndex((button) => button.textContent === "Export story JSON") +
+      1,
+  );
+  remove.focus();
+  assert.equal(root.ownerDocument.activeElement, remove);
+  remove.click();
+  await until(() => !$("#stories textarea"), "deleted story cleared");
+  assert.deepEqual(writes, [{ group: group.id, story: story.id, revision: 1 }]);
+});
