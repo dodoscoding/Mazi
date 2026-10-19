@@ -35,7 +35,8 @@
     "dev:local": "node scripts/run-app.mjs --local",
     "start:local": "npm run build && node scripts/run-app.mjs --built --local",
     "archive:migrate": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.migrate', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
-    "archive:hosted": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.hosted_ops', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --"
+    "archive:hosted": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.hosted_ops', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
+    "test:dom": "node --test tests/dom/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/geist": "5.3.0",
@@ -53,6 +54,7 @@
     "@types/react-dom": "19.3.0",
     "@types/three": "0.186.0",
     "@vitejs/plugin-react": "6.1.1",
+    "happy-dom": "21.0.3",
     "prettier": "3.9.9",
     "supabase": "2.119.0",
     "typescript": "7.0.2",
