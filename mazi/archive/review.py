@@ -11,7 +11,9 @@ import io
 import json
 import hashlib
 import zipfile
+import heapq
 from datetime import date, datetime, timezone
+from itertools import groupby
 import time
 
 from PIL import Image, ImageOps, ImageStat
@@ -261,8 +263,9 @@ class ReviewStore(ImportStore):
     def _event_id(group, ids):
         return hashlib.sha256(json.dumps([group, sorted(ids)]).encode()).hexdigest()
 
-    def _date_place(self, asset, payload):
-        annotation = self.db.execute("SELECT capture_date,place FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
+    def _date_place(self, asset, payload, annotation=None):
+        if annotation is None:
+            annotation = self.db.execute("SELECT capture_date,place FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
         if annotation and annotation["capture_date"]:
             day = annotation["capture_date"][:10]
         else:
@@ -313,34 +316,50 @@ class ReviewStore(ImportStore):
                             (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
             self._audit(user, "review.correct", asset)
 
-    def timeline(self, user, group, offset=0, limit=30, query=""):
-        if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100 or not isinstance(query, str) or len(query) > 200:
-            raise ValueError("Invalid timeline page")
-        ids = self._visible_ids(user, group)
-        if len(ids) > 1000:
-            raise ValueError("Timeline exceeds local limit")
-        items = []
-        for asset in ids:
-            records = self._all_origins(user, asset)
-            if not records:
+    def _timeline_items(self, user, group, query=""):
+        visible = set(self._visible_ids(user, group))
+        rows = self.db.execute(
+            "SELECT a.id,o.payload,r.title,r.capture_date,r.place,r.anniversary "
+            "FROM archive_assets a JOIN archive_origins o ON o.asset_id=a.id "
+            "JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id "
+            "JOIN members reader ON reader.group_id=a.group_id AND reader.user_id=? "
+            "LEFT JOIN review_annotations r ON r.asset_id=a.id "
+            "WHERE a.group_id=? AND o.withdrawn=0 ORDER BY a.id," + insertion_order(self.db, "o"), (user, group))
+        for asset, origins in groupby(rows, key=lambda row: row["id"]):
+            if asset not in visible:
                 continue
-            annotation = self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
-            facts = {self._date_place(asset, record) for record in records}
+            origins = list(origins)
+            annotation = origins[0]
+            records = [json.loads(origin["payload"]) for origin in origins]
+            facts = {self._date_place(asset, record, annotation) for record in records}
             day, place = next(iter(facts)) if len(facts) == 1 else (None, "")
-            title = annotation["title"] if annotation else ""
+            title = annotation["title"] or ""
             searchable = " ".join([title, place, *[str(p.get("original_filename") or "") for p in records],
                                    *[str(c.get("text") or "") for p in records for c in p.get("context", [])]])
             if query.casefold() not in searchable.casefold():
                 continue
-            items.append({"id": asset, "title": title, "date": day, "place": place or None,
-                          "date_basis": "reviewed correction" if annotation and annotation["capture_date"] else
-                                        "conflicting source evidence" if len(facts) > 1 else
-                                        "source capture evidence" if day else "undated",
-                          "origin_count": len(records),
-                          "anniversary": bool(annotation["anniversary"]) if annotation else False})
-        items.sort(key=lambda item: (item["date"] or "", item["id"]), reverse=True)
-        return {"items": items[offset:offset + limit], "total": len(items),
-                "next_offset": offset + limit if offset + limit < len(items) else None}
+            yield {"id": asset, "title": title, "date": day, "place": place or None,
+                   "date_basis": "reviewed correction" if annotation["capture_date"] else
+                                 "conflicting source evidence" if len(facts) > 1 else
+                                 "source capture evidence" if day else "undated",
+                   "origin_count": len(records),
+                   "anniversary": bool(annotation["anniversary"])}
+        self._member(user, group)
+
+    def timeline(self, user, group, offset=0, limit=30, query=""):
+        if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100 or not isinstance(query, str) or len(query) > 200:
+            raise ValueError("Invalid timeline page")
+        total, items = 0, []
+        for item in self._timeline_items(user, group, query):
+            total += 1
+            entry = (item["date"] or "", item["id"], item)
+            if len(items) < offset + limit:
+                heapq.heappush(items, entry)
+            elif entry > items[0]:
+                heapq.heapreplace(items, entry)
+        items.sort(reverse=True)
+        return {"items": [entry[2] for entry in items[offset:]], "total": total,
+                "next_offset": offset + limit if offset + limit < total else None}
 
     def review_event(self, user, group, assets, title, decision):
         if decision not in ("accept", "reject", "undo") or not isinstance(assets, list) or len(assets) < 2 or len(assets) > 100 or len(set(assets)) != len(assets):

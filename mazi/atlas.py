@@ -27,13 +27,7 @@ def _place(rows):
 def atlas_view(store, user, group):
     with store.transaction():
         store._member(user, group)
-        items, offset = {}, 0
-        while True:
-            page = store.timeline(user, group, offset=offset, limit=100)
-            items.update((item['id'], item) for item in page['items'])
-            if page['next_offset'] is None:
-                break
-            offset = page['next_offset']
+        items = {item['id']: item for item in store._timeline_items(user, group)}
         hidden_assets = set()
         for row in store.db.execute(
             'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
