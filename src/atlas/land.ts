@@ -14,15 +14,35 @@ export type Land = {
   dots: (count: number) => Float32Array;
 };
 
-let pending: Promise<Land | null> | undefined;
+let cached: Land | undefined;
 
-/** Loads `/land.geojson` once. Resolves null when it is missing so the globe falls back to ocean. */
-export function loadLand(): Promise<Land | null> {
-  pending ??= fetch("/land.geojson")
-    .then((response) => (response.ok ? response.json() : null))
-    .then((data) => (data ? build(data) : null))
-    .catch(() => null);
-  return pending;
+/** Caches usable land. Missing outlines leave the globe ocean-only and can be retried. */
+export function loadLand(signal?: AbortSignal): Promise<Land | null> {
+  if (signal?.aborted) return Promise.resolve(null);
+  if (cached) return Promise.resolve(cached);
+  return new Promise((resolve) => {
+    const controller = new AbortController();
+    const finish = (land: Land | null) => {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+      resolve(land);
+    };
+    const abort = () => {
+      controller.abort();
+      finish(null);
+    };
+    const timeout = setTimeout(abort, 10_000);
+    signal?.addEventListener("abort", abort, { once: true });
+    void fetch("/land.geojson", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const land = data ? build(data) : null;
+        if (land) cached = land;
+        finish(land);
+      })
+      .catch(() => finish(null));
+  });
 }
 
 function polygons(data: { features?: { geometry?: Geometry }[] }): Ring[][] {
