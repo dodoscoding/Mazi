@@ -52,7 +52,10 @@ export function mount(root, lifecycle) {
   let groups = [];
   let selectedRun = null;
   let reportOffset = 0;
+  let reportRequest = 0;
   let galleryOffset = 0;
+  let galleryRequest = 0;
+  let galleryLoading = false;
   let polling = false;
   let currentReport = null;
   let gallerySignature = "";
@@ -488,7 +491,10 @@ export function mount(root, lifecycle) {
   async function refreshReport() {
     if (!selectedRun) return;
     const id = selectedRun;
-    const report = await api(`/api/imports/${id}?offset=${reportOffset}`);
+    const offset = reportOffset;
+    const request = ++reportRequest;
+    const report = await api(`/api/imports/${id}?offset=${offset}`);
+    if (request !== reportRequest || offset !== reportOffset) return;
     await showReport(id, report);
   }
 
@@ -566,90 +572,104 @@ export function mount(root, lifecycle) {
   }
 
   async function gallery(more = false) {
-    if (!group) return;
-    if (!more) {
-      galleryOffset = 0;
-      $("gallery").replaceChildren();
-    }
-    const items = await api(
-      `/api/archive?group=${group.id}&offset=${galleryOffset}`,
-    );
-    for (const item of items) {
-      const article = document.createElement("article");
-      article.className = "shared-photo";
-      const image = document.createElement("img");
-      image.src = `/api/archive/${item.id}/preview`;
-      image.alt = item.origins[0]?.original_filename || "Imported photograph";
-      image.loading = "lazy";
-      article.append(image);
-      const download = textElement("a", "Download original");
-      download.href = `/api/archive/${item.id}/original`;
-      download.download = item.origins[0]?.original_filename || "original";
-      download.className = "fx-text-link";
-      article.append(download);
-      const details = document.createElement("details");
-      details.append(
-        textElement(
-          "summary",
-          `${item.origin_count} source record${item.origin_count === 1 ? "" : "s"} · dates and conversation`,
-        ),
-      );
-      const sourceRecords = document.createElement("div");
-      sourceRecords.className = "source-records";
-      details.append(sourceRecords);
-      function appendOrigins(origins) {
-        for (const origin of origins) {
-          sourceRecords.append(
-            textElement(
-              "p",
-              `${words(origin.source_type)} · ${origin.sender.label || "Source sender unknown"}\nShared: ${origin.shared_at_assertion.raw ?? "Unknown"}\nCapture: ${origin.capture_assertions.map((a) => a.raw).join(", ") || "Unknown"}`,
-            ),
-          );
-          for (const message of origin.context)
-            sourceRecords.append(
-              textElement(
-                "p",
-                `${message.sender?.label || "Source message"}: ${message.text}`,
-              ),
-            );
-          if (origin.reactions.length)
-            sourceRecords.append(
-              textElement(
-                "p",
-                "Reactions: " + JSON.stringify(origin.reactions),
-              ),
-            );
-          if (origin.warnings.length)
-            sourceRecords.append(
-              textElement("p", origin.warnings.map(words).join(" · ")),
-            );
-        }
+    if (!group || (more && galleryLoading)) return;
+    const request = ++galleryRequest;
+    const offset = more ? galleryOffset : 0;
+    galleryLoading = true;
+    try {
+      if (!more) {
+        galleryOffset = 0;
+        $("gallery").replaceChildren();
       }
-      appendOrigins(item.origins);
-      let nextOrigin = item.next_origin_offset;
-      const moreOrigins = button("More source records", async () => {
-        const page = await api(
-          `/api/archive/${item.id}/origins?offset=${nextOrigin}`,
-        );
-        appendOrigins(page.items);
-        nextOrigin = page.next_offset;
-        moreOrigins.hidden = nextOrigin === null;
-      });
-      moreOrigins.hidden = nextOrigin === null;
-      details.append(moreOrigins);
-      article.append(details);
-      $("gallery").append(article);
-    }
-    galleryOffset += items.length;
-    $("more").hidden = items.length < 30;
-    if (!galleryOffset)
-      $("gallery").append(
-        el(
-          "p",
-          "fx-empty",
-          "Successfully imported photos will appear here for everyone in your group.",
-        ),
+      const items = await api(
+        `/api/archive?group=${group.id}&offset=${offset}`,
       );
+      if (request !== galleryRequest) return;
+      for (const item of items) {
+        const article = document.createElement("article");
+        article.className = "shared-photo";
+        const image = document.createElement("img");
+        image.src = `/api/archive/${item.id}/preview`;
+        image.alt = item.origins[0]?.original_filename || "Imported photograph";
+        image.loading = "lazy";
+        article.append(image);
+        const download = textElement("a", "Download original");
+        download.href = `/api/archive/${item.id}/original`;
+        download.download = item.origins[0]?.original_filename || "original";
+        download.className = "fx-text-link";
+        article.append(download);
+        const details = document.createElement("details");
+        details.append(
+          textElement(
+            "summary",
+            `${item.origin_count} source record${item.origin_count === 1 ? "" : "s"} · dates and conversation`,
+          ),
+        );
+        const sourceRecords = document.createElement("div");
+        sourceRecords.className = "source-records";
+        details.append(sourceRecords);
+        function appendOrigins(origins) {
+          for (const origin of origins) {
+            sourceRecords.append(
+              textElement(
+                "p",
+                `${words(origin.source_type)} · ${origin.sender.label || "Source sender unknown"}\nShared: ${origin.shared_at_assertion.raw ?? "Unknown"}\nCapture: ${origin.capture_assertions.map((a) => a.raw).join(", ") || "Unknown"}`,
+              ),
+            );
+            for (const message of origin.context)
+              sourceRecords.append(
+                textElement(
+                  "p",
+                  `${message.sender?.label || "Source message"}: ${message.text}`,
+                ),
+              );
+            if (origin.reactions.length)
+              sourceRecords.append(
+                textElement(
+                  "p",
+                  "Reactions: " + JSON.stringify(origin.reactions),
+                ),
+              );
+            if (origin.warnings.length)
+              sourceRecords.append(
+                textElement("p", origin.warnings.map(words).join(" · ")),
+              );
+          }
+        }
+        appendOrigins(item.origins);
+        let nextOrigin = item.next_origin_offset;
+        const moreOrigins = button("More source records", async () => {
+          if (moreOrigins.disabled) return;
+          moreOrigins.disabled = true;
+          try {
+            const page = await api(
+              `/api/archive/${item.id}/origins?offset=${nextOrigin}`,
+            );
+            appendOrigins(page.items);
+            nextOrigin = page.next_offset;
+            moreOrigins.hidden = nextOrigin === null;
+          } finally {
+            moreOrigins.disabled = false;
+          }
+        });
+        moreOrigins.hidden = nextOrigin === null;
+        details.append(moreOrigins);
+        article.append(details);
+        $("gallery").append(article);
+      }
+      galleryOffset = offset + items.length;
+      $("more").hidden = items.length < 30;
+      if (!galleryOffset)
+        $("gallery").append(
+          el(
+            "p",
+            "fx-empty",
+            "Successfully imported photos will appear here for everyone in your group.",
+          ),
+        );
+    } finally {
+      if (request === galleryRequest) galleryLoading = false;
+    }
   }
 
   renderSourceCards();
