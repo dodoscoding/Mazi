@@ -213,6 +213,7 @@ export function mount(root, lifecycle) {
   }
   async function search(offset = 0) {
     const revision = ++generation;
+    const mode = $("#mode").value;
     $("#notice").textContent = "";
     $("#search-recovery").hidden = true;
     $("#results").replaceChildren();
@@ -239,6 +240,11 @@ export function mount(root, lifecycle) {
       $("#search-recovery").hidden = !(
         error.status === 400 && error.code === "capacity_exceeded"
       );
+      $("#search-recovery-message").textContent =
+        mode === "semantic"
+          ? "Related search supports up to 1,000 visible photographs per circle, before filtering. Try Words & filters for larger circles."
+          : "Complete results are unavailable because this search exceeded its metadata-work budget.";
+      $("#use-keyword").hidden = mode !== "semantic";
       throw error;
     } finally {
       if (revision === generation) {
@@ -474,6 +480,13 @@ export function mount(root, lifecycle) {
   };
   $("#search-form").onsubmit = (event) => {
     event.preventDefault();
+    run(() => search());
+  };
+  $("#use-keyword").onclick = () => {
+    $("#mode").value = "keyword";
+    similar = "";
+    $("#clear-similar").hidden = true;
+    $("#query").focus();
     run(() => search());
   };
   $("#more").onclick = () => run(() => search(next));

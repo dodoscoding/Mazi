@@ -18,6 +18,11 @@ from mazi.identity.core import Conflict, Denied
 from mazi.sources.sources import SourceStore
 from . import embeddings as model
 
+KEYWORD_ORIGIN_BYTES = 64 * 1024
+KEYWORD_ASSET_BYTES = 8 * 1024 * 1024
+KEYWORD_REQUEST_BYTES = 64 * 1024 * 1024
+KEYWORD_SCAN_SECONDS = 2
+
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS discovery_people (
  id TEXT PRIMARY KEY, group_id TEXT NOT NULL, name TEXT NOT NULL, creator TEXT NOT NULL,
@@ -420,6 +425,134 @@ class DiscoveryStore(SourceStore):
             remaining = sum(doc['eligible'] and self._cached_vectors(doc) is None for doc in docs)
         return dict(indexed=indexed, discarded=discarded, remaining=remaining)
 
+    def _keyword_documents(self, user, group, person, started):
+        last_asset = last_origin = ''
+        asset, records, shared, sources, annotation = None, [], [], set(), None
+        asset_bytes = request_bytes = 0
+        byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
+        person_match = '''EXISTS (
+            SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person
+            JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor
+            WHERE t.person=? AND t.asset=a.id AND p.group_id=a.group_id
+            AND (p.account IS NULL OR EXISTS (SELECT 1 FROM members identity_member
+                 WHERE identity_member.group_id=p.group_id AND identity_member.user_id=p.account))
+            AND NOT EXISTS (SELECT 1 FROM discovery_suppressions d WHERE d.person=t.person AND d.asset=t.asset)
+        )''' if person else '1'
+
+        def document():
+            dates, places = set(), set()
+            for payload in records:
+                source_dates, source_places = self._date_place_evidence(asset, payload, annotation)
+                dates.update(source_dates)
+                places.update(source_places)
+            day = next(iter(dates)) if len(dates) == 1 else None
+            place = next(iter(places)) if len(places) == 1 else ''
+            cities = sorted({city for _, city in shared} | ({place} if place else set()))
+            title = annotation['title'] or ''
+            content = ' '.join([title, *cities, *[str(p.get('original_filename') or '') for p in records],
+                                *[str(c.get('text') or '') for p in records for c in p.get('context', [])]])
+            return dict(id=asset, title=title, date=day, place=place, content=content,
+                        sources=sources, cities=cities, countries={country for country, _ in shared},
+                        person_match=annotation['person_match'])
+
+        while True:
+            if time.perf_counter() - started > KEYWORD_SCAN_SECONDS:
+                raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
+            batch = self.db.execute(f'''SELECT a.id,o.id AS origin,{byte_length} AS payload_bytes,
+                    CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END AS payload,
+                    r.source,n.title,n.capture_date,n.place,p.country,p.city,{person_match} AS person_match
+                FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id
+                JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id
+                JOIN import_runs r ON r.id=o.run_id
+                LEFT JOIN review_annotations n ON n.asset_id=a.id
+                LEFT JOIN shared_places p ON p.origin=o.id
+                WHERE o.group_id=? AND a.group_id=? AND o.withdrawn=0 AND o.asset_id>=?
+                AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id)
+                AND (o.asset_id>? OR (o.asset_id=? AND o.id>?))
+                ORDER BY o.asset_id,o.id LIMIT 256''',
+                (KEYWORD_ORIGIN_BYTES, *((person,) if person else ()), group, group,
+                 last_asset, user, last_asset, last_asset, last_origin)).fetchall()
+            if not batch:
+                break
+            for row in batch:
+                if asset is not None and asset != row['id']:
+                    yield document()
+                    records, shared, sources, asset_bytes = [], [], set(), 0
+                asset, annotation = row['id'], row
+                if row['payload_bytes'] > KEYWORD_ORIGIN_BYTES:
+                    raise CapacityExceeded('Words & filters metadata exceeds the 64 KiB per-origin limit')
+                asset_bytes += row['payload_bytes']
+                request_bytes += row['payload_bytes']
+                if asset_bytes > KEYWORD_ASSET_BYTES:
+                    raise CapacityExceeded('Words & filters metadata exceeds the 8 MiB per-photograph limit')
+                if request_bytes > KEYWORD_REQUEST_BYTES:
+                    raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
+                records.append(json.loads(row['payload']))
+                if row['country'] is not None:
+                    shared.append((row['country'], row['city']))
+                sources.add(row['source'])
+            last_asset, last_origin = batch[-1]['id'], batch[-1]['origin']
+            del batch
+        if asset is not None:
+            yield document()
+        if time.perf_counter() - started > KEYWORD_SCAN_SECONDS:
+            raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
+
+    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30):
+        self._member(user, group)
+        if similar and not self.db.execute('''SELECT 1 FROM archive_assets a
+                WHERE a.id=? AND a.group_id=?
+                AND EXISTS (SELECT 1 FROM archive_origins o JOIN members m
+                    ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0)
+                AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id)''',
+                (similar, group, user)).fetchone():
+            raise Denied('Reference image unavailable for processing')
+        started = time.perf_counter()
+        self.db.execute('''DELETE FROM discovery_vectors WHERE asset IN (
+            SELECT a.id FROM archive_assets a WHERE a.group_id=? AND (
+                NOT EXISTS (SELECT 1 FROM archive_origins o JOIN members m
+                    ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0)
+                OR (NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id) AND (
+                    NOT EXISTS (SELECT 1 FROM discovery_processing p WHERE p.group_id=a.group_id AND p.subject='*' AND p.enabled<>0)
+                    OR EXISTS (SELECT 1 FROM archive_origins o JOIN members m
+                        ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0
+                        AND NOT EXISTS (SELECT 1 FROM discovery_processing p WHERE p.group_id=a.group_id AND p.subject=o.owner_id AND p.enabled<>0))
+                    OR EXISTS (SELECT 1 FROM review_annotations n WHERE n.asset_id=a.id AND (
+                        NOT EXISTS (SELECT 1 FROM discovery_processing p WHERE p.group_id=a.group_id AND p.subject=n.actor_id AND p.enabled<>0)
+                        OR NOT EXISTS (SELECT 1 FROM members m WHERE m.group_id=a.group_id AND m.user_id=n.actor_id)))
+                ))))''', (group, user))
+        total, items = 0, []
+        words, objects = query.casefold().split(), model.terms(object_query)
+        for doc in self._keyword_documents(user, group, person, started):
+            if person and not doc['person_match'] or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
+                continue
+            if country and country.upper() not in doc['countries']:
+                continue
+            if source and source not in doc['sources'] or start and (not doc['date'] or doc['date'] < start) or end and (not doc['date'] or doc['date'] > end):
+                continue
+            if object_query and not objects <= model.terms(doc['content']):
+                continue
+            if query and not all(word in doc['content'].casefold() for word in words):
+                continue
+            if offset <= total < offset + limit:
+                items.append(dict(id=doc['id'], title=doc['title'], date=doc['date'], place=doc['place'],
+                                  score=1.0, basis='keyword / filters', people=[]))
+            total += 1
+        page = {item['id']: item for item in items}
+        if page:
+            for row in self.db.execute('''SELECT t.asset,p.id,p.name,p.account,p.creator,t.actor
+                    FROM discovery_tags t JOIN discovery_people p ON p.id=t.person
+                    JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor
+                    WHERE p.group_id=? AND t.asset IN (%s)
+                    AND (p.account IS NULL OR EXISTS (SELECT 1 FROM members identity_member
+                        WHERE identity_member.group_id=p.group_id AND identity_member.user_id=p.account))
+                    AND NOT EXISTS (SELECT 1 FROM discovery_suppressions d WHERE d.person=t.person AND d.asset=t.asset)
+                    ORDER BY p.name,p.id''' % ','.join('?' for _ in page), (group, *page)):
+                page[row['asset']]['people'].append(dict(id=row['id'], name=row['name'], is_me=row['account'] == user,
+                                                       can_remove=row['actor'] == user or row['creator'] == user))
+        return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
+                    mode='keyword / filters', model=None, unindexed=0, message=self.encoder.message)
+
     def search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30):
         for value in (query, person, place, country, object_query, start, end, source, similar):
             text(value)
@@ -431,6 +564,16 @@ class DiscoveryStore(SourceStore):
         if start and end and start > end:
             raise ValueError('Invalid date range')
         with self.transaction():
+            if mode == 'keyword':
+                self._member(user, group)
+                probe = self.db.execute('''SELECT a.id FROM archive_assets a WHERE a.group_id=?
+                    AND EXISTS (SELECT 1 FROM archive_origins o JOIN members m
+                        ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0)
+                    AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id)
+                    LIMIT 1001''', (group, user)).fetchall()
+                if len(probe) > 1000:
+                    return self._keyword_search(user, group, query, person, place, country, object_query,
+                                                start, end, source, similar, offset, limit)
             visible = self._visible_ids(user, group)
             if len(visible) > 1000:
                 raise CapacityExceeded('Local search limit is 1,000 items')

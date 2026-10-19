@@ -120,3 +120,135 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   await expect(page.locator("#private")).toBeHidden();
   expect(errors).toEqual([]);
 });
+
+test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90000);
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/search");
+  await expect(page.locator("#results article")).toHaveCount(3);
+  const requests: Record<string, string>[] = [];
+  let budgetExceeded = false;
+  await page.route("**/api/archive/keyword-fixture-*/preview", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+    }),
+  );
+  await page.route("**/api/discovery/search?*", async (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    requests.push(Object.fromEntries(params));
+    if (params.get("mode") === "semantic" || budgetExceeded) {
+      await route.fulfill({
+        status: 400,
+        json: {
+          code: "capacity_exceeded",
+          error: budgetExceeded
+            ? "Keyword search exceeded its metadata-work budget"
+            : "Local search limit is 1,000 items",
+        },
+      });
+      return;
+    }
+    const offset = Number(params.get("offset"));
+    const end = Math.min(offset + 30, 1001);
+    await route.fulfill({
+      json: {
+        items: Array.from({ length: end - offset }, (_, index) => ({
+          id: `keyword-fixture-${offset + index}`,
+          title: `Keyword photograph ${offset + index + 1}`,
+          date: "2024-06-01",
+          place: "Amsterdam",
+          people: [],
+          basis: "keyword",
+          score: 1,
+        })),
+        total: 1001,
+        next_offset: end < 1001 ? end : null,
+        mode: "keyword",
+        unindexed: 0,
+      },
+    });
+  });
+  await page
+    .getByLabel("Search", { exact: true })
+    .fill("scaling-keyword-fixture");
+  await page.getByLabel("Search mode").selectOption("semantic");
+  await page.getByText("Refine by place, person, date or source").click();
+  await page.locator("#person").selectOption({ label: "Ben" });
+  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
+  await page.getByLabel("Country code").fill("NL");
+  await page.getByLabel("Object or concept in text").fill("bicycle");
+  await page.getByLabel("From", { exact: true }).fill("2024-01-01");
+  await page.getByLabel("Through", { exact: true }).fill("2024-12-31");
+  await page.getByLabel("Source", { exact: true }).selectOption("apple");
+  await page.getByRole("button", { name: "Search archive" }).click();
+  await expect(page.locator("#search-recovery")).toBeVisible();
+  await expect(page.locator("#search-recovery")).toContainText(
+    "1,000 visible photographs",
+  );
+  await expect(page.locator("#mode")).toHaveValue("semantic");
+  expect(requests.map((request) => request.mode)).toEqual(["semantic"]);
+  const failedSearch = requests[0];
+  await page.getByRole("button", { name: "Use Words & filters" }).click();
+  await expect(page.locator("#query")).toBeFocused();
+  await expect(page.locator("#count")).toHaveText("1001 photographs · keyword");
+  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  await expect(page.locator("#search-recovery")).toBeHidden();
+  await expect(page.locator("#mode")).toHaveValue("keyword");
+  expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
+  for (let offset = 30; offset < 1001; offset += 30) {
+    await page.getByRole("button", { name: "Next page" }).click();
+    await expect(page.locator("#results h3").first()).toHaveText(
+      `Keyword photograph ${offset + 1}`,
+    );
+    await expect(page.locator("#count")).toHaveText(
+      "1001 photographs · keyword",
+    );
+  }
+  await expect(page.locator("#results article")).toHaveCount(11);
+  await expect(page.locator("#results h3").last()).toHaveText(
+    "Keyword photograph 1001",
+  );
+  await expect(page.getByRole("button", { name: "Next page" })).toBeHidden();
+  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  expect(requests.at(-1)).toEqual({
+    ...failedSearch,
+    mode: "keyword",
+    offset: "990",
+  });
+  budgetExceeded = true;
+  await page.getByRole("button", { name: "Search archive" }).click();
+  await expect(page.locator("#search-recovery")).toBeVisible();
+  await expect(page.locator("#search-recovery")).toContainText(
+    "Complete results are unavailable",
+  );
+  await expect(page.locator("#search-recovery")).toContainText(
+    "metadata-work budget",
+  );
+  await expect(page.locator("#search-recovery")).toContainText(
+    "No partial results",
+  );
+  await expect(
+    page.getByRole("button", { name: "Use Words & filters" }),
+  ).toBeHidden();
+  await expect(page.locator("#results article")).toHaveCount(0);
+  await expect(page.locator("#result-total")).toBeEmpty();
+  await expect(page.locator("#result-types")).toBeHidden();
+  await expect(page.locator("#search-none")).toBeHidden();
+  await expect(page.locator("#mode")).toHaveValue("keyword");
+  await expect(page.locator("#query")).toHaveValue("scaling-keyword-fixture");
+  await expect(page.locator("#place")).toHaveValue("Amsterdam");
+  await page.screenshot({
+    path: testInfo.outputPath("keyword-budget-recovery.png"),
+    fullPage: true,
+  });
+  budgetExceeded = false;
+  await page.getByRole("button", { name: "Search archive" }).click();
+  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  await expect(page.locator("#search-recovery")).toBeHidden();
+  expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
+});
