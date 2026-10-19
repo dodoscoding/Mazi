@@ -35,6 +35,7 @@ export function mount(root, lifecycle) {
   let generation = 0;
   let land;
   let counted = "";
+  let countRequest = 0;
   toastNotice($("#notice"), lifecycle);
   async function api(path, body) {
     const response = await fetch(
@@ -284,18 +285,30 @@ export function mount(root, lifecycle) {
       );
     void decorateMap(canvas, revision);
   }
-  async function originCounts() {
+  async function originCounts(request) {
     const selectedGroup = group;
+    const current = () =>
+      request === countRequest &&
+      group === selectedGroup &&
+      root.isConnected &&
+      !root.hidden;
     const tally = new Map();
     let items = 0;
-    // The archive pages 30 items at a time; the local prototype caps groups at 1,000.
-    for (let offset = 0; offset < 1020;) {
+    let moreItems = false;
+    let partialOrigins = false;
+    // Bound this overview to 1,020 items, plus one page to detect truncation.
+    for (let offset = 0; offset <= 1020;) {
       const page = await api(
-        `/api/archive?group=${encodeURIComponent(group)}&offset=${offset}`,
+        `/api/archive?group=${encodeURIComponent(selectedGroup)}&offset=${offset}`,
       );
-      if (group !== selectedGroup) return;
+      if (!current()) return false;
+      if (offset === 1020) {
+        moreItems = page.length > 0;
+        break;
+      }
       for (const item of page) {
         items++;
+        partialOrigins ||= item.next_origin_offset != null;
         const kinds = new Set(
           item.origins.map((o) => sourceKey(o.source_type)),
         );
@@ -306,8 +319,13 @@ export function mount(root, lifecycle) {
     }
     const rows = [...tally.entries()].sort((a, b) => b[1] - a[1]);
     $("#jump-sources").textContent = `· ${rows.length}`;
+    const scope = moreItems
+      ? `the first ${items.toLocaleString("en-US")}`
+      : partialOrigins
+        ? `${items.toLocaleString("en-US")}`
+        : `all ${items.toLocaleString("en-US")}`;
     $("#origin-sub").textContent = items
-      ? `Where all ${items} shared ${items === 1 ? "item" : "items"} came from. An item shared from two sources counts under both.`
+      ? `Sources recorded for ${scope} shared ${items === 1 ? "item" : "items"}. ${partialOrigins ? "Counts use the first 100 source records per item; additional source types may be omitted. " : ""}${moreItems ? "This overview is limited; more shared items are available in the archive. " : ""}An item with two listed sources counts under both.`
       : "Nothing has been shared yet. Items appear here as imports finish.";
     const list = $("#origin-counts");
     list.replaceChildren();
@@ -330,12 +348,13 @@ export function mount(root, lifecycle) {
         bar,
         node(
           "p",
-          `${count} of ${items} shared ${items === 1 ? "item" : "items"}`,
+          `${count} of ${items.toLocaleString("en-US")} ${moreItems || partialOrigins ? "sampled " : ""}shared ${items === 1 ? "item" : "items"}`,
           { class: "fx-small" },
         ),
       );
       list.append(row);
     }
+    return true;
   }
   async function loadSources() {
     const selectedGroup = group;
@@ -480,15 +499,19 @@ export function mount(root, lifecycle) {
     $("#origins").replaceChildren();
     await map();
     await loadSources();
-    // Counting pages through the whole archive, so it runs once per circle
-    // and again only after a withdrawal changes what is shared.
-    if (counted !== group)
+    // The bounded source overview runs once per circle or after a withdrawal.
+    if (counted !== group) {
+      const request = ++countRequest;
       try {
-        await originCounts();
-        counted = group;
+        if (await originCounts(request)) counted = group;
       } catch {
-        $("#origin-counts").replaceChildren();
+        if (request === countRequest && root.isConnected && !root.hidden) {
+          $("#origin-counts").replaceChildren();
+          $("#origin-sub").textContent =
+            "Source overview could not load. Refresh places to retry.";
+        }
       }
+    }
     const origins = await api(
       "/api/review/my-contributions?" + new URLSearchParams({ group }),
     );
@@ -516,7 +539,7 @@ export function mount(root, lifecycle) {
   );
   $("#filters").onsubmit = (event) => {
     event.preventDefault();
-    run(map, null);
+    run(refresh, null);
   };
   $("#country").onchange = () => {
     $("#city").value = "";

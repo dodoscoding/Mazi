@@ -145,3 +145,142 @@ test("real lifecycle access denial still hides private places and ignores late o
   assert.equal($("#places").children.length, 0);
   assert.equal($("#map").children.length, 0);
 });
+
+for (const total of [31, 1020, 1021]) {
+  test(`source summary states the scope of ${total} shared items`, async (t) => {
+    const offsets = [];
+    const { $ } = await mountFeature(t, "places", (path) => {
+      if (path === "/land.geojson") return { features: [] };
+      if (path.startsWith("/api/archive?")) {
+        const offset = Number(
+          new URL(path, "http://test").searchParams.get("offset"),
+        );
+        offsets.push(offset);
+        return Array.from(
+          { length: Math.max(0, Math.min(30, total - offset)) },
+          (_, i) => ({
+            id: `photo-${offset + i}`,
+            origins: [{ source_type: "manual" }],
+            next_origin_offset: null,
+          }),
+        );
+      }
+      return base(path);
+    });
+    await until(() => $("#origin-counts").children.length, "source summary");
+    if (total >= 1020) assert.equal(offsets.at(-1), 1020);
+    if (total > 1020) {
+      assert.match($("#origin-sub").textContent, /first 1,020/);
+      assert.doesNotMatch($("#origin-sub").textContent, /all/);
+    } else
+      assert.match(
+        $("#origin-sub").textContent,
+        new RegExp(`all ${total.toLocaleString("en-US")}`),
+      );
+  });
+}
+
+test("source summary discloses paginated provenance", async (t) => {
+  const { $ } = await mountFeature(t, "places", (path) => {
+    if (path === "/land.geojson") return { features: [] };
+    if (path.startsWith("/api/archive?"))
+      return [
+        {
+          id: "photo",
+          origins: Array.from({ length: 100 }, () => ({
+            source_type: "manual",
+          })),
+          origin_count: 101,
+          next_origin_offset: 100,
+        },
+      ];
+    return base(path);
+  });
+  await until(() => $("#origin-counts").children.length, "source summary");
+  assert.match($("#origin-sub").textContent, /first 100 source records/);
+  assert.doesNotMatch($("#origin-sub").textContent, /all/);
+});
+
+test("failed lookahead never claims a complete source summary", async (t) => {
+  let fail = true;
+  const { $, window } = await mountFeature(t, "places", (path) => {
+    if (path === "/land.geojson") return { features: [] };
+    if (path.startsWith("/api/archive?")) {
+      const offset = Number(
+        new URL(path, "http://test").searchParams.get("offset"),
+      );
+      if (offset === 1020)
+        return fail ? new Error("Lookahead unavailable") : [];
+      return Array.from({ length: 30 }, () => ({
+        origins: [{ source_type: "manual" }],
+        next_origin_offset: null,
+      }));
+    }
+    return base(path);
+  });
+  await until(
+    () => $("#origin-sub").textContent.includes("could not load"),
+    "summary failure visible",
+  );
+  assert.doesNotMatch($("#origin-sub").textContent, /all/);
+  fail = false;
+  $("#filters").dispatchEvent(
+    new window.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await until(
+    () => $("#origin-sub").textContent.includes("all 1,020"),
+    "failed overview retries successfully",
+  );
+});
+
+test("older source overview cannot overwrite a newer refresh", async (t) => {
+  const gate = deferred();
+  let calls = 0;
+  const { $, window } = await mountFeature(t, "places", (path) => {
+    if (path === "/land.geojson") return { features: [] };
+    if (path.startsWith("/api/archive?"))
+      return ++calls === 1
+        ? gate.promise
+        : [{ origins: [{ source_type: "manual" }], next_origin_offset: null }];
+    return base(path);
+  });
+  await until(() => calls === 1, "first summary pending");
+  $("#filters").dispatchEvent(
+    new window.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await until(
+    () => $("#origin-sub").textContent.includes("all 1"),
+    "new summary available",
+  );
+  gate.resolve([
+    { origins: [{ source_type: "apple" }], next_origin_offset: null },
+  ]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.doesNotMatch($("#origin-counts").textContent, /Apple/);
+});
+
+test("disposed places view ignores a late source overview", async (t) => {
+  const gate = deferred();
+  let requested = false;
+  const { $, root, lifecycle } = await mountFeature(
+    t,
+    "places",
+    (path) => {
+      if (path === "/land.geojson") return { features: [] };
+      if (path.startsWith("/api/archive?")) {
+        requested = true;
+        return gate.promise;
+      }
+      return base(path);
+    },
+    { realLifecycle: true },
+  );
+  await until(() => requested, "summary pending");
+  lifecycle.dispose();
+  root.remove();
+  gate.resolve([
+    { origins: [{ source_type: "apple" }], next_origin_offset: null },
+  ]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal($("#origin-counts").children.length, 0);
+});
