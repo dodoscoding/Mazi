@@ -8,6 +8,8 @@ export function mount(root, lifecycle) {
   const page = root.querySelector(".fx");
   let group = "",
     revision = 0,
+    phase = "loading",
+    settings = null,
     groups = [],
     evidenceSheet = null;
   function node(tag, text) {
@@ -27,8 +29,35 @@ export function mount(root, lifecycle) {
         : {},
     );
     const data = await response.json();
-    if (!response.ok) throw Error(data.error || "Request failed");
+    if (!response.ok)
+      throw Object.assign(Error(data.error || "Request failed"), {
+        status: response.status,
+      });
     return data;
+  }
+  function eligibility() {
+    if (phase === "error")
+      return "Answer permissions could not be checked. Retry before asking.";
+    if (phase === "saving") return "Saving answer permissions…";
+    if (!settings) return "Checking answer permissions…";
+    const reasons = [];
+    if (!settings.local_processing_enabled)
+      reasons.push(
+        "A group admin must enable local processing in People & search.",
+      );
+    if (!settings.group_enabled)
+      reasons.push("A group admin must enable Memory answers for this group.");
+    if (!settings.contribution_enabled)
+      reasons.push("Opt in to Memory answers in the permissions below.");
+    return reasons.join(" ");
+  }
+  function controls() {
+    const reason = eligibility();
+    $("ask").disabled = phase !== "ready" || Boolean(reason);
+    $("eligibility").textContent = reason;
+    $("retry-permissions").hidden = phase !== "error";
+    for (const id of ["personal", "group-enabled"])
+      $(id).disabled = !settings || phase === "saving";
   }
   function clear() {
     revision++;
@@ -38,28 +67,42 @@ export function mount(root, lifecycle) {
     $("notice").dataset.state = "";
     $("evidence-panel").hidden = true;
     $("evidence-list").replaceChildren();
+    evidenceSheet?.body.replaceChildren();
+    evidenceSheet?.close();
     delete page.dataset.asked;
+    controls();
   }
   function usage(value) {
     $("usage").textContent =
       `${value.requests} / ${value.daily_limit} requests today (UTC). Provider cost: €0. Local infrastructure cost is not measured.`;
   }
-  async function refresh() {
+  async function refresh(message = "") {
+    phase = "loading";
+    settings = null;
     clear();
-    $("private").hidden = true;
+    $("private").hidden = false;
+    $("admin").hidden = groups.find((g) => g.id === group)?.role !== "admin";
     const current = revision;
     try {
       const state = await api(
         "/api/answers/state?group=" + encodeURIComponent(group),
       );
       if (current !== revision) return;
+      settings = state;
       $("personal").checked = state.contribution_enabled;
       $("group-enabled").checked = state.group_enabled;
-      $("admin").hidden = groups.find((g) => g.id === group)?.role !== "admin";
       usage(state.usage);
-      $("private").hidden = false;
+      $("notice").textContent = message;
+      phase = "ready";
+      controls();
     } catch (error) {
-      if (current === revision) $("notice").textContent = error.message;
+      if (current === revision) {
+        phase = "error";
+        controls();
+        $("notice").textContent = [message, error.message]
+          .filter(Boolean)
+          .join(". ");
+      }
     }
   }
 
@@ -276,8 +319,8 @@ export function mount(root, lifecycle) {
     const stop = el("button", "fx-pill-button", "Stop");
     stop.type = "button";
     stop.addEventListener("click", () => {
+      phase = "ready";
       clear();
-      $("ask").disabled = false;
       $("notice").textContent = "Stopped. Nothing was kept.";
       $("question").focus();
     });
@@ -285,6 +328,7 @@ export function mount(root, lifecycle) {
     return panel;
   }
 
+  $("retry-permissions").onclick = () => refresh();
   $("groups").onchange = () => {
     group = lifecycle.selectGroup($("groups"));
     refresh();
@@ -294,27 +338,36 @@ export function mount(root, lifecycle) {
     ["group-enabled", true],
   ]) {
     $(id).onchange = async () => {
+      if (!settings || phase === "saving") return;
+      phase = "saving";
       clear();
+      const current = revision;
       try {
         await api("/api/answers/processing", {
           group,
           enabled: $(id).checked,
           group_wide: groupWide,
         });
-        await refresh();
+        if (current === revision) await refresh();
       } catch (error) {
-        $("notice").textContent = error.message;
+        if (current !== revision) return;
+        if (error.status === 401 || error.status === 403) {
+          settings = null;
+          phase = "error";
+          controls();
+          $("notice").textContent = error.message;
+        } else await refresh(error.message);
       }
     };
   }
   $("ask-form").onsubmit = async (event) => {
     event.preventDefault();
+    if (phase !== "ready" || eligibility()) return;
+    phase = "asking";
     clear();
     const current = revision;
     const question = $("question").value;
-    const askedGroup = group;
     page.dataset.asked = "true";
-    $("ask").disabled = true;
     $("notice").dataset.state = "thinking";
     $("notice").textContent = "Checking archive evidence…";
     $("answer").append(renderThinking(question));
@@ -323,11 +376,7 @@ export function mount(root, lifecycle) {
         group,
         question,
       });
-      if (current !== revision) {
-        // A stopped request still counted against today's limit; show it.
-        if (group === askedGroup) usage(result.usage);
-        return;
-      }
+      if (current !== revision) return;
       $("notice").dataset.state = "";
       $("notice").textContent =
         result.status === "supported"
@@ -346,7 +395,10 @@ export function mount(root, lifecycle) {
         $("notice").textContent = error.message;
       }
     } finally {
-      if (current === revision) $("ask").disabled = false;
+      if (current === revision) {
+        phase = "ready";
+        controls();
+      }
     }
   };
   (async () => {

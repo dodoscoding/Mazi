@@ -25,6 +25,20 @@ class AnswerTests(unittest.TestCase):
     def ask(self, question='When was bicycle?'):
         return self.store.answer(self.ben, self.group, question)
 
+    def test_answer_settings_report_local_processing_without_enabling_it(self):
+        self.assertTrue(self.store.answer_settings(self.ben, self.group)['local_processing_enabled'])
+        self.store.processing(self.alice, self.group, False, group_wide=True)
+        state = self.store.answer_settings(self.ben, self.group)
+        self.assertFalse(state['local_processing_enabled'])
+        self.assertTrue(state['group_enabled'])
+        self.assertTrue(state['contribution_enabled'])
+        with self.assertRaises(Denied):
+            self.ask()
+        with self.assertRaises(Denied):
+            self.store.answer_settings(self.outsider, self.group)
+        other = self.store.create_group(self.outsider, 'Unprocessed circle')
+        self.assertFalse(self.store.answer_settings(self.outsider, other)['local_processing_enabled'])
+
     def test_grounded_fields_and_coverage(self):
         result = self.ask()
         self.assertEqual(result['status'], 'supported')
