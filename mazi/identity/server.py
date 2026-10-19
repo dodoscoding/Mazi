@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from mazi.persistence import ArchiveBusy
+from mazi.http_origin import validate_origin
 
 import base64
 import json
@@ -92,8 +93,7 @@ def handler_for(store: Store):
             try:
                 origin = self.headers.get("Origin")
                 host = self.headers.get("Host", "")
-                if origin and origin not in (f"http://{host}", f"https://{host}"):
-                    raise Denied("Invalid origin")
+                validate_origin(origin, host)
                 if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
                     raise Denied("JSON required")
                 length = int(self.headers.get("Content-Length", "0"))
