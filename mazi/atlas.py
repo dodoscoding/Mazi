@@ -2,6 +2,8 @@
 import json
 from math import asin, cos, radians, sin, sqrt
 
+from mazi.persistence import insertion_order
+
 SAME_PLACE_KM = 50
 
 
@@ -35,6 +37,16 @@ def atlas_view(store, user, group):
             hidden_assets.update(json.loads(row[0]))
         cards, grouped = [], set()
 
+        def origins_for_item(asset):
+            """Stream an authorized item's origins in this policy transaction."""
+            rows = store.db.execute(
+                'SELECT o.payload FROM archive_origins o JOIN members m '
+                'ON m.user_id=o.owner_id AND m.group_id=o.group_id '
+                'WHERE o.asset_id=? AND o.withdrawn=0 ORDER BY ' +
+                insertion_order(store.db, 'o'), (asset,))
+            for row in rows:
+                yield json.loads(row['payload'])
+
         def card(identifier, title, assets, kind):
             records = [items[asset] for asset in assets]
             dates = sorted({item['date'] for item in records if item['date']})
@@ -57,7 +69,7 @@ def atlas_view(store, user, group):
                 photos.append(dict(src='/api/review/rendition/' + item['id'],
                                    alt=item['title'] or 'Archive photograph',
                                    caption=item['title'] or 'Untitled photograph'))
-                for origin in store._all_origins(user, item['id']):
+                for origin in origins_for_item(item['id']):
                     sources.add(origin.get('source') or 'archive')
                     for message in origin.get('context', []):
                         value = message.get('text', '')
