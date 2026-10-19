@@ -541,11 +541,12 @@ class PlacesScaleTests(PlacesFixture):
         expected = sorted((('' if index % 4 == 0 else '2024-01-02' if index % 4 < 3 else '2024-01-03'), origin['id'])
                           for index, origin in enumerate(origins))
         self.assertEqual([(p['day'] or '', p['origin']) for p in points], expected)
-        self.assertEqual((samples['rows'], samples['pages'], samples['maximum_page_rows']), (10000, 79, 128))
+        self.assertEqual((samples['rows'], samples['pages'], samples['maximum_page_rows']), (20000, 158, 128))
         self.assertLessEqual(samples['maximum_projected_page_utf8_bytes'], 128 * 2048)
-        self.assertEqual(len(started), 1)
-        self.assertEqual(len(finished), 1)
+        self.assertEqual(len(started), 2)
+        self.assertEqual(len(finished), 2)
         samples['location_scan_seconds'] = finished[0] - started[0]
+        samples['final_validation_seconds'] = finished[1] - started[1]
         print('Location export synthetic profile: ' + json.dumps(samples, sort_keys=True))
         with self.assertRaises(CapacityExceeded):
             self.store.places(self.alice, self.group)
@@ -620,10 +621,11 @@ class PlacesHostedProjectionTests(PlacesFixture):
                 self.store.export_archive(self.alice, self.group)
         finally:
             self.store.db = connection
-        self.assertEqual(len(projected), 2)
+        self.assertEqual(len(projected), 3)
         self.assertEqual(projected[0]['city'], '😀' * 200)
-        self.assertIsNone(projected[1]['city'])
-        self.assertTrue(projected[1]['oversized'])
+        self.assertEqual(projected[1]['city'], '😀' * 200)
+        self.assertIsNone(projected[2]['city'])
+        self.assertTrue(projected[2]['oversized'])
         self.assertFalse(connection.in_transaction)
 
 
