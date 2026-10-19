@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { memories as samples } from "./memories";
+import { isFeaturePath } from "./featureRoutes";
 import type { Memory } from "./memories";
 
 type Circle = { id: string; name: string; role: string };
@@ -54,7 +55,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
         const group = groups.find((item) => item.id === groupId)?.id || "";
         if (group) sessionStorage.setItem("mazi.group", group);
         let memories: Memory[] = [];
-        if (group) {
+        if (group && !isFeaturePath(path, demo)) {
           const result = await fetch(
             "/api/atlas?" + new URLSearchParams({ group }),
             { signal: controller.signal },
