@@ -65,7 +65,8 @@ class AnswerStore(DiscoveryStore):
 
     def answer_settings(self, user, group):
         self._member(user, group)
-        return dict(group_enabled=self._answer_enabled(group, '*'), contribution_enabled=self._answer_enabled(group, user), usage=self._usage(user, group))
+        return dict(group_enabled=self._answer_enabled(group, '*'), contribution_enabled=self._answer_enabled(group, user),
+                    local_processing_enabled=self._enabled(group, '*'), usage=self._usage(user, group))
 
     def _authorize_answer(self, user, group):
         self._member(user, group)

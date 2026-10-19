@@ -27,10 +27,24 @@
               maxlength="500"
               placeholder="When was bicycle?"
               autocomplete="off"
-            /><button id="ask" class="fx-button fx-button--primary">
+            /><button
+              id="ask"
+              class="fx-button fx-button--primary"
+              aria-describedby="eligibility"
+              disabled
+            >
               Find evidence
             </button>
           </div>
+          <p id="eligibility" class="fx-small" role="status"></p>
+          <button
+            id="retry-permissions"
+            type="button"
+            class="fx-pill-button"
+            hidden
+          >
+            Retry answer permissions
+          </button>
           <p class="fx-small">
             Try “Where was dinner?” or “Earliest Amsterdam”. Answers quote
             recorded metadata; they cannot explain motives or establish
