@@ -64,10 +64,17 @@ class CapacityHttpTests(unittest.TestCase):
 
             try:
                 asset = store.gallery(user, group)[0]['id']
+                status, search = request(f'/api/discovery/search?group={group}&query=PHOTO-1000.PNG')
+                self.assertEqual((status, search['total'], len(search['items']), search['next_offset']),
+                                 (200, 1, 1, None))
+                status, search = request(f'/api/discovery/search?group={group}&offset=1000')
+                self.assertEqual((status, search['total'], len(search['items']), search['next_offset']),
+                                 (200, 1001, 1, None))
+                self.assertEqual(request(f'/api/discovery/search?group={group}', authenticated=False)[0], 403)
                 checks = [
-                    (f'/api/discovery/search?group={group}', None, 'Local search limit is 1,000 items'),
-                    ('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'}, 'Local Memory answers support up to 1,000 visible photographs'),
                     (f'/api/answers/evidence?group={group}&asset={asset}', None, 'Local Memory answers support up to 1,000 visible photographs'),
+                    (f'/api/discovery/search?group={group}&mode=semantic', None, 'Local search limit is 1,000 items'),
+                    ('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'}, 'Local Memory answers support up to 1,000 visible photographs'),
                     (f'/api/review/events?group={group}', None, 'Review set exceeds local limit'),
                     (f'/api/review/duplicates?group={group}', None, 'Review set exceeds local limit'),
                 ]
@@ -83,6 +90,18 @@ class CapacityHttpTests(unittest.TestCase):
                                      (400, {'code': 'capacity_exceeded', 'error': 'Local index limit is 1,000 items'}))
                 finally:
                     store.encoder = original_encoder
+                # An oversized synthetic source record fails the whole keyword request.
+                origin = store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=? LIMIT 1', (asset,)).fetchone()
+                store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?',
+                                 (json.dumps({'context': [{'text': 'x' * (64 * 1024)}]}), origin['id']))
+                store.db.commit()
+                try:
+                    self.assertEqual(request(f'/api/discovery/search?group={group}'),
+                                     (400, {'code': 'capacity_exceeded',
+                                            'error': 'Words & filters metadata exceeds the 64 KiB per-origin limit'}))
+                finally:
+                    store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (origin['payload'], origin['id']))
+                    store.db.commit()
                 for path, body in [
                     (f'/api/discovery/search?group={group}&offset=bad', None),
                     (f'/api/review/timeline?group={group}&offset=bad', None),
@@ -93,7 +112,7 @@ class CapacityHttpTests(unittest.TestCase):
                 self.assertEqual((status, len(gallery)), (200, 30))
                 status, timeline = request(f'/api/review/timeline?group={group}')
                 self.assertEqual((status, timeline['total']), (200, 1001))
-                # A real visibility change back to the supported boundary restores search.
+                # A real visibility change restores the legacy boundary and guarded answers.
                 store.hide(user, gallery[0]['id'], True)
                 status, search = request(f'/api/discovery/search?group={group}')
                 self.assertEqual((status, search['total']), (200, 1000))

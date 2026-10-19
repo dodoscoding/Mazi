@@ -76,13 +76,17 @@
           </svg>
         </button>
       </div>
-      <p class="hint">
-        Search supports up to 1,000 visible photographs per circle. The limit
-        applies before words and filters, including dates or places.
+      <p id="search-help" class="hint">
+        Words &amp; filters can search more than 1,000 visible photographs,
+        within metadata-work limits. Related search supports up to 1,000 visible
+        photographs per circle, before filtering.
       </p>
       <p id="search-recovery" class="hint" hidden>
-        This circle is above the local search limit. No partial results are
-        shown. Your search and filters are still here.
+        <span id="search-recovery-message"></span>
+        No partial results are shown. Your search and filters are still here.
+        <button id="use-keyword" type="button" hidden>
+          Use Words &amp; filters
+        </button>
         <a href="#/memories">Browse photographs</a> or
         <a href="#/review">search the review timeline</a> instead.
       </p>
@@ -147,7 +151,7 @@
         <button id="stop-index" type="button" hidden>Stop indexing</button>
       </div>
       <p class="hint">
-        Local indexing also supports up to 1,000 visible photographs per circle.
+        Local indexing supports up to 1,000 visible photographs per circle.
       </p>
       <p id="index-progress" role="status"></p>
       <p id="index-recovery" class="hint" hidden>
