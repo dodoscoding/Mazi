@@ -20,6 +20,9 @@ KEYWORD_ORIGIN_BYTES = 64 * 1024
 KEYWORD_ASSET_BYTES = 8 * 1024 * 1024
 KEYWORD_REQUEST_BYTES = 64 * 1024 * 1024
 KEYWORD_SCAN_SECONDS = 2
+EXPORT_PEOPLE_CITY_KEYS = 1000
+EXPORT_PEOPLE_CITY_ENTRIES = 4096
+EXPORT_PEOPLE_CITY_CHARACTERS = 262144
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS discovery_people (
@@ -253,6 +256,28 @@ class DiscoveryStore(SourceStore):
         return [dict(r) for r in self.db.execute("SELECT s.person,s.asset,p.name FROM discovery_suppressions s JOIN discovery_people p ON p.id=s.person WHERE p.group_id=? AND p.account=? AND s.subject IN (?, 'private-review')", (group, user, user)) if r['asset'] in allowed]
 
     def people(self, user, group, manage=False):
+        return self._people(user, group, manage)
+
+    def _people(self, user, group, manage=False, *, reuse_cities=False):
+        city_cache = {} if reuse_cities else None
+        city_entries = city_characters = 0
+
+        def asset_cities(asset):
+            nonlocal city_entries, city_characters
+            if city_cache is None:
+                return self._document(user, asset)['cities']
+            if asset in city_cache:
+                return city_cache[asset]
+            cities = tuple(self._document(user, asset)['cities'])
+            characters = sum(len(city) for city in cities)
+            if (len(city_cache) < EXPORT_PEOPLE_CITY_KEYS and
+                    city_entries + len(cities) <= EXPORT_PEOPLE_CITY_ENTRIES and
+                    city_characters + characters <= EXPORT_PEOPLE_CITY_CHARACTERS):
+                city_cache[asset] = cities
+                city_entries += len(cities)
+                city_characters += characters
+            return cities
+
         visible = set(self._visible_ids(user, group))
         result = []
         events = self.accepted_events(user, group)
@@ -262,7 +287,7 @@ class DiscoveryStore(SourceStore):
                 continue
             assets = [r[0] for r in self.db.execute('SELECT t.asset FROM discovery_tags t JOIN members m ON m.user_id=t.actor AND m.group_id=? WHERE t.person=? AND NOT EXISTS (SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)', (group, row['id'])) if r[0] in visible]
             if assets or (manage and row['creator'] == user):
-                result.append(dict(id=row['id'], name=row['name'], assets=assets, count=len(assets), is_me=row['account'] == user, verified=bool(row['account']), places=sorted({city for asset in assets for city in self._document(user, asset)['cities']}), memories=[dict(id=e['id'], title=e['title']) for e in events if set(e['assets']) & set(assets)]))
+                result.append(dict(id=row['id'], name=row['name'], assets=assets, count=len(assets), is_me=row['account'] == user, verified=bool(row['account']), places=sorted({city for asset in assets for city in asset_cities(asset)}), memories=[dict(id=e['id'], title=e['title']) for e in events if set(e['assets']) & set(assets)]))
         return result
 
     def nonmember_review(self, user, person, asset, verified, restore=False):
@@ -643,7 +668,7 @@ class DiscoveryStore(SourceStore):
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
     def _export_discovery(self, user, group, fingerprint, archive=None):
-        fingerprint.json_member('people.json', self.people(user, group), archive)
+        fingerprint.json_member('people.json', self._people(user, group, reuse_cities=True), archive)
         fingerprint.json_member('personal-discovery.json',
                                 dict(hidden=self.hidden(user, group), hidden_memories=self.hidden_events(user, group),
                                      suppressed=self.suppressed(user, group), processing=self.settings(user, group)), archive)
