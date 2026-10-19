@@ -388,7 +388,7 @@ class SourceStore(ReviewStore):
                 namespace, key = self._resource_locator(user, row['id'])
                 if (namespace, key) != (identity['namespace'], identity['key']):
                     raise Conflict('Stored resource changed while preparing export; retry')
-                write_export_object(self.objects, identity, archive, 'resources/' + row['id'],
+                write_export_object(self.objects, identity, archive, output, 'resources/' + row['id'],
                                     'Stored resource changed while preparing export; retry')
             fingerprint.identity('resource', identity)
             manifest.append({'id': row['id'], 'sha256': row['sha256'], 'metadata': json.loads(row['metadata'])})

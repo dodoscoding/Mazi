@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 import json
 import os
+import random
 import tempfile
 import unittest
 import zipfile
@@ -335,6 +336,51 @@ class ExportFileTests(unittest.TestCase):
                 self.assertEqual(archive.getinfo('originals/' + self.asset).file_size, len(original))
                 self.assertEqual(archive.read('originals/' + self.asset), original)
 
+    def test_preview_storage_does_not_consume_completed_zip_allowance(self):
+        from PIL import Image
+        from mazi.archive.review import ReviewStore
+        from mazi.sources.sources import SourceStore
+        from mazi.discovery.discovery import DiscoveryStore
+        image = Image.frombytes('RGB', (1600, 1600), random.Random(75).randbytes(1600 * 1600 * 3))
+        data = io.BytesIO()
+        image.save(data, 'PNG', compress_level=0)
+        original = data.getvalue()
+        self.store.withdraw(self.alice, self.run)
+        run = self.submit({'noise.png': original})
+        self.process(run)
+        asset = self.store.gallery(self.ben, self.group)[0]['id']
+        self.assertEqual(self.store.report(self.alice, run)['counts'], {'AVAILABLE_TO_GROUP': 1})
+        stored = self.store.group_metrics(self.alice, self.group)['stored_original_bytes']
+        self.assertEqual(stored, len(original) + len(self.store.asset_bytes(self.ben, asset)))
+        for kind in (ReviewStore, SourceStore, DiscoveryStore, MemoryStore):
+            with self.subTest(store=kind.__name__):
+                store = kind(self.temp.name)
+                try:
+                    with store.export_archive_file(self.ben, self.group) as artifact:
+                        size = artifact.seek(0, 2)
+                    self.assertGreater(stored, size)
+                    with patch('mazi.archive.review.EXPORT_BYTES', size), observe_artifacts() as files:
+                        with store.export_archive_file(self.ben, self.group) as artifact:
+                            self.assertEqual(artifact.seek(0, 2), size)
+                            with zipfile.ZipFile(artifact) as archive:
+                                self.assertIsNone(archive.testzip())
+                                self.assertEqual(archive.read('originals/' + asset), original)
+                        with zipfile.ZipFile(io.BytesIO(store.export_archive(self.ben, self.group))) as archive:
+                            self.assertEqual(archive.read('originals/' + asset), original)
+                    self.assertTrue(all(file.closed for file in files))
+                finally:
+                    store.close()
+        with patch('mazi.archive.review.EXPORT_BYTES', size), observe_artifacts() as files:
+            handler, statuses, headers = self.http_export()
+        self.assertEqual(statuses, [200])
+        self.assertEqual(headers['Content-Type'], 'application/zip')
+        self.assertEqual(int(headers['Content-Length']), size)
+        self.assertEqual(len(handler.wfile.getvalue()), size)
+        with zipfile.ZipFile(io.BytesIO(handler.wfile.getvalue())) as archive:
+            self.assertIsNone(archive.testzip())
+            self.assertEqual(archive.read('originals/' + asset), original)
+        self.assertTrue(files[0].closed)
+
     def hosted_objects(self, resource_data):
         from mazi.storage import HostedObjects, STORAGE_SCHEMA
         from tests.backend.test_storage import Remote
@@ -349,6 +395,82 @@ class ExportFileTests(unittest.TestCase):
             hosted.retain('source-resources', resource, resource_data)
         self.store.objects = hosted
         return remote, resource
+
+    def test_original_that_cannot_fit_after_header_is_refused_before_body_read(self):
+        oversized = Path(self.temp.name) / 'oversized-original'
+        with oversized.open('wb') as stream:
+            stream.truncate(128 * 1024 * 1024)
+        reads, header_sizes, sources = [], [], []
+        real_zip = zipfile.ZipFile
+        for cleanup_failure in (False, True):
+            with self.subTest(cleanup_failure=cleanup_failure):
+                class SourcePath:
+                    @contextmanager
+                    def open(self, mode):
+                        with oversized.open(mode) as stream:
+                            sources.append(stream)
+                            class Reader:
+                                def fileno(self):
+                                    header_sizes.append(files[0].high_water)
+                                    return stream.fileno()
+                                def read(self, size=-1):
+                                    reads.append(size)
+                                    raise AssertionError('Oversized original body was read')
+                            try:
+                                yield Reader()
+                            finally:
+                                if cleanup_failure:
+                                    raise OSError('source cleanup failed')
+                @contextmanager
+                def materialize(area, key):
+                    try:
+                        yield SourcePath()
+                    finally:
+                        if cleanup_failure:
+                            raise OSError('materialization cleanup failed')
+                class Artifact(ObservedFile):
+                    def close(self):
+                        super().close()
+                        if cleanup_failure:
+                            raise OSError('artifact cleanup failed')
+                class Archive(real_zip):
+                    def close(self):
+                        was_open = self.fp is not None
+                        super().close()
+                        if was_open and cleanup_failure:
+                            raise OSError('ZIP cleanup failed')
+                with observe_artifacts(Artifact) as files, \
+                     patch('mazi.archive.review.zipfile.ZipFile', Archive), \
+                     patch.object(self.store.objects, 'materialize', materialize):
+                    with self.assertRaisesRegex(CapacityExceeded, '^Export exceeds the local 128 MiB archive limit$'):
+                        with self.store.export_archive_file(self.ben, self.group):
+                            self.fail('Oversized artifact exposed')
+                self.assertTrue(files[0].closed)
+                self.assertLess(files[0].high_water, 256 * 1024)
+        self.assertEqual(reads, [])
+        self.assertEqual(header_sizes, [76, 76])
+        self.assertTrue(all(source.closed for source in sources))
+
+    def test_later_asset_denial_precedes_any_original_materialization(self):
+        second_run = self.submit({'second.jpg': helpers.picture() + b'second'})
+        self.process(second_run)
+        writer = MemoryStore(self.temp.name)
+        self.addCleanup(writer.close)
+        visible_ids = self.store._visible_ids
+        def withdraw_after_selection(user, group):
+            ids = visible_ids(user, group)
+            self.assertEqual(len(ids), 2)
+            writer.withdraw(self.alice, self.run if ids[-1] == self.asset else second_run)
+            return ids
+        with patch.object(self.store, '_visible_ids', withdraw_after_selection), \
+             patch.object(self.store.objects, 'materialize', side_effect=AssertionError('Original materialized before authorization')), \
+             observe_artifacts() as files:
+            handler, statuses, headers = self.http_export()
+        self.assertEqual(statuses, [403])
+        self.assertEqual(headers['Content-Type'], 'application/json')
+        self.assertEqual(json.loads(handler.wfile.getvalue()), {'error': 'Media unavailable'})
+        self.assertEqual(files, [])
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
 
     def test_hosted_materialization_preserves_receipts_checksums_and_private_cleanup(self):
         data = b'opaque video bytes' * 300000

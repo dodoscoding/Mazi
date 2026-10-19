@@ -63,11 +63,12 @@ class ExportWriter:
             raise
 
 
-def write_export_object(objects, identity, archive, name, conflict):
+def write_export_object(objects, identity, archive, output, name, conflict):
     checksum, size = hashlib.sha256(), 0
     with export_cleanup(objects.materialize(identity["namespace"], identity["key"])) as path:
         with export_cleanup(path.open("rb")) as source, export_cleanup(archive.open(name, "w")) as member:
             expected = os.fstat(source.fileno()).st_size
+            output.check_size(output.high_water + expected)
             while chunk := source.read(EXPORT_COPY_BYTES):
                 if member.write(chunk) != len(chunk):
                     raise OSError("Incomplete archive write")
