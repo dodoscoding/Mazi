@@ -1,22 +1,27 @@
 """Foreground source transfers sharing the local archive's authorization boundary."""
 from __future__ import annotations
 
-from mazi.persistence import initialize_schema, insertion_order
+from mazi.persistence import ArchiveBusy, initialize_schema, insertion_order
 
 import io
 import hashlib
 import json
 import math
 import os
+import sqlite3
 import time
 import uuid
 import zipfile
 from datetime import date
 from pathlib import Path
 
+from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.adapters import MAX_FILE, NormalizedImportItem, digest
 from mazi.archive.review import ReviewStore
+
+PLACES_EXPORT_ROW_BYTES = 2 * 1024
+PLACES_EXPORT_SCAN_SECONDS = 3
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS continuous_sources (
@@ -345,13 +350,19 @@ class SourceStore(ReviewStore):
                     (origin, country, city, latitude, longitude, day))
             self._audit(user, 'place.update', origin)
 
+    def _places_query(self, user, group):
+        return (' FROM shared_places p JOIN archive_origins o ON o.id=p.origin '
+                'JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+                'WHERE o.group_id=? AND o.withdrawn=0', (group,))
+
     def places(self, user, group, country='', city='', paths=False):
         self._member(user, group)
         if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
             raise ValueError('Invalid filters')
-        rows = [dict(row) for row in self.db.execute('SELECT p.*,o.asset_id FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.group_id=? AND o.withdrawn=0 ORDER BY p.day,p.origin LIMIT 1001', (group,))]
+        clause, params = self._places_query(user, group)
+        rows = [dict(row) for row in self.db.execute('SELECT p.*,o.asset_id' + clause + ' ORDER BY p.day,p.origin LIMIT 1001', params)]
         if len(rows) > 1000:
-            raise ValueError('Local map limit is 1,000 shared locations')
+            raise CapacityExceeded('Local map supports up to 1,000 shared location records')
         countries = sorted({r['country'] for r in rows})
         narrowed = [r for r in rows if not country or r['country'] == country.upper()]
         cities = sorted({r['city'] for r in narrowed})
@@ -360,18 +371,103 @@ class SourceStore(ReviewStore):
         return {'points': points, 'countries': countries, 'cities': cities,
                 'paths': [[a['origin'], b['origin']] for a, b in zip(dated, dated[1:]) if a['day'] != b['day']] if paths else []}
 
-    def export_archive(self, user, group):
+    def _build_export_archive(self, user, group, ids):
         self._member(user, group)
         resources = self.db.execute("SELECT r.* FROM source_resources r JOIN continuous_sources s ON s.id=r.connection JOIN members m ON m.group_id=s.group_id AND m.user_id=s.owner_id JOIN import_runs i ON i.id=r.id WHERE s.group_id=? AND r.withdrawn=0 AND i.withdrawn=0 AND r.state='RETAINED_NO_PREVIEW'", (group,)).fetchall()
         size = sum(row['size'] for row in resources)
-        output = io.BytesIO(super().export_archive(user, group))
-        if size + output.getbuffer().nbytes > 128 * 1024 * 1024:
-            raise ValueError('Export exceeds local 128 MiB limit')
+        output = io.BytesIO(super()._build_export_archive(user, group, ids))
+        self._check_export_size(size + output.getbuffer().nbytes)
         with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
             manifest = []
             for row in resources:
                 archive.writestr('resources/' + row['id'], self.resource_bytes(user, row['id']))
                 manifest.append({'id': row['id'], 'sha256': row['sha256'], 'metadata': json.loads(row['metadata'])})
             archive.writestr('resources.json', json.dumps(manifest))
-            archive.writestr('places.json', json.dumps(self.places(user, group)['points']))
+            self._write_export_places(user, group, ids, archive, output)
         return output.getvalue()
+
+    def _write_export_places(self, user, group, ids, archive, output):
+        started = time.perf_counter()
+
+        def check_time():
+            if time.perf_counter() - started > PLACES_EXPORT_SCAN_SECONDS:
+                raise CapacityExceeded('Export exceeded the local location scan time budget')
+
+        clause, params = self._places_query(user, group)
+        clause += ' AND o.asset_id IN (' + ','.join('?' for _ in ids) + ')'
+        params += tuple(ids)
+        day_key = "COALESCE(p.day,'')"
+        fields = (('p.origin', 'origin', 36, 144), ('p.country', 'country', 2, 8),
+                  ('p.city', 'city', 200, 800), ('p.latitude', 'latitude', None, 32),
+                  ('p.longitude', 'longitude', None, 32), ('p.day', 'day', 10, 40),
+                  ('o.asset_id', 'asset_id', 36, 144))
+        projected, guards = [], []
+        for field, name, characters, byte_limit in fields:
+            byte_length = (f'octet_length(CAST({field} AS TEXT))' if getattr(self.db, 'hosted', False)
+                           else f'length(CAST({field} AS BLOB))')
+            guard = f'{byte_length}<={byte_limit}'
+            if characters is not None:
+                guard += f' AND length({field})<={characters}'
+            projected.append(f'CASE WHEN {guard} THEN {field} ELSE NULL END AS {name}')
+            guards.append(f'COALESCE(NOT ({guard}),FALSE)')
+        columns = ','.join([*projected, '(' + ' OR '.join(guards) + ') AS oversized'])
+        cursor = None
+        first = True
+        try:
+            # Stabilize mutable dates across keyset pages without locking original/resource reads.
+            with self.transaction(), archive.open('places.json', 'w') as member:
+                def write(chunk):
+                    self._check_export_size(output.tell() + len(chunk))
+                    member.write(chunk)
+
+                write(b'[')
+                while ids:
+                    check_time()
+                    self._member(user, group)
+                    seek = '' if cursor is None else f' AND ({day_key}>? OR ({day_key}=? AND p.origin>?))'
+                    values = params if cursor is None else (*params, cursor[0], cursor[0], cursor[1])
+                    page = self.db.execute('SELECT ' + columns + clause + seek +
+                                           f' ORDER BY {day_key},p.origin LIMIT 128', values).fetchall()
+                    check_time()
+                    for row in page:
+                        check_time()
+                        encoded = self._serialize_export_place(row)
+                        check_time()
+                        if not first:
+                            write(b',')
+                        write(encoded)
+                        first = False
+                    if len(page) < 128:
+                        break
+                    cursor = (page[-1]['day'] or '', page[-1]['origin'])
+                    del page
+                self._member(user, group)
+                check_time()
+                write(b']')
+        except sqlite3.OperationalError as exc:
+            if (getattr(exc, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise ArchiveBusy('Archive is busy; retry shortly') from None
+            raise
+        check_time()
+
+    def _serialize_export_place(self, row):
+        if row['oversized']:
+            raise CapacityExceeded('Export location record exceeds its metadata limit')
+        point = {key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')}
+        for name in ('origin', 'asset_id'):
+            if not isinstance(point[name], str) or not 1 <= len(point[name]) <= 36:
+                raise ValueError('Invalid stored location identifier')
+        if text(point['country'], 2) != point['country'] or not point['country'].isascii() or not point['country'].isalpha() or len(point['country']) != 2:
+            raise ValueError('Invalid stored location country')
+        if text(point['city']) != point['city']:
+            raise ValueError('Invalid stored location city')
+        for name, limit in (('latitude', 90), ('longitude', 180)):
+            value = point[name]
+            if type(value) not in (int, float) or not math.isfinite(value) or not -limit <= value <= limit:
+                raise ValueError('Invalid stored coordinates')
+        if point['day'] is not None:
+            calendar_day(point['day'])
+        encoded = json.dumps(point, ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+        if len(encoded) > PLACES_EXPORT_ROW_BYTES:
+            raise CapacityExceeded('Export location record exceeds its 2 KiB serialized limit')
+        return encoded

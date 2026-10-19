@@ -118,3 +118,9 @@ The local Phase 6 implementation uses a fixed extractive engine over eligible ph
 ## Capsule boundary
 
 At M7, a capsule adds a server-time unlock condition to the normal group access policy. Before unlock, original downloads, thumbnails, embeddings, search snippets, AI answers, recaps, and notifications cannot reveal locked content. For the local Phase 7 implementation, sealing is immutable with no author read bypass; the author can delete at any time while still a member. A locked receipt exposes only ID and opening time to the author. New capsule text/photos are isolated from archive ingestion, and author departure deletes the capsule. Production review of these choices remains open. A browser timer is never the access control.
+
+## Shared places and archive export
+
+A shared location belongs to one live contribution, so several historical origins of one photograph can each retain a location. The local map supports at most 1,000 authorized shared-location records before country or city filters. Exhaustion returns a typed capacity error rather than a partial map. Source connections and the viewer's own contribution controls load independently, allowing an owned location to be removed while the map is unavailable. Ordinary refresh failures preserve the selected contribution and manual location draft; actual access loss clears private content. A successful location write remains successful even when the subsequent map refresh fails.
+
+Archive export uses a separate complete location projection for the authorized photograph set captured by the export. Personal hides, departed owners and withdrawn origins remain excluded. Location records keep the existing schema and chronological order, with undated records first. Metadata and archive-size exhaustion fail before the HTTP response sends a ZIP; no partial archive is offered as a complete export. This does not make the whole export an atomic snapshot or remove its existing photograph limit.

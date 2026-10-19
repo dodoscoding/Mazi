@@ -22,6 +22,8 @@ from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.engine import ImportStore
 
+EXPORT_BYTES = 128 * 1024 * 1024
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS review_pairs (
  group_id TEXT NOT NULL, left_id TEXT NOT NULL, right_id TEXT NOT NULL,
@@ -422,9 +424,18 @@ class ReviewStore(ImportStore):
     def export_archive(self, user, group):
         ids = self._visible_ids(user, group)
         if len(ids) > 1000:
-            raise ValueError("Export exceeds local limit")
-        if sum(self._asset(user, asset)["size"] for asset in ids) > 128 * 1024 * 1024:
-            raise ValueError("Export exceeds local size limit")
+            raise CapacityExceeded("Export supports up to 1,000 photographs")
+        self._check_export_size(sum(self._asset(user, asset)["size"] for asset in ids))
+        data = self._build_export_archive(user, group, ids)
+        self._member(user, group)
+        self._check_export_size(len(data))
+        return data
+
+    def _check_export_size(self, size):
+        if size > EXPORT_BYTES:
+            raise CapacityExceeded('Export exceeds the local 128 MiB archive limit')
+
+    def _build_export_archive(self, user, group, ids):
         output = io.BytesIO()
         manifest = []
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:

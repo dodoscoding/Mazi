@@ -89,6 +89,7 @@ class CapacityHttpTests(unittest.TestCase):
                     (f'/api/discovery/search?group={group}&mode=semantic', None, 'Local search limit is 1,000 items'),
                     (f'/api/review/events?group={group}', None, 'Review set exceeds local limit'),
                     (f'/api/review/duplicates?group={group}', None, 'Review set exceeds local limit'),
+                    (f'/api/review/export?group={group}', None, 'Export supports up to 1,000 photographs'),
                 ]
                 for path, body, message in checks:
                     with self.subTest(path=path):

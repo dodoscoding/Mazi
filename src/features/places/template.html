@@ -9,6 +9,14 @@
   <p id="signed-out" class="fx-panel" hidden>
     <a href="/">Sign in on the imports page</a> to explore your group.
   </p>
+  <button
+    id="retry-workspace"
+    type="button"
+    class="fx-button fx-button--quiet"
+    hidden
+  >
+    Try again
+  </button>
   <div id="workspace" hidden>
     <nav class="places-switch" aria-label="Places and sources sections">
       <button type="button" data-jump="map-title" aria-current="true">
@@ -28,6 +36,7 @@
           ></label>
         </div>
         <p id="place-count" class="fx-sub"></p>
+        <p id="places-error" class="fx-small" role="status" hidden></p>
         <p class="fx-small">
           Only locations explicitly shared by their contributor appear here. The
           list below is an alternative to the map.
@@ -79,6 +88,7 @@
             Choose one of your contributions. Coordinates are shared with the
             whole group; removing the location keeps the photograph.
           </p>
+          <p id="origins-status" class="fx-small" role="status"></p>
           <form id="place-form" class="fx-fields">
             <label class="fx-field"
               >Photograph
