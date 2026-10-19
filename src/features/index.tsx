@@ -15,6 +15,7 @@ import { mount as answersMount } from "./answers/mount";
 import { mount as evidenceMount } from "./evidence/mount";
 import { mount as memoriesMount } from "./memories/mount";
 import "./features.css";
+import "./imports/imports.css";
 
 export const featureRegistry = {
   "/imports": { template: importsTemplate, mount: importsMount },

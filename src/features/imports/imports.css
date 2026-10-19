@@ -1,0 +1,169 @@
+.fx-imports[data-mode="imports"] .import-composer {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
+  gap: 28px;
+  align-items: start;
+}
+.fx-imports[data-mode="imports"] .source-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.fx-imports[data-mode="imports"] .source-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 16px 12px;
+  background: transparent;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: none;
+  transition: background-color var(--dur-quick) ease-out;
+}
+.fx-imports[data-mode="imports"] .source-card .source-badge {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+}
+.fx-imports[data-mode="imports"] .source-card > .fx-small {
+  display: block;
+  grid-column: 2 / -1;
+  grid-row: 2;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.fx-imports[data-mode="imports"] .source-card > b {
+  font-size: 14px;
+}
+.fx-imports[data-mode="imports"] .source-card .fx-button {
+  grid-column: 3;
+  grid-row: 1;
+  min-height: 44px;
+  padding-inline: 12px;
+  margin: 0;
+  font-size: 12px;
+}
+.fx-imports[data-mode="imports"] .source-card:has([aria-pressed="true"]) {
+  background: var(--bg-raised);
+  border-radius: 12px;
+  border-bottom-color: transparent;
+}
+.fx-imports[data-mode="imports"] .source-card--link .fx-text-link {
+  grid-column: 2 / -1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  text-underline-offset: 4px;
+}
+.fx-imports[data-mode="imports"] .upload-form {
+  margin: 0;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--bg-void) 55%, transparent);
+  gap: 20px;
+}
+.fx-imports[data-mode="imports"] .upload-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+.fx-imports[data-mode="imports"] .upload-fields .fx-file {
+  grid-column: 1 / -1;
+  padding: 24px;
+  border: 1px dashed var(--text-muted);
+  border-radius: 12px;
+  background: var(--bg-deep);
+  gap: 14px;
+  margin: 0;
+}
+.fx-imports[data-mode="imports"] .fx-file input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.fx-imports[data-mode="imports"] .fx-file input::file-selector-button {
+  min-height: 44px;
+  padding: 0 18px;
+  margin-right: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.fx-imports[data-mode="imports"] .fx-file:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+.fx-imports[data-mode="imports"] .import-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  padding: 0;
+  margin: 0 0 8px;
+  list-style-position: inside;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.fx-imports[data-mode="imports"] .import-sequence li::marker {
+  color: var(--accent-node);
+  font-variant-numeric: tabular-nums;
+}
+.fx-imports[data-mode="imports"] .upload-actions {
+  flex-wrap: wrap;
+  width: 100%;
+}
+.fx-imports[data-mode="imports"] .upload-actions .fx-button {
+  min-height: 48px;
+}
+.fx-imports .workspace-error {
+  padding: 24px;
+  border: 1px solid var(--error);
+  border-radius: 12px;
+  background: var(--bg-deep);
+}
+.fx-imports .workspace-error p {
+  margin-bottom: 12px;
+}
+@media (max-width: 900px) {
+  .fx-imports[data-mode="imports"] .import-composer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .fx-imports[data-mode="imports"] .source-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+  }
+  .fx-imports[data-mode="imports"] .source-card--link {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 600px) {
+  .fx-imports[data-mode="imports"] .source-cards,
+  .fx-imports[data-mode="imports"] .upload-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fx-imports[data-mode="imports"] .source-card {
+    padding: 12px 8px;
+  }
+  .fx-imports[data-mode="imports"] .upload-form {
+    padding: 20px 16px;
+  }
+  .fx-imports[data-mode="imports"] .upload-fields .fx-file {
+    padding: 20px 16px;
+  }
+  .fx-imports[data-mode="imports"] .import-sequence {
+    gap: 8px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-imports[data-mode="imports"] .source-card {
+    transition: none;
+  }
+}

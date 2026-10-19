@@ -6,7 +6,12 @@
     </p>
   </header>
   <p id="notice" role="status" aria-live="polite"></p>
-  <section id="workspace-error" class="fx-panel" role="alert" hidden>
+  <section
+    id="workspace-error"
+    class="fx-panel workspace-error"
+    role="alert"
+    hidden
+  >
     <h2 class="fx-section-title">Couldn’t load your workspace</h2>
     <p id="workspace-error-text"></p>
     <button type="button" id="retry-workspace" class="fx-button">
@@ -81,70 +86,77 @@
           </p>
         </div>
         <h2 id="import-title" class="fx-section-title">Add a chapter</h2>
-        <div
-          id="source-cards"
-          class="source-cards"
-          role="group"
-          aria-label="Choose a source"
-        ></div>
-        <form id="upload" class="upload-form">
-          <div class="upload-fields">
-            <label class="fx-field"
-              >Source<select name="source">
-                <option value="whatsapp">WhatsApp chat export</option>
-                <option value="messenger">Messenger JSON export</option>
-                <option value="discord">Discord user data package</option>
-                <option value="manual">Manual photos in a ZIP</option>
-              </select></label
-            >
-            <label class="fx-field"
-              >Source account label<input
-                name="namespace"
-                maxlength="200"
-                required
-                placeholder="e.g. my WhatsApp account"
-              /><small
-                >Reuse this label for future exports from the same
-                account.</small
-              ></label
-            >
-            <label class="fx-field" id="date-order"
-              >WhatsApp date order<select name="date_order">
-                <option value="">Leave ambiguous dates unresolved</option>
-                <option value="DMY">Day / month / year</option>
-                <option value="MDY">Month / day / year</option>
-              </select></label
-            >
-            <label class="fx-field fx-file"
-              >Export ZIP<input
-                name="file"
-                type="file"
-                accept=".zip,application/zip"
-                required
-            /></label>
-          </div>
-          <p class="fx-small">
-            Up to 128 MiB compressed / 512 MiB expanded. JPEG and PNG photos up
-            to 25 MiB and 24 megapixels. Video, HEIC, animation and other
-            formats receive an unsupported outcome. Remote attachments are never
-            downloaded.
-          </p>
-          <div class="upload-actions">
-            <button id="upload-button" class="fx-button fx-button--primary">
-              Upload and inspect inventory
-            </button>
-            <progress
-              id="transfer"
-              value="0"
-              max="100"
-              aria-label="Archive transfer progress"
-            ></progress>
-          </div>
-          <p class="fx-small">
-            If transfer stops, select the same file and account label to resume.
-            Inspect the inventory before starting group ingestion.
-          </p>
-        </form>
+        <ol class="import-sequence" aria-label="Import steps">
+          <li>Upload your export</li>
+          <li>Inspect its inventory</li>
+          <li>Import to your circle</li>
+        </ol>
+        <div class="import-composer">
+          <div
+            id="source-cards"
+            class="source-cards"
+            role="group"
+            aria-label="Choose a source"
+          ></div>
+          <form id="upload" class="upload-form">
+            <div class="upload-fields">
+              <label class="fx-field fx-file"
+                >Export ZIP<input
+                  name="file"
+                  type="file"
+                  accept=".zip,application/zip"
+                  required
+              /></label>
+              <label class="fx-field"
+                >Source<select name="source">
+                  <option value="whatsapp">WhatsApp chat export</option>
+                  <option value="messenger">Messenger JSON export</option>
+                  <option value="discord">Discord user data package</option>
+                  <option value="manual">Manual photos in a ZIP</option>
+                </select></label
+              >
+              <label class="fx-field"
+                >Source account label<input
+                  name="namespace"
+                  maxlength="200"
+                  required
+                  placeholder="e.g. my WhatsApp account"
+                /><small
+                  >Reuse this label for future exports from the same
+                  account.</small
+                ></label
+              >
+              <label class="fx-field" id="date-order"
+                >WhatsApp date order<select name="date_order">
+                  <option value="">Leave ambiguous dates unresolved</option>
+                  <option value="DMY">Day / month / year</option>
+                  <option value="MDY">Month / day / year</option>
+                </select></label
+              >
+            </div>
+            <p class="fx-small">
+              Up to 128 MiB compressed / 512 MiB expanded. JPEG and PNG photos
+              up to 25 MiB and 24 megapixels. Video, HEIC, animation and other
+              formats receive an unsupported outcome. Remote attachments are
+              never downloaded.
+            </p>
+            <div class="upload-actions">
+              <button id="upload-button" class="fx-button fx-button--primary">
+                Upload and inspect inventory
+              </button>
+              <progress
+                id="transfer"
+                value="0"
+                max="100"
+                aria-label="Archive transfer progress"
+              ></progress>
+            </div>
+            <p class="fx-small">
+              If transfer stops, select the same file and account label to
+              resume. Inspect the inventory before starting group ingestion.
+            </p>
+          </form>
+        </div>
       </section>
       <section aria-labelledby="reports-title" class="import-reports">
         <h2 id="reports-title" class="fx-section-title">My imports</h2>
