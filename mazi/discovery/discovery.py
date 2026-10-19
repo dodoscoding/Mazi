@@ -319,8 +319,13 @@ class DiscoveryStore(SourceStore):
         annotation = self.db.execute('SELECT * FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
         evidence = [json.loads(o['payload']) for o in origins]
         title = annotation['title'] if annotation else ''
-        facts = {self._date_place(asset, p) for p in evidence}
-        day, place = next(iter(facts)) if len(facts) == 1 else (None, '')
+        dates, places = set(), set()
+        for payload in evidence:
+            source_dates, source_places = self._date_place_evidence(asset, payload, annotation)
+            dates.update(source_dates)
+            places.update(source_places)
+        day = next(iter(dates)) if len(dates) == 1 else None
+        place = next(iter(places)) if len(places) == 1 else ''
         shared = [dict(r) for r in self.db.execute('SELECT p.country,p.city FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))]
         cities = sorted({p['city'] for p in shared} | ({place} if place else set()))
         content = ' '.join([title, *cities, *[str(p.get('original_filename') or '') for p in evidence], *[str(c.get('text') or '') for p in evidence for c in p.get('context', [])]])

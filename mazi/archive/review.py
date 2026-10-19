@@ -235,15 +235,16 @@ class ReviewStore(ImportStore):
             if row[0] not in visible:
                 continue
             payload = json.loads(row[1])
-            day, place = self._date_place(row[0], payload)
-            if not day:
-                continue
-            evidence.setdefault(row[0], set()).add((day, place))
+            dates, cities = self._date_place_evidence(row[0], payload)
+            accumulated = evidence.setdefault(row[0], (set(), set()))
+            accumulated[0].update(dates)
+            accumulated[1].update(cities)
         buckets = {}
-        for asset, keys in evidence.items():
-            # Conflicting source dates or cities need manual correction first.
-            if len(keys) == 1:
-                buckets.setdefault(next(iter(keys)), set()).add(asset)
+        for asset, (dates, cities) in evidence.items():
+            # Retain every assertion until conflicts across all origins are resolved.
+            if len(dates) == 1 and len(cities) <= 1:
+                key = (next(iter(dates)), next(iter(cities), ""))
+                buckets.setdefault(key, set()).add(asset)
         result = []
         for (day, place), assets in sorted(buckets.items()):
             if len(assets) < 2:
@@ -263,25 +264,23 @@ class ReviewStore(ImportStore):
     def _event_id(group, ids):
         return hashlib.sha256(json.dumps([group, sorted(ids)]).encode()).hexdigest()
 
-    def _date_place(self, asset, payload, annotation=None):
+    def _date_place_evidence(self, asset, payload, annotation=None):
         if annotation is None:
             annotation = self.db.execute("SELECT capture_date,place FROM review_annotations WHERE asset_id=?", (asset,)).fetchone()
+        dates = set()
+        for assertion in payload.get("capture_assertions") or []:
+            try:
+                dates.add(datetime.fromisoformat(assertion["local"].replace("Z", "+00:00")).date().isoformat())
+            except (KeyError, ValueError, TypeError, AttributeError):
+                pass
+        cities = {str(place["city"]).strip().casefold()
+                  for place in payload.get("location_assertions") or []
+                  if isinstance(place, dict) and place.get("city") and str(place["city"]).strip()}
         if annotation and annotation["capture_date"]:
-            day = annotation["capture_date"][:10]
-        else:
-            assertions = payload.get("capture_assertions") or []
-            stamp = next((a.get("local") for a in assertions if a.get("local")), None)
-            if not stamp:
-                day = None
-            else:
-                try:
-                    day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).date().isoformat()
-                except ValueError:
-                    day = None
-        places = payload.get("location_assertions") or []
-        inferred = next((str(p.get("city", "")).strip().casefold() for p in places
-                         if isinstance(p, dict) and p.get("city")), "")
-        return day, (annotation["place"].casefold() if annotation and annotation["place"] else inferred)
+            dates = {annotation["capture_date"][:10]}
+        if annotation and annotation["place"]:
+            cities = {annotation["place"].strip().casefold()}
+        return dates, cities
 
     def _all_origins(self, user, asset):
         result = []
@@ -331,8 +330,13 @@ class ReviewStore(ImportStore):
             origins = list(origins)
             annotation = origins[0]
             records = [json.loads(origin["payload"]) for origin in origins]
-            facts = {self._date_place(asset, record, annotation) for record in records}
-            day, place = next(iter(facts)) if len(facts) == 1 else (None, "")
+            dates, cities = set(), set()
+            for record in records:
+                source_dates, source_cities = self._date_place_evidence(asset, record, annotation)
+                dates.update(source_dates)
+                cities.update(source_cities)
+            day = next(iter(dates)) if len(dates) == 1 else None
+            place = next(iter(cities)) if len(cities) == 1 else ""
             title = annotation["title"] or ""
             searchable = " ".join([title, place, *[str(p.get("original_filename") or "") for p in records],
                                    *[str(c.get("text") or "") for p in records for c in p.get("context", [])]])
@@ -340,7 +344,7 @@ class ReviewStore(ImportStore):
                 continue
             yield {"id": asset, "title": title, "date": day, "place": place or None,
                    "date_basis": "reviewed correction" if annotation["capture_date"] else
-                                 "conflicting source evidence" if len(facts) > 1 else
+                                 "conflicting source evidence" if len(dates) > 1 else
                                  "source capture evidence" if day else "undated",
                    "origin_count": len(records),
                    "anniversary": bool(annotation["anniversary"])}
