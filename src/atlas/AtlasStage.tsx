@@ -15,7 +15,7 @@ import { loadLand } from "./land";
 import type { Land } from "./land";
 import type { AtlasModel } from "./model";
 
-const Globe = lazy(() => import("./Globe"));
+const createGlobe = () => lazy(() => import("./Globe"));
 
 class SceneBoundary extends Component<
   { children: ReactNode; onError: () => void },
@@ -70,7 +70,8 @@ export function AtlasStage({
   compact?: boolean;
 }) {
   const toast = useToast();
-  const [land, setLand] = useState<Land | null | undefined>(undefined);
+  const [Globe, setGlobe] = useState(createGlobe);
+  const [land, setLand] = useState<Land | null>(null);
   const [failed, setFailed] = useState(
     () => new URLSearchParams(location.search).get("scene") === "off",
   );
@@ -80,18 +81,20 @@ export function AtlasStage({
   const region = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let alive = true;
+    const controller = new AbortController();
     // The land outline is the heaviest request; let the page's own assets land first.
     const start = () =>
-      void loadLand().then((value) => {
+      void loadLand(controller.signal).then((value) => {
         if (alive) setLand(value);
       });
     if (document.readyState === "complete") start();
     else addEventListener("load", start, { once: true });
     return () => {
       alive = false;
+      controller.abort();
       removeEventListener("load", start);
     };
-  }, []);
+  }, [attempt]);
   useEffect(() => onFailedChange(failed), [failed, onFailedChange]);
   useEffect(() => {
     let intersecting = true;
@@ -116,6 +119,8 @@ export function AtlasStage({
   }, [toast]);
   const markReady = useCallback(() => setReady(true), []);
   const retry = useCallback(() => {
+    // React.lazy retains rejection, so an explicit retry needs a fresh identity.
+    setGlobe(createGlobe);
     setFailed(false);
     setReady(false);
     setAttempt((value) => value + 1);
@@ -146,32 +151,30 @@ export function AtlasStage({
           onPick={onPick}
         />
       ) : (
-        land !== undefined && (
-          <SceneBoundary key={attempt} onError={lost}>
-            <Suspense fallback={null}>
-              <Globe
-                atlas={atlas}
-                land={land}
-                selectedPlace={selectedPlace}
-                focusPlace={focusPlace}
-                year={year}
-                day={day}
-                reduced={reduced}
-                layout={layout as Layout}
-                portal={portal}
-                introStart={introStart}
-                active={active}
-                born={born}
-                thumbnails={thumbnails}
-                onPick={onPick}
-                onReady={markReady}
-                onLost={lost}
-                framing={compact ? "panel" : "atlas"}
-                interactive={!compact}
-              />
-            </Suspense>
-          </SceneBoundary>
-        )
+        <SceneBoundary key={attempt} onError={lost}>
+          <Suspense fallback={null}>
+            <Globe
+              atlas={atlas}
+              land={land}
+              selectedPlace={selectedPlace}
+              focusPlace={focusPlace}
+              year={year}
+              day={day}
+              reduced={reduced}
+              layout={layout as Layout}
+              portal={portal}
+              introStart={introStart}
+              active={active}
+              born={born}
+              thumbnails={thumbnails}
+              onPick={onPick}
+              onReady={markReady}
+              onLost={lost}
+              framing={compact ? "panel" : "atlas"}
+              interactive={!compact}
+            />
+          </Suspense>
+        </SceneBoundary>
       )}
       {!flat && !ready && (
         <p className="scene-loading" role="status">
@@ -194,9 +197,10 @@ export function AtlasStage({
             <path d="M12 10v4M12 17v.5" />
           </svg>
           <p>
-            <b>The atlas is in flat view.</b> This browser couldn't draw the
-            globe, so you're seeing the same atlas laid flat. The list, years,
-            search and memories all work.
+            <b>The atlas is in flat view.</b> This browser couldn't load or draw
+            the globe, so you're seeing the same atlas laid flat. The list,
+            years, search and memories all work. If retrying doesn't help,
+            reload the page to get the latest globe files.
           </p>
           <button
             type="button"
