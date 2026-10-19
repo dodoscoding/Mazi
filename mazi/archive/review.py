@@ -5,9 +5,11 @@ presentation grouping; every original remains accessible through its own ID.
 """
 from __future__ import annotations
 
-from mazi.persistence import initialize_schema, insertion_order
+from mazi.persistence import ArchiveBusy, initialize_schema, insertion_order
+from mazi.archive.export import ExportFingerprint
 
 import io
+import sqlite3
 import json
 import hashlib
 import zipfile
@@ -426,26 +428,68 @@ class ReviewStore(ImportStore):
         if len(ids) > 1000:
             raise CapacityExceeded("Export supports up to 1,000 photographs")
         self._check_export_size(sum(self._asset(user, asset)["size"] for asset in ids))
-        data = self._build_export_archive(user, group, ids)
-        self._member(user, group)
+        captured = ExportFingerprint(self._check_export_size)
+        data = self._build_export_archive(user, group, ids, captured)
         self._check_export_size(len(data))
+        try:
+            # Admission compares one current metadata projection. Object reads and
+            # delivery stay outside this transaction; later commits cannot recall bytes.
+            with self.transaction():
+                self._member(user, group)
+                current_ids = self._visible_ids(user, group)
+                if ids != current_ids:
+                    raise Conflict("Archive changed while preparing export; retry")
+                current = ExportFingerprint(self._check_export_size)
+                self._capture_export_metadata(user, group, current_ids, current)
+                if captured.digest() != current.digest():
+                    raise Conflict("Archive changed while preparing export; retry")
+        except sqlite3.OperationalError as exc:
+            if (getattr(exc, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise ArchiveBusy('Archive is busy; retry shortly') from None
+            raise
         return data
 
     def _check_export_size(self, size):
         if size > EXPORT_BYTES:
             raise CapacityExceeded('Export exceeds the local 128 MiB archive limit')
 
-    def _build_export_archive(self, user, group, ids):
-        output = io.BytesIO()
+    def _export_asset(self, user, asset):
+        row = self._asset(user, asset)
+        origins, identities, offset = [], [], 0
+        while True:
+            page, total = self._origin_page(user, asset, offset)
+            for origin in page:
+                origins.append(json.loads(origin['payload']))
+                identities.append({key: origin[key] for key in
+                                   ('id', 'asset_id', 'group_id', 'owner_id', 'run_id', 'occurrence', 'fingerprint')})
+            offset += len(page)
+            if offset >= total:
+                break
+        metadata = {"id": asset, "sha256": row['sha256'], "mime": row["mime"], "origins": origins,
+                    "annotation": dict(self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone() or {})}
+        identity = dict(asset=asset, group=row['group_id'], namespace='archive-objects',
+                        key=row['original_key'], sha256=row['sha256'], size=row['size'], origins=identities)
+        return metadata, identity
+
+    def _export_manifest(self, user, group, ids, fingerprint, archive=None):
+        fingerprint.identity('visible-assets', ids)
         manifest = []
-        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:
-            for asset in ids:
-                row = self._asset(user, asset)
-                data = self.asset_bytes(user, asset, original=True)
+        for asset in ids:
+            metadata, identity = self._export_asset(user, asset)
+            if archive is not None:
+                data = self.objects.read(identity['namespace'], identity['key'])
+                if hashlib.sha256(data).hexdigest() != identity['sha256']:
+                    raise Conflict("Stored original changed while preparing export; retry")
                 archive.writestr("originals/" + asset, data)
-                origins = self._all_origins(user, asset)
-                manifest.append({"id": asset, "sha256": hashlib.sha256(data).hexdigest(),
-                                 "mime": row["mime"], "origins": origins,
-                                 "annotation": dict(self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone() or {})})
-            archive.writestr("manifest.json", json.dumps({"group": group, "assets": manifest}, ensure_ascii=False))
-        return output.getvalue()
+            fingerprint.identity('original', identity)
+            manifest.append(metadata)
+        fingerprint.json_member('manifest.json', {"group": group, "assets": manifest}, archive, ensure_ascii=False)
+
+    def _capture_export_metadata(self, user, group, ids, fingerprint):
+        self._export_manifest(user, group, ids, fingerprint)
+
+    def _build_export_archive(self, user, group, ids, fingerprint):
+        with io.BytesIO() as output:
+            with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:
+                self._export_manifest(user, group, ids, fingerprint, archive)
+            return output.getvalue()

@@ -66,6 +66,8 @@ def handler_for(store):
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
             except Denied as exc:
                 self.json(403, {"error": str(exc)})
+            except Conflict as exc:
+                self.json(409, {"error": str(exc)})
             except (ValueError, TypeError):
                 self.json(400, {"error": "Invalid request"})
             except OSError:

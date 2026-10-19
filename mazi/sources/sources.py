@@ -371,23 +371,53 @@ class SourceStore(ReviewStore):
         return {'points': points, 'countries': countries, 'cities': cities,
                 'paths': [[a['origin'], b['origin']] for a, b in zip(dated, dated[1:]) if a['day'] != b['day']] if paths else []}
 
-    def _build_export_archive(self, user, group, ids):
+    def _export_resources(self, user, group, fingerprint, archive=None, output=None):
         self._member(user, group)
-        resources = self.db.execute("SELECT r.* FROM source_resources r JOIN continuous_sources s ON s.id=r.connection JOIN members m ON m.group_id=s.group_id AND m.user_id=s.owner_id JOIN import_runs i ON i.id=r.id WHERE s.group_id=? AND r.withdrawn=0 AND i.withdrawn=0 AND r.state='RETAINED_NO_PREVIEW'", (group,)).fetchall()
-        size = sum(row['size'] for row in resources)
-        output = io.BytesIO(super()._build_export_archive(user, group, ids))
-        self._check_export_size(size + output.getbuffer().nbytes)
-        with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
-            manifest = []
-            for row in resources:
-                archive.writestr('resources/' + row['id'], self.resource_bytes(user, row['id']))
-                manifest.append({'id': row['id'], 'sha256': row['sha256'], 'metadata': json.loads(row['metadata'])})
-            archive.writestr('resources.json', json.dumps(manifest))
-            self._write_export_places(user, group, ids, archive, output)
-        return output.getvalue()
+        resources = self.db.execute("SELECT r.*,s.owner_id,s.group_id FROM source_resources r JOIN continuous_sources s ON s.id=r.connection JOIN members m ON m.group_id=s.group_id AND m.user_id=s.owner_id JOIN import_runs i ON i.id=r.id WHERE s.group_id=? AND r.withdrawn=0 AND i.withdrawn=0 AND r.state='RETAINED_NO_PREVIEW'", (group,)).fetchall()
+        self._check_export_size(sum(row['size'] for row in resources) + (output.getbuffer().nbytes if output is not None else 0))
+        manifest = []
+        for row in resources:
+            identity = {key: row[key] for key in ('id', 'connection', 'identity', 'owner_id', 'group_id', 'sha256', 'size')}
+            identity.update(namespace='source-resources', key=row['id'])
+            if archive is not None:
+                data = self.objects.read(identity['namespace'], identity['key'])
+                if hashlib.sha256(data).hexdigest() != identity['sha256']:
+                    raise Conflict('Stored resource changed while preparing export; retry')
+                archive.writestr('resources/' + row['id'], data)
+            fingerprint.identity('resource', identity)
+            manifest.append({'id': row['id'], 'sha256': row['sha256'], 'metadata': json.loads(row['metadata'])})
+        fingerprint.json_member('resources.json', manifest, archive)
 
-    def _write_export_places(self, user, group, ids, archive, output):
+    def _capture_export_metadata(self, user, group, ids, fingerprint):
+        super()._capture_export_metadata(user, group, ids, fingerprint)
+        self._export_resources(user, group, fingerprint)
+        fingerprint.member('places.json', self._scan_export_places(user, group, ids))
+
+    def _build_export_archive(self, user, group, ids, fingerprint):
+        with io.BytesIO(super()._build_export_archive(user, group, ids, fingerprint)) as output:
+            with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
+                self._export_resources(user, group, fingerprint, archive, output)
+                self._write_export_places(user, group, ids, archive, output, fingerprint)
+            return output.getvalue()
+
+    def _write_export_places(self, user, group, ids, archive, output, fingerprint):
         started = time.perf_counter()
+        try:
+            # Build stabilizes only the location scan. Final validation owns its
+            # surrounding metadata transaction and calls the scan directly.
+            with self.transaction():
+                fingerprint.member('places.json', self._scan_export_places(user, group, ids, started), archive,
+                                   lambda size: self._check_export_size(output.tell() + size))
+        except sqlite3.OperationalError as exc:
+            if (getattr(exc, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise ArchiveBusy('Archive is busy; retry shortly') from None
+            raise
+        if time.perf_counter() - started > PLACES_EXPORT_SCAN_SECONDS:
+            raise CapacityExceeded('Export exceeded the local location scan time budget')
+
+    def _scan_export_places(self, user, group, ids, started=None):
+        """Yield the exact location JSON under the caller's metadata transaction."""
+        started = time.perf_counter() if started is None else started
 
         def check_time():
             if time.perf_counter() - started > PLACES_EXPORT_SCAN_SECONDS:
@@ -413,41 +443,30 @@ class SourceStore(ReviewStore):
         columns = ','.join([*projected, '(' + ' OR '.join(guards) + ') AS oversized'])
         cursor = None
         first = True
-        try:
-            # Stabilize mutable dates across keyset pages without locking original/resource reads.
-            with self.transaction(), archive.open('places.json', 'w') as member:
-                def write(chunk):
-                    self._check_export_size(output.tell() + len(chunk))
-                    member.write(chunk)
-
-                write(b'[')
-                while ids:
-                    check_time()
-                    self._member(user, group)
-                    seek = '' if cursor is None else f' AND ({day_key}>? OR ({day_key}=? AND p.origin>?))'
-                    values = params if cursor is None else (*params, cursor[0], cursor[0], cursor[1])
-                    page = self.db.execute('SELECT ' + columns + clause + seek +
-                                           f' ORDER BY {day_key},p.origin LIMIT 128', values).fetchall()
-                    check_time()
-                    for row in page:
-                        check_time()
-                        encoded = self._serialize_export_place(row)
-                        check_time()
-                        if not first:
-                            write(b',')
-                        write(encoded)
-                        first = False
-                    if len(page) < 128:
-                        break
-                    cursor = (page[-1]['day'] or '', page[-1]['origin'])
-                    del page
-                self._member(user, group)
+        yield b'['
+        while ids:
+            check_time()
+            self._member(user, group)
+            seek = '' if cursor is None else f' AND ({day_key}>? OR ({day_key}=? AND p.origin>?))'
+            values = params if cursor is None else (*params, cursor[0], cursor[0], cursor[1])
+            page = self.db.execute('SELECT ' + columns + clause + seek +
+                                   f' ORDER BY {day_key},p.origin LIMIT 128', values).fetchall()
+            check_time()
+            for row in page:
                 check_time()
-                write(b']')
-        except sqlite3.OperationalError as exc:
-            if (getattr(exc, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
-                raise ArchiveBusy('Archive is busy; retry shortly') from None
-            raise
+                encoded = self._serialize_export_place(row)
+                check_time()
+                if not first:
+                    yield b','
+                yield encoded
+                first = False
+            if len(page) < 128:
+                break
+            cursor = (page[-1]['day'] or '', page[-1]['origin'])
+            del page
+        self._member(user, group)
+        check_time()
+        yield b']'
         check_time()
 
     def _serialize_export_place(self, row):

@@ -486,15 +486,20 @@ class ImportStore(Store):
                             "next_origin_offset": origins["next_offset"]})
         return results
 
-    def origins(self, user, asset, offset=0):
+    def _origin_page(self, user, asset, offset=0):
+        """One authorized source page, including non-public identity columns."""
         self._asset(user, asset)
         if type(offset) is not int or offset < 0:
             raise ValueError("Invalid source record page")
         clause = ("FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
                   "WHERE o.asset_id=? AND o.withdrawn=0")
         total = self.db.execute("SELECT count(*) " + clause, (asset,)).fetchone()[0]
-        rows = self.db.execute("SELECT o.payload " + clause + ' ORDER BY ' + insertion_order(self.db, 'o') + ' LIMIT 100 OFFSET ?', (asset, offset))
-        items = [json.loads(row[0]) for row in rows]
+        rows = self.db.execute("SELECT o.* " + clause + ' ORDER BY ' + insertion_order(self.db, 'o') + ' LIMIT 100 OFFSET ?', (asset, offset)).fetchall()
+        return rows, total
+
+    def origins(self, user, asset, offset=0):
+        rows, total = self._origin_page(user, asset, offset)
+        items = [json.loads(row["payload"]) for row in rows]
         return {"items": items, "total": total, "next_offset": offset + len(items) if offset + len(items) < total else None}
 
     def reconcile(self):

@@ -644,9 +644,18 @@ class DiscoveryStore(SourceStore):
             return dict(items=result[offset:offset + limit], total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
-    def _build_export_archive(self, user, group, ids):
-        output = io.BytesIO(super()._build_export_archive(user, group, ids))
-        with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
-            archive.writestr('people.json', json.dumps(self.people(user, group)))
-            archive.writestr('personal-discovery.json', json.dumps(dict(hidden=self.hidden(user, group), hidden_memories=self.hidden_events(user, group), suppressed=self.suppressed(user, group), processing=self.settings(user, group))))
-        return output.getvalue()
+    def _export_discovery(self, user, group, fingerprint, archive=None):
+        fingerprint.json_member('people.json', self.people(user, group), archive)
+        fingerprint.json_member('personal-discovery.json',
+                                dict(hidden=self.hidden(user, group), hidden_memories=self.hidden_events(user, group),
+                                     suppressed=self.suppressed(user, group), processing=self.settings(user, group)), archive)
+
+    def _capture_export_metadata(self, user, group, ids, fingerprint):
+        super()._capture_export_metadata(user, group, ids, fingerprint)
+        self._export_discovery(user, group, fingerprint)
+
+    def _build_export_archive(self, user, group, ids, fingerprint):
+        with io.BytesIO(super()._build_export_archive(user, group, ids, fingerprint)) as output:
+            with zipfile.ZipFile(output, 'a', compression=zipfile.ZIP_STORED) as archive:
+                self._export_discovery(user, group, fingerprint, archive)
+            return output.getvalue()
