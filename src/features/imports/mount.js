@@ -181,10 +181,13 @@ export function mount(root, lifecycle) {
   async function refresh() {
     try {
       groups = await api("/api/groups");
-    } catch {
+    } catch (error) {
       $("workspace").hidden = true;
+      $("workspace-error-text").textContent = error.message;
+      $("workspace-error").hidden = false;
       return;
     }
+    $("workspace-error").hidden = true;
     $("workspace").hidden = false;
     $("groups").replaceChildren();
     for (const item of groups) {
@@ -486,6 +489,10 @@ export function mount(root, lifecycle) {
     if (!selectedRun) return;
     const id = selectedRun;
     const report = await api(`/api/imports/${id}?offset=${reportOffset}`);
+    await showReport(id, report);
+  }
+
+  async function showReport(id, report) {
     if (selectedRun !== id) return;
     currentReport = report;
     $("report").hidden = false;
@@ -663,6 +670,7 @@ export function mount(root, lifecycle) {
     event.preventDefault();
     run(async () => {
       const values = Object.fromEntries(new FormData(event.target));
+      const uploadGroupId = group.id;
       if (values.file.size > 128 * 1024 * 1024)
         throw new Error("Archive must be 128 MiB or smaller.");
       $("upload-button").disabled = true;
@@ -681,7 +689,7 @@ export function mount(root, lifecycle) {
           ? { date_order: values.date_order }
           : {};
         const { id } = await api("/api/imports/start", {
-          group: group.id,
+          group: uploadGroupId,
           source: values.source,
           namespace: values.namespace,
           size: values.file.size,
@@ -690,9 +698,10 @@ export function mount(root, lifecycle) {
         });
         selectedRun = id;
         reportOffset = 0;
-        await refreshReport();
-        let received = currentReport.received;
-        if (currentReport.state === "UPLOADING") {
+        const uploadReport = await api(`/api/imports/${id}?offset=0`);
+        await showReport(id, uploadReport);
+        let received = uploadReport.received;
+        if (uploadReport.state === "UPLOADING") {
           // Chunk progress lives in the transfer bar; the toast says it once.
           notice("Transferring archive…");
           while (received < values.file.size) {
@@ -792,5 +801,15 @@ export function mount(root, lifecycle) {
       polling = false;
     }
   }, 1500);
+  $("retry-workspace").onclick = () =>
+    run(async () => {
+      $("retry-workspace").disabled = true;
+      try {
+        await refresh();
+        if ($("workspace-error").hidden) $("page-title").focus();
+      } finally {
+        $("retry-workspace").disabled = false;
+      }
+    });
   run(refresh);
 }

@@ -1,11 +1,18 @@
 <div class="fx fx-imports" data-mode="imports">
   <header class="fx-head">
-    <h1 id="page-title">My Imports</h1>
+    <h1 id="page-title" tabindex="-1">My Imports</h1>
     <p class="fx-sub" id="page-sub">
       Photos and the conversations around them, gathered into one shared place.
     </p>
   </header>
   <p id="notice" role="status" aria-live="polite"></p>
+  <section id="workspace-error" class="fx-panel" role="alert" hidden>
+    <h2 class="fx-section-title">Couldn’t load your workspace</h2>
+    <p id="workspace-error-text"></p>
+    <button type="button" id="retry-workspace" class="fx-button">
+      Try again
+    </button>
+  </section>
   <div id="workspace" hidden>
     <div class="circle-layout" id="circle-view" hidden>
       <section aria-labelledby="circle-title" class="circle-main">
