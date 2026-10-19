@@ -467,9 +467,13 @@ class ImportStore(Store):
             raise Denied("Media unavailable")
         return row
 
-    def asset_bytes(self, user, asset, original=False):
+    def _asset_locator(self, user, asset, original=False):
         row = self._asset(user, asset)
-        return self.objects.read("archive-objects", row["original_key" if original else "preview_key"])
+        return row, "archive-objects", row["original_key" if original else "preview_key"]
+
+    def asset_bytes(self, user, asset, original=False):
+        _, namespace, key = self._asset_locator(user, asset, original)
+        return self.objects.read(namespace, key)
 
     def gallery(self, user, group, offset=0, limit=30):
         self._member(user, group)
