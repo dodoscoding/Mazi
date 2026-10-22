@@ -173,6 +173,100 @@ class EngineTests(unittest.TestCase):
         self.process(partial)
         self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 3)
 
+    def test_slow_preparation_completes_with_unreclaimed_token(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        def slow_prepare(current):
+            result = prepare(current)
+            clock[0] = 161
+            return result
+        with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", slow_prepare):
+            self.store.complete(job)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1})
+        asset = self.store.gallery(self.ben, self.group)[0]["id"]
+        self.assertEqual(self.store.asset_bytes(self.ben, asset, True), picture())
+
+    def test_replacement_claim_during_preparation_fences_old_token(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        other = ImportStore(self.temp.name)
+        replacement = []
+        def reclaimed_prepare(current):
+            result = prepare(current)
+            clock[0] = 161
+            replacement.append(other.claim(now=161))
+            return result
+        try:
+            with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", reclaimed_prepare):
+                with self.assertRaises(Conflict):
+                    self.store.complete(job)
+            self.assertEqual(self.store.gallery(self.ben, self.group), [])
+            other.complete(replacement[0], now=162)
+            self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+        finally:
+            other.close()
+
+    def test_slow_preparation_observes_cancel_withdrawal_and_departure(self):
+        for action in ("cancel", "withdraw", "remove"):
+            with self.subTest(action=action):
+                run = self.submit({f"slow-{action}.jpg": picture()}, user=self.ben)
+                self.store.confirm(self.ben, run)
+                job = self.store.claim(now=100)
+                prepare = self.store.prepare
+                clock = [101]
+                def revoked_prepare(current):
+                    result = prepare(current)
+                    if action == "remove":
+                        self.store.remove_member(self.alice, self.group, self.ben)
+                    else:
+                        getattr(self.store, action)(self.ben, run)
+                    clock[0] = 161
+                    return result
+                with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", revoked_prepare):
+                    with self.assertRaises((Denied, Conflict)):
+                        self.store.complete(job)
+                self.assertEqual(self.store.gallery(self.alice, self.group), [])
+
+    def test_expired_job_cannot_start_preparation(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        with patch.object(self.store, "prepare") as prepare:
+            with self.assertRaises(Conflict):
+                self.store.complete(job, now=161)
+            prepare.assert_not_called()
+
+    def test_late_failure_keeps_retry_backoff_and_attempt_limit(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        now = 100
+        for attempt in range(1, 4):
+            job = self.store.claim(now=now)
+            self.assertEqual(job["attempts"], attempt)
+            self.store.fail(job, now=now + 61)
+            item = self.store.report(self.alice, run)["items"][0]
+            self.assertEqual(item["reason"], "RETRY_LIMIT" if attempt == 3 else "RETRY_SCHEDULED")
+            self.assertIsNone(self.store.claim(now=now + 61))
+            now += 61 + 2 ** attempt
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"FAILED": 1})
+        self.assertEqual(self.store.gallery(self.ben, self.group), [])
+
+    def test_late_failure_cannot_replace_newer_claim(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        old = self.store.claim(now=100)
+        current = self.store.claim(now=161)
+        with self.assertRaises(Conflict):
+            self.store.fail(old, now=162)
+        self.store.complete(current, now=162)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1})
+
     def test_lease_fencing_cancel_and_membership_revocation(self):
         run = self.submit({"a.jpg": picture(), "b.jpg": picture()}, user=self.ben)
         self.store.confirm(self.ben, run)
