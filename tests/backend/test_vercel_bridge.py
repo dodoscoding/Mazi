@@ -12,6 +12,7 @@ from wsgiref.util import setup_testing_defaults
 from wsgiref.validate import validator
 
 from api import index
+from mazi.imports import engine
 from mazi.memories.memories import MemoryStore
 from mazi.persistence import ArchiveBusy
 from mazi.server import handler_for
@@ -162,6 +163,31 @@ class VercelBridgeTests(unittest.TestCase):
         report = self.store.report(self.alice, run)
         self.assertEqual((report['state'], report['counts']), ('COMPLETED', {'AVAILABLE_TO_GROUP': 1}))
 
+    def test_sequential_work_requests_reuse_the_inventory_session(self):
+        data = zip_bytes({'chat.txt': '\n'.join(
+            f'01/01/2020, 12:00 - Ana: synthetic message {i}' for i in range(250)).encode()})
+        run = self.store.begin_import(self.alice, self.group, 'whatsapp', 'warm-scan',
+                                      len(data), hashlib.sha256(data).hexdigest(), {'date_order': 'DMY'})
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        original_scan = engine.ImportStore.scan
+
+        def scan_page(store, run, batch_size=500):
+            return original_scan(store, run, batch_size=100)
+
+        def one_step(work, budget):
+            work.step()
+            return {'pending': True}
+
+        with patch.object(engine.ImportStore, 'scan', scan_page), \
+                patch.object(engine, 'inventory', wraps=engine.inventory) as inventory, \
+                patch.object(index, 'drain', side_effect=one_step):
+            for _ in range(3):
+                self.assertEqual(call(index.app, 'POST', '/api/work', headers=self.signed_in)[0], 200)
+            self.assertEqual(inventory.call_count, 1, 'warm requests retain the parsed inventory')
+        report = self.store.report(self.alice, run)
+        self.assertEqual((report['state'], report['discovered']), ('INVENTORIED', 250))
+
     def test_cron_get_requires_the_bearer_secret(self):
         with patch.dict('os.environ', {'CRON_SECRET': 'synthetic-cron-secret'}):
             self.assertEqual(call(index.app, 'GET', '/api/work')[0], 401)
@@ -179,6 +205,33 @@ class VercelBridgeTests(unittest.TestCase):
             self.assertEqual((status, json.loads(b''.join(chunks))), (200, {'pending': False, 'mode': 'thread'}))
         finally:
             store.close()
+
+
+class WorkerEvictionTests(unittest.TestCase):
+    def test_unexpected_failure_closes_the_evicted_worker_store_once(self):
+        work = Mock()
+        with patch.object(index, '_state', {'work': work}):
+            index._forget('work', RuntimeError('connection closed'))
+            self.assertNotIn('work', index._state)
+            index._forget('work', RuntimeError('already removed'))
+        work.store.close.assert_called_once_with()
+
+    def test_store_cleanup_failure_does_not_mask_the_original_failure(self):
+        work = Mock()
+        work.store.close.side_effect = RuntimeError('close failed')
+        with patch.object(index, '_state', {'work': work}):
+            index._forget('work', RuntimeError('connection closed'))
+            self.assertNotIn('work', index._state)
+        work.store.close.assert_called_once_with()
+
+    def test_expected_request_failures_keep_the_warm_worker(self):
+        for error in (OSError('temporary storage failure'), NotImplementedError('method')):
+            with self.subTest(error=type(error).__name__):
+                work = Mock()
+                with patch.object(index, '_state', {'work': work}):
+                    index._forget('work', error)
+                    self.assertIs(index._state['work'], work)
+                work.store.close.assert_not_called()
 
 
 class DrainBudgetTests(unittest.TestCase):
