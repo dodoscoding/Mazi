@@ -138,6 +138,45 @@ class PostgresContracts(unittest.TestCase):
         self.assertEqual(outcomes, {'AVAILABLE_TO_GROUP': 'IMPORTED', 'FAILED': 'GROUP_STORAGE_LIMIT'})
         self.assertEqual(self.store.db.execute('SELECT sum(size) FROM archive_assets WHERE group_id=?', (self.group,)).fetchone()[0], 19 * 1024**3)
 
+    def test_export_people_and_hidden_memories_use_native_event_columns(self):
+        import io
+        import json
+        import zipfile
+        from mazi.archive.export import ExportFingerprint
+        person = self.fixture + 'person'
+        assets = [self.fixture + str(index) for index in range(3)]
+        events = [self.fixture + 'visible', self.fixture + 'hidden']
+        try:
+            with self.store.db:
+                self.store.db.execute('INSERT INTO import_runs(id,owner_id,group_id,source,namespace,manifest,options,size,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                                      (self.fixture, self.user, self.group, 'manual', 'synthetic', self.fixture, '{}', 1, 'COMPLETED', 0))
+                for asset in assets:
+                    self.store.db.execute('INSERT INTO archive_assets(id,group_id,sha256,original_key,preview_key,mime,size,width,height) VALUES(?,?,?,?,?,?,?,?,?)',
+                                          (asset, self.group, asset, 'synthetic', 'synthetic', 'image/jpeg', 1, 8, 8))
+                    self.store.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,?)',
+                                          (asset, asset, self.group, self.user, self.fixture, asset, asset, '{}', 0))
+                self.store.db.execute('INSERT INTO discovery_people VALUES(?,?,?,?,?,?)', (person, self.group, 'Person', self.user, None, None))
+                self.store.db.execute('INSERT INTO discovery_tags VALUES(?,?,?)', (person, assets[0], self.user))
+                self.store.db.execute('INSERT INTO discovery_tags VALUES(?,?,?)', (person, assets[1], self.user))
+                for event, pair in zip(events, (assets[:2], assets[1:])):
+                    self.store.db.execute('INSERT INTO review_events VALUES(?,?,?,?,?,?,?)',
+                                          (event, self.group, json.dumps(pair), event, 'accepted', self.user, '2026-10-22'))
+                self.store.db.execute('INSERT INTO discovery_hidden_events VALUES(?,?)', (self.user, events[1]))
+            output = io.BytesIO()
+            with zipfile.ZipFile(output, 'w') as archive:
+                self.store._export_discovery(self.user, self.group, ExportFingerprint(self.store._check_export_size), archive)
+            with zipfile.ZipFile(io.BytesIO(output.getvalue())) as archive:
+                people = json.loads(archive.read('people.json'))
+                personal = json.loads(archive.read('personal-discovery.json'))
+            self.assertEqual(people[0]['memories'], [dict(id=events[0], title=events[0])])
+            self.assertEqual(personal['hidden_memories'], [dict(id=events[1], title=events[1])])
+        finally:
+            with self.store.db:
+                self.store.db.execute('DELETE FROM discovery_hidden_events WHERE "user"=?', (self.user,))
+                self.store.db.execute('DELETE FROM review_events WHERE group_id=?', (self.group,))
+                self.store.db.execute('DELETE FROM discovery_tags WHERE person=?', (person,))
+                self.store.db.execute('DELETE FROM discovery_people WHERE id=?', (person,))
+
     def test_notification_boolean_round_trip(self):
         for enabled in (True, False, True):
             self.store.notification_opt_in(self.user, self.group, enabled)
