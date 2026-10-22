@@ -16,6 +16,7 @@
     "test:ui": "playwright test --ui",
     "test:unit": "node --test \"tests/unit/*.test.ts\"",
     "check:docs": "python3 work/poteto/product-plan/verify_docs.py",
+    "check:budgets": "node scripts/check-budgets.mjs",
     "typecheck": "tsc -b",
     "lint": "prettier --check src \"tests/**/*.ts\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",
     "format": "prettier --write src \"tests/**/*.ts\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",

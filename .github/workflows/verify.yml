@@ -23,6 +23,7 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox
       - run: npm run lint
       - run: npm run build
+      - run: npm run check:budgets
       - run: npm run check:docs
       - run: npm run test:backend
       - run: npm run eval:retrieval
