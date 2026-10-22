@@ -1,3 +1,4 @@
+import { shareDateLabel } from "./provenance";
 import type { Memory } from "../memories";
 
 const isoDay = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
@@ -25,6 +26,7 @@ export function hasDate(memory: Memory) {
 
 /** The date as members read it, with "About" when the archive is unsure. */
 export function displayDate(memory: Memory) {
+  if (!hasDate(memory)) return shareDateLabel(memory) || memory.date;
   const date = readableDate(memory.date);
   return memory.approximate && hasDate(memory) ? `About ${date}` : date;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { MouseEvent } from "react";
 import type { Memory } from "../memories";
+import { provenanceOf, sourceSharedLine } from "../memory/provenance";
 import { Icon } from "../ui/icons";
 import {
   coordinates,
@@ -41,6 +42,8 @@ export function Portal({
   useEffect(() => {
     title.current?.focus({ preventScroll: true });
   }, [memory.id]);
+  const sourceSharing = sourceSharedLine(memory);
+  const provenance = provenanceOf(memory);
   const hero = memory.photos[0];
   const strip = memory.photos.slice(1, 4);
   const more = memory.photos.length - 1 - strip.length;
@@ -168,11 +171,16 @@ export function Portal({
         {memory.description && (
           <p className="dossier-story">{memory.description}</p>
         )}
-        {(memory.people.shared.length > 0 ||
+        {(sourceSharing ||
+          memory.people.shared.length > 0 ||
           memory.people.conversation.length > 0) && (
           <div className="dossier-people">
+            {sourceSharing && <p>{sourceSharing}</p>}
             {memory.people.shared.length > 0 && (
-              <p>Shared by {listNames(memory.people.shared)}</p>
+              <p>
+                {provenance.length ? "Added to archive by" : "Shared by"}{" "}
+                {listNames(memory.people.shared)}
+              </p>
             )}
             {memory.people.conversation.length > 0 && (
               <p>

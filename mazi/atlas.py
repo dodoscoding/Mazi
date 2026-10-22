@@ -1,5 +1,6 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
+import re
 from math import asin, cos, radians, sin, sqrt
 
 from mazi.persistence import insertion_order
@@ -38,7 +39,6 @@ def atlas_view(store, user, group):
             hidden_assets.update(json.loads(row[0]))
         cards, grouped = [], set()
 
-        # Card membership is compact; payloads are decoded one at a time below.
         consumers = {}
         details = []
 
@@ -54,7 +54,9 @@ def atlas_view(store, user, group):
             photos = [dict(src='/api/review/rendition/' + item['id'],
                            alt=item['title'] or 'Archive photograph',
                            caption=item['title'] or 'Untitled photograph') for item in records]
-            detail = dict(messages={}, sources=set(), places=[], shared=set())
+            detail = dict(messages={}, sources=set(), places=[], shared=set(),
+                          provenance=[{} for _ in records],
+                          untitled={position for position, item in enumerate(records) if not item['title']})
             details.append(detail)
             for position, asset in enumerate(assets):
                 consumers.setdefault(asset, []).append((detail, position))
@@ -74,8 +76,6 @@ def atlas_view(store, user, group):
         for asset, item in items.items():
             if asset not in grouped and asset not in hidden_assets:
                 cards.append(card('photo-' + asset, item['title'] or 'Untitled photograph', [asset], 'photo'))
-        # Two group-scoped streams replace the three lookups per represented photo.
-        # Keep the policy transaction around both reads and all card assembly.
         joins = (' FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id AND a.group_id=o.group_id '
                  'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
                  'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
@@ -89,8 +89,22 @@ def atlas_view(store, user, group):
             if not targets:
                 continue
             origin = json.loads(row['payload'])
+            assertion = origin.get('shared_at_assertion') or {}
+            sender = (origin.get('sender') or {}).get('label') or None
+            raw = assertion.get('raw')
+            date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
+            ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
+                         and date_parts is not None and 1 <= int(date_parts[1]) <= 12
+                         and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
+            evidence = dict(sender=sender, source=origin.get('source') or 'archive', sharedAt=dict(
+                local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
+                precision=assertion.get('precision') or 'unknown',
+                ambiguous=bool(ambiguous)))
+            evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
             for detail, asset_position in targets:
                 detail['sources'].add(origin.get('source') or 'archive')
+                if sender or raw is not None or assertion.get('local'):
+                    detail['provenance'][asset_position].setdefault(evidence_key, evidence)
                 if row['display_name'] is not None:
                     detail['shared'].add(row['display_name'])
                 for message_position, message in enumerate(origin.get('context', [])):
@@ -111,6 +125,19 @@ def atlas_view(store, user, group):
             for detail, asset_position in consumers.get(row['asset_id'], ()):
                 detail['places'].append((asset_position, place_position, row))
         for result, detail in zip(cards, details):
+            for position, photo in enumerate(result['photos']):
+                evidence = list(detail['provenance'][position].values())
+                if evidence:
+                    photo['provenance'] = evidence
+                names = sorted({item['sender'] for item in evidence if item['sender']})
+                if names and position in detail['untitled']:
+                    title = 'Photo shared by ' + (
+                        ' and '.join(names) if len(names) <= 2 else
+                        ', '.join(names[:2]) + f' and {len(names) - 2} more')
+                    photo['caption'] = title
+                    photo['alt'] = title
+                    if result['kind'] == 'photo':
+                        result['title'] = result['shortTitle'] = title
             result['source'] = ', '.join(sorted(detail['sources']))
             result['messages'] = [dict(name=key[0], time=key[1], text=key[2])
                                   for key in sorted(detail['messages'], key=detail['messages'].get)]
