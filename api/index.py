@@ -54,7 +54,13 @@ def _drain():
 def _forget(key, error):
     # A thawed instance may hold a dropped database connection; reconnect on the next request.
     if not isinstance(error, (OSError, NotImplementedError)):
-        _state.pop(key, None)
+        evicted = _state.pop(key, None)
+        if key == 'work' and evicted is not None:
+            try:
+                evicted.store.close()
+            except Exception:
+                # The failed connection may also reject close; keep the triggering error.
+                pass
 
 
 def _handler():
