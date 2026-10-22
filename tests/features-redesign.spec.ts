@@ -298,3 +298,72 @@ test("PR 6 screens have no axe violations in night or day", async ({
     expect(record.violations, `evidence in ${theme}`).toEqual([]);
   }
 });
+
+test("Search photographs stay usable while included categories load and retry", async ({
+  page,
+}, info) => {
+  await enter(page, "Alice");
+  let requested = false;
+  let fail = true;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/discovery/state?**", async (route) => {
+    requested = true;
+    await gate;
+    if (fail)
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Synthetic context failure" }),
+      });
+    else await route.continue();
+  });
+  await page.goto("/#/search");
+  await expect(page.locator("#results article")).toHaveCount(3);
+  expect(requested).toBe(false);
+  await page.getByLabel("Search", { exact: true }).fill("bicycle");
+  await page
+    .getByRole("button", { name: "Search archive", exact: true })
+    .click();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await expect(page.locator("#result-total")).toHaveText("1 photograph");
+  const include = page.getByRole("button", {
+    name: "Include memories, chats, places and people",
+  });
+  await include.click();
+  await expect.poll(() => requested).toBe(true);
+  await expect(include).toBeDisabled();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await expect(page.locator("#person")).toBeDisabled();
+  await page
+    .getByText("Refine by place, person, date or source", { exact: true })
+    .click();
+  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
+  await page
+    .getByRole("button", { name: "Search archive", exact: true })
+    .click();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  release();
+  await expect(page.locator("#context-status")).toContainText("unavailable");
+  await expect(include).toBeEnabled();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  fail = false;
+  await include.click();
+  await expect(page.locator("#person")).toBeEnabled();
+  await expect(page.getByLabel("Search", { exact: true })).toHaveValue(
+    "bicycle",
+  );
+  await expect(page.getByLabel("Place", { exact: true })).toHaveValue(
+    "Amsterdam",
+  );
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await expect(page.locator("#people")).toContainText("Ben");
+  await expect(page.locator(".disc-tag select")).toBeEnabled();
+  await expect(page.locator(".disc-tag select option")).not.toHaveCount(1);
+  await page.screenshot({
+    path: info.outputPath("search-context-ready.png"),
+    fullPage: true,
+  });
+});
