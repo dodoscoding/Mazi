@@ -332,6 +332,15 @@ test("Search photographs stay usable while included categories load and retry", 
   const include = page.getByRole("button", {
     name: "Include memories, chats, places and people",
   });
+  await page.screenshot({
+    path: info.outputPath("search-photographs-ready.png"),
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await include.click();
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
