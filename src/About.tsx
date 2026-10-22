@@ -192,6 +192,11 @@ export function About({
             is removed.
           </p>
         </section>
+        <p className="about-note">
+          Music: “Monkeys Spinning Monkeys” by Kevin MacLeod (incompetech.com),
+          licensed under{" "}
+          <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        </p>
       </aside>
       <SignOutDialog
         open={confirming}
