@@ -22,3 +22,6 @@ tools/apple-photos/build/
 work/poteto/supabase-migration/private/
 
 work/poteto/unified-app/browser-results/
+
+.vercel/
+.vercel_python_packages/

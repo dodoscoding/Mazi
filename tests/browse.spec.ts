@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
 async function axeInBothThemes(page: Page) {
-  for (const theme of ["night", "day"]) {
+  for (const theme of ["night"]) {
     await page.evaluate((value) => {
       localStorage.setItem("mazi.theme", value);
       document.documentElement.dataset.theme = value;
@@ -124,9 +124,7 @@ test("search finds a memory by a word from its story and shows its thumbnail", a
   await expect(box).toBeFocused();
 });
 
-test("Timeline and Search have no axe violations in night or day", async ({
-  page,
-}) => {
+test("Timeline and Search have no axe violations", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1#/timeline");
   await expect(page.locator(".timeline-globe")).toHaveAttribute(

@@ -19,46 +19,25 @@ async function openHome(page: Page) {
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
 }
 
-async function switchTheme(page: Page, to: "day" | "night") {
-  if (isPhone(page)) {
-    await page.getByRole("button", { name: "More", exact: true }).click();
-    await page
-      .getByRole("dialog", { name: "More" })
-      .getByRole("button", { name: `Switch to ${to}` })
-      .click();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog", { name: "More" })).toHaveCount(0);
-  } else await page.getByRole("button", { name: `Switch to ${to}` }).click();
-}
-
-test("night is the default and a chosen day theme survives a reload", async ({
+test("night is the only theme and an old day choice is cleared", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("seeded")) {
+      sessionStorage.setItem("seeded", "1");
+      localStorage.setItem("mazi.theme", "day");
+    }
+  });
   await openHome(page);
-  const root = page.locator("html");
-  await expect(root).toHaveAttribute("data-theme", "night");
-  const night = await page.evaluate(
-    () => getComputedStyle(document.body).backgroundColor,
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  expect(await page.evaluate(() => localStorage.getItem("mazi.theme"))).toBe(
+    null,
   );
-  await switchTheme(page, "day");
-  await expect(root).toHaveAttribute("data-theme", "day");
-  await expect
-    .poll(() =>
-      page.evaluate(() => getComputedStyle(document.body).backgroundColor),
-    )
-    .not.toBe(night);
-  await page.reload();
-  await expect(root).toHaveAttribute("data-theme", "day");
   if (isPhone(page))
     await page.getByRole("button", { name: "More", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Switch to night" }),
-  ).toBeVisible();
-  await expect
-    .poll(() =>
-      page.evaluate(() => getComputedStyle(document.body).backgroundColor),
-    )
-    .toBe("rgb(244, 242, 236)");
+  await expect(page.getByRole("button", { name: /^Switch to/ })).toHaveCount(0);
+  await page.goto("/?demo=1#/about");
+  await expect(page.getByRole("radiogroup", { name: "Theme" })).toHaveCount(0);
 });
 
 test("the theme renders without storage", async ({ page }) => {
@@ -73,8 +52,6 @@ test("the theme renders without storage", async ({ page }) => {
   page.on("pageerror", (error) => errors.push(error.message));
   await openHome(page);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
-  await switchTheme(page, "day");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
   expect(errors).toEqual([]);
 });
 
@@ -140,13 +117,12 @@ test("Archive tools opens, is keyboard operable and closes on Escape", async ({
   await expect(tools).toHaveCount(0);
 });
 
-test("Home has no axe violations in night or day", async ({ page }) => {
+test("Home has no axe violations", async ({ page }) => {
   // The first-visit Atlas intro fades the HUD in; this audit is of the settled Home.
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHome(page);
-  for (const theme of ["night", "day"] as const) {
-    if (theme === "day") await switchTheme(page, "day");
+  for (const theme of ["night"] as const) {
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations, `${theme} theme`).toEqual([]);
@@ -172,13 +148,10 @@ test("a mouse click on an Archive tools link lands even when clicks do not focus
   await expect(page).toHaveURL(/#\/places/);
 });
 
-test("the open Archive tools menu has no axe violations in day", async ({
-  page,
-}) => {
+test("the open Archive tools menu has no axe violations", async ({ page }) => {
   test.skip(isPhone(page), "Phones reach the archive tools through More.");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHome(page);
-  await switchTheme(page, "day");
   await page.goto("/?demo=1#/memories");
   const button = page.getByRole("button", { name: "Archive tools" });
   await button.focus();

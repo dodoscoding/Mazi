@@ -18,20 +18,23 @@ async function spyOnAudio(page: Page) {
         spy.contexts++;
       }
     };
-    const proto = BaseAudioContext.prototype as unknown as Record<
-      string,
-      unknown
-    >;
-    for (const name of Object.getOwnPropertyNames(proto)) {
-      const descriptor = Object.getOwnPropertyDescriptor(proto, name);
-      if (!name.startsWith("create") || typeof descriptor?.value !== "function")
-        continue;
-      const create = descriptor.value as (...args: unknown[]) => unknown;
-      proto[name] = function (this: unknown, ...args: unknown[]) {
-        spy.calls[name] = (spy.calls[name] || 0) + 1;
-        return create.apply(this, args);
-      };
-    }
+    for (const proto of [
+      BaseAudioContext.prototype,
+      Original.prototype,
+    ] as unknown as Record<string, unknown>[])
+      for (const name of Object.getOwnPropertyNames(proto)) {
+        const descriptor = Object.getOwnPropertyDescriptor(proto, name);
+        if (
+          !name.startsWith("create") ||
+          typeof descriptor?.value !== "function"
+        )
+          continue;
+        const create = descriptor.value as (...args: unknown[]) => unknown;
+        proto[name] = function (this: unknown, ...args: unknown[]) {
+          spy.calls[name] = (spy.calls[name] || 0) + 1;
+          return create.apply(this, args);
+        };
+      }
   });
 }
 
@@ -139,7 +142,7 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   // The browser lets audio start only after a gesture.
   await page.keyboard.press("Shift");
   await expect.poll(async () => (await audio(page)).contexts).toBe(1);
-  await expect.poll(() => calls(page, "createOscillator")).toBeGreaterThan(0);
+  await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   expect(await calls(page, "createBufferSource")).toBe(0);
   await page.getByRole("link", { name: "Open memory", exact: true }).click();
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
@@ -160,7 +163,7 @@ test("under reduced motion the whoosh is dropped but a year step still ticks", a
   await signIn(page);
   await openAtlas(page);
   await page.keyboard.press("Shift");
-  await expect.poll(() => calls(page, "createOscillator")).toBeGreaterThan(0);
+  await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   const before = await calls(page, "createOscillator");
   await page.getByRole("slider", { name: "Year" }).focus();
   await page.keyboard.press("ArrowLeft");
@@ -174,29 +177,24 @@ test("under reduced motion the whoosh is dropped but a year step still ticks", a
   expect(await calls(page, "createBufferSource")).toBe(0);
 });
 
-test("Entry offers the sound toggle beside the theme toggle", async ({
-  page,
-}) => {
+test("Entry offers the sound toggle", async ({ page }) => {
   await page.goto("/");
   const header = page.locator(".entry-header");
   const toggle = header.getByRole("button", { name: "Sound", exact: true });
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await expect(toggle).toHaveText("Sound off");
-  await expect(
-    header.getByRole("button", { name: /^Switch to/ }),
-  ).toBeVisible();
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await expect(toggle).toHaveText("Sound on");
 });
 
-test("the headers with the sound toggle have no axe violations in night or day", async ({
+test("the headers with the sound toggle have no axe violations", async ({
   page,
 }) => {
   // Six axe passes over two atlas loads; CI draws the globe in software meanwhile.
   test.setTimeout(120000);
   await signIn(page);
-  for (const theme of ["night", "day"] as const) {
+  for (const theme of ["night"] as const) {
     await remember(page, "mazi.theme", theme);
     await openAtlas(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
@@ -213,7 +211,7 @@ test("the headers with the sound toggle have no axe violations in night or day",
     await toggle.click();
   }
   await page.context().clearCookies();
-  for (const theme of ["night", "day"] as const) {
+  for (const theme of ["night"] as const) {
     await remember(page, "mazi.theme", theme);
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
@@ -245,7 +243,7 @@ test("captures evidence screenshots", async ({ page }) => {
       : { width: 1440, height: 900 },
   );
   let theme: "night" | "day" = "night";
-  for (theme of ["night", "day"] as const) {
+  for (theme of ["night"] as const) {
     await page.context().clearCookies();
     await page.goto("/");
     await page.evaluate((value) => {
