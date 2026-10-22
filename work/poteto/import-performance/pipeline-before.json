@@ -1,0 +1,87 @@
+[
+  {
+    "records": 7500,
+    "photos": 223,
+    "archive_bytes": 538805,
+    "seconds": 0.7972,
+    "counts": {
+      "PENDING": 223,
+      "SKIPPED": 7277
+    },
+    "final_counts": {
+      "AVAILABLE_TO_GROUP": 223,
+      "SKIPPED": 7277
+    },
+    "stages_seconds": {
+      "upload": 0.0009,
+      "finish": 0.0003,
+      "scan": 0.7972,
+      "report": 0.0012,
+      "processing": 0.1014
+    },
+    "fake_hosted": false,
+    "scan_remote_gets": null,
+    "scan_remote_bytes": null,
+    "materializations": 16,
+    "inventory_calls": 16,
+    "insert_statements": 7500,
+    "scan_calls": 16,
+    "archive_bytes_hashed": 8620880
+  },
+  {
+    "records": 30000,
+    "photos": 0,
+    "archive_bytes": 1519005,
+    "seconds": 9.1881,
+    "counts": {
+      "SKIPPED": 30000
+    },
+    "final_counts": {
+      "SKIPPED": 30000
+    },
+    "stages_seconds": {
+      "upload": 0.001,
+      "finish": 0.0006,
+      "scan": 9.1881,
+      "report": 0.0023,
+      "processing": 0.0002
+    },
+    "fake_hosted": false,
+    "scan_remote_gets": null,
+    "scan_remote_bytes": null,
+    "materializations": 61,
+    "inventory_calls": 61,
+    "insert_statements": 30000,
+    "scan_calls": 61,
+    "archive_bytes_hashed": 92659305
+  },
+  {
+    "records": 7500,
+    "photos": 223,
+    "archive_bytes": 538805,
+    "seconds": 0.8143,
+    "counts": {
+      "PENDING": 223,
+      "SKIPPED": 7277
+    },
+    "final_counts": {
+      "AVAILABLE_TO_GROUP": 223,
+      "SKIPPED": 7277
+    },
+    "stages_seconds": {
+      "upload": 0.0005,
+      "finish": 0.001,
+      "scan": 0.8143,
+      "report": 0.0013,
+      "processing": 0.2327
+    },
+    "fake_hosted": true,
+    "scan_remote_gets": 32,
+    "scan_remote_bytes": 8620880,
+    "materializations": 16,
+    "inventory_calls": 16,
+    "insert_statements": 7500,
+    "scan_calls": 16,
+    "archive_bytes_hashed": 8620880
+  }
+]

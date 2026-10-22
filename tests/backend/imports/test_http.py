@@ -83,6 +83,28 @@ class HttpTests(unittest.TestCase):
         self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
         self.assertEqual(self.request("/api/archive?group=" + self.group + "&offset=-1")[0], 400)
 
+    def test_full_size_chunk_replay_and_short_tail_preserve_upload(self):
+        data = bytes(range(256)) * 2048 + b"short tail"
+        code, _, response = self.request("/api/imports/start", {
+            "group": self.group, "source": "manual", "namespace": "chunk-boundary",
+            "size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
+        })
+        self.assertEqual(code, 201)
+        run = json.loads(response)["id"]
+        first = {"id": run, "offset": 0, "data": base64.b64encode(data[:512 * 1024]).decode()}
+        for _ in range(2):
+            code, _, response = self.request("/api/imports/chunk", first)
+            self.assertEqual(code, 200)
+            self.assertEqual(json.loads(response)["received"], 512 * 1024)
+        code, _, response = self.request("/api/imports/chunk", {
+            "id": run, "offset": 512 * 1024,
+            "data": base64.b64encode(data[512 * 1024:]).decode(),
+        })
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(response)["received"], len(data))
+        self.assertEqual(self.request("/api/imports/finish", {"id": run})[0], 200)
+        self.assertEqual(self.store.objects.read("archives", run), data)
+
 
 if __name__ == "__main__":
     unittest.main()

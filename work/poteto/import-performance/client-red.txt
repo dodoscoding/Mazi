@@ -1,0 +1,120 @@
+✔ an upload uses its own resume offset while another report is selected (59.747833ms)
+✔ a workspace load failure offers a retry that restores the requested circle without duplicate history (15.84225ms)
+✔ the submitted archive keeps its circle and source when the form changes during hashing (14.636417ms)
+✔ an already completed archive keeps its report without transferring again (15.904916ms)
+✔ overlapping gallery refreshes keep only the newest page and cursor (20.262583ms)
+✔ a late report page cannot replace the most recently requested page (21.667375ms)
+✔ repeated load-more clicks request and append each gallery page once (15.34525ms)
+✔ a failed load-more request releases the control and retries the same cursor (20.283167ms)
+✔ source-record pagination prevents duplicate requests and can retry a failure (20.098333ms)
+✖ archive transfer fills the allowed chunk size and preserves every byte (48.714167ms)
+✖ periodic polling respects COMPLETED lifecycle (16.198375ms)
+✖ periodic polling respects CANCELLED lifecycle (16.823625ms)
+✖ periodic polling respects FAILED lifecycle (16.64625ms)
+✔ periodic polling respects INVENTORIED lifecycle (15.573375ms)
+✔ periodic polling respects PROCESSING lifecycle (15.645417ms)
+✖ media progress excludes records without media and inventory awaits confirmation (14.074208ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 11
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 538.162959
+
+✖ failing tests:
+
+test at tests/dom/imports.test.mjs:483:1
+✖ archive transfer fills the allowed chunk size and preserves every byte (48.714167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  +   262144,
+  +   262144,
+  +   262144,
+  +   262144,
+  -   524288,
+  -   524288,
+      17
+    ]
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:503:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 262144, 262144, 262144, 262144, 17 ],
+    expected: [ 524288, 524288, 17 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/imports.test.mjs:509:3
+✖ periodic polling respects COMPLETED lifecycle (16.198375ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/imports.test.mjs:509:3
+✖ periodic polling respects CANCELLED lifecycle (16.823625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/imports.test.mjs:509:3
+✖ periodic polling respects FAILED lifecycle (16.64625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/imports.test.mjs:527:1
+✖ media progress excludes records without media and inventory awaits confirmation (14.074208ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  '97' !== '0'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:539:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '97',
+    expected: '0',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

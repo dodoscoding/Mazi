@@ -19,11 +19,13 @@ import uuid
 import zipfile
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
+from dataclasses import dataclass
+from typing import Generator
 from pathlib import Path
 
 from mazi.identity.core import Conflict, Denied, Store
 from .adapters import (Archive, ArchiveError, MAX_ARCHIVE, MAX_FILE, SOURCES,
-                       digest, inventory)
+                       digest, inventory, NormalizedImportItem)
 
 LEASE_SECONDS = 60
 MAX_ATTEMPTS = 3
@@ -69,6 +71,14 @@ CREATE INDEX IF NOT EXISTS archive_asset_origins ON archive_origins(asset_id,wit
 """
 
 
+@dataclass
+class ScanSession:
+    identity: tuple[str, ...]
+    checkpoint: int
+    resources: ExitStack
+    items: Generator[NormalizedImportItem, None, None]
+
+
 class ImportStore(Store):
     def __init__(self, root):
         super().__init__(root)
@@ -77,6 +87,7 @@ class ImportStore(Store):
             self.db.execute("PRAGMA busy_timeout=5000")
         initialize_schema(self.db, SCHEMA)
         self._archive_session = None
+        self._scan_session: ScanSession | None = None
         self.archive_dir = self.root / "archives"
         self.object_dir = self.root / "archive-objects"
         for directory in (self.archive_dir, self.object_dir):
@@ -87,8 +98,51 @@ class ImportStore(Store):
         if session is not None:
             session[1].close()
 
+    def _release_scan(self):
+        session, self._scan_session = self._scan_session, None
+        if session is not None:
+            try:
+                session.items.close()
+            finally:
+                session.resources.close()
+
+    def _check_scan_session(self):
+        if self._scan_session is None:
+            return
+        row = self.db.execute("SELECT * FROM import_runs WHERE id=?", (self._scan_session.identity[0],)).fetchone()
+        try:
+            if row is None or row["state"] != "SCANNING" or row["withdrawn"] or row["checkpoint"] != self._scan_session.checkpoint:
+                self._release_scan()
+                return
+            self._member(row["owner_id"], row["group_id"])
+        except Denied:
+            self._release_scan()
+
+    def _scan_inventory(self, row):
+        identity = tuple(row[key] for key in ("id", "group_id", "manifest", "source", "namespace", "options"))
+        if self._scan_session is not None:
+            if self._scan_session.identity == identity and self._scan_session.checkpoint == row["checkpoint"]:
+                return self._scan_session
+            self._release_scan()
+        self._member(row["owner_id"], row["group_id"])
+        with ExitStack() as stack:
+            path = stack.enter_context(self.objects.materialize("archives", row["id"]))
+            archive = stack.enter_context(Archive(path))
+            if archive.manifest != row["manifest"]:
+                raise ArchiveError("Archive checksum differs")
+            items = inventory(archive, row["source"], row["namespace"], json.loads(row["options"]))
+            try:
+                for _ in range(row["checkpoint"]):
+                    next(items)
+            except StopIteration:
+                items.close()
+                raise ArchiveError("Inventory shorter than saved checkpoint") from None
+            self._scan_session = ScanSession(identity, row["checkpoint"], stack.pop_all(), items)
+        return self._scan_session
+
     def close(self):
         try:
+            self._release_scan()
             self._release_archive()
         finally:
             super().close()
@@ -188,7 +242,8 @@ class ImportStore(Store):
                 return
             if row["received"] != row["size"]:
                 raise Conflict("Upload incomplete")
-            actual = hashlib.sha256(self.objects.read("archives", run)).hexdigest()
+            with self.objects.materialize("archives", run) as path, path.open("rb") as stream:
+                actual = hashlib.file_digest(stream, "sha256").hexdigest()
             if actual != row["manifest"]:
                 # Allow the same upload to restart after corrupt bytes.
                 self.db.execute("UPDATE import_runs SET received=0 WHERE id=?", (run,))
@@ -198,38 +253,53 @@ class ImportStore(Store):
             self.db.execute("UPDATE import_runs SET state='SCANNING' WHERE id=?", (run,))
 
     def scan(self, run, batch_size=50_000):
+        if type(batch_size) is not int or batch_size < 1:
+            raise ValueError("Invalid scan batch size")
+        self._check_scan_session()
         row = self.db.execute("SELECT * FROM import_runs WHERE id=?", (run,)).fetchone()
-        if row is None or row["state"] != "SCANNING":
+        if row is None or row["state"] != "SCANNING" or row["withdrawn"]:
             return False
         pending = []
-        exhausted = True
+        exhausted = False
         try:
-            with self.objects.materialize("archives", run) as path, Archive(path) as archive:
-                for index, item in enumerate(inventory(archive, row["source"], row["namespace"], json.loads(row["options"]))):
-                    if index < row["checkpoint"]:
-                        continue
-                    pending.append((index, item))
-                    if len(pending) >= batch_size:
-                        exhausted = False
-                        break
+            session = self._scan_inventory(row)
+            for index in range(row["checkpoint"], row["checkpoint"] + batch_size):
+                try:
+                    item = next(session.items)
+                except StopIteration:
+                    exhausted = True
+                    break
+                pending.append((str(uuid.uuid4()), run, index, item.occurrence_key,
+                                json.dumps(item.to_dict(), ensure_ascii=False), item.availability, item.reason))
             with self.transaction():
                 current = self.db.execute("SELECT * FROM import_runs WHERE id=?", (run,)).fetchone()
                 self._member(row["owner_id"], row["group_id"])
-                if current["state"] != "SCANNING" or current["checkpoint"] != row["checkpoint"]:
+                if current["state"] != "SCANNING" or current["withdrawn"] or current["checkpoint"] != row["checkpoint"]:
+                    self._release_scan()
                     return False
-                for index, item in pending:
-                    self.db.execute("INSERT INTO import_items(id,run_id,ordinal,occurrence,payload,outcome,reason) VALUES(?,?,?,?,?,?,?)",
-                                    (str(uuid.uuid4()), run, index, item.occurrence_key, json.dumps(item.to_dict(), ensure_ascii=False),
-                                     item.availability, item.reason))
+                # Stay below SQLite's historical 999 bind-parameter limit and bound hosted round trips.
+                for start in range(0, len(pending), 128):
+                    batch = pending[start:start + 128]
+                    self.db.execute("INSERT INTO import_items(id,run_id,ordinal,occurrence,payload,outcome,reason) VALUES " +
+                                    ",".join("(?,?,?,?,?,?,?)" for _ in batch),
+                                    tuple(value for values in batch for value in values))
+                checkpoint = row["checkpoint"] + len(pending)
                 self.db.execute("UPDATE import_runs SET checkpoint=?,scan_done=?,state=? WHERE id=?",
-                                (row["checkpoint"] + len(pending), int(exhausted), "INVENTORIED" if exhausted else "SCANNING", run))
+                                (checkpoint, int(exhausted), "INVENTORIED" if exhausted else "SCANNING", run))
+            session.checkpoint = checkpoint
+            if exhausted:
+                self._release_scan()
             return True
         except (ArchiveError, zipfile.BadZipFile, UnicodeError, OSError, Denied, ValueError, TypeError, RecursionError) as exc:
+            self._release_scan()
             with self.transaction():
                 message = str(exc) if isinstance(exc, ArchiveError) else "Archive unreadable or access removed"
                 self.db.execute("UPDATE import_runs SET state='FAILED',error=? WHERE id=? AND state='SCANNING'", (message, run))
                 self.db.execute("UPDATE import_items SET outcome='FAILED',reason='ARCHIVE_INVALID' WHERE run_id=? AND outcome='PENDING'", (run,))
             return False
+        except BaseException:
+            self._release_scan()
+            raise
 
     def confirm(self, user, run):
         with self.transaction():
@@ -418,6 +488,7 @@ class ImportStore(Store):
             self._reconcile_run(row["run_id"])
 
     def work_once(self):
+        self._check_scan_session()
         self._check_archive_session()
         scanning = self.db.execute("SELECT id FROM import_runs WHERE state='SCANNING' ORDER BY created_at LIMIT 1").fetchone()
         if scanning:
@@ -460,6 +531,8 @@ class ImportStore(Store):
             self._audit(user, "import.cancel", run)
 
     def _cancel(self, run):
+        if self._scan_session is not None and self._scan_session.identity[0] == run:
+            self._release_scan()
         if self._archive_session is not None and self._archive_session[0][0] == run:
             self._release_archive()
         self.db.execute("UPDATE import_runs SET state='CANCELLED' WHERE id=?", (run,))
@@ -494,7 +567,12 @@ class ImportStore(Store):
         row = self._run(user, run)
         if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("Invalid report page")
-        counts = {r[0]: r[1] for r in self.db.execute("SELECT outcome,count(*) FROM import_items WHERE run_id=? GROUP BY outcome", (run,))}
+        summaries = self.db.execute("SELECT outcome,count(*),count(DISTINCT asset_id), "
+                                    "sum(CASE WHEN reason='NO_MEDIA' THEN 1 ELSE 0 END) "
+                                    "FROM import_items WHERE run_id=? GROUP BY outcome", (run,)).fetchall()
+        counts = {summary[0]: summary[1] for summary in summaries}
+        unique_assets = next((summary[2] for summary in summaries if summary[0] == "AVAILABLE_TO_GROUP"), 0)
+        no_media = sum(summary[3] for summary in summaries)
         items = []
         for item in self.db.execute("SELECT * FROM import_items WHERE run_id=? ORDER BY ordinal LIMIT ? OFFSET ?", (run, limit, offset)):
             payload = json.loads(item["payload"])
@@ -507,7 +585,7 @@ class ImportStore(Store):
                 "error": row["error"], "discovered": sum(counts.values()), "counts": counts, "items": items,
                 "next_offset": offset + len(items) if offset + len(items) < sum(counts.values()) else None,
                 "coverage": "Only supplied records; archive coverage is incomplete.",
-                "unique_assets": self.db.execute("SELECT count(DISTINCT asset_id) FROM import_items WHERE run_id=? AND outcome='AVAILABLE_TO_GROUP'", (run,)).fetchone()[0]}
+                "unique_assets": unique_assets, "no_media": no_media}
 
     def imports_for(self, user, group):
         self._member(user, group)
