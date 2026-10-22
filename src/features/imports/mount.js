@@ -30,7 +30,7 @@ const sources = [
 const stateLabels = {
   UPLOADING: "Uploading",
   SCANNING: "Reading the export",
-  INVENTORIED: "Ready to import",
+  INVENTORIED: "Awaiting your confirmation",
   PROCESSING: "Importing now",
   COMPLETED: "Done",
   CANCELLED: "Cancelled",
@@ -42,6 +42,7 @@ const stateTone = {
   FAILED: "error",
 };
 const activeOutcomes = ["PENDING", "PROCESSING", "RETRY_REQUESTED"];
+const terminalStates = ["COMPLETED", "CANCELLED", "FAILED"];
 
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
@@ -419,7 +420,8 @@ export function mount(root, lifecycle) {
   }
 
   function renderProgress(report) {
-    const total = report.discovered || 0;
+    const records = report.discovered || 0;
+    const total = Math.max(0, records - (report.no_media || 0));
     const active = activeOutcomes.reduce(
       (sum, key) => sum + (report.counts[key] || 0),
       0,
@@ -459,7 +461,7 @@ export function mount(root, lifecycle) {
       ],
       [
         at > 1
-          ? `Read ${total} ${total === 1 ? "item" : "items"}`
+          ? `Read ${records} ${records === 1 ? "record" : "records"}`
           : "Reading the export",
         1,
       ],
@@ -506,11 +508,18 @@ export function mount(root, lifecycle) {
     $("report").hidden = false;
     $("report-title").textContent =
       `${sourceNames[report.source] || report.source} · ${words(report.state)}`;
+    const noMedia = report.no_media || 0;
     const summary = [
-      `${report.discovered} discovered`,
-      ...Object.entries(report.counts).map(
-        ([key, count]) => `${count} ${words(key)}`,
-      ),
+      `${report.discovered} records scanned`,
+      `${Math.max(0, report.discovered - noMedia)} media candidates`,
+      noMedia ? `${noMedia} without media` : "",
+      ...Object.entries(report.counts)
+        .map(([key, count]) => [
+          key,
+          key === "SKIPPED" ? count - noMedia : count,
+        ])
+        .filter(([, count]) => count > 0)
+        .map(([key, count]) => `${count} ${words(key)}`),
       `${report.unique_assets} unique photos`,
       report.withdrawn ? "Contribution withdrawn" : "",
       report.error ? words(report.error) : "",
@@ -729,7 +738,7 @@ export function mount(root, lifecycle) {
           while (received < values.file.size) {
             const bytes = new Uint8Array(
               await values.file
-                .slice(received, received + 256 * 1024)
+                .slice(received, received + 512 * 1024)
                 .arrayBuffer(),
             );
             let binary = "";
@@ -813,7 +822,14 @@ export function mount(root, lifecycle) {
   $("refresh-gallery").onclick = () => run(() => gallery());
   $("more").onclick = () => run(() => gallery(true));
   setInterval(async () => {
-    if (polling || !selectedRun || document.hidden) return;
+    if (
+      polling ||
+      !selectedRun ||
+      document.hidden ||
+      (currentReport?.id === selectedRun &&
+        terminalStates.includes(currentReport.state))
+    )
+      return;
     polling = true;
     try {
       await refreshReport();

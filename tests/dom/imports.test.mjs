@@ -67,6 +67,7 @@ function setup(t, boundary) {
   root.innerHTML = template;
   window.document.body.append(root);
   const dispose = [];
+  const intervals = [];
   mount(root, {
     groupId: group.id,
     fetch: async (path, options) => {
@@ -80,7 +81,7 @@ function setup(t, boundary) {
           value instanceof Error ? { error: value.message } : value,
       };
     },
-    setInterval: () => 0,
+    setInterval: (callback) => intervals.push(callback),
     setTimeout: window.setTimeout.bind(window),
     URL: window.URL,
     onDispose: (callback) => dispose.push(callback),
@@ -93,7 +94,12 @@ function setup(t, boundary) {
       else delete globalThis[name];
     }
   });
-  return { window, root, $: (selector) => root.querySelector(selector) };
+  return {
+    window,
+    root,
+    intervals,
+    $: (selector) => root.querySelector(selector),
+  };
 }
 function baseResponse(path) {
   if (path === "/api/groups") return [group];
@@ -476,4 +482,95 @@ test("source-record pagination prevents duplicate requests and can retry a failu
   );
   assert.equal(calls, 2);
   assert.equal(more.hidden, true);
+});
+
+test("archive transfer fills the allowed chunk size and preserves every byte", async (t) => {
+  const original = Uint8Array.from(
+    { length: 1024 * 1024 + 17 },
+    (_, i) => i % 256,
+  );
+  const chunks = [];
+  const { $, window } = setup(t, (path, body) => {
+    if (path === "/api/imports/start") return { id: "large" };
+    if (path.startsWith("/api/imports/large"))
+      return report("large", "UPLOADING", 0, original.length);
+    if (path === "/api/imports/chunk") {
+      const data = Buffer.from(body.data, "base64");
+      chunks.push({ offset: body.offset, data });
+      return { received: body.offset + data.length };
+    }
+    if (path === "/api/imports/finish") return {};
+    return baseResponse(path);
+  });
+  await until(() => $(".history-row"), "history");
+  const transfer = new window.DataTransfer();
+  transfer.items.add(new window.File([original], "large.zip"));
+  $("input[name=file]").files = transfer.files;
+  $("#upload").dispatchEvent(
+    new window.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await until(() => !$("#upload-button").disabled, "upload settles");
+  assert.deepEqual(
+    chunks.map(({ data }) => data.length),
+    [512 * 1024, 512 * 1024, 17],
+  );
+  assert.deepEqual(
+    chunks.map(({ offset }) => offset),
+    [0, 512 * 1024, 1024 * 1024],
+  );
+  assert.deepEqual(
+    Buffer.concat(chunks.map(({ data }) => data)),
+    Buffer.from(original),
+  );
+});
+
+for (const state of [
+  "COMPLETED",
+  "CANCELLED",
+  "FAILED",
+  "INVENTORIED",
+  "PROCESSING",
+]) {
+  test(`periodic polling respects ${state} lifecycle`, async (t) => {
+    let calls = 0;
+    const { $, intervals } = setup(t, (path) => {
+      if (path.startsWith("/api/imports/older")) {
+        calls++;
+        return report("older", state);
+      }
+      return baseResponse(path);
+    });
+    await until(() => $(".history-row"), "history");
+    $(".history-row").click();
+    await until(() => !$("#report").hidden, "report");
+    await delay(0);
+    await intervals[0]();
+    assert.equal(calls, ["INVENTORIED", "PROCESSING"].includes(state) ? 2 : 1);
+  });
+}
+
+test("media progress excludes records without media and inventory awaits confirmation", async (t) => {
+  let state = "PROCESSING";
+  const { $, intervals } = setup(t, (path) => {
+    if (path.startsWith("/api/imports/older"))
+      return {
+        ...report("older", state),
+        discovered: 7500,
+        no_media: 7277,
+        counts: { SKIPPED: 7277, PENDING: 223 },
+      };
+    return baseResponse(path);
+  });
+  await until(() => $(".history-row"), "history");
+  $(".history-row").click();
+  await until(() => !$("#report").hidden, "report");
+  assert.equal($("#report-bar").getAttribute("aria-valuenow"), "0");
+  assert.match($("#report-summary").textContent, /7500 records scanned/);
+  assert.match($("#report-summary").textContent, /7277 without media/);
+  assert.match($("#report-summary").textContent, /223 media candidates/);
+  assert.doesNotMatch($("#report-summary").textContent, /7277 skipped/);
+  state = "INVENTORIED";
+  await intervals[0]();
+  assert.match($("#report-state").textContent, /confirmation/i);
+  assert.equal($("#confirm").hidden, false);
 });
