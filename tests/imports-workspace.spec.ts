@@ -600,3 +600,43 @@ test("imports mounts when opened in a hidden document", async ({ page }) => {
   await page.goto("/#/imports");
   await expect(page.getByLabel("Export ZIP")).toHaveCount(1);
 });
+
+test("foreground session identity change clears retained imports", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/imports");
+  await page.getByLabel("Source account label").fill("private retained label");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    const profile = await response.json();
+    await route.fulfill({
+      response,
+      json: { ...profile, user_id: "another-user" },
+    });
+  });
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByLabel("Export ZIP")).toHaveCount(0);
+  await expect(
+    page.getByText("Your access changed. Enter again to check your circle."),
+  ).toBeVisible();
+});
