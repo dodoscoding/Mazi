@@ -37,15 +37,18 @@ export function FeaturePage({ path }: { path: string }) {
     const [pathname, query] = path.split("?");
     const feature = featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
+    const retainWhenHidden = pathname === "/imports" || pathname === "/circle";
     let disposed = false;
+    let accessDenied = false;
     let lifecycle: ReturnType<typeof createLifecycle> | undefined;
     let observer: MutationObserver | undefined;
     const mount = () => {
       if (disposed) return;
+      accessDenied = false;
       observer?.disconnect();
       lifecycle?.dispose();
       container.replaceChildren();
-      if (document.hidden) return;
+      if (document.hidden && !retainWhenHidden) return;
       const root = document.createElement("section");
       root.className = "feature-content";
       root.innerHTML = feature.template;
@@ -81,6 +84,7 @@ export function FeaturePage({ path }: { path: string }) {
       container.replaceChildren();
     };
     const accessLost = () => {
+      accessDenied = true;
       clear();
       const message = document.createElement("p");
       message.setAttribute("role", "status");
@@ -96,11 +100,12 @@ export function FeaturePage({ path }: { path: string }) {
     };
     const groupChanged = () => queueMicrotask(mount);
     const visibility = () => {
+      if (accessDenied || retainWhenHidden) return;
       if (document.hidden) clear();
       else mount();
     };
     const pageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) mount();
+      if (event.persisted && !accessDenied) mount();
     };
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("mazi:group", groupChanged);

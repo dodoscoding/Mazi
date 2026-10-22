@@ -507,13 +507,21 @@ for (const path of ["imports"]) {
       expect(offsets).toEqual([0, 256 * 1024, 512 * 1024]);
       expect(finishes).toBe(1);
       expect(failed).toEqual([]);
-      await page.route(`**/api/imports/${run}?*`, (route) =>
-        route.fulfill({
+      let denyReport!: () => void;
+      const denialGate = new Promise<void>((resolve) => {
+        denyReport = resolve;
+      });
+      let reportWaiting = false;
+      await page.route(`**/api/imports/${run}?*`, async (route) => {
+        reportWaiting = true;
+        await denialGate;
+        await route.fulfill({
           status: 403,
           contentType: "application/json",
           body: JSON.stringify({ error: "Synthetic access revoked" }),
-        }),
-      );
+        });
+      });
+      await expect.poll(() => reportWaiting).toBe(true);
       await page.evaluate(() => {
         Object.defineProperty(document, "hidden", {
           configurable: true,
@@ -521,6 +529,7 @@ for (const path of ["imports"]) {
         });
         document.dispatchEvent(new Event("visibilitychange"));
       });
+      denyReport();
       await expect(page.getByLabel("Export ZIP")).toHaveCount(0);
       await page.evaluate(() => {
         Object.defineProperty(document, "hidden", {
@@ -531,7 +540,7 @@ for (const path of ["imports"]) {
       });
       await expect(
         page.getByText(
-          "Your session or access changed. Sign in again to continue.",
+          "Your access changed. Enter again to check your circle.",
         ),
       ).toBeVisible();
       await expect(page.getByLabel("Export ZIP")).toHaveCount(0);
