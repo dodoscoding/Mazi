@@ -269,11 +269,11 @@ class ImportStore(Store):
                             (token, now + LEASE_SECONDS, row["id"]))
             return {**dict(row), "lease_token": token, "lease_until": now + LEASE_SECONDS, "attempts": row["attempts"] + 1}
 
-    def _fence(self, job, now):
+    def _fence(self, job, now, *, require_live=True):
         row = self.db.execute("SELECT i.*,r.state,r.withdrawn,r.owner_id,r.group_id FROM import_items i "
                               "JOIN import_runs r ON r.id=i.run_id WHERE i.id=?", (job["id"],)).fetchone()
         if (row is None or row["outcome"] != "PROCESSING" or row["lease_token"] != job["lease_token"] or
-                row["lease_until"] <= now or row["state"] != "PROCESSING" or row["withdrawn"]):
+                (require_live and row["lease_until"] <= now) or row["state"] != "PROCESSING" or row["withdrawn"]):
             raise Conflict("Stale worker lease or cancelled import")
         self._member(row["owner_id"], row["group_id"])
         return row
@@ -354,11 +354,10 @@ class ImportStore(Store):
 
     def complete(self, job, prepared=None, now=None):
         clock = time.time if now is None else lambda: now
-        # Check both before expensive work and at the database availability boundary.
         self._fence(job, clock())
         prepared = self.prepare(job) if prepared is None else prepared
         with self.transaction():
-            row = self._fence(job, clock())
+            row = self._fence(job, clock(), require_live=False)
             outcome, reason, asset = prepared["outcome"], prepared["reason"], None
             if outcome == "AVAILABLE_TO_GROUP":
                 payload = json.loads(row["payload"])
@@ -412,7 +411,7 @@ class ImportStore(Store):
     def fail(self, job, now=None):
         now = time.time() if now is None else now
         with self.transaction():
-            row = self._fence(job, now)
+            row = self._fence(job, now, require_live=False)
             terminal = row["attempts"] >= MAX_ATTEMPTS
             self.db.execute("UPDATE import_items SET outcome=?,reason=?,retry_at=?,lease_token=NULL,lease_until=NULL WHERE id=?",
                             ("FAILED" if terminal else "PENDING", "RETRY_LIMIT" if terminal else "RETRY_SCHEDULED",

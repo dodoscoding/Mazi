@@ -255,8 +255,8 @@ class SourceStore(ReviewStore):
             self.db.execute("UPDATE import_runs SET state='PROCESSING',scan_done=1,checkpoint=1 WHERE id=?", (resource,))
             self.db.execute("UPDATE source_resources SET state='QUEUED' WHERE id=?", (resource,))
 
-    def _fence(self, job, now):
-        row = super()._fence(job, now)
+    def _fence(self, job, now, *, require_live=True):
+        row = super()._fence(job, now, require_live=require_live)
         resource = self.db.execute('SELECT id FROM source_resources WHERE id=?', (job['run_id'],)).fetchone()
         if resource:
             _, source = self._resource(row['owner_id'], resource['id'], True)
