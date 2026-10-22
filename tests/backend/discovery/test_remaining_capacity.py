@@ -3,6 +3,7 @@ import itertools
 import json
 import random
 import time
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -167,6 +168,55 @@ class RemainingCapacityTests(unittest.TestCase):
             self.store.hide(self.ben, 'capacity-01000', True)
             with self.assertRaises(Denied):
                 self.store.search(self.ben, self.group, mode='semantic', similar='capacity-01000')
+
+    def test_places_scan_serializes_public_location_changes(self):
+        from mazi.sources.sources import SourceStore
+        for start in (0, 100):
+            self.process(self.submit({f'photo-{number}.jpg': picture() for number in range(start, min(start + 100, 129))}))
+        for row in self.store.db.execute('SELECT id FROM archive_origins').fetchall():
+            self.store.set_place(self.alice, row['id'], 'NL', 'Amsterdam', 52, 4, '2020-01-02')
+        writer = SourceStore(self.temp.name)
+        self.addCleanup(writer.close)
+        attempted, committed = threading.Event(), threading.Event()
+        errors, threads = [], []
+        connection = self.store.db
+        owner = self
+        class ScanCursor:
+            def __init__(self, cursor):
+                self.cursor = cursor
+            def fetchall(self):
+                rows = self.cursor.fetchall()
+                if rows and not threads:
+                    def mutate():
+                        attempted.set()
+                        try:
+                            writer.set_place(owner.alice, rows[0]['origin'], 'NL', 'Amsterdam', 52, 4, '2030-01-02')
+                            committed.set()
+                        except Exception as error:
+                            errors.append(error)
+                    thread = threading.Thread(target=mutate)
+                    threads.append(thread)
+                    thread.start()
+                    owner.assertTrue(attempted.wait(2))
+                    owner.assertFalse(committed.wait(0.05))
+                return rows
+        class ScanConnection:
+            def __getattr__(self, name):
+                return getattr(connection, name)
+            def execute(self, sql, params=()):
+                cursor = connection.execute(sql, params)
+                return ScanCursor(cursor) if 'AS text_bytes' in sql else cursor
+        self.store.db = ScanConnection()
+        try:
+            points = self.store.places(self.ben, self.group)['points']
+            self.assertEqual((len(points), len({point['origin'] for point in points})), (129, 129))
+        finally:
+            self.store.db = connection
+            for thread in threads:
+                thread.join(3)
+        self.assertEqual(errors, [])
+        self.assertTrue(committed.is_set())
+        self.assertEqual(len(self.store.places(self.ben, self.group)['points']), 129)
 
     def test_real_ten_thousand_photo_import_supports_complete_local_journeys(self):
         for start in range(0, 10000, 100):
