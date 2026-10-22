@@ -142,3 +142,132 @@ test("Timeline and Search have no axe violations in night or day", async ({
   await expect(page.getByRole("status")).toContainText("No demo memories");
   await axeInBothThemes(page);
 });
+
+test("timeline replays every sharing-only memory within one year and supports pause and restart", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install();
+  const memories = [1, 2, 3].map((i) => ({
+    id: `shared-${i}`,
+    shortTitle: `Shared ${i}`,
+    title: `Shared ${i}`,
+    date: "Date not recorded",
+    year: null,
+    approximate: false,
+    by: "Circle",
+    description: "Synthetic",
+    place: null,
+    people: { shared: [], conversation: [] },
+    messages: [],
+    photos: [
+      {
+        src: "/media/ferry.webp",
+        alt: "Synthetic",
+        caption: "",
+        provenance: [
+          {
+            sender: "Ana",
+            source: "whatsapp",
+            sharedAt: {
+              local: `2025-01-0${i}`,
+              raw: null,
+              precision: "day",
+              ambiguous: false,
+            },
+          },
+        ],
+      },
+    ],
+  }));
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories } }),
+  );
+  await page.goto("/#/timeline");
+  const replay = page.getByRole("button", {
+    name: "Replay memories",
+    exact: true,
+  });
+  await replay.click();
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "shared-1",
+  );
+  await page.clock.runFor(1400);
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "shared-2",
+  );
+  await page.getByRole("button", { name: "Pause replay", exact: true }).click();
+  await page.clock.runFor(1600);
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "shared-2",
+  );
+  await replay.click();
+  await page.clock.runFor(1400);
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "shared-3",
+  );
+  await page.clock.runFor(1400);
+  await expect(replay).toBeVisible();
+  await replay.click();
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "shared-1",
+  );
+});
+
+test("manual timeline navigation resets the paused replay cursor and keeps approximate capture labels", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install();
+  const memories = [2020, 2021, 2025, 2026].map((year) => ({
+    id: `year-${year}`,
+    shortTitle: `Year ${year}`,
+    title: `Year ${year}`,
+    date: `${year}-01-01`,
+    year,
+    approximate: true,
+    by: "Circle",
+    description: "Synthetic",
+    place: null,
+    people: { shared: [], conversation: [] },
+    messages: [],
+    photos: [{ src: "/media/ferry.webp", alt: "Synthetic", caption: "" }],
+  }));
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories } }),
+  );
+  await page.goto("/#/timeline");
+  await expect(
+    page.locator('.tl-card[data-memory-id="year-2020"] .tl-date'),
+  ).toContainText("About");
+  await page
+    .getByRole("button", { name: "Replay memories", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Pause replay", exact: true }).click();
+  const slider = page.getByRole("slider", { name: "Year", exact: true });
+  if (await slider.isVisible()) {
+    await slider.focus();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+  } else {
+    await page.getByRole("button", { name: "Next year, 2021" }).click();
+    await page.getByRole("button", { name: "Next year, 2025" }).click();
+  }
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "year-2025",
+  );
+  await page
+    .getByRole("button", { name: "Replay memories", exact: true })
+    .click();
+  await page.clock.runFor(1400);
+  await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
+    "data-memory-id",
+    "year-2026",
+  );
+});

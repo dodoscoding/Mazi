@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { mkdirSync } from "node:fs";
 
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
@@ -329,6 +330,8 @@ test("sharing-only same-year memories replay independently with explicit date ba
   page,
 }) => {
   await skipIntro(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install();
   const base = {
     kind: "photo",
     source: "whatsapp",
@@ -372,16 +375,25 @@ test("sharing-only same-year memories replay independently with explicit date ba
   await page.goto("/#/?selected=shared-3");
   await expect(page.locator(".readout-year")).toHaveText("2025");
   await expect(page.locator(".readout-summary")).toContainText("Shared on");
+  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Flat map", exact: true }).click();
+  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/sharing-chronology-${isPhone(page) ? "phone" : "desktop"}.png`,
+  });
   const replay = page.getByRole("button", { name: "Replay", exact: true });
   await expect(replay).toBeEnabled();
   await replay.click();
   await expect(page).toHaveURL(/selected=shared-1/);
+  await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=shared-2/);
   await page.getByRole("button", { name: "Pause", exact: true }).click();
-  await page.waitForTimeout(1600);
+  await page.clock.runFor(1600);
   await expect(page).toHaveURL(/selected=shared-2/);
   await replay.click();
+  await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=shared-3/);
+  await page.clock.runFor(1500);
   await expect(replay).toBeVisible();
   await replay.click();
   await expect(page).toHaveURL(/selected=shared-1/);

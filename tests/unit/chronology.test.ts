@@ -84,3 +84,11 @@ test("grouped photos require complete sharing coverage and label ranges and part
     /Capture date incomplete/,
   );
 });
+
+test("conflicting capture assertions remain explicit when sharing positions Replay", () => {
+  const item = memory("conflict", ["2025-01-01"], {
+    dateBasis: "conflicting source evidence",
+  });
+  assert.match(chronologyDate(item).label, /Capture date incomplete/);
+  assert.equal(chronologyDate(item).basis, "shared");
+});
