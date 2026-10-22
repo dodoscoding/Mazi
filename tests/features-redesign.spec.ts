@@ -304,6 +304,13 @@ test("Search photographs stay usable while included categories load and retry", 
 }, info) => {
   await enter(page, "Alice");
   const session = await (await page.request.get("/api/session")).json();
+  const snapshotResponse = await page.request.get(
+    `/api/discovery/search?group=${encodeURIComponent(session.group_id)}&mode=keyword`,
+  );
+  expect(snapshotResponse.ok()).toBe(true);
+  const snapshot = await snapshotResponse.json();
+  expect(snapshot.next_offset).toBeNull();
+  expect(snapshot.items).toHaveLength(snapshot.total);
   const tagName = `Startup tag ${info.project.name}`;
   const personResponse = await page.request.post("/api/discovery/person", {
     data: { group: session.group_id, name: tagName },
@@ -328,7 +335,19 @@ test("Search photographs stay usable while included categories load and retry", 
     else await route.continue();
   });
   await page.goto("/#/search");
-  await expect(page.locator("#results article")).toHaveCount(3);
+  await expect(page.locator("#results article")).toHaveCount(snapshot.total);
+  const shownIds = await page
+    .locator("#results article img")
+    .evaluateAll((images) =>
+      images
+        .map((image) =>
+          new URL((image as HTMLImageElement).src).pathname.split("/").at(-2),
+        )
+        .sort(),
+    );
+  expect(shownIds).toEqual(
+    snapshot.items.map((item: { id: string }) => item.id).sort(),
+  );
   expect(requested).toBe(false);
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
   await page
