@@ -97,6 +97,10 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
 }) => {
   await page.goto("/#/search");
   await expect(page.locator("#results article")).toHaveCount(3);
+  await page
+    .getByRole("button", { name: "Include memories, chats, places and people" })
+    .click();
+  await expect(page.locator("#person")).toBeEnabled();
   await page.getByLabel("Search", { exact: true }).fill("summer");
   await page.getByRole("button", { name: "Search archive" }).click();
   const memories = page.getByRole("region", { name: "Memories · 1" });

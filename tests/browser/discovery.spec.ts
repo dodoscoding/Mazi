@@ -130,6 +130,10 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   });
   await page.goto("/#/search");
   await expect(page.locator("#results article")).toHaveCount(3);
+  await page
+    .getByRole("button", { name: "Include memories, chats, places and people" })
+    .click();
+  await expect(page.locator("#person")).toBeEnabled();
   const requests: Record<string, string>[] = [];
   let budgetExceeded = false;
   await page.route("**/api/archive/keyword-fixture-*/preview", (route) =>
@@ -148,7 +152,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
           code: "capacity_exceeded",
           error: budgetExceeded
             ? "Keyword search exceeded its metadata-work budget"
-            : "Local search limit is 1,000 items",
+            : "Local search limit is 10,000 items",
         },
       });
       return;
@@ -184,11 +188,13 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page.getByLabel("Object or concept in text").fill("bicycle");
   await page.getByLabel("From", { exact: true }).fill("2024-01-01");
   await page.getByLabel("Through", { exact: true }).fill("2024-12-31");
-  await page.getByLabel("Source", { exact: true }).selectOption("apple");
+  await page
+    .getByRole("combobox", { name: "Source", exact: true })
+    .selectOption("apple");
   await page.getByRole("button", { name: "Search archive" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
-    "1,000 visible photographs",
+    "10,000 visible photographs",
   );
   await expect(page.locator("#mode")).toHaveValue("semantic");
   expect(requests.map((request) => request.mode)).toEqual(["semantic"]);
