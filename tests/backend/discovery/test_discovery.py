@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 from pathlib import Path
 
 from PIL import Image
@@ -276,6 +277,65 @@ class DiscoveryTests(unittest.TestCase):
             old_server.close()
         self.assertEqual(self.store.people(self.alice, self.group), [])
         self.assertEqual(self.store.db.execute('SELECT count(*) FROM discovery_vectors').fetchone()[0], 0)
+
+    def test_preview_authorization_queries_are_bounded_before_storage(self):
+        from tests.backend.archive.test_capacity import ArchiveCapacityTests
+        counts = []
+        for count in (1, 1001):
+            if count > 1:
+                ArchiveCapacityTests.seed_projection(self, count - 1)
+            statements = []
+            self.store.db.set_trace_callback(statements.append)
+            try:
+                def read(area, key):
+                    self.assertFalse(self.store.db.in_transaction, 'Storage must run outside the policy transaction')
+                    self.assertEqual(statements[-1], 'COMMIT')
+                    return b'synthetic preview'
+                with patch.object(self.store.objects, 'read', side_effect=read):
+                    self.assertEqual(self.store.rendition_bytes(self.ben, self.asset), b'synthetic preview')
+            finally:
+                self.store.db.set_trace_callback(None)
+            counts.append(sum(query.startswith('SELECT') for query in statements))
+        self.assertEqual(counts, [5, 5])
+
+    def test_denied_preview_never_reads_storage_and_keeps_shared_group_policy(self):
+        with patch.object(self.store.objects, 'read') as read:
+            with self.assertRaises(Denied):
+                self.store.rendition_bytes(self.outsider, self.asset)
+            self.store.hide(self.ben, self.asset, True)
+            with self.assertRaises(Denied):
+                self.store.rendition_bytes(self.ben, self.asset)
+            self.store.hide(self.ben, self.asset, False)
+            other = self.store.create_group(self.alice, 'Other group')
+            self.store.setup_shared(admin_name='Alice', group_id=other, mappings={'Alice': self.alice})
+            self.store.shared_mode = True
+            with self.assertRaises(Denied):
+                self.store.rendition_bytes(self.alice, self.asset)
+            read.assert_not_called()
+
+    def selected_preview(self):
+        other = io.BytesIO()
+        Image.new('RGB', (9, 9), 'red').save(other, 'JPEG')
+        run = self.submit({'selected.jpg': other.getvalue()}, user=self.ben)
+        self.process(run, self.ben)
+        second = next(row['id'] for row in self.store.gallery(self.alice, self.group) if row['id'] != self.asset)
+        self.store.review_pair(self.alice, self.group, self.asset, second, 'merge')
+        self.store.select_rendition(self.alice, self.group, self.asset, second)
+        return run, second
+
+    def test_withdrawn_selected_preview_falls_back_without_archive_scan(self):
+        run, _ = self.selected_preview()
+        self.store.withdraw(self.ben, run)
+        expected = self.store.asset_bytes(self.alice, self.asset)
+        with patch.object(self.store, '_visible_ids', side_effect=AssertionError('Archive-wide preview lookup')):
+            self.assertEqual(self.store.rendition_bytes(self.alice, self.asset), expected)
+
+    def test_removed_selected_owner_preview_falls_back_without_archive_scan(self):
+        self.selected_preview()
+        self.store.remove_member(self.alice, self.group, self.ben)
+        expected = self.store.asset_bytes(self.alice, self.asset)
+        with patch.object(self.store, '_visible_ids', side_effect=AssertionError('Archive-wide preview lookup')):
+            self.assertEqual(self.store.rendition_bytes(self.alice, self.asset), expected)
 
     def test_hidden_rendition_cannot_resurface_through_visible_duplicate(self):
         other = io.BytesIO()

@@ -1,5 +1,6 @@
 import sys
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 import unittest
 import json
@@ -53,6 +54,25 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(self.store.duplicate_suggestions(self.ben, self.group), [])
         with self.assertRaises(Denied):
             self.store.rendition_bytes(self.ben, ids[0])
+
+    def test_preview_locator_finishes_policy_transaction_before_storage(self):
+        run = self.submit({'preview.jpg': helpers.picture()})
+        self.process(run)
+        asset = self.store.gallery(self.ben, self.group)[0]['id']
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        try:
+            def read(area, key):
+                self.assertEqual(area, 'archive-objects')
+                self.assertFalse(self.store.db.in_transaction)
+                self.assertIn('BEGIN IMMEDIATE', statements)
+                self.assertEqual(statements[-1], 'COMMIT')
+                return b'preview'
+            with patch.object(self.store.objects, 'read', side_effect=read):
+                self.assertEqual(self.store.rendition_bytes(self.ben, asset), b'preview')
+        finally:
+            self.store.db.set_trace_callback(None)
+        self.assertEqual(sum(query.startswith('SELECT') for query in statements), 3)
 
     def test_different_flat_colors_are_not_duplicate_suggestions(self):
         from PIL import Image
