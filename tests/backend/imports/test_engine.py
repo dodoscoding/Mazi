@@ -99,15 +99,38 @@ class EngineTests(unittest.TestCase):
             pass
         self.assertEqual(self.store.report(self.alice, run)["state"], "COMPLETED")
 
+    def test_processing_workspace_replaces_run_and_observes_external_cancel(self):
+        first = self.submit({"a.jpg": picture(), "b.jpg": picture()})
+        second_group = self.store.create_group(self.alice, "Other circle")
+        second = self.submit({"c.jpg": picture(), "d.jpg": picture()}, group=second_group)
+        self.store.confirm(self.alice, first)
+        self.store.confirm(self.alice, second)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            other = ImportStore(self.temp.name)
+            try:
+                other.cancel(self.alice, first)
+                self.store.work_once()
+                self.assertEqual(state, {"opens": 2, "active": 1, "peak": 1})
+                other.cancel(self.alice, second)
+                self.assertFalse(self.store.work_once())
+                self.assertEqual(state["active"], 0)
+            finally:
+                other.close()
+        self.assertEqual(len(self.store.gallery(self.alice, self.group)), 1)
+        self.assertEqual(len(self.store.gallery(self.alice, second_group)), 1)
+
     def test_processing_rejects_replaced_archive_and_releases_workspace(self):
         run = self.submit({"a.jpg": picture()})
         self.store.objects.remove("archives", run)
-        self.store.objects.retain("archives", run, zip_bytes({"other.jpg": picture()}))
+        self.store.objects.retain("archives", run, zip_bytes({"a.jpg": b"replaced bytes"}))
         self.store.confirm(self.alice, run)
         state, tracking = self.tracked_archives()
         with tracking:
             self.store.work_once()
         self.assertEqual(state["active"], 0)
+        self.assertEqual(self.store.report(self.alice, run)["items"][0]["reason"], "ARCHIVE_INVALID")
         self.assertEqual(self.store.gallery(self.ben, self.group), [])
 
     def test_upload_resume_scan_restart_and_manual_shared_pipeline(self):

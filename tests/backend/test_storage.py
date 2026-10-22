@@ -54,6 +54,21 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(self.objects.append('archives', 'a', 0, b'hello'), 5)
         self.assertEqual(self.objects.read('archives', 'a'), b'hello')
 
+    def test_conflicting_remote_write_reads_once_and_never_receipts_bad_bytes(self):
+        reads = []
+        def conflict(key, data):
+            raise StorageConflict('existing object')
+        def read(key):
+            reads.append(key)
+            return b'hello'
+        with patch.object(self.remote, 'put', conflict), patch.object(self.remote, 'get', read), self.db:
+            self.objects.append('archives', 'a', 0, b'hello')
+        self.assertEqual(len(reads), 1)
+        with patch.object(self.remote, 'put', conflict), patch.object(self.remote, 'get', return_value=b'bad'):
+            with self.assertRaises(StorageConflict), self.db:
+                self.objects.append('archives', 'b', 0, b'hello')
+        self.assertEqual(self.db.execute("SELECT count(*) FROM object_receipts WHERE key='b'").fetchone()[0], 0)
+
     def test_replay_arbitrary_ranges_restart_and_no_growing_upload(self):
         with self.db:
             self.objects.append('archives', 'a', 0, b'hello')

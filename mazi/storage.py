@@ -169,13 +169,7 @@ class StorageHTTP:
         return '/object/' + quote(self.bucket, safe='') + '/' + quote(key, safe='/')
 
     def put(self, key, data):
-        try:
-            self._request('POST', self._object(key), data, 'application/octet-stream')
-        except StorageConflict:
-            if self.get(key) != data:
-                raise StorageConflict('Immutable remote object differs') from None
-        if self.get(key) != data:
-            raise OSError('Remote upload verification failed')
+        self._request('POST', self._object(key), data, 'application/octet-stream')
 
     def get(self, key):
         return self._request('GET', self._object(key))
@@ -261,8 +255,14 @@ class HostedObjects:
             chunk = data[start:start+CHUNK_SIZE]
             checksum = digest(chunk)
             object_key = f"{area}/{key}/{state['generation']}/{offset+start}-{checksum}"
-            self.remote.put(object_key, chunk)
+            conflict = False
+            try:
+                self.remote.put(object_key, chunk)
+            except StorageConflict:
+                conflict = True
             if self.remote.get(object_key) != chunk:
+                if conflict:
+                    raise StorageConflict('Immutable remote object differs')
                 raise OSError('Remote upload verification failed')
             self.db.execute('INSERT INTO object_receipts(area,key,generation,start_offset,size,digest,object_key) VALUES(?,?,?,?,?,?,?)',
                 (area, key, state['generation'], offset+start, len(chunk), checksum, object_key))
