@@ -1,0 +1,2 @@
+{"removed_synthetic_objects": 12, "isolated_bucket_removed": true}
+{"verified_at": "2026-10-22T08:35:17.773368+00:00", "provider": "Supabase execute_sql", "query": "information_schema counts for isolated acceptance schema and live mazi base tables", "isolated_schemas_remaining": 0, "live_mazi_table_count": 48}

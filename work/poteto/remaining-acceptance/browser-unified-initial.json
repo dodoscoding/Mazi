@@ -1,0 +1,1440 @@
+{
+  "config": {
+    "argv": [
+      "/Users/altanesmer/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/Users/altanesmer/Desktop/Ales/Mazi/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "playwright.unified.config.ts"
+    ],
+    "configFile": "/Users/altanesmer/Desktop/Ales/Mazi/playwright.unified.config.ts",
+    "rootDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "unified.spec.ts",
+          "entry.spec.ts",
+          "features-redesign.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "/Users/altanesmer/Desktop/Ales/Mazi/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "unified.spec.ts",
+          "entry.spec.ts",
+          "features-redesign.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "work/poteto/unified-app/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run build && MAZI_IMPORT_PORT=8017 .venv/bin/python -m tests.browser.memories_server",
+      "url": "http://127.0.0.1:8017",
+      "reuseExistingServer": false,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "entry.spec.ts",
+      "file": "entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "every signed-out route is gated and named profiles resume across browsers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3194,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:01.834Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-58d528acee6486ff5e98",
+          "file": "entry.spec.ts",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "title": "session checks stay neutral and introduction failures remain retryable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 502,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:05.219Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-8c91abef2f67abaf62c9",
+          "file": "entry.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "archive access denial clears the authenticated shell",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 191,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:05.724Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-d00e3acdd0811c546db0",
+          "file": "entry.spec.ts",
+          "line": 147,
+          "column": 1
+        },
+        {
+          "title": "an old Atlas denial cannot clear a newer authorized load",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 156,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:05.919Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-29c423b72d50c24104b3",
+          "file": "entry.spec.ts",
+          "line": 175,
+          "column": 1
+        },
+        {
+          "title": "every signed-out route is gated and named profiles resume across browsers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2951,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:44.716Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-30cd53ebe825cb3c1ab9",
+          "file": "entry.spec.ts",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "title": "session checks stay neutral and introduction failures remain retryable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 505,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:47.761Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-7644526a9ba44110cd26",
+          "file": "entry.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "archive access denial clears the authenticated shell",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 165,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:48.270Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-aedf54c6778e856f37ac",
+          "file": "entry.spec.ts",
+          "line": 147,
+          "column": 1
+        },
+        {
+          "title": "an old Atlas denial cannot clear a newer authorized load",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 148,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:48.438Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a2a3eba492b1b8e90f7d-d22da69cf2a128b78e2a",
+          "file": "entry.spec.ts",
+          "line": 175,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "features-redesign.spec.ts",
+      "file": "features-redesign.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "About states the privacy promises and replays the introduction",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 620,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:06.106Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-24aa0071364d34c82b49",
+          "file": "features-redesign.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "Sign out on About asks first; Stay keeps the session and confirming ends it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1171,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:06.730Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-4360e3aa22ac0909d771",
+          "file": "features-redesign.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "My Imports always says imports are shared at once and offers no publish step",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 274,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:07.905Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-91bc70111c4283688967",
+          "file": "features-redesign.spec.ts",
+          "line": 80,
+          "column": 1
+        },
+        {
+          "title": "an import report has one technical confirm step and no publish gate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3454,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:08.186Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-fcc09921562b6399c13f",
+          "file": "features-redesign.spec.ts",
+          "line": 107,
+          "column": 1
+        },
+        {
+          "title": "Our circle lists members without public or social counts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 104,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:11.649Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-b195f72d9482bc4a9a10",
+          "file": "features-redesign.spec.ts",
+          "line": 157,
+          "column": 1
+        },
+        {
+          "title": "Ask streams the answer word by word, then cites its evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2020,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:11.756Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-d1e86913c7999df9c01a",
+          "file": "features-redesign.spec.ts",
+          "line": 172,
+          "column": 1
+        },
+        {
+          "title": "Under reduced motion the answer appears complete",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 219,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:13.780Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-e6115d1d5ad9217fc56b",
+          "file": "features-redesign.spec.ts",
+          "line": 229,
+          "column": 1
+        },
+        {
+          "title": "Ask says when the archive has no evidence and links nothing",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 245,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:14.003Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-7fa05075154b66f8093c",
+          "file": "features-redesign.spec.ts",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "PR 6 screens have no axe violations in night or day",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9899,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:14.251Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-09aa4ab65cf6a9d80b8c",
+          "file": "features-redesign.spec.ts",
+          "line": 257,
+          "column": 1
+        },
+        {
+          "title": "Search photographs stay usable while included categories load and retry",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10112,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m4\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 4 elements\u001b[22m\n\u001b[2m       - unexpected value \"4\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m4\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 4 elements\u001b[22m\n\u001b[2m       - unexpected value \"4\"\u001b[22m\n\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50",
+                    "location": {
+                      "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                      "column": 50,
+                      "line": 331
+                    },
+                    "snippet": "  329 |   });\n  330 |   await page.goto(\"/#/search\");\n> 331 |   await expect(page.locator(\"#results article\")).toHaveCount(3);\n      |                                                  ^\n  332 |   expect(requested).toBe(false);\n  333 |   await page.getByLabel(\"Search\", { exact: true }).fill(\"bicycle\");\n  334 |   await page"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                        "column": 50,
+                        "line": 331
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m4\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 4 elements\u001b[22m\n\u001b[2m       - unexpected value \"4\"\u001b[22m\n\n\n  329 |   });\n  330 |   await page.goto(\"/#/search\");\n> 331 |   await expect(page.locator(\"#results article\")).toHaveCount(3);\n      |                                                  ^\n  332 |   expect(requested).toBe(false);\n  333 |   await page.getByLabel(\"Search\", { exact: true }).fill(\"bicycle\");\n  334 |   await page\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:24.153Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                    "column": 50,
+                    "line": 331
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-5357aad5ba2be7f7c5c4",
+          "file": "features-redesign.spec.ts",
+          "line": 302,
+          "column": 1
+        },
+        {
+          "title": "About states the privacy promises and replays the introduction",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 190,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:48.616Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-4758ce96dbf25f4a1340",
+          "file": "features-redesign.spec.ts",
+          "line": 20,
+          "column": 1
+        },
+        {
+          "title": "Sign out on About asks first; Stay keeps the session and confirming ends it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1156,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:48.809Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-5fdd227321fac6b46527",
+          "file": "features-redesign.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "My Imports always says imports are shared at once and offers no publish step",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 155,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:49.969Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-5d654cff2158c0d4d364",
+          "file": "features-redesign.spec.ts",
+          "line": 80,
+          "column": 1
+        },
+        {
+          "title": "an import report has one technical confirm step and no publish gate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3305,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:50.127Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-1782e7d186a6815b5eb8",
+          "file": "features-redesign.spec.ts",
+          "line": 107,
+          "column": 1
+        },
+        {
+          "title": "Our circle lists members without public or social counts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:53.435Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-17c745a35893411b072a",
+          "file": "features-redesign.spec.ts",
+          "line": 157,
+          "column": 1
+        },
+        {
+          "title": "Ask streams the answer word by word, then cites its evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2424,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:53.550Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-c28fb7ae6ef0755aa2a3",
+          "file": "features-redesign.spec.ts",
+          "line": 172,
+          "column": 1
+        },
+        {
+          "title": "Under reduced motion the answer appears complete",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 230,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:55.978Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-d1c3ae6c3d5735fb597f",
+          "file": "features-redesign.spec.ts",
+          "line": 229,
+          "column": 1
+        },
+        {
+          "title": "Ask says when the archive has no evidence and links nothing",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 351,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:56.211Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-b6b580d101f4d9d971d0",
+          "file": "features-redesign.spec.ts",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "PR 6 screens have no axe violations in night or day",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10079,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:56.566Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-1b127a1ba82db1acd294",
+          "file": "features-redesign.spec.ts",
+          "line": 257,
+          "column": 1
+        },
+        {
+          "title": "Search photographs stay usable while included categories load and retry",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10117,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m6\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 6 elements\u001b[22m\n\u001b[2m       - unexpected value \"6\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m6\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 6 elements\u001b[22m\n\u001b[2m       - unexpected value \"6\"\u001b[22m\n\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50",
+                    "location": {
+                      "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                      "column": 50,
+                      "line": 331
+                    },
+                    "snippet": "  329 |   });\n  330 |   await page.goto(\"/#/search\");\n> 331 |   await expect(page.locator(\"#results article\")).toHaveCount(3);\n      |                                                  ^\n  332 |   expect(requested).toBe(false);\n  333 |   await page.getByLabel(\"Search\", { exact: true }).fill(\"bicycle\");\n  334 |   await page"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                        "column": 50,
+                        "line": 331
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#results article')\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m6\u001b[39m\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" locator('#results article') with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#results article')\u001b[22m\n\u001b[2m    - locator resolved to 0 elements\u001b[22m\n\u001b[2m    - unexpected value \"0\"\u001b[22m\n\u001b[2m    23 × locator resolved to 6 elements\u001b[22m\n\u001b[2m       - unexpected value \"6\"\u001b[22m\n\n\n  329 |   });\n  330 |   await page.goto(\"/#/search\");\n> 331 |   await expect(page.locator(\"#results article\")).toHaveCount(3);\n      |                                                  ^\n  332 |   expect(requested).toBe(false);\n  333 |   await page.getByLabel(\"Search\", { exact: true }).fill(\"bicycle\");\n  334 |   await page\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:15:06.648Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts",
+                    "column": 50,
+                    "line": 331
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fef52dedc4d6d7d23f56-653987e821923ca1a96d",
+          "file": "features-redesign.spec.ts",
+          "line": 302,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "unified.spec.ts",
+      "file": "unified.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "one authenticated shell connects real Atlas, stories, discovery and evidence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2443,
+                  "error": {
+                    "message": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 2 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' })\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' })\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n",
+                    "stack": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 2 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' })\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' })\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6",
+                    "location": {
+                      "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                      "column": 6,
+                      "line": 62
+                    },
+                    "snippet": "  60 |   await page\n  61 |     .getByLabel(\"Your recollection\")\n> 62 |     .fill(\"<img src=x onerror=alert(1)> A beautiful day.\");\n     |      ^\n  63 |   await page\n  64 |     .getByRole(\"button\", { name: \"Save my recollection\", exact: true })\n  65 |     .click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                        "column": 6,
+                        "line": 62
+                      },
+                      "message": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 2 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' })\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' })\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n\n\n  60 |   await page\n  61 |     .getByLabel(\"Your recollection\")\n> 62 |     .fill(\"<img src=x onerror=alert(1)> A beautiful day.\");\n     |      ^\n  63 |   await page\n  64 |     .getByRole(\"button\", { name: \"Save my recollection\", exact: true })\n  65 |     .click();\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:34.507Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                    "column": 6,
+                    "line": 62
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-eb1736e274bdeac7d845",
+          "file": "unified.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "named profile imports and logout discard delayed private Atlas responses",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4877,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:37.333Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-cca1adfe19b219b548fd",
+          "file": "unified.spec.ts",
+          "line": 186,
+          "column": 1
+        },
+        {
+          "title": "access loss clears private drafts and supporting records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:14:42.292Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-b43c4b220c5346cb8530",
+          "file": "unified.spec.ts",
+          "line": 305,
+          "column": 1
+        },
+        {
+          "title": "one authenticated shell connects real Atlas, stories, discovery and evidence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2176,
+                  "error": {
+                    "message": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 4 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).first()\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).first()\n    3) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).nth(1)\n    4) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n",
+                    "stack": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 4 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).first()\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).first()\n    3) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).nth(1)\n    4) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6",
+                    "location": {
+                      "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                      "column": 6,
+                      "line": 62
+                    },
+                    "snippet": "  60 |   await page\n  61 |     .getByLabel(\"Your recollection\")\n> 62 |     .fill(\"<img src=x onerror=alert(1)> A beautiful day.\");\n     |      ^\n  63 |   await page\n  64 |     .getByRole(\"button\", { name: \"Save my recollection\", exact: true })\n  65 |     .click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                        "column": 6,
+                        "line": 62
+                      },
+                      "message": "Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 4 elements:\n    1) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).first()\n    2) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).first()\n    3) <section class=\"story-writing\" aria-label=\"Your recollection\">…</section> aka getByRole('region', { name: 'Your recollection' }).nth(1)\n    4) <textarea maxlength=\"2000\"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Your recollection')\u001b[22m\n\n\n  60 |   await page\n  61 |     .getByLabel(\"Your recollection\")\n> 62 |     .fill(\"<img src=x onerror=alert(1)> A beautiful day.\");\n     |      ^\n  63 |   await page\n  64 |     .getByRole(\"button\", { name: \"Save my recollection\", exact: true })\n  65 |     .click();\n    at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:15:17.005Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-phone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts",
+                    "column": 6,
+                    "line": 62
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-daba84888606d0cba977",
+          "file": "unified.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "named profile imports and logout discard delayed private Atlas responses",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:15:19.548Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-c6ccd6cc0044cc43f6a9",
+          "file": "unified.spec.ts",
+          "line": 186,
+          "column": 1
+        },
+        {
+          "title": "access loss clears private drafts and supporting records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2348,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T08:15:24.934Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bf2316f650991e781f12-dbedee3e67a22686dc0b",
+          "file": "unified.spec.ts",
+          "line": 305,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-22T08:13:59.702Z",
+    "duration": 87621.09599999999,
+    "expected": 30,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

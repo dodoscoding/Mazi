@@ -1,0 +1,40 @@
+
+> mazi@0.1.0 test:postgres
+> node --env-file=.env.supabase -e "process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'unittest', 'tests.backend.test_postgres'], {stdio:'inherit', env:{...process.env, MAZI_TEST_POSTGRES:'1'}}).status ?? 1)"
+
+..E..E...
+======================================================================
+ERROR: test_held_lock_timeout_rolls_back_and_recovers (tests.backend.test_postgres.PostgresContracts.test_held_lock_timeout_rolls_back_and_recovers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi/tests/backend/test_postgres.py", line 195, in test_held_lock_timeout_rolls_back_and_recovers
+    other.notification_opt_in(self.user, self.group, True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi/mazi/memories/advanced.py", line 135, in notification_opt_in
+    with self.transaction():
+         ~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "/Users/altanesmer/Desktop/Ales/Mazi/mazi/imports/engine.py", line 86, in transaction
+    self.db.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi/mazi/persistence.py", line 119, in execute
+    self._begin()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi/mazi/persistence.py", line 113, in _begin
+    raise ArchiveBusy("Archive is busy; retry shortly") from None
+mazi.persistence.ArchiveBusy: Archive is busy; retry shortly
+
+======================================================================
+ERROR: test_simultaneous_workers_claim_distinct_items (tests.backend.test_postgres.PostgresContracts.test_simultaneous_workers_claim_distinct_items)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi/tests/backend/test_postgres.py", line 80, in test_simultaneous_workers_claim_distinct_items
+    self.assertEqual(len({job['id'] for job in jobs}), 2)
+                          ~~~^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+
+----------------------------------------------------------------------
+Ran 9 tests in 24.395s
+
+FAILED (errors=2)

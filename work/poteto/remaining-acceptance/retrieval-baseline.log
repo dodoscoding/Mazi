@@ -1,0 +1,21 @@
+
+> mazi@0.1.0 eval:retrieval
+> .venv/bin/python -m mazi.discovery.evaluate
+
+{
+  "fixture_sha256": "d917797385adce231092ee6b4f44263d17bcd0ff7efe06b47d8bdae80cca12cb",
+  "candidates": 120,
+  "questions": 100,
+  "recall_at_10": 1.0,
+  "target": 0.85,
+  "target_met": true,
+  "warm_p95_seconds": 0.013294167001731694,
+  "cold_index_and_search_seconds": 0.4630344580000383,
+  "embeddings_computed": 240,
+  "processing_wall_seconds_per_1000_embeddings": 1.865109383379604,
+  "external_provider_cost_per_1000": 0,
+  "privacy_probes_passed": 3,
+  "privacy_probes_total": 3,
+  "failed_questions": [],
+  "limitation": "Fixed synthetic regression holdout authored after the v1 vocabulary was frozen. Never imported by the encoder. Not an independent or consented real-archive release evaluation."
+}

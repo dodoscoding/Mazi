@@ -1,0 +1,67 @@
+{
+  "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+  "fixture_sha256": "88d2249a0bd57dddea9ede95b47c39c0ae59f3a65f7add8d77dbb4a916298834",
+  "image_sha256": {
+    "lake": "fa64b0da367697d6bc7054c340b2facb607cf6e182656c47fdb237b1d4aca6eb",
+    "birthday": "bd515dfdc9daec06b3bdee66eb3354d194270ade30f779c01a6c73311d62f291",
+    "harbor": "062d054b58a9d44a1ede2bd6abc5df0af838990313f63265c64bdb189027992c",
+    "table": "ec526af8da24e93596918e55ac241d4d4a4a8fb3a6a457fd4589462b68feb2de",
+    "ferry": "8c1003b2cb3583ebae9530e0e05d6645cb60ddd5490daee88bd024c14c5b481a"
+  },
+  "candidates": 25,
+  "questions": 100,
+  "recall_at_1": 0.92,
+  "recall_at_3": 0.98,
+  "recall_at_10": 0.99,
+  "warm_p95_seconds": 0.020077540997590404,
+  "cold_index_seconds": 1.0518116250023013,
+  "privacy": {
+    "personal_hide": true,
+    "outsider": true,
+    "consent_purged": true,
+    "keyword_survives": true
+  },
+  "limitations": "Fixed English image-retrieval smoke set. Five pre-existing AI-generated demo images, 20 prompts each, plus 20 color/shape distractors. Filenames and captions do not reveal subjects. This is not an independent representative archive benchmark.",
+  "misses_at_1": [
+    {
+      "query": "feet hanging over the side of a pier",
+      "expected": "lake",
+      "rank": 24
+    },
+    {
+      "query": "a waterfront at dusk without a dinner table",
+      "expected": "harbor",
+      "rank": 2
+    },
+    {
+      "query": "a napkin beside half finished dishes",
+      "expected": "table",
+      "rank": 6
+    },
+    {
+      "query": "a dinner gathering with mountains across the water",
+      "expected": "ferry",
+      "rank": 2
+    },
+    {
+      "query": "friends sharing a meal beside the sea",
+      "expected": "ferry",
+      "rank": 2
+    },
+    {
+      "query": "several people seated for an evening meal",
+      "expected": "ferry",
+      "rank": 2
+    },
+    {
+      "query": "a candlelit group meal on a Greek island",
+      "expected": "ferry",
+      "rank": 2
+    },
+    {
+      "query": "an evening gathering beside the sea",
+      "expected": "ferry",
+      "rank": 2
+    }
+  ]
+}

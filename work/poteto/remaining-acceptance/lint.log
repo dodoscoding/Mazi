@@ -1,0 +1,6 @@
+
+> mazi@0.1.0 lint
+> prettier --check src "tests/**/*.ts" scripts/*.mjs vite.config.ts playwright*.config.ts package.json
+
+Checking formatting...
+All matched files use Prettier code style!

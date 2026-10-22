@@ -1,0 +1,206 @@
+
+> mazi@0.1.0 test:app
+> playwright test --config playwright.unified.config.ts
+
+[WebServer] (node:63239) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 34 tests using 1 worker
+
+(node:63249) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (3.2s)
+  ✓   2 [desktop] › tests/entry.spec.ts:93:1 › session checks stay neutral and introduction failures remain retryable (502ms)
+  ✓   3 [desktop] › tests/entry.spec.ts:147:1 › archive access denial clears the authenticated shell (191ms)
+  ✓   4 [desktop] › tests/entry.spec.ts:175:1 › an old Atlas denial cannot clear a newer authorized load (156ms)
+  ✓   5 [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (620ms)
+  ✓   6 [desktop] › tests/features-redesign.spec.ts:48:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.2s)
+  ✓   7 [desktop] › tests/features-redesign.spec.ts:80:1 › My Imports always says imports are shared at once and offers no publish step (274ms)
+
+  ✓   8 [desktop] › tests/features-redesign.spec.ts:107:1 › an import report has one technical confirm step and no publish gate (3.5s)
+  ✓   9 [desktop] › tests/features-redesign.spec.ts:157:1 › Our circle lists members without public or social counts (104ms)
+  ✓  10 [desktop] › tests/features-redesign.spec.ts:172:1 › Ask streams the answer word by word, then cites its evidence (2.0s)
+  ✓  11 [desktop] › tests/features-redesign.spec.ts:229:1 › Under reduced motion the answer appears complete (219ms)
+  ✓  12 [desktop] › tests/features-redesign.spec.ts:243:1 › Ask says when the archive has no evidence and links nothing (245ms)
+  ✓  13 [desktop] › tests/features-redesign.spec.ts:257:1 › PR 6 screens have no axe violations in night or day (9.9s)
+  ✘  14 [desktop] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry (10.1s)
+(node:63353) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  15 [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (2.4s)
+(node:63362) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  16 [desktop] › tests/unified.spec.ts:186:1 › named profile imports and logout discard delayed private Atlas responses (4.9s)
+  ✓  17 [desktop] › tests/unified.spec.ts:305:1 › access loss clears private drafts and supporting records (2.2s)
+(node:63375) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  18 [phone] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (3.0s)
+  ✓  19 [phone] › tests/entry.spec.ts:93:1 › session checks stay neutral and introduction failures remain retryable (505ms)
+  ✓  20 [phone] › tests/entry.spec.ts:147:1 › archive access denial clears the authenticated shell (165ms)
+  ✓  21 [phone] › tests/entry.spec.ts:175:1 › an old Atlas denial cannot clear a newer authorized load (148ms)
+  ✓  22 [phone] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (190ms)
+  ✓  23 [phone] › tests/features-redesign.spec.ts:48:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.2s)
+  ✓  24 [phone] › tests/features-redesign.spec.ts:80:1 › My Imports always says imports are shared at once and offers no publish step (155ms)
+
+  ✓  25 [phone] › tests/features-redesign.spec.ts:107:1 › an import report has one technical confirm step and no publish gate (3.3s)
+  ✓  26 [phone] › tests/features-redesign.spec.ts:157:1 › Our circle lists members without public or social counts (112ms)
+  ✓  27 [phone] › tests/features-redesign.spec.ts:172:1 › Ask streams the answer word by word, then cites its evidence (2.4s)
+  ✓  28 [phone] › tests/features-redesign.spec.ts:229:1 › Under reduced motion the answer appears complete (230ms)
+  ✓  29 [phone] › tests/features-redesign.spec.ts:243:1 › Ask says when the archive has no evidence and links nothing (351ms)
+  ✓  30 [phone] › tests/features-redesign.spec.ts:257:1 › PR 6 screens have no axe violations in night or day (10.1s)
+  ✘  31 [phone] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry (10.1s)
+(node:63461) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  32 [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (2.2s)
+(node:63469) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  33 [phone] › tests/unified.spec.ts:186:1 › named profile imports and logout discard delayed private Atlas responses (5.3s)
+  ✓  34 [phone] › tests/unified.spec.ts:305:1 › access loss clears private drafts and supporting records (2.3s)
+
+
+  1) [desktop] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('#results article')
+    Expected: 3
+    Received: 4
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('#results article') with timeout 10000ms
+      - waiting for locator('#results article')
+        - locator resolved to 0 elements
+        - unexpected value "0"
+        23 × locator resolved to 4 elements
+           - unexpected value "4"
+
+
+      329 |   });
+      330 |   await page.goto("/#/search");
+    > 331 |   await expect(page.locator("#results article")).toHaveCount(3);
+          |                                                  ^
+      332 |   expect(requested).toBe(false);
+      333 |   await page.getByLabel("Search", { exact: true }).fill("bicycle");
+      334 |   await page
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50
+
+    Error Context: work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+
+    Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 2 elements:
+        1) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' })
+        2) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' })
+
+    Call log:
+      - waiting for getByLabel('Your recollection')
+
+
+      60 |   await page
+      61 |     .getByLabel("Your recollection")
+    > 62 |     .fill("<img src=x onerror=alert(1)> A beautiful day.");
+         |      ^
+      63 |   await page
+      64 |     .getByRole("button", { name: "Save my recollection", exact: true })
+      65 |     .click();
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6
+
+    Error Context: work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [phone] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('#results article')
+    Expected: 3
+    Received: 6
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('#results article') with timeout 10000ms
+      - waiting for locator('#results article')
+        - locator resolved to 0 elements
+        - unexpected value "0"
+        23 × locator resolved to 6 elements
+           - unexpected value "6"
+
+
+      329 |   });
+      330 |   await page.goto("/#/search");
+    > 331 |   await expect(page.locator("#results article")).toHaveCount(3);
+          |                                                  ^
+      332 |   expect(requested).toBe(false);
+      333 |   await page.getByLabel("Search", { exact: true }).fill("bicycle");
+      334 |   await page
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/features-redesign.spec.ts:331:50
+
+    Error Context: work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+
+    Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 4 elements:
+        1) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' }).first()
+        2) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).first()
+        3) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' }).nth(1)
+        4) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).nth(1)
+
+    Call log:
+      - waiting for getByLabel('Your recollection')
+
+
+      60 |   await page
+      61 |     .getByLabel("Your recollection")
+    > 62 |     .fill("<img src=x onerror=alert(1)> A beautiful day.");
+         |      ^
+      63 |   await page
+      64 |     .getByRole("button", { name: "Save my recollection", exact: true })
+      65 |     .click();
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/unified.spec.ts:62:6
+
+    Error Context: work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [desktop] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry
+    [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+    [phone] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry
+    [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+  30 passed (1.5m)

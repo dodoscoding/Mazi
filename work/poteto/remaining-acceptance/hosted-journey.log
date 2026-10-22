@@ -1,0 +1,6 @@
+test_remote_restart_and_private_byte_classes (tests.backend.test_hosted_journey.HostedJourney.test_remote_restart_and_private_byte_classes) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 15.449s
+
+OK

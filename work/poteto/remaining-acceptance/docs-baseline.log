@@ -1,0 +1,9 @@
+
+> mazi@0.1.0 check:docs
+> python3 work/poteto/product-plan/verify_docs.py
+
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi/work/poteto/product-plan/verify_docs.py", line 11, in <module>
+    assert '\u2014' not in body and '\u2013' not in body, f'Long dash: {path}'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Long dash: /Users/altanesmer/Desktop/Ales/Mazi/docs/PROTOTYPE_STACK.md

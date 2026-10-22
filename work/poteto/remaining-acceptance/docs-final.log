@@ -1,0 +1,6 @@
+
+> mazi@0.1.0 check:docs
+> python3 work/poteto/product-plan/verify_docs.py
+
+PASS: 16 authored documents, 171 local links, 30 requirement mappings, 8 milestones, 15 acceptance scenarios.
+This verifies document structure, not application behavior or completeness of design.

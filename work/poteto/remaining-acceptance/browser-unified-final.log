@@ -1,0 +1,58 @@
+
+> mazi@0.1.0 test:app
+> playwright test --config playwright.unified.config.ts
+
+[WebServer] (node:67877) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 34 tests using 1 worker
+
+(node:67923) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (3.0s)
+  ✓   2 [desktop] › tests/entry.spec.ts:93:1 › session checks stay neutral and introduction failures remain retryable (510ms)
+  ✓   3 [desktop] › tests/entry.spec.ts:147:1 › archive access denial clears the authenticated shell (158ms)
+  ✓   4 [desktop] › tests/entry.spec.ts:175:1 › an old Atlas denial cannot clear a newer authorized load (143ms)
+  ✓   5 [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (572ms)
+  ✓   6 [desktop] › tests/features-redesign.spec.ts:48:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.2s)
+  ✓   7 [desktop] › tests/features-redesign.spec.ts:80:1 › My Imports always says imports are shared at once and offers no publish step (156ms)
+
+  ✓   8 [desktop] › tests/features-redesign.spec.ts:107:1 › an import report has one technical confirm step and no publish gate (3.4s)
+  ✓   9 [desktop] › tests/features-redesign.spec.ts:157:1 › Our circle lists members without public or social counts (131ms)
+  ✓  10 [desktop] › tests/features-redesign.spec.ts:172:1 › Ask streams the answer word by word, then cites its evidence (2.0s)
+  ✓  11 [desktop] › tests/features-redesign.spec.ts:229:1 › Under reduced motion the answer appears complete (228ms)
+  ✓  12 [desktop] › tests/features-redesign.spec.ts:243:1 › Ask says when the archive has no evidence and links nothing (250ms)
+  ✓  13 [desktop] › tests/features-redesign.spec.ts:257:1 › PR 6 screens have no axe violations in night or day (10.0s)
+  ✓  14 [desktop] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry (690ms)
+  ✓  15 [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (8.2s)
+
+  ✓  16 [desktop] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (4.8s)
+  ✓  17 [desktop] › tests/unified.spec.ts:339:1 › access loss clears private drafts and supporting records (2.2s)
+(node:68128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  18 [phone] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (3.0s)
+  ✓  19 [phone] › tests/entry.spec.ts:93:1 › session checks stay neutral and introduction failures remain retryable (476ms)
+  ✓  20 [phone] › tests/entry.spec.ts:147:1 › archive access denial clears the authenticated shell (182ms)
+  ✓  21 [phone] › tests/entry.spec.ts:175:1 › an old Atlas denial cannot clear a newer authorized load (151ms)
+  ✓  22 [phone] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (202ms)
+  ✓  23 [phone] › tests/features-redesign.spec.ts:48:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.2s)
+  ✓  24 [phone] › tests/features-redesign.spec.ts:80:1 › My Imports always says imports are shared at once and offers no publish step (161ms)
+
+  ✓  25 [phone] › tests/features-redesign.spec.ts:107:1 › an import report has one technical confirm step and no publish gate (3.3s)
+  ✓  26 [phone] › tests/features-redesign.spec.ts:157:1 › Our circle lists members without public or social counts (118ms)
+  ✓  27 [phone] › tests/features-redesign.spec.ts:172:1 › Ask streams the answer word by word, then cites its evidence (2.3s)
+  ✓  28 [phone] › tests/features-redesign.spec.ts:229:1 › Under reduced motion the answer appears complete (229ms)
+  ✓  29 [phone] › tests/features-redesign.spec.ts:243:1 › Ask says when the archive has no evidence and links nothing (351ms)
+  ✓  30 [phone] › tests/features-redesign.spec.ts:257:1 › PR 6 screens have no axe violations in night or day (10.4s)
+  ✓  31 [phone] › tests/features-redesign.spec.ts:302:1 › Search photographs stay usable while included categories load and retry (825ms)
+  ✓  32 [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (9.7s)
+
+  ✓  33 [phone] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (5.3s)
+  ✓  34 [phone] › tests/unified.spec.ts:339:1 › access loss clears private drafts and supporting records (2.4s)
+
+  34 passed (1.3m)

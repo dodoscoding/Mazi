@@ -1,0 +1,439 @@
+
+> mazi@0.1.0 test:domains
+> playwright test --config tests/browser/playwright.config.ts
+
+
+Running 24 tests using 1 worker
+
+(node:63513) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.0s)
+(node:63531) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   2 [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.1s)
+(node:63551) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   3 [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (5.0s)
+(node:63573) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   4 [archive-phone] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (5.3s)
+(node:63598) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [sources-desktop] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (975ms)
+(node:63608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [sources-phone] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (1.2s)
+(node:63620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   7 [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback (10.6s)
+(node:63648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   8 [discovery-desktop] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (10.3s)
+(node:63753) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   9 [discovery-desktop] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure (1.5m)
+(node:64388) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  10 [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback (10.4s)
+(node:64450) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  11 [discovery-phone] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (10.3s)
+(node:64678) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  12 [discovery-phone] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure (1.5m)
+(node:65666) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [answers-desktop] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (1.7s)
+(node:65699) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  14 [answers-phone] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (1.7s)
+(node:65722) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [memories-desktop] › tests/browser/browse-features.spec.ts:22:1 › Memories filters the photo grid by year with removable chips (2.3s)
+  ✘  16 [memories-desktop] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results (10.2s)
+(node:65825) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  17 [memories-desktop] › tests/browser/browse-features.spec.ts:136:1 › Discover renders rediscovery prompts from the archive (2.2s)
+  ✘  18 [memories-desktop] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (276ms)
+(node:65851) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 [memories-desktop] › tests/browser/memories.spec.ts:52:1 › Capsules stay sealed with a changed browser clock (438ms)
+(node:65864) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  20 [memories-phone] › tests/browser/browse-features.spec.ts:22:1 › Memories filters the photo grid by year with removable chips (2.7s)
+  ✘  21 [memories-phone] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results (10.2s)
+(node:65942) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  22 [memories-phone] › tests/browser/browse-features.spec.ts:136:1 › Discover renders rediscovery prompts from the archive (2.2s)
+  ✘  23 [memories-phone] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (285ms)
+(node:66007) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  24 [memories-phone] › tests/browser/memories.spec.ts:52:1 › Capsules stay sealed with a changed browser clock (371ms)
+
+
+  1) [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('#results article').first()
+    Expected substring: "Bicycle beside the sea"
+    Received string:    "Dinner with friends2024-01-02 · istanbulOpen originalBenRemove tagConfirm someone in this photoChoose a personBenConfirm tagHide from my discoveryFind similar photographs"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toContainText" locator('#results article').first() with timeout 10000ms
+      - waiting for locator('#results article').first()
+        24 × locator resolved to <article class="disc-photo">…</article>
+           - unexpected value "Dinner with friends2024-01-02 · istanbulOpen originalBenRemove tagConfirm someone in this photoChoose a personBenConfirm tagHide from my discoveryFind similar photographs"
+
+
+      29 |   await expect(page.locator("#index-progress")).toContainText("0 remaining");
+      30 |   await expect(page.locator("#count")).toContainText("Local CLIP");
+    > 31 |   await expect(page.locator("#results article").first()).toContainText(
+         |                                                          ^
+      32 |     "Bicycle beside the sea",
+      33 |   );
+      34 |   await expect(page.locator("#model-help")).toContainText("English");
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery-learned.spec.ts:31:58
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [discovery-desktop] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: 'Find similar colors' })
+    Expected: 3
+    Received: 0
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('button', { name: 'Find similar colors' }) with timeout 10000ms
+      - waiting for getByRole('button', { name: 'Find similar colors' })
+        24 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      25 |   await expect(
+      26 |     page.getByRole("button", { name: "Find similar colors" }),
+    > 27 |   ).toHaveCount(groupAlreadyOn ? 3 : 0);
+         |     ^
+      28 |   await page.getByLabel("Search mode").selectOption("keyword");
+      29 |   await page
+      30 |     .getByText("My visibility & processing choices", { exact: true })
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery.spec.ts:27:5
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [discovery-desktop] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure
+
+    Test timeout of 90000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 90000ms exceeded.
+    Call log:
+      - waiting for locator('#person')
+        - locator resolved to <select disabled id="person"></select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - element is not enabled
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - element is not enabled
+        - retrying select option action
+          - waiting 100ms
+        179 × waiting for element to be visible and enabled
+            - element is not enabled
+          - retrying select option action
+            - waiting 500ms
+
+
+      179 |   await page.getByLabel("Search mode").selectOption("semantic");
+      180 |   await page.getByText("Refine by place, person, date or source").click();
+    > 181 |   await page.locator("#person").selectOption({ label: "Ben" });
+          |                                 ^
+      182 |   await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
+      183 |   await page.getByLabel("Country code").fill("NL");
+      184 |   await page.getByLabel("Object or concept in text").fill("bicycle");
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery.spec.ts:181:33
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('#index-progress')
+    Expected substring: "need indexing"
+    Received string:    ""
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toContainText" locator('#index-progress') with timeout 10000ms
+      - waiting for locator('#index-progress')
+        24 × locator resolved to <p role="status" id="index-progress"></p>
+           - unexpected value ""
+
+
+      25 |   await page.getByLabel("Search", { exact: true }).fill("bright red square");
+      26 |   await page.getByRole("button", { name: "Search archive" }).click();
+    > 27 |   await expect(page.locator("#index-progress")).toContainText("need indexing");
+         |                                                 ^
+      28 |   await page.getByRole("button", { name: "Build local search index" }).click();
+      29 |   await expect(page.locator("#index-progress")).toContainText("0 remaining");
+      30 |   await expect(page.locator("#count")).toContainText("Local CLIP");
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery-learned.spec.ts:27:49
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [discovery-phone] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: 'Find similar colors' })
+    Expected: 3
+    Received: 0
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('button', { name: 'Find similar colors' }) with timeout 10000ms
+      - waiting for getByRole('button', { name: 'Find similar colors' })
+        24 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      25 |   await expect(
+      26 |     page.getByRole("button", { name: "Find similar colors" }),
+    > 27 |   ).toHaveCount(groupAlreadyOn ? 3 : 0);
+         |     ^
+      28 |   await page.getByLabel("Search mode").selectOption("keyword");
+      29 |   await page
+      30 |     .getByText("My visibility & processing choices", { exact: true })
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery.spec.ts:27:5
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-People-combined--7e22b-nt-work-without-recognition-discovery-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [discovery-phone] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure
+
+    Test timeout of 90000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 90000ms exceeded.
+    Call log:
+      - waiting for locator('#person')
+        - locator resolved to <select disabled id="person"></select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - element is not enabled
+        - retrying select option action
+        - waiting 20ms
+        2 × waiting for element to be visible and enabled
+          - element is not enabled
+        - retrying select option action
+          - waiting 100ms
+        179 × waiting for element to be visible and enabled
+            - element is not enabled
+          - retrying select option action
+            - waiting 500ms
+
+
+      179 |   await page.getByLabel("Search mode").selectOption("semantic");
+      180 |   await page.getByText("Refine by place, person, date or source").click();
+    > 181 |   await page.locator("#person").selectOption({ label: "Ben" });
+          |                                 ^
+      182 |   await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
+      183 |   await page.getByLabel("Country code").fill("NL");
+      184 |   await page.getByLabel("Object or concept in text").fill("bicycle");
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/discovery.spec.ts:181:33
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/discovery-HTTP-boundary-fi-32576--results-and-budget-failure-discovery-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [memories-desktop] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Memories · 1' })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Memories · 1' }) with timeout 10000ms
+      - waiting for getByRole('region', { name: 'Memories · 1' })
+
+
+      101 |   await page.getByRole("button", { name: "Search archive" }).click();
+      102 |   const memories = page.getByRole("region", { name: "Memories · 1" });
+    > 103 |   await expect(memories).toBeVisible();
+          |                          ^
+      104 |   const result = memories.getByRole("link", { name: /Our summer/ });
+      105 |   await expect(result.locator("img").first()).toBeVisible();
+      106 |   await expect(page.getByRole("button", { name: /All 1/ })).toHaveAttribute(
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/browse-features.spec.ts:103:26
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [memories-desktop] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing
+
+    Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 2 elements:
+        1) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' })
+        2) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' })
+
+    Call log:
+      - waiting for getByLabel('Your recollection')
+
+
+      12 |   await page
+      13 |     .getByLabel("Your recollection")
+    > 14 |     .fill("<img src=x onerror=alert(1)> A beautiful day.");
+         |      ^
+      15 |   await page.getByRole("button", { name: "Save my recollection" }).click();
+      16 |   await expect(page.locator("#stories")).toContainText("You: <img");
+      17 |   await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/memories.spec.ts:14:6
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [memories-phone] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Memories · 1' })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Memories · 1' }) with timeout 10000ms
+      - waiting for getByRole('region', { name: 'Memories · 1' })
+
+
+      101 |   await page.getByRole("button", { name: "Search archive" }).click();
+      102 |   const memories = page.getByRole("region", { name: "Memories · 1" });
+    > 103 |   await expect(memories).toBeVisible();
+          |                          ^
+      104 |   const result = memories.getByRole("link", { name: /Our summer/ });
+      105 |   await expect(result.locator("img").first()).toBeVisible();
+      106 |   await expect(page.getByRole("button", { name: /All 1/ })).toHaveAttribute(
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/browse-features.spec.ts:103:26
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/browse-features-archive-Se-0d95e-mbnail-and-shows-no-results-memories-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [memories-phone] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing
+
+    Error: locator.fill: Error: strict mode violation: getByLabel('Your recollection') resolved to 4 elements:
+        1) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' }).first()
+        2) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).first()
+        3) <section class="story-writing" aria-label="Your recollection">…</section> aka getByRole('region', { name: 'Your recollection' }).nth(1)
+        4) <textarea maxlength="2000"></textarea> aka getByRole('textbox', { name: 'Your recollection' }).nth(1)
+
+    Call log:
+      - waiting for getByLabel('Your recollection')
+
+
+      12 |   await page
+      13 |     .getByLabel("Your recollection")
+    > 14 |     .fill("<img src=x onerror=alert(1)> A beautiful day.");
+         |      ^
+      15 |   await page.getByRole("button", { name: "Save my recollection" }).click();
+      16 |   await expect(page.locator("#stories")).toContainText("You: <img");
+      17 |   await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
+        at /Users/altanesmer/Desktop/Ales/Mazi/tests/browser/memories.spec.ts:14:6
+
+    Error Context: work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/remaining-acceptance/domain-browser-results/memories-Annual-recap-and-collaborative-story-editing-memories-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10 failed
+    [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+    [discovery-desktop] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition
+    [discovery-desktop] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure
+    [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+    [discovery-phone] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition
+    [discovery-phone] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure
+    [memories-desktop] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results
+    [memories-desktop] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing
+    [memories-phone] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results
+    [memories-phone] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing
+  14 passed (4.8m)

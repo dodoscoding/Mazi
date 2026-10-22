@@ -1,0 +1,22 @@
+
+> mazi@0.1.0 test:m0
+> node --test tests/m0/*.test.mjs
+
+▶ M0 real Auth, database and private Storage access boundaries
+  ✔ active contributor, second member and administrator read rows and real JPEG/PNG bytes (112.863458ms)
+  ✔ outsider, removed member, other group and anonymous cannot read protected rows or bytes (88.091ms)
+  ✔ one item becomes available while its withdrawn neighbor stays inaccessible (27.650583ms)
+  ✔ public object route cannot bypass the private bucket (7.20475ms)
+  ✔ user database writes are denied and leave privileged snapshots unchanged (15.017875ms)
+  ✔ user Storage upload, overwrite and deletion fail without altering bytes (65.282125ms)
+  ✔ membership revocation denies an existing JWT and contributor departure hides only dependent items (38.171083ms)
+  ✔ withdrawal denies new reads with the same current reader JWT (18.610042ms)
+✔ M0 real Auth, database and private Storage access boundaries (2891.000708ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2929.992209
