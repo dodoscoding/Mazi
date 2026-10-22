@@ -1,5 +1,6 @@
 import sys
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 import unittest
 import json
@@ -24,6 +25,25 @@ class ReviewTests(unittest.TestCase):
 
     def tearDown(self):
         helpers.EngineTests.tearDown(self)
+
+    def test_busy_preview_is_retryable_without_reading_storage(self):
+        import sqlite3
+        from mazi.persistence import ArchiveBusy
+        run = self.submit({"photo.jpg": helpers.picture()})
+        self.process(run)
+        asset = self.store.gallery(self.alice, self.group)[0]["id"]
+        self.store.db.execute("PRAGMA busy_timeout=1")
+        other = sqlite3.connect(Path(self.temp.name) / "mazi.sqlite3")
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            with patch.object(self.store.objects, 'read') as read:
+                with self.assertRaises(ArchiveBusy):
+                    self.store.rendition_bytes(self.alice, asset)
+                read.assert_not_called()
+        finally:
+            other.rollback()
+            other.close()
+        self.assertTrue(self.store.rendition_bytes(self.alice, asset))
 
     def test_review_merge_rendition_undo_and_revocation(self):
         from io import BytesIO
@@ -53,6 +73,25 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(self.store.duplicate_suggestions(self.ben, self.group), [])
         with self.assertRaises(Denied):
             self.store.rendition_bytes(self.ben, ids[0])
+
+    def test_preview_locator_finishes_policy_transaction_before_storage(self):
+        run = self.submit({'preview.jpg': helpers.picture()})
+        self.process(run)
+        asset = self.store.gallery(self.ben, self.group)[0]['id']
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        try:
+            def read(area, key):
+                self.assertEqual(area, 'archive-objects')
+                self.assertFalse(self.store.db.in_transaction)
+                self.assertIn('BEGIN IMMEDIATE', statements)
+                self.assertEqual(statements[-1], 'COMMIT')
+                return b'preview'
+            with patch.object(self.store.objects, 'read', side_effect=read):
+                self.assertEqual(self.store.rendition_bytes(self.ben, asset), b'preview')
+        finally:
+            self.store.db.set_trace_callback(None)
+        self.assertEqual(sum(query.startswith('SELECT') for query in statements), 3)
 
     def test_different_flat_colors_are_not_duplicate_suggestions(self):
         from PIL import Image

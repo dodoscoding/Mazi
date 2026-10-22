@@ -174,3 +174,65 @@ class AtlasTests(unittest.TestCase):
         self.store.remove_member(self.alice, self.group, self.ben)
         self.assertIsNone(self._red_card()['place'])
         self.assertEqual(self._red_card()['people']['shared'], ['Alice'])
+
+    def _source_evidence(self, origin, sender, shared_at, *, ambiguous=False):
+        row = self.store.db.execute('SELECT payload FROM archive_origins WHERE id=?', (origin,)).fetchone()
+        payload = json.loads(row['payload'])
+        payload.update(source='whatsapp', sender={'label': sender}, shared_at_assertion=shared_at,
+                       capture_assertions=[], warnings=['AMBIGUOUS_DATE'] if ambiguous else [])
+        with self.store.transaction():
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), origin))
+
+    def test_source_share_evidence_names_an_untitled_photo_without_changing_capture_chronology(self):
+        asset = self.assets[0]
+        with self.store.transaction():
+            self.store.db.execute('DELETE FROM review_annotations WHERE asset_id=?', (asset,))
+        self._source_evidence(self._origin(asset), 'Ana',
+                              {'raw': '23/04/2024, 21.08.02', 'local': '2024-04-23T21:08:02', 'precision': 'second'})
+        card = next(card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['id'] == 'photo-' + asset)
+        self.assertEqual(card['title'], 'Photo shared by Ana')
+        self.assertEqual(card['shortTitle'], card['title'])
+        self.assertEqual(card['photos'][0]['caption'], card['title'])
+        self.assertEqual((card['date'], card['year'], card['dateBasis']), ('Date not recorded', None, 'undated'))
+        self.assertEqual(card['photos'][0]['provenance'], [dict(sender='Ana', source='whatsapp', sharedAt=dict(
+            raw='23/04/2024, 21.08.02', local='2024-04-23T21:08:02', precision='second', ambiguous=False))])
+
+    def test_ambiguous_numeric_and_multiple_source_evidence_preserves_reviewed_title_and_date(self):
+        _, ben_origin = self._ben_copy_of_red()
+        self._source_evidence(self._origin(self.assets[0]), 'Ana',
+                              {'raw': '04/05/2024, 21:00', 'local': None, 'precision': 'unknown'}, ambiguous=True)
+        self._source_evidence(ben_origin, 'Ben', {'raw': 1713906482000, 'local': None, 'precision': 'unknown'})
+        card = self._red_card()
+        self.assertEqual((card['title'], card['date'], card['year']), ('Red', '2020-01-02', 2020))
+        evidence = card['photos'][0]['provenance']
+        self.assertEqual([item['sender'] for item in evidence], ['Ana', 'Ben'])
+        self.assertTrue(evidence[0]['sharedAt']['ambiguous'])
+        self.assertEqual(evidence[1]['sharedAt']['raw'], '1713906482000')
+        self.assertFalse(evidence[1]['sharedAt']['ambiguous'])
+        with self.store.transaction():
+            self.store.db.execute('DELETE FROM review_annotations WHERE asset_id=?', (self.assets[0],))
+        untitled = next(card for card in atlas_view(self.store, self.alice, self.group)['memories']
+                        if card['id'] == 'photo-' + self.assets[0])
+        self.assertEqual(untitled['title'], 'Photo shared by Ana and Ben')
+        self.assertIsNone(untitled['year'])
+        self._source_evidence(ben_origin, 'Ben', {'raw': 'not a date', 'local': None}, ambiguous=True)
+        malformed = next(card for card in atlas_view(self.store, self.alice, self.group)['memories']
+                         if card['id'] == 'photo-' + self.assets[0])
+        self.assertFalse(malformed['photos'][0]['provenance'][1]['sharedAt']['ambiguous'])
+        self.store.review_event(self.alice, self.group, self.assets, 'Circle story', 'accept')
+        self.assertEqual(atlas_view(self.store, self.alice, self.group)['memories'][0]['title'], 'Circle story')
+
+    def test_source_evidence_deduplicates_and_rechecks_withdrawal_and_owner_membership(self):
+        resource, ben_origin = self._ben_copy_of_red()
+        assertion = {'raw': '2024-04-23', 'local': '2024-04-23T21:08:02', 'precision': 'second'}
+        self._source_evidence(self._origin(self.assets[0]), 'Ana', assertion)
+        self._source_evidence(ben_origin, 'Ana', assertion)
+        self.assertEqual(len(self._red_card()['photos'][0]['provenance']), 1)
+        self._source_evidence(ben_origin, 'Ben', assertion)
+        self.assertEqual(len(self._red_card()['photos'][0]['provenance']), 2)
+        self.store.withdraw_resource(self.ben, resource)
+        self.assertEqual([item['sender'] for item in self._red_card()['photos'][0]['provenance']], ['Ana'])
+        with self.store.transaction():
+            self.store.db.execute('UPDATE archive_origins SET withdrawn=0 WHERE id=?', (ben_origin,))
+        self.store.remove_member(self.alice, self.group, self.ben)
+        self.assertEqual([item['sender'] for item in self._red_card()['photos'][0]['provenance']], ['Ana'])

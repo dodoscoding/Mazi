@@ -1,3 +1,8 @@
+import {
+  shareDateLabel,
+  sourceSharedLine,
+  provenanceOf,
+} from "../memory/provenance";
 import type { Memory, Photo, Place } from "../memories";
 
 let regions: Intl.DisplayNames | undefined;
@@ -27,9 +32,12 @@ export function listNames(names: string[]) {
 
 /** Evidence only: who shared the photographs, never who was there. */
 export function sharedLine(memory: Memory) {
-  return memory.people.shared.length
-    ? `Shared by ${listNames(memory.people.shared)}`
-    : "";
+  return (
+    sourceSharedLine(memory) ||
+    (memory.people.shared.length
+      ? `${provenanceOf(memory).length ? "Added" : "Shared"} by ${listNames(memory.people.shared)}`
+      : "")
+  );
 }
 
 export function initials(name: string) {
@@ -76,6 +84,8 @@ export function monthYear(date: Date) {
 
 /** A memory's date as the Components sheet writes it: exact, or "About". */
 export function dateLabel(memory: Memory) {
+  if (memory.date === "Date not recorded")
+    return shareDateLabel(memory) || memory.date;
   const date = firstDate(memory);
   const text = date
     ? date.toLocaleDateString(navigator.language, {

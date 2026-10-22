@@ -1,5 +1,6 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
+import re
 from math import asin, cos, radians, sin, sqrt
 
 from mazi.persistence import insertion_order
@@ -27,7 +28,8 @@ def _place(rows):
 
 
 def atlas_view(store, user, group):
-    with store.transaction():
+    transaction = store.db.read_transaction() if getattr(store.db, "hosted", False) else store.transaction()
+    with transaction:
         store._member(user, group)
         items = {item['id']: item for item in store._timeline_items(user, group)}
         hidden_assets = set()
@@ -37,15 +39,8 @@ def atlas_view(store, user, group):
             hidden_assets.update(json.loads(row[0]))
         cards, grouped = [], set()
 
-        def origins_for_item(asset):
-            """Stream an authorized item's origins in this policy transaction."""
-            rows = store.db.execute(
-                'SELECT o.payload FROM archive_origins o JOIN members m '
-                'ON m.user_id=o.owner_id AND m.group_id=o.group_id '
-                'WHERE o.asset_id=? AND o.withdrawn=0 ORDER BY ' +
-                insertion_order(store.db, 'o'), (asset,))
-            for row in rows:
-                yield json.loads(row['payload'])
+        consumers = {}
+        details = []
 
         def card(identifier, title, assets, kind):
             records = [items[asset] for asset in assets]
@@ -56,38 +51,21 @@ def atlas_view(store, user, group):
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
                 if not complete_dates:
                     date_label += ' · some dates unknown'
-            photos, messages, sources, places, shared = [], [], set(), [], set()
-            seen_messages = set()
-            for item in records:
-                places.extend(store.db.execute(
-                    'SELECT p.city,p.country,p.latitude,p.longitude FROM shared_places p '
-                    'JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
-                    'WHERE o.asset_id=? AND o.withdrawn=0', (item['id'],)))
-                shared.update(row[0] for row in store.db.execute(
-                    'SELECT p.display_name FROM archive_origins o JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
-                    'JOIN shared_profiles p ON p.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (item['id'],)))
-                photos.append(dict(src='/api/review/rendition/' + item['id'],
-                                   alt=item['title'] or 'Archive photograph',
-                                   caption=item['title'] or 'Untitled photograph'))
-                for origin in origins_for_item(item['id']):
-                    sources.add(origin.get('source') or 'archive')
-                    for message in origin.get('context', []):
-                        value = message.get('text', '')
-                        name = message.get('sender', {}).get('label') or 'Source participant'
-                        when = str(message.get('shared_at') or '')
-                        key = (name, when, value)
-                        if value and key not in seen_messages:
-                            seen_messages.add(key)
-                            messages.append(dict(name=name, time=when, text=value))
-            place = _place(places) if places else None
-            people = dict(shared=sorted(shared),
-                          conversation=sorted({message['name'] for message in messages} - {'Source participant'}))
+            photos = [dict(src='/api/review/rendition/' + item['id'],
+                           alt=item['title'] or 'Archive photograph',
+                           caption=item['title'] or 'Untitled photograph') for item in records]
+            detail = dict(messages={}, sources=set(), places=[], shared=set(),
+                          provenance=[{} for _ in records],
+                          untitled={position for position, item in enumerate(records) if not item['title']})
+            details.append(detail)
+            for position, asset in enumerate(assets):
+                consumers.setdefault(asset, []).append((detail, position))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,
                         date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
                         approximate=not complete_dates, by='Your circle',
                         description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
-                        source=', '.join(sorted(sources)), photos=photos, messages=messages,
-                        place=place, people=people,
+                        source='', photos=photos, messages=[],
+                        place=None, people=dict(shared=[], conversation=[]),
                         dateBasis=', '.join(sorted({item['date_basis'] for item in records})))
 
         for event in store._approved(user, group):
@@ -98,5 +76,74 @@ def atlas_view(store, user, group):
         for asset, item in items.items():
             if asset not in grouped and asset not in hidden_assets:
                 cards.append(card('photo-' + asset, item['title'] or 'Untitled photograph', [asset], 'photo'))
+        joins = (' FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id AND a.group_id=o.group_id '
+                 'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
+                 'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
+        where = 'WHERE o.group_id=? AND o.withdrawn=0 '
+        rows = store.db.execute(
+            'SELECT o.asset_id,o.payload,p.display_name' + joins +
+            'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
+            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
+        for origin_position, row in enumerate(rows):
+            targets = consumers.get(row['asset_id'])
+            if not targets:
+                continue
+            origin = json.loads(row['payload'])
+            assertion = origin.get('shared_at_assertion') or {}
+            sender = (origin.get('sender') or {}).get('label') or None
+            raw = assertion.get('raw')
+            date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
+            ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
+                         and date_parts is not None and 1 <= int(date_parts[1]) <= 12
+                         and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
+            evidence = dict(sender=sender, source=origin.get('source') or 'archive', sharedAt=dict(
+                local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
+                precision=assertion.get('precision') or 'unknown',
+                ambiguous=bool(ambiguous)))
+            evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
+            for detail, asset_position in targets:
+                detail['sources'].add(origin.get('source') or 'archive')
+                if sender or raw is not None or assertion.get('local'):
+                    detail['provenance'][asset_position].setdefault(evidence_key, evidence)
+                if row['display_name'] is not None:
+                    detail['shared'].add(row['display_name'])
+                for message_position, message in enumerate(origin.get('context', [])):
+                    value = message.get('text', '')
+                    name = message.get('sender', {}).get('label') or 'Source participant'
+                    when = str(message.get('shared_at') or '')
+                    key = (name, when, value)
+                    if value:
+                        position = (asset_position, origin_position, message_position)
+                        previous = detail['messages'].get(key)
+                        if previous is None or position < previous:
+                            detail['messages'][key] = position
+        places = store.db.execute(
+            'SELECT o.asset_id,p.city,p.country,p.latitude,p.longitude' + joins +
+            'JOIN shared_places p ON p.origin=o.id ' + where +
+            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
+        for place_position, row in enumerate(places):
+            for detail, asset_position in consumers.get(row['asset_id'], ()):
+                detail['places'].append((asset_position, place_position, row))
+        for result, detail in zip(cards, details):
+            for position, photo in enumerate(result['photos']):
+                evidence = list(detail['provenance'][position].values())
+                if evidence:
+                    photo['provenance'] = evidence
+                names = sorted({item['sender'] for item in evidence if item['sender']})
+                if names and position in detail['untitled']:
+                    title = 'Photo shared by ' + (
+                        ' and '.join(names) if len(names) <= 2 else
+                        ', '.join(names[:2]) + f' and {len(names) - 2} more')
+                    photo['caption'] = title
+                    photo['alt'] = title
+                    if result['kind'] == 'photo':
+                        result['title'] = result['shortTitle'] = title
+            result['source'] = ', '.join(sorted(detail['sources']))
+            result['messages'] = [dict(name=key[0], time=key[1], text=key[2])
+                                  for key in sorted(detail['messages'], key=detail['messages'].get)]
+            ordered_places = [entry[2] for entry in sorted(detail['places'])]
+            result['place'] = _place(ordered_places) if ordered_places else None
+            result['people'] = dict(shared=sorted(detail['shared']), conversation=sorted(
+                {message['name'] for message in result['messages']} - {'Source participant'}))
         cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
         return {'memories': cards}

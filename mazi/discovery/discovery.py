@@ -115,15 +115,17 @@ class DiscoveryStore(SourceStore):
             result.append(dict(id=asset, width=row['width'], height=row['height'], origins=origins['items'], origin_count=origins['total'], next_origin_offset=origins['next_offset']))
         return result
 
-    def rendition_bytes(self, user, asset):
-        row = self._asset(user, asset)
-        visible = set(self._visible_ids(user, row['group_id']))
-        if asset not in visible:
+    def _rendition_locator(self, user, asset, *, original=None):
+        if original is None:
+            original = self._asset_locator(user, asset)
+        self._member(user, original[0]['group_id'])
+        resolved = super()._rendition_locator(user, asset, original=original)
+        hidden = {row[0] for row in self.db.execute(
+            'SELECT asset FROM discovery_hidden WHERE "user"=? AND asset IN (?,?)',
+            (user, asset, resolved[0]['id']))}
+        if asset in hidden:
             raise Denied('Rendition hidden from discovery')
-        selected = self.db.execute('SELECT selected_id FROM review_renditions WHERE asset_id=?', (asset,)).fetchone()
-        if selected and selected[0] not in visible:
-            return self.asset_bytes(user, asset)
-        return super().rendition_bytes(user, asset)
+        return original if resolved[0]['id'] in hidden else resolved
 
     def _places_query(self, user, group):
         clause, params = super()._places_query(user, group)
