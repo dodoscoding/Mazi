@@ -1,0 +1,121 @@
+{
+  "baseline_revision": "a2ed798dbc346108a1883725f779b147ce050cd4",
+  "performance_before": {
+    "photos": 20,
+    "zip_bytes": 18432,
+    "processing": {
+      "seconds": 0.01831733300059568,
+      "materialize_archives": 20,
+      "GET": 60,
+      "GET_bytes": 396352,
+      "archive_GET": 20,
+      "archive_GET_bytes": 368640,
+      "PUT": 40,
+      "PUT_bytes": 27712,
+      "photos_per_second": 1091.862008478505
+    }
+  },
+  "performance_after": {
+    "photos": 20,
+    "zip_bytes": 18432,
+    "processing": {
+      "seconds": 0.014924249997420702,
+      "materialize_archives": 1,
+      "GET": 41,
+      "GET_bytes": 46144,
+      "archive_GET": 1,
+      "archive_GET_bytes": 18432,
+      "PUT": 40,
+      "PUT_bytes": 27712,
+      "photos_per_second": 1340.100842820009
+    }
+  },
+  "storage_append_before": {
+    "POST": 1,
+    "GET": 2
+  },
+  "storage_append_after": {
+    "POST": 1,
+    "GET": 1
+  },
+  "native_browser": {
+    "visibilityMethod": "Native macOS switch driven through cua; browser records unmodified visibility events",
+    "errors": [],
+    "archiveBytes": 4700761,
+    "photoCount": 80,
+    "hiddenDOM": {
+      "hidden": true,
+      "roots": 1,
+      "fileInputs": 1
+    },
+    "nativeVisibilityEvents": [
+      {
+        "state": "hidden",
+        "at": 1792670453198
+      }
+    ],
+    "visibilityAfterInventory": "hidden",
+    "afterReturn": {
+      "files": 1,
+      "label": "background-native-1792670436401"
+    },
+    "pass": true,
+    "beforeHide": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "UPLOADING",
+      "received": 262144,
+      "size": 4700761,
+      "checkpoint": 0,
+      "scan_complete": false,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 0,
+      "counts": {},
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "whileHidden": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "INVENTORIED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "PENDING": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "afterClose": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "COMPLETED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "AVAILABLE_TO_GROUP": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 80
+    }
+  },
+  "limitations": [
+    "Hosted IO counters use a fake transport and real HostedObjects over SQLite, not production network timings.",
+    "Native Chromium on macOS uses connectOverCDP noDefaults to disable focus emulation. No document visibility property was injected.",
+    "The first native run tested the working background fix build. Final-head verification is recorded separately."
+  ]
+}
