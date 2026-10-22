@@ -22,6 +22,20 @@ class TransactionContracts(unittest.TestCase):
         connection._db.execute.return_value.fetchone.return_value = (1,)
         return connection
 
+    def test_policy_read_context_uses_shared_lock_and_rolls_back_failures(self):
+        db = self.connection()
+        with db.read_transaction():
+            self.assertTrue(db._active)
+        queries = [call.args[0] for call in db._db.execute.call_args_list]
+        self.assertIn('SELECT pg_advisory_xact_lock_shared(%s)', queries)
+        self.assertNotIn('SELECT pg_advisory_xact_lock(%s)', queries)
+        self.assertEqual(queries[-1], 'COMMIT')
+        with self.assertRaises(ValueError):
+            with db.read_transaction():
+                raise ValueError('failed projection')
+        self.assertFalse(db._active)
+        self.assertEqual(db._db.execute.call_args[0], ('ROLLBACK',))
+
     def test_context_keeps_connection_open_and_rolls_back(self):
         db = self.connection()
         with db:

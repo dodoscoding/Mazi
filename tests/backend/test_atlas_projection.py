@@ -86,7 +86,7 @@ class AtlasProjectionTests(unittest.TestCase):
         self.assertEqual(int(headers['Content-Length']), len(body))
         self.assertEqual(body, json.dumps({'memories': cards}).encode())
 
-    def test_1001_imported_photos_keep_exact_http_body_with_half_query_budget(self):
+    def test_1001_imported_photos_keep_exact_http_body_with_constant_query_budget(self):
         imported(self.fixture, 1001)
         assets = [row[0] for row in self.store.db.execute('SELECT id FROM archive_assets ORDER BY id DESC')]
         self.assertEqual(len(assets), 1001)
@@ -101,7 +101,25 @@ class AtlasProjectionTests(unittest.TestCase):
             finally:
                 self.store.db.set_trace_callback(None)
             self.assert_body(response, expected)
-            self.assertLessEqual(len(statements), 3 * 1001 + 40)
+            self.assertLessEqual(len(statements), 24)
+
+    def test_projection_query_count_is_constant_for_1_300_and_1001_photos(self):
+        counts = []
+        for count in (1, 300, 1001):
+            self.store.db.execute("DELETE FROM archive_origins")
+            self.store.db.execute("DELETE FROM archive_assets")
+            self.store.db.commit()
+            self.fixture.seed_projection(count)
+            statements = []
+            self.store.db.set_trace_callback(statements.append)
+            try:
+                result = atlas_view(self.store, self.ben, self.group)
+            finally:
+                self.store.db.set_trace_callback(None)
+            self.assertEqual(len(result['memories']), count)
+            counts.append(len(statements))
+        self.assertEqual(counts, [counts[0]] * 3)
+        self.assertLessEqual(counts[0], 24)
 
     def test_100_101_501_origins_keep_all_context_in_source_order(self):
         previous = 0
