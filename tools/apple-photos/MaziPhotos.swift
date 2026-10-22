@@ -40,8 +40,8 @@ struct LibraryItem: Identifiable {
     @Published var kind = "all"
     @Published var from = Calendar.current.date(byAdding: .year, value: -10, to: Date())!
     @Published var through = Date()
-    @Published var email = ""
-    @Published var password = ""
+    @Published var name = ""
+    @Published var code = ""
     @Published var connection = ""
     @Published var status = "Sign in to your local Mazi archive, then allow Photos access."
     @Published var busy = false
@@ -143,7 +143,7 @@ struct LibraryItem: Identifiable {
 
     func signIn() {
         task = Task {
-            do { _ = try await post("api/login", ["email": email, "password": password]); password = ""; status = "Signed in. Allow Photos access to inspect your library." }
+            do { _ = try await post("api/entry", ["name": name, "code": code]); code = ""; status = "Signed in. Allow Photos access to inspect your library." }
             catch { status = error.localizedDescription }
         }
     }
@@ -251,7 +251,7 @@ final class ResourceBuffer: @unchecked Sendable {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Choose what you bring along.").font(.largeTitle)
                 Text("Foreground transfer to your local archive. Originals, edits and Live Photo components are kept separately.")
-                HStack { TextField("Mazi email", text: $model.email); SecureField("Password", text: $model.password); Button("Sign in", action: model.signIn) }.disabled(model.busy)
+                HStack { TextField("Your name in Mazi", text: $model.name); SecureField("Shared code", text: $model.code); Button("Sign in", action: model.signIn) }.disabled(model.busy)
                 TextField("Apple source ID from Places & sources", text: $model.connection).disabled(model.busy)
                 HStack { Button("Allow Photos access", action: model.authorize); Picker("Album", selection: $model.album) { Text("All albums").tag(""); ForEach(model.albums, id: \.0) { Text($0.1).tag($0.0) } }; Picker("Media", selection: $model.kind) { Text("Photos & videos").tag("all"); Text("Photos").tag("image"); Text("Videos").tag("video") } }.disabled(model.busy)
                 if !model.album.isEmpty {
