@@ -14,6 +14,12 @@
   <label class="disc-group">Group<select id="groups"></select></label>
   <p id="notice" role="status" aria-live="polite"></p>
   <div id="private" hidden>
+    <div id="context-choice" hidden>
+      <button id="include-context" type="button">
+        Include memories, chats, places and people
+      </button>
+      <p id="context-status" role="status"></p>
+    </div>
     <form id="search-form" class="disc-search" role="search">
       <h2 id="search-title" class="disc-search-title">Find a photograph</h2>
       <div class="search-bar">
@@ -116,7 +122,10 @@
           <label
             >Person<select id="person">
               <option value="">Anyone</option>
-            </select></label
+            </select>
+            <button id="load-people" type="button" hidden>
+              Load people
+            </button></label
           >
           <label
             >Place<input id="place" maxlength="200" placeholder="Amsterdam"

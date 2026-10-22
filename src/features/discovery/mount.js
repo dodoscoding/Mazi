@@ -27,6 +27,12 @@ export function mount(root, lifecycle) {
     $("#prompts").hidden = true;
     $("#discover-sub").hidden = true;
   } else promptSkeleton(root);
+  let contextRevision = 0,
+    contextReady = false,
+    contextWanted = false,
+    contextLoading = false,
+    photoTotal = null,
+    completedQuery = "";
   let indexRun = 0,
     learned = false;
   let group = "",
@@ -44,6 +50,26 @@ export function mount(root, lifecycle) {
   }
   function clearPrivate() {
     generation++;
+    contextRevision++;
+    contextReady = false;
+    contextLoading = false;
+    photoTotal = null;
+    atlas = [];
+    atlasKey = null;
+    if (view === "search") {
+      $("#context-choice").hidden = false;
+      $("#include-context").disabled = false;
+      $("#context-status").textContent =
+        "Search photographs now. Include other categories and People when you need them.";
+      $("#person").disabled = true;
+      $("#load-people").hidden = false;
+      $("#load-people").disabled = false;
+      $("#mode option[value=semantic]").disabled = true;
+      $("#build-index").hidden = true;
+      root.querySelectorAll(".disc-manage").forEach((panel) => {
+        panel.hidden = true;
+      });
+    }
     indexRun++;
     $("#index-progress").textContent = "";
     $("#index-recovery").hidden = true;
@@ -78,7 +104,7 @@ export function mount(root, lifecycle) {
     $("#more").hidden = true;
     people = [];
   }
-  async function api(path, body) {
+  async function api(path, body, expectedContext) {
     const response = await fetch(
       path,
       body
@@ -90,6 +116,8 @@ export function mount(root, lifecycle) {
         : {},
     );
     const value = await response.json();
+    if (expectedContext !== undefined && expectedContext !== contextRevision)
+      throw Error("Context changed");
     if (!response.ok) {
       if (response.status === 403) {
         clearPrivate();
@@ -159,6 +187,23 @@ export function mount(root, lifecycle) {
       );
   }
   function renderTypes(photos) {
+    if (view === "search" && !contextReady) {
+      $("#result-total").textContent =
+        `${photos} ${photos === 1 ? "photograph" : "photographs"}`;
+      $("#result-types").hidden = true;
+      $("#search-none").hidden = true;
+      for (const id of [
+        "#memory-results",
+        "#chat-results",
+        "#place-results",
+        "#people-results",
+        "#ask-card",
+      ])
+        $(id).hidden = true;
+      $("#photo-results").hidden = false;
+      $("#search-groups").hidden = false;
+      return;
+    }
     const total =
       counts.memories + counts.chats + counts.places + counts.people + photos;
     const types = [
@@ -189,8 +234,7 @@ export function mount(root, lifecycle) {
     $("#search-none").hidden = !none;
     $("#search-groups").hidden = none;
     if (none) {
-      $("#none-title").textContent =
-        `Nothing for “${$("#query").value.trim()}”`;
+      $("#none-title").textContent = `Nothing for “${completedQuery.trim()}”`;
       $("#none-try").replaceChildren(
         ...suggestions(atlas).map((word) => {
           const button = node("button", word, {
@@ -207,7 +251,7 @@ export function mount(root, lifecycle) {
       );
     }
     $("#ask-quote").textContent = counts.term
-      ? `“${$("#query").value.trim()}”`
+      ? `“${completedQuery.trim()}”`
       : "";
     showGroups();
   }
@@ -276,7 +320,9 @@ export function mount(root, lifecycle) {
         `${result.unindexed} eligible photographs need indexing; these use words and filters until the index is built.`;
     $("#count").textContent = `${result.total} photographs · ${result.mode}`;
     if (!offset) {
-      counts = renderGroups(root, atlas, $("#query").value, people);
+      photoTotal = result.total;
+      completedQuery = $("#query").value;
+      counts = renderGroups(root, atlas, completedQuery, people);
       renderTypes(result.total);
     }
     $("#more").hidden = next === null;
@@ -332,17 +378,24 @@ export function mount(root, lifecycle) {
         node("option", "Choose a person", { value: "" }),
         ...people.map((p) => node("option", p.name, { value: p.id })),
       );
+      select.disabled = view === "search" && !contextReady;
       label.append(select);
-      card.append(
-        label,
-        action("Confirm tag", async () => {
+      const confirmTag = action(
+        "Confirm tag",
+        async () => {
           if (!select.value) throw Error("Choose a person first.");
           await mutate("tag", {
             person: select.value,
             asset: item.id,
             confirmed: true,
           });
-        }),
+        },
+        "disc-tag-confirm",
+      );
+      confirmTag.disabled = view === "search" && !contextReady;
+      card.append(
+        label,
+        confirmTag,
         action("Hide from my discovery", () =>
           mutate("hide", { asset: item.id, enabled: true }),
         ),
@@ -367,17 +420,32 @@ export function mount(root, lifecycle) {
         ),
       );
   }
-  async function refresh() {
-    clearPrivate();
-    const revision = generation;
-    const currentGroup = group;
+  async function hydrateContext(revision, currentGroup) {
     const [state, map] = await Promise.all([
-      api("/api/discovery/state?group=" + encodeURIComponent(group)),
-      api("/api/atlas?group=" + encodeURIComponent(group)).catch(() => ({
-        memories: [],
-      })),
+      api(
+        "/api/discovery/state?group=" + encodeURIComponent(currentGroup),
+        undefined,
+        revision,
+      ),
+      api(
+        "/api/atlas?group=" + encodeURIComponent(currentGroup),
+        undefined,
+        revision,
+      ).catch((error) => {
+        if (view === "discover") return { memories: [] };
+        throw error;
+      }),
     ]);
-    if (revision !== generation || currentGroup !== group) return;
+    if (revision !== contextRevision || currentGroup !== group) return;
+    for (const id of [
+      "#memories",
+      "#hidden-memories",
+      "#people",
+      "#identities",
+      "#hidden-items",
+      "#suppressed",
+    ])
+      $(id).replaceChildren();
     atlas = map.memories;
     const key = currentGroup + atlas.map((memory) => memory.id).join();
     if (view === "discover" && key !== atlasKey) {
@@ -453,18 +521,86 @@ export function mount(root, lifecycle) {
     $("#admin-tools").hidden = !admin;
     if (admin) {
       const members = await api(
-        "/api/members?group=" + encodeURIComponent(group),
+        "/api/members?group=" + encodeURIComponent(currentGroup),
+        undefined,
+        revision,
       );
-      if (revision !== generation || currentGroup !== group) return;
+      if (revision !== contextRevision || currentGroup !== group) return;
       options(
         "#identity-account",
         members.map((m) => ({ id: m.id, name: m.display_name || m.email })),
         "Choose a member",
       );
     }
+    contextReady = true;
     $("#private").hidden = false;
-    await search();
+    $("#person").disabled = false;
+    $("#mode option[value=semantic]").disabled = false;
+    $("#load-people").hidden = true;
+    root.querySelectorAll(".disc-manage").forEach((panel) => {
+      panel.hidden = false;
+    });
+    $("#admin-tools").hidden = !admin;
+    for (const select of root.querySelectorAll(".disc-tag select")) {
+      const selected = select.value;
+      select.replaceChildren(
+        node("option", "Choose a person", { value: "" }),
+        ...people.map((person) =>
+          node("option", person.name, { value: person.id }),
+        ),
+      );
+      if (people.some((person) => person.id === selected))
+        select.value = selected;
+      select.disabled = false;
+    }
+    root.querySelectorAll(".disc-tag-confirm").forEach((button) => {
+      button.disabled = false;
+    });
+    if (photoTotal !== null) {
+      counts = renderGroups(root, atlas, completedQuery, people);
+      renderTypes(photoTotal);
+    }
   }
+  async function loadContext() {
+    if (contextLoading || contextReady) return;
+    contextWanted = true;
+    contextLoading = true;
+    const revision = contextRevision;
+    const currentGroup = group;
+    $("#include-context").disabled = true;
+    $("#load-people").disabled = true;
+    $("#context-status").textContent =
+      "Loading memories, chats, places and people…";
+    try {
+      await hydrateContext(revision, currentGroup);
+      if (revision !== contextRevision || currentGroup !== group) return;
+      $("#context-choice").hidden = true;
+    } catch (error) {
+      if (revision !== contextRevision || currentGroup !== group) return;
+      $("#context-status").textContent =
+        "Other categories and People are unavailable. Your photograph search is still here. Try again.";
+    } finally {
+      if (revision === contextRevision) {
+        contextLoading = false;
+        $("#include-context").disabled = false;
+        $("#load-people").disabled = false;
+      }
+    }
+  }
+  async function refresh() {
+    const includeContext = contextWanted;
+    clearPrivate();
+    if (view === "search") {
+      $("#private").hidden = false;
+      if (includeContext) await loadContext();
+      await search();
+    } else {
+      await hydrateContext(contextRevision, group);
+      await search();
+    }
+  }
+  $("#include-context").onclick = () => run(loadContext);
+  $("#load-people").onclick = () => run(loadContext);
   $("#shuffle").onclick = () => {
     heroIndex++;
     renderPrompts(root, atlas, heroIndex);
@@ -501,6 +637,8 @@ export function mount(root, lifecycle) {
   $("#groups").onchange = () =>
     run(async () => {
       group = lifecycle.selectGroup($("#groups"));
+      contextWanted = false;
+      $("#mode").value = "keyword";
       similar = "";
       await refresh();
     });
