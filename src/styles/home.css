@@ -892,6 +892,7 @@
   animation: portal-open 500ms var(--ease-reveal) 600ms both;
 }
 .portal-window {
+  border-radius: 0;
   inset: 0;
   overflow: hidden;
   background: var(--bg-deep);
@@ -899,16 +900,12 @@
     0 0 0 1.5px var(--accent-node),
     0 0 30px 4px var(--glow),
     0 0 90px 10px var(--atmosphere-tint);
-  animation:
-    portal-open 500ms var(--ease-reveal) 600ms both,
-    portal-breathe 9s ease-in-out 1100ms infinite alternate;
+  animation: portal-open 500ms var(--ease-reveal) 600ms both;
 }
 .portal-window img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transform: scale(1.06);
-  animation: photo-settle 500ms var(--ease-arrive) 800ms both;
+  object-fit: contain;
 }
 .portal figcaption {
   position: absolute;
@@ -923,16 +920,6 @@
   from {
     opacity: 0;
     transform: scale(0.2);
-  }
-}
-@keyframes portal-breathe {
-  to {
-    border-radius: 53% 47% 55% 45% / 46% 56% 44% 54%;
-  }
-}
-@keyframes photo-settle {
-  from {
-    transform: scale(1.12);
   }
 }
 .portal-bar {
