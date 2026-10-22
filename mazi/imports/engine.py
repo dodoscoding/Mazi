@@ -17,7 +17,7 @@ import sqlite3
 import time
 import uuid
 import zipfile
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -76,10 +76,53 @@ class ImportStore(Store):
             self.db.execute("PRAGMA journal_mode=WAL")
             self.db.execute("PRAGMA busy_timeout=5000")
         initialize_schema(self.db, SCHEMA)
+        self._archive_session = None
         self.archive_dir = self.root / "archives"
         self.object_dir = self.root / "archive-objects"
         for directory in (self.archive_dir, self.object_dir):
             directory.mkdir(mode=0o700, exist_ok=True)
+
+    def _release_archive(self):
+        session, self._archive_session = self._archive_session, None
+        if session is not None:
+            session[1].close()
+
+    def close(self):
+        try:
+            self._release_archive()
+        finally:
+            super().close()
+
+    def _processing_archive(self, job):
+        row = self._run(job["owner_id"], job["run_id"])
+        if row["state"] != "PROCESSING" or row["withdrawn"]:
+            self._release_archive()
+            raise Conflict("Import is not processing")
+        identity = (row["id"], row["group_id"], row["manifest"])
+        if self._archive_session is not None and self._archive_session[0] == identity:
+            return self._archive_session[2]
+        self._release_archive()
+        with ExitStack() as stack:
+            path = stack.enter_context(self.objects.materialize("archives", row["id"]))
+            archive = stack.enter_context(Archive(path))
+            source_resource = json.loads(job["payload"])["original_metadata_reference"].startswith("source:#")
+            if not source_resource and archive.manifest != row["manifest"]:
+                raise ArchiveError("Archive checksum differs")
+            self._archive_session = (identity, stack.pop_all(), archive)
+        return archive
+
+    def _check_archive_session(self):
+        if self._archive_session is None:
+            return
+        run = self._archive_session[0][0]
+        row = self.db.execute("SELECT state,withdrawn,owner_id,group_id FROM import_runs WHERE id=?", (run,)).fetchone()
+        if row is None or row["state"] != "PROCESSING" or row["withdrawn"]:
+            self._release_archive()
+            return
+        try:
+            self._member(row["owner_id"], row["group_id"])
+        except Denied:
+            self._release_archive()
 
     @contextmanager
     def transaction(self):
@@ -225,11 +268,11 @@ class ImportStore(Store):
                             (token, now + LEASE_SECONDS, row["id"]))
             return {**dict(row), "lease_token": token, "lease_until": now + LEASE_SECONDS, "attempts": row["attempts"] + 1}
 
-    def _fence(self, job, now):
+    def _fence(self, job, now, *, require_live=True):
         row = self.db.execute("SELECT i.*,r.state,r.withdrawn,r.owner_id,r.group_id FROM import_items i "
                               "JOIN import_runs r ON r.id=i.run_id WHERE i.id=?", (job["id"],)).fetchone()
         if (row is None or row["outcome"] != "PROCESSING" or row["lease_token"] != job["lease_token"] or
-                row["lease_until"] <= now or row["state"] != "PROCESSING" or row["withdrawn"]):
+                (require_live and row["lease_until"] <= now) or row["state"] != "PROCESSING" or row["withdrawn"]):
             raise Conflict("Stale worker lease or cancelled import")
         self._member(row["owner_id"], row["group_id"])
         return row
@@ -246,8 +289,8 @@ class ImportStore(Store):
         from PIL import Image, ImageOps, UnidentifiedImageError
         payload = json.loads(job["payload"])
         try:
-            with self.objects.materialize("archives", job["run_id"]) as path, Archive(path) as archive:
-                data = archive.read(payload["local_blob_reference"], MAX_FILE)
+            archive = self._processing_archive(job)
+            data = archive.read(payload["local_blob_reference"], MAX_FILE)
             # Bytes are in memory here, so an OSError is a decode failure, not storage.
             try:
                 with Image.open(io.BytesIO(data)) as image:
@@ -300,16 +343,24 @@ class ImportStore(Store):
                     "capture": assertions, "locations": locations}
         except FileNotFoundError:
             return {"outcome": "MISSING_MEDIA", "reason": "FILE_NOT_SUPPLIED"}
-        except (UnidentifiedImageError, Image.DecompressionBombError, ValueError, zipfile.BadZipFile):
+        except ArchiveError:
+            self._release_archive()
+            return {"outcome": "FAILED", "reason": "ARCHIVE_INVALID"}
+        except zipfile.BadZipFile:
+            self._release_archive()
             return {"outcome": "FAILED", "reason": "INVALID_MEDIA"}
+        except (UnidentifiedImageError, Image.DecompressionBombError, ValueError):
+            return {"outcome": "FAILED", "reason": "INVALID_MEDIA"}
+        except OSError:
+            self._release_archive()
+            raise
 
     def complete(self, job, prepared=None, now=None):
         clock = time.time if now is None else lambda: now
-        # Check both before expensive work and at the database availability boundary.
         self._fence(job, clock())
         prepared = self.prepare(job) if prepared is None else prepared
         with self.transaction():
-            row = self._fence(job, clock())
+            row = self._fence(job, clock(), require_live=False)
             outcome, reason, asset = prepared["outcome"], prepared["reason"], None
             if outcome == "AVAILABLE_TO_GROUP":
                 payload = json.loads(row["payload"])
@@ -358,11 +409,12 @@ class ImportStore(Store):
             self.db.execute("UPDATE import_items SET outcome=?,reason=?,asset_id=?,lease_token=NULL,lease_until=NULL WHERE id=?",
                             (outcome, reason, asset, row["id"]))
             self._reconcile_run(row["run_id"])
+        self._check_archive_session()
 
     def fail(self, job, now=None):
         now = time.time() if now is None else now
         with self.transaction():
-            row = self._fence(job, now)
+            row = self._fence(job, now, require_live=False)
             terminal = row["attempts"] >= MAX_ATTEMPTS
             self.db.execute("UPDATE import_items SET outcome=?,reason=?,retry_at=?,lease_token=NULL,lease_until=NULL WHERE id=?",
                             ("FAILED" if terminal else "PENDING", "RETRY_LIMIT" if terminal else "RETRY_SCHEDULED",
@@ -370,6 +422,7 @@ class ImportStore(Store):
             self._reconcile_run(row["run_id"])
 
     def work_once(self):
+        self._check_archive_session()
         scanning = self.db.execute("SELECT id FROM import_runs WHERE state='SCANNING' ORDER BY created_at LIMIT 1").fetchone()
         if scanning:
             self.scan(scanning["id"], batch_size=500)
@@ -389,6 +442,7 @@ class ImportStore(Store):
                 self.fail(job)
             except (Denied, Conflict):
                 pass
+        self._check_archive_session()
         return True
 
     def retry(self, user, run, item_id):
@@ -410,6 +464,8 @@ class ImportStore(Store):
             self._audit(user, "import.cancel", run)
 
     def _cancel(self, run):
+        if self._archive_session is not None and self._archive_session[0][0] == run:
+            self._release_archive()
         self.db.execute("UPDATE import_runs SET state='CANCELLED' WHERE id=?", (run,))
         self.db.execute("UPDATE import_items SET outcome='CANCELLED',reason='IMPORT_CANCELLED',lease_token=NULL,lease_until=NULL "
                         "WHERE run_id=? AND outcome IN ('PENDING','PROCESSING')", (run,))

@@ -54,6 +54,21 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(self.objects.append('archives', 'a', 0, b'hello'), 5)
         self.assertEqual(self.objects.read('archives', 'a'), b'hello')
 
+    def test_conflicting_remote_write_reads_once_and_never_receipts_bad_bytes(self):
+        reads = []
+        def conflict(key, data):
+            raise StorageConflict('existing object')
+        def read(key):
+            reads.append(key)
+            return b'hello'
+        with patch.object(self.remote, 'put', conflict), patch.object(self.remote, 'get', read), self.db:
+            self.objects.append('archives', 'a', 0, b'hello')
+        self.assertEqual(len(reads), 1)
+        with patch.object(self.remote, 'put', conflict), patch.object(self.remote, 'get', return_value=b'bad'):
+            with self.assertRaises(StorageConflict), self.db:
+                self.objects.append('archives', 'b', 0, b'hello')
+        self.assertEqual(self.db.execute("SELECT count(*) FROM object_receipts WHERE key='b'").fetchone()[0], 0)
+
     def test_replay_arbitrary_ranges_restart_and_no_growing_upload(self):
         with self.db:
             self.objects.append('archives', 'a', 0, b'hello')
@@ -139,6 +154,21 @@ class StorageTests(unittest.TestCase):
 
 
 class StorageHTTPTests(unittest.TestCase):
+    def test_append_has_one_readback_before_receipt(self):
+        db = sqlite3.connect(':memory:')
+        db.row_factory = sqlite3.Row
+        db.executescript(STORAGE_SCHEMA)
+        calls = []
+        def request(req, **kwargs):
+            calls.append(req.method)
+            return io.BytesIO(b'hello' if req.method == 'GET' else b'')
+        objects = HostedObjects(db, 'https://test.supabase.co', 'sb_secret_test')
+        with patch('mazi.storage.urlopen', request), db:
+            objects.append('archives', 'a', 0, b'hello')
+        self.assertEqual(calls, ['POST', 'GET'])
+        self.assertEqual(db.execute('SELECT count(*) FROM object_receipts').fetchone()[0], 1)
+        db.close()
+
     def test_modern_secret_only_apikey_and_legacy_bearer(self):
         requests = []
         def request(req, **kwargs):

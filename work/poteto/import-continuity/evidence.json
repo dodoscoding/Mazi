@@ -1,0 +1,457 @@
+{
+  "baseline_revision": "a2ed798dbc346108a1883725f779b147ce050cd4",
+  "performance_before": {
+    "photos": 20,
+    "zip_bytes": 18432,
+    "processing": {
+      "seconds": 0.01831733300059568,
+      "materialize_archives": 20,
+      "GET": 60,
+      "GET_bytes": 396352,
+      "archive_GET": 20,
+      "archive_GET_bytes": 368640,
+      "PUT": 40,
+      "PUT_bytes": 27712,
+      "photos_per_second": 1091.862008478505
+    }
+  },
+  "performance_after": {
+    "photos": 20,
+    "zip_bytes": 18432,
+    "processing": {
+      "seconds": 0.014924249997420702,
+      "materialize_archives": 1,
+      "GET": 41,
+      "GET_bytes": 46144,
+      "archive_GET": 1,
+      "archive_GET_bytes": 18432,
+      "PUT": 40,
+      "PUT_bytes": 27712,
+      "photos_per_second": 1340.100842820009
+    }
+  },
+  "storage_append_before": {
+    "POST": 1,
+    "GET": 2
+  },
+  "storage_append_after": {
+    "POST": 1,
+    "GET": 1
+  },
+  "native_browser": {
+    "visibilityMethod": "Native macOS switch driven through cua; browser records unmodified visibility events",
+    "errors": [],
+    "archiveBytes": 4700761,
+    "photoCount": 80,
+    "hiddenDOM": {
+      "hidden": true,
+      "roots": 1,
+      "fileInputs": 1
+    },
+    "nativeVisibilityEvents": [
+      {
+        "state": "hidden",
+        "at": 1792670453198
+      }
+    ],
+    "visibilityAfterInventory": "hidden",
+    "afterReturn": {
+      "files": 1,
+      "label": "background-native-1792670436401"
+    },
+    "pass": true,
+    "beforeHide": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "UPLOADING",
+      "received": 262144,
+      "size": 4700761,
+      "checkpoint": 0,
+      "scan_complete": false,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 0,
+      "counts": {},
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "whileHidden": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "INVENTORIED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "PENDING": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "afterClose": {
+      "id": "99635a58-607d-4ae2-8eda-63c5ea769ce6",
+      "source": "manual",
+      "state": "COMPLETED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "AVAILABLE_TO_GROUP": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 80
+    }
+  },
+  "limitations": [
+    "Hosted IO counters use a fake transport and real HostedObjects over SQLite, not production network timings.",
+    "Native Chromium on macOS uses connectOverCDP noDefaults to disable focus emulation. No document visibility property was injected.",
+    "Native results bind to recorded source revisions; later commits only add verification artifacts."
+  ],
+  "native_final": {
+    "revision": "b7100755b75cb12dd181e7879281ad130c6e1fd4",
+    "visibilityMethod": "Native macOS Chromium window/tab transitions; browser records unmodified visibility events with no focus or visibility emulation",
+    "errors": [],
+    "archiveBytes": 4700761,
+    "photoCount": 80,
+    "hiddenDOM": {
+      "hidden": true,
+      "roots": 1,
+      "fileInputs": 1
+    },
+    "nativeVisibilityEvents": [
+      {
+        "state": "hidden",
+        "at": 1792670935038
+      }
+    ],
+    "visibilityAfterInventory": "hidden",
+    "afterReturn": {
+      "files": 1,
+      "label": "background-native-1792670931526"
+    },
+    "pass": true,
+    "beforeHide": {
+      "id": "35c11cd8-67fa-4395-bf02-3f149a9a7168",
+      "source": "manual",
+      "state": "UPLOADING",
+      "received": 262144,
+      "size": 4700761,
+      "checkpoint": 0,
+      "scan_complete": false,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 0,
+      "counts": {},
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "whileHidden": {
+      "id": "35c11cd8-67fa-4395-bf02-3f149a9a7168",
+      "source": "manual",
+      "state": "INVENTORIED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "PENDING": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "afterClose": {
+      "id": "35c11cd8-67fa-4395-bf02-3f149a9a7168",
+      "source": "manual",
+      "state": "COMPLETED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "AVAILABLE_TO_GROUP": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 80
+    }
+  },
+  "native_after_main_merge": {
+    "revision": "733afc9310398306ed53a6bef512358e7e84ecef",
+    "visibilityMethod": "Native macOS Chromium window/tab transitions; browser records unmodified visibility events with no focus or visibility emulation",
+    "events": [
+      {
+        "kind": "request",
+        "path": "/api/imports/start"
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 0
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 262144
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 524288
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 786432
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 1048576
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 1310720
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 1572864
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 1835008
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 2097152
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 2359296
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 2621440
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 2883584
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 3145728
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 3407872
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 3670016
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 3932160
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 4194304
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/chunk",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+        "offset": 4456448
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/finish",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce"
+      },
+      {
+        "kind": "request",
+        "path": "/api/imports/confirm",
+        "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce"
+      }
+    ],
+    "errors": [],
+    "archiveBytes": 4700761,
+    "photoCount": 80,
+    "beforeHide": {
+      "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+      "source": "manual",
+      "state": "UPLOADING",
+      "received": 262144,
+      "size": 4700761,
+      "checkpoint": 0,
+      "scan_complete": false,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 0,
+      "counts": {},
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "hiddenDOM": {
+      "hidden": true,
+      "roots": 1,
+      "fileInputs": 1
+    },
+    "whileHidden": {
+      "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+      "source": "manual",
+      "state": "INVENTORIED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "PENDING": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "nativeVisibilityEvents": [
+      {
+        "state": "hidden",
+        "at": 1792671308289
+      }
+    ],
+    "visibilityAfterInventory": "hidden",
+    "afterReturn": {
+      "files": 1,
+      "label": "background-native-1792671306206"
+    },
+    "afterConfirm": {
+      "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+      "source": "manual",
+      "state": "PROCESSING",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "PENDING": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 0
+    },
+    "afterClose": {
+      "id": "1de1b4b9-7ee1-4c46-951a-1949cada1fce",
+      "source": "manual",
+      "state": "COMPLETED",
+      "received": 4700761,
+      "size": 4700761,
+      "checkpoint": 80,
+      "scan_complete": true,
+      "withdrawn": false,
+      "error": null,
+      "discovered": 80,
+      "counts": {
+        "AVAILABLE_TO_GROUP": 80
+      },
+      "next_offset": null,
+      "coverage": "Only supplied records; archive coverage is incomplete.",
+      "unique_assets": 80
+    },
+    "pass": true
+  },
+  "local_suites": {
+    "source_revision": "b7100755b75cb12dd181e7879281ad130c6e1fd4",
+    "backend": {
+      "run": 427,
+      "skipped": 11,
+      "failed": 0
+    },
+    "unit": {
+      "passed": 13
+    },
+    "dom": {
+      "passed": 108
+    },
+    "chromium_shell": {
+      "passed": 118,
+      "skipped": 18
+    },
+    "firefox_shell_isolated_launcher": {
+      "passed": 114,
+      "skipped": 22
+    },
+    "integrated_app": {
+      "passed": 34
+    },
+    "domains": {
+      "passed": 22,
+      "skipped": 2
+    },
+    "imports": {
+      "passed": 19,
+      "skipped": 1
+    },
+    "retrieval": {
+      "questions": 100,
+      "recall_at_10": 1.0,
+      "privacy_passed": 3
+    },
+    "answers": {
+      "questions": 150,
+      "failures": 0
+    }
+  }
+}
