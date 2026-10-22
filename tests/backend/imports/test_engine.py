@@ -67,10 +67,10 @@ class EngineTests(unittest.TestCase):
                         state["active"] -= 1
         return state, patch.object(self.store.objects, "materialize", tracked)
 
-    def scanning_run(self, records=1201):
+    def scanning_run(self, records=1201, namespace="scan"):
         text = "\n".join(f"01/01/2024, 12:00 - Alice: synthetic {i}" for i in range(records))
         data = zip_bytes({"_chat.txt": text.encode()})
-        run = self.store.begin_import(self.alice, self.group, "whatsapp", "scan", len(data), hashlib.sha256(data).hexdigest(), {"date_order": "DMY"})
+        run = self.store.begin_import(self.alice, self.group, "whatsapp", namespace, len(data), hashlib.sha256(data).hexdigest(), {"date_order": "DMY"})
         self.store.write_chunk(self.alice, run, 0, data)
         self.store.finish_transfer(self.alice, run)
         return run
@@ -120,6 +120,72 @@ class EngineTests(unittest.TestCase):
         report = self.store.report(self.alice, run)
         self.assertEqual(report["discovered"], 1201)
         self.assertEqual(report["state"], "INVENTORIED")
+
+    def test_scan_discards_consumed_batch_after_transaction_failure(self):
+        run = self.scanning_run()
+        self.store.scan(run, 500)
+        transaction = self.store.transaction
+        @contextmanager
+        def broken():
+            with transaction():
+                yield
+                raise RuntimeError("synthetic transaction failure")
+        with patch.object(self.store, "transaction", broken):
+            with self.assertRaises(RuntimeError):
+                self.store.scan(run, 500)
+        self.assertIsNone(self.store._scan_session)
+        self.assertEqual(self.store.report(self.alice, run)["checkpoint"], 500)
+        self.store.scan(run, 500)
+        self.store.scan(run, 500)
+        self.assertEqual(self.store.report(self.alice, run)["discovered"], 1201)
+
+    def test_scan_checkpoint_race_reconstructs_without_duplicate_rows(self):
+        run = self.scanning_run()
+        self.store.scan(run, 500)
+        other = ImportStore(self.temp.name)
+        transaction = self.store.transaction
+        @contextmanager
+        def raced():
+            other.scan(run, 500)
+            with transaction():
+                yield
+        try:
+            with patch.object(self.store, "transaction", raced):
+                self.assertFalse(self.store.scan(run, 500))
+            self.assertIsNone(self.store._scan_session)
+            self.store.scan(run, 500)
+            self.assertEqual(self.store.report(self.alice, run)["discovered"], 1201)
+        finally:
+            other.close()
+
+    def test_scan_workspace_releases_on_withdraw_departure_and_close(self):
+        for action in ("withdraw", "departure", "close"):
+            with self.subTest(action=action):
+                run = self.scanning_run(namespace=action)
+                state, tracking = self.tracked_archives()
+                with tracking:
+                    self.store.scan(run, 500)
+                    self.assertEqual(state["active"], 1)
+                    if action == "withdraw":
+                        self.store.withdraw(self.alice, run)
+                    elif action == "departure":
+                        self.store.db.execute("DELETE FROM members WHERE user_id=? AND group_id=?", (self.alice, self.group))
+                        self.store.db.commit()
+                        self.store.work_once()
+                        self.store.db.execute("INSERT INTO members(group_id,user_id,role) VALUES(?,?,'admin')", (self.group, self.alice))
+                        self.store.db.commit()
+                    else:
+                        self.store.close()
+                        self.store = ImportStore(self.temp.name)
+                    self.assertEqual(state["active"], 0)
+
+    def test_finish_hashes_materialized_file_without_reading_archive_bytes(self):
+        data = zip_bytes({"a.jpg": picture()})
+        run = self.store.begin_import(self.alice, self.group, "manual", "stream", len(data), hashlib.sha256(data).hexdigest(), {})
+        self.store.write_chunk(self.alice, run, 0, data)
+        with patch.object(self.store.objects, "read", side_effect=AssertionError("full archive read")):
+            self.store.finish_transfer(self.alice, run)
+        self.assertEqual(self.store.report(self.alice, run)["state"], "SCANNING")
 
     def test_processing_reuses_one_archive_and_releases_at_completion(self):
         run = self.submit({"a.jpg": picture(), "b.jpg": picture(), "invalid.jpg": b"bad"})
