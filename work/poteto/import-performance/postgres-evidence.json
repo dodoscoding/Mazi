@@ -1,0 +1,41 @@
+{
+  "isolation": "Disposable localhost:15590 PostgreSQL17 cluster; local trust auth; removed after stop; no production credentials",
+  "results": [
+    {
+      "repo": "/Users/altanesmer/Desktop/Ales/Mazi",
+      "postgres": "17",
+      "database_driver": "PostgresConnection/psycopg",
+      "object_storage": "LocalObjects; no provider network",
+      "scan_seconds": 1.2903,
+      "processing_seconds": 0.5388,
+      "scan_calls": 16,
+      "insert_statements": 7500,
+      "max_insert_bind_parameters": 7,
+      "counts": {
+        "SKIPPED": 7277,
+        "AVAILABLE_TO_GROUP": 223
+      },
+      "unique_assets": 1,
+      "no_media": null,
+      "state": "COMPLETED"
+    },
+    {
+      "repo": "/Users/altanesmer/.codex/worktrees/import-performance/Mazi",
+      "postgres": "17",
+      "database_driver": "PostgresConnection/psycopg",
+      "object_storage": "LocalObjects; no provider network",
+      "scan_seconds": 0.3724,
+      "processing_seconds": 0.6501,
+      "scan_calls": 16,
+      "insert_statements": 60,
+      "max_insert_bind_parameters": 896,
+      "counts": {
+        "AVAILABLE_TO_GROUP": 223,
+        "SKIPPED": 7277
+      },
+      "unique_assets": 1,
+      "no_media": 7277,
+      "state": "COMPLETED"
+    }
+  ]
+}
