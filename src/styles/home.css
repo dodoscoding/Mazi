@@ -1518,6 +1518,9 @@
 
 /* 390: phone. Bottom sheet with the index and memories over the globe; the tab bar stays. */
 @media (max-width: 600px) {
+  .portal-layer {
+    bottom: var(--tab-bar-height);
+  }
   .atlas-home {
     --atlas-top: 64px;
     height: calc(100dvh - var(--atlas-top) - var(--tab-bar-height));
