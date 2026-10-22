@@ -180,6 +180,14 @@ class PlacesHttpTests(PlacesFixture):
             with self.subTest(recovery=prefix):
                 self.assertEqual(self.request(prefix + self.group)[0], 200)
 
+    def test_projection_recognizes_extended_sqlite_locked_error(self):
+        from mazi.persistence import ArchiveBusy
+        failure = sqlite3.OperationalError('synthetic locked failure')
+        failure.sqlite_errorcode = sqlite3.SQLITE_LOCKED | (1 << 8)
+        with patch.object(self.store, 'transaction', side_effect=failure):
+            with self.assertRaises(ArchiveBusy):
+                self.store.places(self.alice, self.group)
+
     def test_projection_translation_preserves_other_sqlite_errors(self):
         failure = sqlite3.OperationalError('synthetic non-busy failure')
         for operation in (self.store.places, self.store.event_suggestions, self.store.duplicate_suggestions):
