@@ -40,11 +40,21 @@ def _drain():
         try:
             if 'work' not in _state:
                 _state['work'] = Worker(MemoryStore(_root()))
-            return drain(_state['work'], DRAIN_SECONDS)
+            try:
+                return drain(_state['work'], DRAIN_SECONDS)
+            except Exception as error:
+                _forget('work', error)
+                raise
         finally:
             _drain_lock.release()
     finally:
         _request_lock.acquire()
+
+
+def _forget(key, error):
+    # A thawed instance may hold a dropped database connection; reconnect on the next request.
+    if not isinstance(error, (OSError, NotImplementedError)):
+        _state.pop(key, None)
 
 
 def _handler():
@@ -163,6 +173,7 @@ def make_app(get_handler):
                     _serve(get_handler(), environ, body, sink)
             except BaseException as error:
                 errors.append(error)
+                _forget('handler', error)
             finally:
                 try:
                     sink.put(_DONE)

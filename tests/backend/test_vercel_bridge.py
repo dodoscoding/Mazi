@@ -137,6 +137,15 @@ class VercelBridgeTests(unittest.TestCase):
         self.assertEqual((status, json.loads(b''.join(chunks))), (500, {'error': 'Internal Server Error'}))
         self.assertIn('synthetic failure', logged.getvalue())
 
+    def test_unexpected_failure_reconnects_the_store(self):
+        self.assertEqual(call(index.app, 'GET', '/health')[0], 200)
+        failed = index._state['handler']
+        with patch.object(MemoryStore, 'shared_session', side_effect=RuntimeError('connection closed')), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(call(index.app, 'GET', '/api/session', headers=self.signed_in)[0], 500)
+        self.assertEqual(call(index.app, 'GET', '/api/session', headers=self.signed_in)[0], 200)
+        self.assertIsNot(index._state['handler'], failed)
+
     def test_signed_in_post_drains_a_queued_import(self):
         data = zip_bytes({'photo.jpg': picture()})
         run = self.store.begin_import(self.alice, self.group, 'manual', 'drain', len(data), hashlib.sha256(data).hexdigest(), {})
