@@ -337,6 +337,19 @@ class DiscoveryTests(unittest.TestCase):
         with patch.object(self.store, '_visible_ids', side_effect=AssertionError('Archive-wide preview lookup')):
             self.assertEqual(self.store.rendition_bytes(self.alice, self.asset), expected)
 
+    def test_hidden_event_does_not_change_existing_preview_policy(self):
+        _, second = self.selected_preview()
+        event = self.store.review_event(self.alice, self.group, [self.asset, second], 'Synthetic event', 'accept')
+        expected = self.store.asset_bytes(self.ben, second)
+        self.store.hide_event(self.ben, self.group, event, True)
+        self.assertEqual(self.store.rendition_bytes(self.ben, self.asset), expected)
+
+    def test_unapproved_selected_preview_uses_original(self):
+        _, second = self.selected_preview()
+        self.store.db.execute('DELETE FROM review_pairs WHERE group_id=?', (self.group,))
+        self.store.db.commit()
+        self.assertEqual(self.store.rendition_bytes(self.alice, self.asset), self.store.asset_bytes(self.alice, self.asset))
+
     def test_hidden_rendition_cannot_resurface_through_visible_duplicate(self):
         other = io.BytesIO()
         Image.new('RGB', (9, 9), 'red').save(other, 'JPEG')
