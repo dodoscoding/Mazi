@@ -1,6 +1,7 @@
 /**
- * Web Audio for the Atlas. The bed is a recording of Dillirga, the Cypriot folk
- * song; every one-shot is built from oscillators and a noise buffer. The context
+ * Web Audio for the Atlas. The bed is "Monkeys Spinning Monkeys" by Kevin
+ * MacLeod (CC BY 4.0, credited on About); every one-shot is built from
+ * oscillators and a noise buffer. The context
  * exists only after a gesture made while sound is on, so the browser never
  * blocks or startles anyone.
  */
@@ -11,7 +12,7 @@ const MASTER = 0.063;
 // The Motion sheet's dive (1600 ms) and back out (1100 ms).
 const DIVE = 1.6;
 const BACK = 1.1;
-const SONG = "/media/sound/dillirga.mp3";
+const SONG = "/media/sound/monkeys-spinning-monkeys.mp3";
 // The song plays well under the cues' master, quiet enough to talk over.
 const SONG_LEVEL = 0.35;
 
@@ -61,7 +62,7 @@ function noiseBuffer(audio: AudioContext) {
 }
 
 /**
- * Dillirga on a loop; fades in over 2 s and out over 1.2 s, or stops at once
+ * The song on a loop; fades in over 2 s and out over 1.2 s, or stops at once
  * when sound is turned off. It resumes where it paused.
  */
 export function ambient(on: boolean, immediate = false) {
