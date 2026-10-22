@@ -53,7 +53,11 @@ test("Search pages photographs before requesting optional context and preserves 
   const feature = await mountFeature(
     t,
     "discovery",
-    (path) => {
+    (path, body) => {
+      if (path === "/api/discovery/tag") {
+        requests.push({ path, body });
+        return {};
+      }
       requests.push(path);
       if (path === "/api/groups") return [group];
       if (path.startsWith("/api/discovery/search")) return searchPage;
@@ -107,6 +111,24 @@ test("Search pages photographs before requesting optional context and preserves 
     "Sam",
   );
   assert.equal($("#results h3").textContent, photograph.title);
+  const confirm = [...feature.root.querySelectorAll("#results button")].find(
+    (button) => button.textContent === "Confirm tag",
+  );
+  assert.equal(confirm.disabled, false);
+  $(".disc-tag select").value = "synthetic-person";
+  confirm.click();
+  await until(
+    () => requests.some((request) => request.path === "/api/discovery/tag"),
+    "tag submitted after context loads",
+  );
+  assert.deepEqual(
+    requests.find((request) => request.path === "/api/discovery/tag").body,
+    { person: "synthetic-person", asset: "synthetic-photo", confirmed: true },
+  );
+  await until(
+    () => $("#notice").textContent === "Changes saved.",
+    "tag refresh completed",
+  );
 });
 
 test("Search optional context failure offers retry without hiding photographs", async (t) => {
@@ -228,3 +250,50 @@ test("Search retains paginated photo navigation while optional context is stalle
   assert.equal($("#results h3").textContent, "Second photo");
   assert.equal($("#more").hidden, true);
 });
+
+for (const outcome of ["pending", "failed"]) {
+  test(`late context cannot restore old categories while a newer search is ${outcome}`, async (t) => {
+    const context = deferred();
+    const newer = deferred();
+    let calls = 0;
+    const feature = await mountFeature(
+      t,
+      "discovery",
+      (path) => {
+        if (path === "/api/groups") return [group];
+        if (path.startsWith("/api/discovery/search"))
+          return ++calls > 1 ? newer.promise : searchPage;
+        if (path.startsWith("/api/discovery/state")) return context.promise;
+        if (path.startsWith("/api/atlas")) return { memories: [] };
+        throw Error(`Unexpected ${path}`);
+      },
+      { route: "/search" },
+    );
+    const { $ } = feature;
+    await until(() => $("#results h3"), "first photograph");
+    $("#include-context").click();
+    $("#query").value = "unrelated newer query";
+    submit(feature);
+    if (outcome === "failed") {
+      newer.resolve(
+        Object.assign(Error("Synthetic capacity"), {
+          status: 400,
+          code: "capacity_exceeded",
+        }),
+      );
+      await until(() => !$("#search-recovery").hidden, "newer failure");
+    }
+    context.resolve(state);
+    await until(() => !$("#person").disabled, "context finished");
+    assert.equal($("#search-groups").hidden, true);
+    assert.equal($("#result-total").textContent, "");
+    assert.equal($("#result-types").hidden, true);
+    if (outcome === "pending") {
+      assert.equal($("#search-loading").hidden, false);
+      newer.resolve(searchPage);
+      await until(() => $("#results h3"), "newer successful photos");
+      assert.equal($("#search-groups").hidden, false);
+      assert.equal($("#people-results").hidden, true);
+    }
+  });
+}
