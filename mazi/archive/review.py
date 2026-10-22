@@ -255,7 +255,6 @@ class ReviewStore(ImportStore):
             self._audit(user, "review.rendition", asset)
 
     def _rendition_locator(self, user, asset, *, original=None):
-        """Resolve one authorized preview, falling back to its original locator."""
         if original is None:
             original = self._asset_locator(user, asset)
         row = original[0]
