@@ -4,6 +4,7 @@ import hashlib
 import http.client
 import io
 import json
+import sqlite3
 import threading
 import zipfile
 from http.server import HTTPServer
@@ -93,10 +94,9 @@ class PlacesHttpTests(PlacesFixture):
                 self.assertEqual((status, len(json.loads(raw)['points'])), (200, 1000))
             self.post('/api/places', dict(origin=origin['id'], country='NL', city='😀' * 200,
                       latitude=52.37, longitude=4.9, day=None if index % 4 == 0 else '2024-01-02'), user)
-        expected_error = {'code': 'capacity_exceeded', 'error': 'Local map supports up to 1,000 shared location records'}
-        for suffix in ('', '&country=NL&city=Amsterdam'):
+        for suffix, count in (('', 1001), ('&country=NL&city=Amsterdam', 0)):
             status, raw, content_type = self.request(query + suffix)
-            self.assertEqual((status, json.loads(raw)), (400, expected_error))
+            self.assertEqual((status, len(json.loads(raw)['points'])), (200, count))
             self.assertIn('application/json', content_type)
         for path in (query, export):
             self.assertEqual(self.request(path, authenticated=False)[0], 403)
@@ -137,6 +137,64 @@ class PlacesHttpTests(PlacesFixture):
         with zipfile.ZipFile(io.BytesIO(self.request(export)[1])) as archive:
             self.assertEqual(len(json.loads(archive.read('places.json'))), 1000)
             self.assertEqual(json.loads(archive.read('manifest.json'))['assets'][0]['origins'], source_records)
+
+    def test_over_twenty_thousand_authorized_rows_fail_before_filters_and_recover(self):
+        origin = self.import_locations(1)[0]
+        row = self.store.db.execute('SELECT * FROM archive_origins WHERE id=?', (origin['id'],)).fetchone()
+        for number in range(20000):
+            identifier = f'synthetic-overflow-{number:05d}'
+            self.store.db.execute('INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)',
+                                  (identifier, row['asset_id'], self.group, self.alice, row['run_id'], identifier, identifier, row['payload']))
+            self.store.db.execute('INSERT INTO shared_places VALUES(?,?,?,?,?,?)',
+                                  (identifier, 'NL', 'Amsterdam', 52, 4, None))
+        self.store.db.commit()
+        query = '/api/places?group=' + self.group
+        for suffix in ('', '&country=NO&city=missing'):
+            status, raw, content_type = self.request(query + suffix)
+            self.assertEqual((status, json.loads(raw)), (400, {'code': 'capacity_exceeded',
+                'error': 'Local map supports up to 20,000 location records within an 8 MiB response budget'}))
+            self.assertIn('application/json', content_type)
+        self.post('/api/places', dict(origin='synthetic-overflow-19999', latitude=None, longitude=None))
+        status, raw, _ = self.request(query)
+        points = json.loads(raw)['points']
+        self.assertEqual((status, len(points), len({point['origin'] for point in points})), (200, 20000, 20000))
+
+    def test_projection_contention_returns_retryable_json_and_recovers(self):
+        from mazi.sources.sources import SourceStore
+        self.import_locations(1)
+        other = SourceStore(self.temp.name)
+        self.addCleanup(other.close)
+        self.store.db.execute('PRAGMA busy_timeout=1')
+        paths = ('/api/places?group=', '/api/review/events?group=', '/api/review/duplicates?group=')
+        other.db.execute('BEGIN IMMEDIATE')
+        try:
+            for prefix in paths:
+                with self.subTest(path=prefix):
+                    status, raw, content_type = self.request(prefix + self.group)
+                    self.assertEqual((status, json.loads(raw)), (503, {'error': 'Archive is busy; retry shortly'}))
+                    self.assertIn('application/json', content_type)
+                    self.assertFalse(self.store.db.in_transaction)
+        finally:
+            other.db.rollback()
+        for prefix in paths:
+            with self.subTest(recovery=prefix):
+                self.assertEqual(self.request(prefix + self.group)[0], 200)
+
+    def test_projection_recognizes_extended_sqlite_locked_error(self):
+        from mazi.persistence import ArchiveBusy
+        failure = sqlite3.OperationalError('synthetic locked failure')
+        failure.sqlite_errorcode = sqlite3.SQLITE_LOCKED | (1 << 8)
+        with patch.object(self.store, 'transaction', side_effect=failure):
+            with self.assertRaises(ArchiveBusy):
+                self.store.places(self.alice, self.group)
+
+    def test_projection_translation_preserves_other_sqlite_errors(self):
+        failure = sqlite3.OperationalError('synthetic non-busy failure')
+        for operation in (self.store.places, self.store.event_suggestions, self.store.duplicate_suggestions):
+            with self.subTest(operation=operation.__name__), patch.object(self.store, 'transaction', side_effect=failure):
+                with self.assertRaises(sqlite3.OperationalError) as raised:
+                    operation(self.alice, self.group)
+                self.assertIs(raised.exception, failure)
 
     def test_busy_location_scan_returns_retryable_json_and_recovers_after_unlock(self):
         from mazi.sources.sources import SourceStore

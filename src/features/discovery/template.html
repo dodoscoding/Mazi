@@ -78,8 +78,8 @@
       </div>
       <p id="search-help" class="hint">
         Words &amp; filters can search more than 1,000 visible photographs,
-        within metadata-work limits. Related search supports up to 1,000 visible
-        photographs per circle, before filtering.
+        within metadata-work limits. Related search supports up to 10,000
+        visible photographs per circle, within metadata and processing limits.
       </p>
       <p id="search-recovery" class="hint" hidden>
         <span id="search-recovery-message"></span>
@@ -151,11 +151,13 @@
         <button id="stop-index" type="button" hidden>Stop indexing</button>
       </div>
       <p class="hint">
-        Local indexing supports up to 1,000 visible photographs per circle.
+        Local indexing supports up to 10,000 visible photographs per circle in
+        resumable batches.
       </p>
       <p id="index-progress" role="status"></p>
       <p id="index-recovery" class="hint" hidden>
-        Indexing is unavailable above 1,000 visible photographs.
+        Indexing stopped because the archive exceeds its photo, metadata or
+        processing budget. Completed batches remain available.
         <a href="#/memories">Browse photographs</a> or
         <a href="#/review">search the review timeline</a> instead.
       </p>

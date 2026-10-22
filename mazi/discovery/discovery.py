@@ -22,6 +22,8 @@ KEYWORD_ORIGIN_BYTES = 64 * 1024
 KEYWORD_ASSET_BYTES = 8 * 1024 * 1024
 KEYWORD_REQUEST_BYTES = 64 * 1024 * 1024
 KEYWORD_SCAN_SECONDS = 2
+DISCOVERY_SCAN_SECONDS = 15
+DISCOVERY_ITEMS = 10000
 EXPORT_PEOPLE_CITY_KEYS = 1000
 EXPORT_PEOPLE_CITY_ENTRIES = 4096
 EXPORT_PEOPLE_CITY_CHARACTERS = 262144
@@ -128,21 +130,7 @@ class DiscoveryStore(SourceStore):
         return clause + ' AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=o.asset_id)', (*params, user)
 
     def places(self, user, group, country='', city='', paths=False):
-        self._member(user, group)
-        if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
-            raise ValueError('Invalid filters')
-        clause, params = self._places_query(user, group)
-        rows = [dict(row) for row in self.db.execute('SELECT p.*,o.asset_id' + clause + ' ORDER BY p.day,p.origin LIMIT 1001', params)]
-        if len(rows) > 1000:
-            raise CapacityExceeded('Local map supports up to 1,000 shared location records')
-        visible = set(self._visible_ids(user, group))
-        points = [row for row in rows if row['asset_id'] in visible]
-        countries = sorted({p['country'] for p in points})
-        points = [p for p in points if not country or p['country'] == text(country).upper()]
-        cities = sorted({p['city'] for p in points})
-        points = [p for p in points if not city or p['city'].casefold() == text(city).casefold()]
-        dated = [p for p in points if p['day']]
-        return dict(points=points, countries=countries, cities=cities, paths=[[a['origin'], b['origin']] for a, b in zip(dated, dated[1:]) if a['day'] != b['day']] if paths else [])
+        return super().places(user, group, text(country).upper(), text(city), paths)
 
     def hide(self, user, asset, enabled):
         if type(enabled) is not bool:
@@ -404,6 +392,15 @@ class DiscoveryStore(SourceStore):
         sources = {r[0] for r in self.db.execute('SELECT DISTINCT r.source FROM import_runs r JOIN archive_origins o ON o.run_id=r.id JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))}
         return dict(id=asset, title=title, date=day, place=place or '', content=content, eligible=bool(eligible), fingerprint=fingerprint, sources=sources, cities=cities, countries={p['country'] for p in shared})
 
+    def _bounded_document(self, user, asset):
+        byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
+        row = self.db.execute(f'SELECT MAX({byte_length}) AS largest,SUM({byte_length}) AS total,COUNT(*) AS origins '
+                              'FROM archive_origins o JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+                              'WHERE o.asset_id=? AND o.withdrawn=0', (asset,)).fetchone()
+        if row['origins'] > 8192 or (row['largest'] or 0) > KEYWORD_ORIGIN_BYTES or (row['total'] or 0) > KEYWORD_ASSET_BYTES:
+            raise CapacityExceeded('Local discovery exceeded its per-photograph metadata budget')
+        return self._document(user, asset)
+
     def _cached_vectors(self, doc):
         rows = self.db.execute('SELECT * FROM discovery_vectors WHERE asset=? ORDER BY modality', (doc['id'],)).fetchall()
         expected = self.encoder.dimensions
@@ -446,10 +443,18 @@ class DiscoveryStore(SourceStore):
         self._member(user, group)
         if not self.encoder.ready:
             raise Conflict('Local model unavailable; words and filters remain available')
+        started = time.perf_counter()
         with self.transaction():
             ids = self._visible_ids(user, group)
-            if len(ids) > 1000:
-                raise CapacityExceeded('Local index limit is 1,000 items')
+            large = len(ids) > 1000
+            if len(ids) > DISCOVERY_ITEMS:
+                raise CapacityExceeded('Local index supports up to 10,000 visible photographs')
+            if large:
+                candidates = []
+                for doc in self._keyword_documents(user, group, '', started, processing=True):
+                    if len(candidates) < limit and doc['eligible'] and self._cached_vectors(doc) is None:
+                        candidates.append(doc['id'])
+                ids = candidates
         indexed, discarded = 0, 0
         attempted = 0
         for asset in ids:
@@ -458,7 +463,7 @@ class DiscoveryStore(SourceStore):
             with self.transaction():
                 if asset not in self._visible_ids(user, group):
                     continue
-                before = self._document(user, asset)
+                before = self._bounded_document(user, asset) if large else self._document(user, asset)
                 if not before['eligible'] or self._cached_vectors(before) is not None:
                     continue
                 generation = self._generation(group)
@@ -476,21 +481,27 @@ class DiscoveryStore(SourceStore):
                 if asset not in self._visible_ids(user, group):
                     discarded += 1
                     continue
-                after = self._document(user, asset)
+                after = self._bounded_document(user, asset) if large else self._document(user, asset)
                 if not after['eligible'] or generation != self._generation(group) or after['fingerprint'] != before['fingerprint']:
                     discarded += 1
                     continue
                 self._save_vectors(group, after, vectors, elapsed)
                 indexed += 1
         with self.transaction():
-            docs = [self._document(user, asset) for asset in self._visible_ids(user, group)]
-            remaining = sum(doc['eligible'] and self._cached_vectors(doc) is None for doc in docs)
+            visible = self._visible_ids(user, group)
+            if large and len(visible) > DISCOVERY_ITEMS:
+                raise CapacityExceeded('Local index supports up to 10,000 visible photographs')
+            documents = (self._keyword_documents(user, group, '', time.perf_counter(), processing=True) if large
+                         else (self._document(user, asset) for asset in visible))
+            remaining = sum(doc['eligible'] and self._cached_vectors(doc) is None for doc in documents)
         return dict(indexed=indexed, discarded=discarded, remaining=remaining)
 
-    def _keyword_documents(self, user, group, person, started):
+    def _keyword_documents(self, user, group, person, started, processing=False):
         last_asset = last_origin = ''
         asset, records, shared, sources, annotation = None, [], [], set(), None
-        asset_bytes = request_bytes = 0
+        asset_bytes = request_bytes = asset_origins = request_origins = 0
+        fingerprints, eligible = [], True
+        scan_seconds = DISCOVERY_SCAN_SECONDS if processing else KEYWORD_SCAN_SECONDS
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
         person_match = '''EXISTS (
             SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person
@@ -513,16 +524,24 @@ class DiscoveryStore(SourceStore):
             title = annotation['title'] or ''
             content = ' '.join([title, *cities, *[str(p.get('original_filename') or '') for p in records],
                                 *[str(c.get('text') or '') for p in records for c in p.get('context', [])]])
-            return dict(id=asset, title=title, date=day, place=place, content=content,
-                        sources=sources, cities=cities, countries={country for country, _ in shared},
-                        person_match=annotation['person_match'])
+            result = dict(id=asset, title=title, date=day, place=place, content=content,
+                          sources=sources, cities=cities, countries={country for country, _ in shared},
+                          person_match=annotation['person_match'])
+            if processing:
+                fingerprint = hashlib.sha256(json.dumps([self.encoder.version, content, fingerprints], ensure_ascii=False).encode()).hexdigest()
+                result.update(eligible=eligible, fingerprint=fingerprint)
+            return result
 
         while True:
-            if time.perf_counter() - started > KEYWORD_SCAN_SECONDS:
+            if time.perf_counter() - started > scan_seconds:
                 raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
             batch = self.db.execute(f'''SELECT a.id,o.id AS origin,{byte_length} AS payload_bytes,
                     CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END AS payload,
-                    r.source,n.title,n.capture_date,n.place,p.country,p.city,{person_match} AS person_match
+                    r.source,n.title,n.capture_date,n.place,p.country,p.city,{person_match} AS person_match,
+                    (EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject='*' AND d.enabled<>0)
+                    AND EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject=o.owner_id AND d.enabled<>0)
+                    AND (n.asset_id IS NULL OR (EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject=n.actor_id AND d.enabled<>0)
+                        AND EXISTS (SELECT 1 FROM members actor WHERE actor.group_id=a.group_id AND actor.user_id=n.actor_id)))) AS eligible
                 FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id
                 JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id
                 JOIN import_runs r ON r.id=o.run_id
@@ -540,9 +559,14 @@ class DiscoveryStore(SourceStore):
                 if asset is not None and asset != row['id']:
                     yield document()
                     records, shared, sources, asset_bytes = [], [], set(), 0
+                    fingerprints, eligible, asset_origins = [], True, 0
                 asset, annotation = row['id'], row
                 if row['payload_bytes'] > KEYWORD_ORIGIN_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 KiB per-origin limit')
+                asset_origins += 1
+                request_origins += 1
+                if asset_origins > 8192 or request_origins > 100000:
+                    raise CapacityExceeded('Local discovery exceeded its metadata origin-count budget')
                 asset_bytes += row['payload_bytes']
                 request_bytes += row['payload_bytes']
                 if asset_bytes > KEYWORD_ASSET_BYTES:
@@ -550,6 +574,9 @@ class DiscoveryStore(SourceStore):
                 if request_bytes > KEYWORD_REQUEST_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
                 records.append(json.loads(row['payload']))
+                if processing:
+                    fingerprints.append((row['origin'], row['payload']))
+                    eligible = eligible and bool(row['eligible'])
                 if row['country'] is not None:
                     shared.append((row['country'], row['city']))
                 sources.add(row['source'])
@@ -557,7 +584,7 @@ class DiscoveryStore(SourceStore):
             del batch
         if asset is not None:
             yield document()
-        if time.perf_counter() - started > KEYWORD_SCAN_SECONDS:
+        if time.perf_counter() - started > scan_seconds:
             raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
 
     def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30):
@@ -600,6 +627,11 @@ class DiscoveryStore(SourceStore):
                 items.append(dict(id=doc['id'], title=doc['title'], date=doc['date'], place=doc['place'],
                                   score=1.0, basis='keyword / filters', people=[]))
             total += 1
+        self._hydrate_people(user, group, items)
+        return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
+                    mode='keyword / filters', model=None, unindexed=0, message=self.encoder.message)
+
+    def _hydrate_people(self, user, group, items):
         page = {item['id']: item for item in items}
         if page:
             for row in self.db.execute('''SELECT t.asset,p.id,p.name,p.account,p.creator,t.actor
@@ -612,9 +644,6 @@ class DiscoveryStore(SourceStore):
                     ORDER BY p.name,p.id''' % ','.join('?' for _ in page), (group, *page)):
                 page[row['asset']]['people'].append(dict(id=row['id'], name=row['name'], is_me=row['account'] == user,
                                                        can_remove=row['actor'] == user or row['creator'] == user))
-        return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
-                    mode='keyword / filters', model=None, unindexed=0, message=self.encoder.message)
-
     def search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30):
         for value in (query, person, place, country, object_query, start, end, source, similar):
             text(value)
@@ -637,9 +666,11 @@ class DiscoveryStore(SourceStore):
                     return self._keyword_search(user, group, query, person, place, country, object_query,
                                                 start, end, source, similar, offset, limit)
             visible = self._visible_ids(user, group)
-            if len(visible) > 1000:
-                raise CapacityExceeded('Local search limit is 1,000 items')
-            people = self.people(user, group)
+            large = len(visible) > 1000
+            if len(visible) > DISCOVERY_ITEMS:
+                raise CapacityExceeded('Local related search supports up to 10,000 visible photographs')
+            started = time.perf_counter()
+            people = [] if large else self.people(user, group)
             person_assets = next((set(p['assets']) for p in people if p['id'] == person), set())
             semantic = mode == 'semantic' and self._enabled(group, '*') and self.encoder.ready
             try:
@@ -653,11 +684,11 @@ class DiscoveryStore(SourceStore):
             if similar and not semantic:
                 similar = ''
             elif similar:
-                doc = self._document(user, similar)
+                doc = self._bounded_document(user, similar) if large else self._document(user, similar)
                 if not doc['eligible']:
                     similar = ''
                 else:
-                    cached = self._vectors(user, group, doc)
+                    cached = self._cached_vectors(doc) if large else self._vectors(user, group, doc)
                     if cached is None:
                         raise Conflict('Build the local search index before using this reference image')
                     reference = cached['visual']
@@ -667,11 +698,15 @@ class DiscoveryStore(SourceStore):
                 if row[0] not in allowed:
                     self.db.execute('DELETE FROM discovery_vectors WHERE asset=?', (row[0],))
             result = []
-            for asset in visible:
-                doc = self._document(user, asset)
+            documents = (self._keyword_documents(user, group, person, started, processing=True) if large
+                         else (self._document(user, asset) for asset in visible))
+            for doc in documents:
+                asset = doc['id']
+                if large and time.perf_counter() - started > DISCOVERY_SCAN_SECONDS:
+                    raise CapacityExceeded('Local related search exceeded its 15 second processing budget')
                 if not doc['eligible']:
                     self.db.execute('DELETE FROM discovery_vectors WHERE asset=?', (asset,))
-                if person and asset not in person_assets or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
+                if person and (not doc['person_match'] if large else asset not in person_assets) or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
                     continue
                 if country and country.upper() not in doc['countries']:
                     continue
@@ -680,7 +715,7 @@ class DiscoveryStore(SourceStore):
                 if object_query and not model.terms(object_query) <= model.terms(doc['content']):
                     continue  # Explicit text concepts, never inferred objects/faces.
                 score, basis = 1.0, 'keyword / filters'
-                vectors = self._vectors(user, group, doc) if semantic and doc['eligible'] else None
+                vectors = (self._cached_vectors(doc) if large else self._vectors(user, group, doc)) if semantic and doc['eligible'] else None
                 if semantic and doc['eligible'] and vectors is None:
                     unindexed += 1
                 if vectors is not None:
@@ -697,9 +732,12 @@ class DiscoveryStore(SourceStore):
                 if score <= 0:
                     continue
                 result.append(dict(id=asset, title=doc['title'], date=doc['date'], place=doc['place'], score=round(score, 5), basis=basis,
-                                   people=[dict(id=p['id'], name=p['name'], is_me=p['is_me'], can_remove=bool(self.db.execute('SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person WHERE t.person=? AND t.asset=? AND (t.actor=? OR p.creator=?)', (p['id'], asset, user, user)).fetchone())) for p in people if asset in p['assets']]))
+                                   people=[] if large else [dict(id=p['id'], name=p['name'], is_me=p['is_me'], can_remove=bool(self.db.execute('SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person WHERE t.person=? AND t.asset=? AND (t.actor=? OR p.creator=?)', (p['id'], asset, user, user)).fetchone())) for p in people if asset in p['assets']]))
             result.sort(key=lambda r: (-r['score'], r['id']))
-            return dict(items=result[offset:offset + limit], total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
+            page = result[offset:offset + limit]
+            if large:
+                self._hydrate_people(user, group, page)
+            return dict(items=page, total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
     def _export_personal(self, user, group, kind):

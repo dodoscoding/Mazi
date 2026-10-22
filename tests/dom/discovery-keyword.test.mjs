@@ -98,7 +98,7 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     requests.map((request) => request.mode),
     ["keyword", "semantic"],
   );
-  assert.match($("#search-recovery").textContent, /1,000 visible photographs/);
+  assert.match($("#search-recovery").textContent, /10,000 visible photographs/);
   assert.match($("#search-recovery").textContent, /No partial results/);
   const retry = [...root.querySelectorAll("#search-recovery button")].find(
     (button) => button.textContent.trim() === "Use Words & filters",
@@ -256,7 +256,7 @@ for (const mode of ["semantic", "keyword"]) {
     assert.match(
       $("#search-recovery-message").textContent,
       mode === "semantic"
-        ? /1,000 visible photographs/
+        ? /10,000 visible photographs/
         : /metadata-work budget/,
     );
     assert.equal($("#use-keyword").hidden, mode !== "semantic");

@@ -274,8 +274,8 @@ test("review capacity keeps timeline and reviewed decisions available with hones
   );
   assert.equal($("#reviewed-events h3").textContent, "Reviewed picnic");
   assert.match($("#reviewed-pairs").textContent, /Kept separate/);
-  assert.match($("#duplicates").textContent, /1,000/);
-  assert.match($("#events").textContent, /1,000/);
+  assert.match($("#duplicates").textContent, /10,000/);
+  assert.match($("#events").textContent, /10,000/);
   assert.match($("#review-sub").textContent, /suggestions unavailable/);
   assert.doesNotMatch($("#duplicates").textContent, /No unreviewed/);
   assert.doesNotMatch($("#events").textContent, /No unreviewed/);

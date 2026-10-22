@@ -61,13 +61,12 @@ class PlacesFixture(unittest.TestCase):
 
 
 class SourcePlacesExportTests(PlacesFixture):
-    def test_map_keeps_complete_limit_and_typed_failure_before_filters(self):
+    def test_map_keeps_complete_locations_above_old_boundary(self):
         origins = self.import_locations(1000)
         self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1000)
         self.import_locations(1, prefix='extra')
         for filters in ({}, {'country': 'NL', 'city': 'Amsterdam'}):
-            with self.assertRaisesRegex(CapacityExceeded, '1,000 shared location records'):
-                self.store.places(self.alice, self.group, **filters)
+            self.assertEqual(len(self.store.places(self.alice, self.group, **filters)['points']), 1001)
         self.store.set_place(self.alice, origins[0]['id'], '', '', None, None, None)
         self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1000)
 
@@ -85,8 +84,7 @@ class SourcePlacesExportTests(PlacesFixture):
             self.assertEqual([(p['day'] or '', p['origin']) for p in places],
                              sorted((p['day'] or '', p['origin']) for p in places))
         self.assertEqual(self.store.owned_origins(self.alice, self.group), before)
-        with self.assertRaises(CapacityExceeded):
-            self.store.places(self.alice, self.group)
+        self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1001)
 
 
 class PlacesProjectionTests(PlacesFixture):
@@ -375,8 +373,7 @@ class MemoryPlacesExportTests(SourcePlacesPrivacyTests):
         self.assertEqual(self.store.places(self.ben, self.group)['points'], [])
         with self.exported() as archive:
             self.assertEqual(len(json.loads(archive.read('places.json'))), 1001)
-        with self.assertRaises(CapacityExceeded):
-            self.store.places(self.alice, self.group)
+        self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1001)
         self.store.hide(self.ben, asset, False)
         with self.exported(self.ben) as archive:
             self.assertEqual(len(json.loads(archive.read('places.json'))), 1001)
@@ -553,8 +550,7 @@ class PlacesScaleTests(PlacesFixture):
         samples['location_scan_seconds'] = finished[0] - started[0]
         samples['final_validation_seconds'] = finished[1] - started[1]
         print('Location export synthetic profile: ' + json.dumps(samples, sort_keys=True))
-        with self.assertRaises(CapacityExceeded):
-            self.store.places(self.alice, self.group)
+        self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 10000)
 
 
 class ArchiveWrapperBudgetTests(PlacesFixture):

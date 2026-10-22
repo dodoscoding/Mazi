@@ -242,7 +242,7 @@ export function mount(root, lifecycle) {
       );
       $("#search-recovery-message").textContent =
         mode === "semantic"
-          ? "Related search supports up to 1,000 visible photographs per circle, before filtering. Try Words & filters for larger circles."
+          ? "Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search."
           : "Complete results are unavailable because this search exceeded its metadata-work budget.";
       $("#use-keyword").hidden = mode !== "semantic";
       throw error;

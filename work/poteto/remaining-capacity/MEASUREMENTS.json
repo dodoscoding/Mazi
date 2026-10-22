@@ -1,0 +1,42 @@
+{
+  "fixture": "10000 seeded authorized metadata records sharing one real 8px JPEG preview; not an import benchmark",
+  "operations": {
+    "related": {
+      "seconds": 0.5284,
+      "traced_peak_bytes": 7384997,
+      "result": {
+        "total": 10000
+      }
+    },
+    "index": {
+      "seconds": 0.8737,
+      "traced_peak_bytes": 890161,
+      "result": {
+        "indexed": 5,
+        "discarded": 0,
+        "remaining": 9995
+      }
+    },
+    "events": {
+      "seconds": 0.1609,
+      "traced_peak_bytes": 8155669,
+      "result": {
+        "rows": 1
+      }
+    },
+    "duplicates": {
+      "seconds": 2.3917,
+      "traced_peak_bytes": 4620553,
+      "result": {
+        "rows": 100
+      }
+    },
+    "places": {
+      "seconds": 0.4996,
+      "traced_peak_bytes": 6183906,
+      "result": {
+        "rows": 10000
+      }
+    }
+  }
+}
