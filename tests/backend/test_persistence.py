@@ -17,10 +17,9 @@ class TransactionContracts(unittest.TestCase):
     def connection(self):
         from mazi.persistence import PostgresConnection
         from unittest.mock import Mock
-        connection = PostgresConnection.__new__(PostgresConnection)
+        connection = PostgresConnection('synthetic')
         connection._db = Mock()
-        connection._active = False
-        connection._lock_key = 12345
+        connection._db.execute.return_value.fetchone.return_value = (1,)
         return connection
 
     def test_context_keeps_connection_open_and_rolls_back(self):
@@ -51,6 +50,7 @@ class TransactionContracts(unittest.TestCase):
         db = self.connection()
         def execute(query, *args):
             if query.startswith('SELECT pg_advisory'): raise TimeoutError()
+            return db._db.execute.return_value
         db._db.execute.side_effect = execute
         with self.assertRaises(TimeoutError): db._begin()
         self.assertFalse(db._active)
@@ -122,3 +122,80 @@ class LazyConnectionContracts(unittest.TestCase):
         self.assertEqual(connect.call_count, 2)
         self.assertIsNone(connect.call_args.kwargs['prepare_threshold'])
         second.close.assert_called_once_with()
+
+    def test_each_transaction_configures_schema_and_standalone_writes_commit(self):
+        from unittest.mock import Mock, patch
+        from mazi.persistence import PostgresConnection
+        native = Mock()
+        native.execute.return_value.fetchone.return_value = (1,)
+        with patch('psycopg.connect', return_value=native):
+            db = PostgresConnection('synthetic', 'archive_test')
+            db.execute('INSERT INTO example VALUES(?)', ('value',))
+            db.execute('SELECT * FROM example')
+            with db:
+                db.execute('BEGIN IMMEDIATE')
+                db.execute('UPDATE example SET value=?', ('changed',))
+            statements = [entry.args[0] for entry in native.execute.call_args_list]
+            setup = [query for query in statements if query.startswith('BEGIN;')]
+            self.assertEqual(len(setup), 3)
+            for query in setup:
+                self.assertIn('SET LOCAL search_path TO "archive_test", pg_catalog', query)
+                self.assertIn("SET LOCAL lock_timeout TO '5s'", query)
+            self.assertEqual(statements.count('COMMIT'), 3)
+            self.assertEqual(sum(query.startswith('SELECT pg_advisory') for query in statements), 1)
+            native.close.assert_not_called()
+            db.disconnect()
+
+    def test_settings_failure_closes_and_reopens_without_replaying_sql(self):
+        import psycopg
+        from unittest.mock import Mock, patch
+        from mazi.persistence import ArchiveUnavailable, PostgresConnection
+        failed, healthy = Mock(), Mock()
+        failed.execute.side_effect = psycopg.OperationalError('private host and credentials')
+        healthy.execute.return_value.fetchone.return_value = (1,)
+        with patch('psycopg.connect', side_effect=[failed, healthy]):
+            db = PostgresConnection('synthetic')
+            with self.assertRaisesRegex(ArchiveUnavailable, '^Hosted database unavailable; retry shortly$'):
+                db.execute('INSERT INTO example VALUES(1)')
+            failed.close.assert_called_once_with()
+            self.assertIsNone(db._db)
+            db.execute('SELECT 1')
+            self.assertEqual(failed.execute.call_count, 1)
+            db.disconnect()
+
+    def test_schema_mismatch_remains_distinct_and_closes_the_client(self):
+        from unittest.mock import Mock, patch
+        from mazi.persistence import ArchiveSchemaMismatch, PostgresConnection
+        native = Mock()
+        native.execute.return_value.fetchone.return_value = (999,)
+        with patch('psycopg.connect', return_value=native):
+            db = PostgresConnection('synthetic')
+            with self.assertRaises(ArchiveSchemaMismatch):
+                db.execute('SELECT 1')
+            self.assertIsNone(db._db)
+        native.close.assert_called_once_with()
+
+    def test_disconnect_releases_an_unfinished_transaction(self):
+        from unittest.mock import Mock, patch
+        from mazi.persistence import PostgresConnection
+        native = Mock()
+        native.execute.return_value.fetchone.return_value = (1,)
+        with patch('psycopg.connect', return_value=native):
+            db = PostgresConnection('synthetic')
+            db.execute('BEGIN IMMEDIATE')
+            db.disconnect()
+            self.assertFalse(db._active)
+            self.assertIsNone(db._db)
+        native.close.assert_called_once_with()
+
+    def test_failed_cleanup_preserves_the_setting_error(self):
+        from unittest.mock import Mock, patch
+        from mazi.persistence import PostgresConnection
+        native = Mock()
+        native.execute.side_effect = ValueError('setting failed')
+        native.close.side_effect = OSError('close failed')
+        with patch('psycopg.connect', return_value=native):
+            db = PostgresConnection('synthetic')
+            with self.assertRaisesRegex(ValueError, '^setting failed$'):
+                db.execute('SELECT 1')
+            self.assertIsNone(db._db)

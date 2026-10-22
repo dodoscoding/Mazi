@@ -14,6 +14,7 @@ from wsgiref.util import is_hop_by_hop
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mazi.memories.memories import MemoryStore  # noqa: E402
+from mazi.persistence import ArchiveUnavailable
 from mazi.server import handler_for  # noqa: E402
 from mazi.sources.server import Worker, drain  # noqa: E402
 
@@ -30,7 +31,16 @@ def _root():
     return Path(os.environ.get('MAZI_IMPORT_DATA_DIR', '/tmp/mazi'))
 
 
+def _disconnect(store):
+    if store is not None and getattr(store.db, 'hosted', False):
+        try:
+            store.db.disconnect()
+        except Exception:
+            print('Hosted database cleanup failed', file=sys.stderr)
+
+
 def _drain():
+    _disconnect(getattr(_state.get('handler'), '_mazi_store', None))
     # Work on a second connection and let this instance's other requests proceed meanwhile.
     _request_lock.release()
     try:
@@ -40,24 +50,30 @@ def _drain():
         try:
             if 'work' not in _state:
                 _state['work'] = Worker(MemoryStore(_root()))
+            work = _state['work']
             try:
-                return drain(_state['work'], DRAIN_SECONDS)
+                return drain(work, DRAIN_SECONDS)
             except Exception as error:
                 _forget('work', error)
                 raise
+            finally:
+                _disconnect(work.store)
         finally:
             _drain_lock.release()
     finally:
         _request_lock.acquire()
 
 
-def _forget(key, error):
+def _forget(key, error, expected=None):
     # A thawed instance may hold a dropped database connection; reconnect on the next request.
+    if expected is not None and _state.get(key) is not expected:
+        return
     if not isinstance(error, (OSError, NotImplementedError)):
         evicted = _state.pop(key, None)
-        if key == 'work' and evicted is not None:
+        if evicted is not None:
+            store = evicted.store if key == 'work' else evicted._mazi_store
             try:
-                evicted.store.close()
+                store.close()
             except Exception:
                 # The failed connection may also reject close; keep the triggering error.
                 pass
@@ -65,7 +81,14 @@ def _forget(key, error):
 
 def _handler():
     if 'handler' not in _state:
-        _state['handler'] = handler_for(MemoryStore(_root()), drain=_drain)
+        store = MemoryStore(_root())
+        try:
+            handler = handler_for(store, drain=_drain)
+        except BaseException:
+            store.close()
+            raise
+        handler._mazi_store = store
+        _state['handler'] = handler
     return _state['handler']
 
 
@@ -152,9 +175,11 @@ def _respond(sink, errors, start_response):
                 yield chunk
         if head is not None:
             unsupported = bool(errors) and isinstance(errors[0], NotImplementedError)
-            if errors and not unsupported:
+            unavailable = bool(errors) and isinstance(errors[0], ArchiveUnavailable)
+            if errors and not unsupported and not unavailable:
                 traceback.print_exception(errors[0])
-            status = '501 Not Implemented' if unsupported else '500 Internal Server Error'
+            status = ('503 Service Unavailable' if unavailable else
+                      '501 Not Implemented' if unsupported else '500 Internal Server Error')
             body = json.dumps({'error': status[4:]}).encode()
             start_response(status, [('Content-Type', 'application/json'), ('Content-Length', str(len(body))),
                                     ('Cache-Control', 'no-store')])
@@ -176,10 +201,17 @@ def make_app(get_handler):
         def run():
             try:
                 with _request_lock:
-                    _serve(get_handler(), environ, body, sink)
+                    handler = None
+                    try:
+                        handler = get_handler()
+                        _serve(handler, environ, body, sink)
+                    except BaseException as error:
+                        errors.append(error)
+                        _forget('handler', error, expected=handler)
+                    finally:
+                        _disconnect(getattr(handler, '_mazi_store', None))
             except BaseException as error:
                 errors.append(error)
-                _forget('handler', error)
             finally:
                 try:
                     sink.put(_DONE)

@@ -69,6 +69,8 @@ class VercelBridgeTests(unittest.TestCase):
     def tearDownClass(cls):
         if 'work' in index._state:
             index._state['work'].store.close()
+        if 'handler' in index._state:
+            index._state['handler']._mazi_store.close()
         index._state.clear()
         cls.store.close()
         cls.env.stop()
@@ -299,3 +301,75 @@ class ConnectionLeaseTests(unittest.TestCase):
         with patch.object(index, '_state', {'handler': handler}):
             index._forget('handler', RuntimeError('failure'))
         handler._mazi_store.close.assert_called_once_with()
+
+    def test_unavailable_is_sanitized_503_without_authentication_loss(self):
+        from mazi.persistence import ArchiveUnavailable
+
+        class Unavailable(BaseHTTPRequestHandler):
+            def do_GET(self):
+                raise ArchiveUnavailable('private database details')
+
+        with contextlib.redirect_stderr(io.StringIO()) as logged:
+            status, headers, chunks = call(index.make_app(lambda: Unavailable), 'GET', '/api/session')
+        self.assertEqual(status, 503)
+        self.assertEqual(json.loads(b''.join(chunks)), {'error': 'Service Unavailable'})
+        self.assertIn(('Cache-Control', 'no-store'), headers)
+        self.assertFalse(any(name.lower() == 'set-cookie' for name, _ in headers))
+        self.assertEqual(logged.getvalue(), '')
+
+    def test_drain_disconnects_its_store_before_releasing_worker_lock(self):
+        from types import SimpleNamespace
+        for failure in (None, RuntimeError('work failed')):
+            with self.subTest(failure=failure):
+                store = Mock()
+                store.db.hosted = True
+                work = SimpleNamespace(store=store)
+                handler_store = Mock()
+                handler_store.db.hosted = True
+                state = {'work': work, 'handler': SimpleNamespace(_mazi_store=handler_store)}
+
+                def disconnect():
+                    self.assertTrue(index._drain_lock.locked())
+
+                store.db.disconnect.side_effect = disconnect
+                with patch.object(index, '_state', state), patch.object(index, 'drain') as draining:
+                    draining.side_effect = failure
+                    with index._request_lock:
+                        if failure:
+                            with self.assertRaisesRegex(RuntimeError, 'work failed'):
+                                index._drain()
+                        else:
+                            index._drain()
+                        self.assertTrue(index._request_lock.locked())
+                store.db.disconnect.assert_called_once_with()
+                handler_store.db.disconnect.assert_called_once_with()
+
+    def test_old_request_cannot_evict_a_new_handler_after_a_drain(self):
+        old, current = Mock(), Mock()
+        with patch.object(index, '_state', {'handler': current}):
+            index._forget('handler', RuntimeError('old request'), expected=old)
+            self.assertIs(index._state['handler'], current)
+        current._mazi_store.close.assert_not_called()
+
+    def test_abandoned_stream_disconnects_its_store(self):
+        store = Mock()
+        store.db.hosted = True
+        disconnected = threading.Event()
+        store.db.disconnect.side_effect = disconnected.set
+
+        class Large(BaseHTTPRequestHandler):
+            _mazi_store = store
+
+            def log_message(self, *args):
+                pass
+
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.end_headers()
+                self.wfile.write(b'a' * (5 * 1024 * 1024))
+
+        _, result = start(index.make_app(lambda: Large), 'GET', '/large')
+        next(result)
+        result.close()
+        self.assertTrue(disconnected.wait(3))
