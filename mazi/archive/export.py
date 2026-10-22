@@ -3,11 +3,44 @@ import hashlib
 import json
 import os
 import sys
+from tempfile import TemporaryFile
+from itertools import chain
 from contextlib import contextmanager, nullcontext
 
 from mazi.identity.core import Conflict
 
 EXPORT_COPY_BYTES = 256 * 1024
+
+
+class ExportArray(list):
+    """One-pass JSON array, consumed by JSONEncoder without retaining records."""
+    def __init__(self, records):
+        self.records = iter(records)
+        self.first = None
+        self.started = False
+        self.empty = False
+        self.iterated = False
+
+    def __bool__(self):
+        if not self.started:
+            self.started = True
+            try:
+                self.first = next(self.records)
+            except StopIteration:
+                self.empty = True
+        return not self.empty
+
+    def __iter__(self):
+        if self.iterated:
+            raise RuntimeError('Export arrays can only be serialized once')
+        self.iterated = True
+        return chain((self.first,), self.records) if self else iter(())
+
+
+def export_chunks(source):
+    source.seek(0)
+    while chunk := source.read(EXPORT_COPY_BYTES):
+        yield chunk
 
 
 @contextmanager
@@ -105,8 +138,17 @@ class ExportFingerprint:
         self._chunk(b'')
 
     def json_member(self, name, value, archive=None, **options):
-        chunks = (chunk.encode('utf-8') for chunk in json.JSONEncoder(**options).iterencode(value))
-        self.member(name, chunks, archive)
+        with export_cleanup(TemporaryFile(mode='w+b')) as source:
+            size = 0
+            for chunk in json.JSONEncoder(**options).iterencode(value):
+                encoded = chunk.encode('utf-8')
+                size += len(encoded)
+                self._check_size(self._public_bytes + size)
+                for start in range(0, len(encoded), EXPORT_COPY_BYTES):
+                    part = memoryview(encoded)[start:start + EXPORT_COPY_BYTES]
+                    if source.write(part) != len(part):
+                        raise OSError('Incomplete metadata spool write')
+            self.member(name, export_chunks(source), archive)
 
     def member(self, name, chunks, archive=None, check_write=None):
         self._start('member:' + name)
