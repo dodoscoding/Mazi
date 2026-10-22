@@ -11,7 +11,9 @@ test("import workspace exposes source and file controls in both themes", async (
   expect(response.ok()).toBe(true);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/imports");
-  await expect(page.getByRole("heading", { name: "My Imports" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "My Imports", level: 1 }),
+  ).toBeVisible();
   await expect(page.getByRole("list", { name: "Import steps" })).toBeVisible();
   await page.getByRole("button", { name: "Choose Photos in a ZIP" }).click();
   await expect(page.locator('#upload select[name="source"]')).toHaveValue(
@@ -199,4 +201,116 @@ test("workspace failure exposes keyboard retry and restores visible focus", asyn
   await expect(error).toBeHidden();
   await expect(page.locator("#page-title")).toBeFocused();
   await expect(page.getByLabel("Export ZIP")).toBeVisible();
+});
+
+test("working pages fit narrow and zoomed viewports in both themes", async ({
+  page,
+}, info) => {
+  test.setTimeout(180000);
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/imports");
+  const screens = [
+    ["imports", "#upload"],
+    ["memories", ".mem-moment"],
+    ["review", "#timeline article"],
+    ["places", "#origin-counts"],
+    ["ask", "#private:not([hidden])"],
+    ["discover", ".disc-search"],
+    ["circle", "#members li"],
+  ];
+  const widths = info.project.name === "phone" ? [320, 390] : [720, 1440];
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["night", "day"]) {
+      await page.evaluate(
+        (value) => localStorage.setItem("mazi.theme", value),
+        theme,
+      );
+      for (const [route, ready] of screens) {
+        await page.goto(`/#/${route}`);
+        await page.reload();
+        await expect(page.locator(ready).first()).toBeVisible();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(
+          await page.evaluate(() => ({
+            width: innerWidth,
+            scroll: document.documentElement.scrollWidth,
+          })),
+          `${route} ${width} ${theme}`,
+        ).toEqual({ width, scroll: width });
+        await page.evaluate(async () => {
+          await Promise.all(
+            document
+              .getAnimations()
+              .filter(
+                (animation) =>
+                  animation.effect?.getComputedTiming().iterations !== Infinity,
+              )
+              .map((animation) => animation.finished.catch(() => {})),
+          );
+        });
+        const result = await new AxeBuilder({ page }).analyze();
+        expect(
+          result.violations.map(({ id, nodes }) => ({
+            id,
+            nodes: nodes.map(({ target, failureSummary }) => ({
+              target,
+              failureSummary,
+            })),
+          })),
+          `${route} ${width} ${theme}`,
+        ).toEqual([]);
+        await page.screenshot({
+          path: info.outputPath(`${route}-${width}-${theme}.png`),
+          fullPage: true,
+        });
+      }
+    }
+  }
+});
+
+test("phone memories preserves view and order with reachable touch controls", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "Phone browsing contract");
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/#/memories");
+    await page.reload();
+    const all = page.getByRole("button", { name: "All photos", exact: true });
+    const moment = page.getByRole("button", { name: "By moment", exact: true });
+    const order = page.getByRole("button", { name: "Order: Newest first" });
+    for (const control of [all, moment, order]) {
+      await expect(control).toBeVisible();
+      const box = await control.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+      expect(box?.width).toBeGreaterThanOrEqual(44);
+    }
+    await all.tap();
+    await expect(all).toHaveAttribute("aria-pressed", "true");
+    await expect(moment).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator(".mem-moment")).toHaveCount(0);
+    await order.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#grid-order")).toBeFocused();
+    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+    await moment.tap();
+    await expect(moment).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".mem-moment").first()).toBeVisible();
+    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+  }
 });
