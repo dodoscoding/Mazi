@@ -2,7 +2,6 @@ import { initials } from "./ui/initials";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { SoundToggle } from "./sound/SoundToggle";
-import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
 import { Icon } from "./ui/icons";
 import type { IconName } from "./ui/icons";
@@ -27,33 +26,6 @@ const tabs: [string, string, IconName][] = [
   ["/search", "Search", "search"],
   ["/imports", "Imports", "imports"],
 ];
-
-function ThemeToggle({ compact = false }: { compact?: boolean }) {
-  const { theme, toggle } = useTheme();
-  const next = theme === "night" ? "day" : "night";
-  const label = `Switch to ${next}`;
-  const icon = next === "day" ? "sun" : "moon";
-  if (!compact)
-    return (
-      <IconButton
-        icon={icon}
-        label={label}
-        className="hud-button"
-        onClick={toggle}
-      />
-    );
-  return (
-    <button
-      type="button"
-      className="button button--secondary theme-pill"
-      aria-label={label}
-      onClick={toggle}
-    >
-      <Icon name={icon} size={14} />
-      {next === "day" ? "Day" : "Night"}
-    </button>
-  );
-}
 
 export function Shell({
   path,
@@ -224,7 +196,6 @@ export function Shell({
                 Leave sample Atlas
               </a>
             )}
-            <ThemeToggle />
             <SoundToggle className="hud-button" />
             <span
               className="avatar"
@@ -281,7 +252,6 @@ export function Shell({
           <div className="sheet-header">
             <h2 className="sheet-title">More</h2>
             <div className="sheet-controls">
-              <ThemeToggle compact />
               <SoundToggle
                 variant="pill"
                 className="button button--secondary theme-pill"
