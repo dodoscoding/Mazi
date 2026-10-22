@@ -1,5 +1,11 @@
 import { useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
+import {
+  provenanceOf,
+  shareDate,
+  sourceSenders,
+  sourceSharedLine,
+} from "./memory/provenance";
 import type { Memory } from "./memories";
 import {
   chronology,
@@ -62,7 +68,10 @@ export function MemoryView({
   const shared = memory.people?.shared || [];
   const meta = [
     date,
-    shared.length ? `Shared by ${shared.join(", ")}` : "",
+    sourceSharedLine(memory) ||
+      (shared.length
+        ? `${provenanceOf(memory).length ? "Added to archive" : "Shared"} by ${shared.join(", ")}`
+        : ""),
     memory.source ? "" : "Sample Atlas",
   ]
     .filter(Boolean)
@@ -268,6 +277,23 @@ export function MemoryView({
                     )}
                   </li>
                 ))}
+                {provenanceOf(memory).map((item, index) => (
+                  <li key={`sharing-${index}`}>
+                    <span className="source-icon">
+                      <Glyph name="chat" size={15} />
+                    </span>
+                    <span className="source-text">
+                      <b>
+                        {item.sender
+                          ? `Shared by ${item.sender}`
+                          : "Source share"}
+                      </b>
+                      <span>
+                        {shareDate(item) || "Share date not recorded"}
+                      </span>
+                    </span>
+                  </li>
+                ))}
               </ul>
             </section>
           </aside>
@@ -327,6 +353,8 @@ function Conversation({ memory }: { memory: Memory }) {
 
 function People({ memory }: { memory: Memory }) {
   const { shared = [], conversation = [] } = memory.people || {};
+  const senders = sourceSenders(memory);
+  const hasProvenance = provenanceOf(memory).length > 0;
   const chips = (names: string[]) => (
     <ul className="people-chips">
       {names.map((name) => (
@@ -344,13 +372,21 @@ function People({ memory }: { memory: Memory }) {
       <h2 id="fact-people" className="hud-label">
         People in the evidence
       </h2>
-      {shared.length === 0 && conversation.length === 0 ? (
+      {shared.length === 0 &&
+      conversation.length === 0 &&
+      senders.length === 0 ? (
         <p className="fact-detail">No one is named in the sources.</p>
       ) : (
         <dl className="people">
-          {shared.length > 0 && (
+          {senders.length > 0 && (
             <div>
               <dt>Shared by</dt>
+              <dd>{chips(senders)}</dd>
+            </div>
+          )}
+          {shared.length > 0 && (
+            <div>
+              <dt>{hasProvenance ? "Added to archive by" : "Shared by"}</dt>
               <dd>{chips(shared)}</dd>
             </div>
           )}

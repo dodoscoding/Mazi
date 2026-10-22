@@ -1,3 +1,4 @@
+import { sourceSharedLine } from "./memory/provenance";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CSSProperties,
@@ -605,7 +606,11 @@ function AtlasHome({
                 onClick={() => activateRow(index)}
               >
                 <span className="index-name">{memory.shortTitle}</span>
-                <span className="index-meta">{shortDate(memory)}</span>
+                <span className="index-meta">
+                  {[shortDate(memory), sourceSharedLine(memory)]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
               </button>
             </li>
           );
@@ -634,6 +639,7 @@ function AtlasHome({
         <p className="featured-meta">
           {[
             shortDate(selected),
+            sourceSharedLine(selected),
             selected.place?.name,
             plural(selected.photos.length, "photo"),
           ]
@@ -682,7 +688,9 @@ function AtlasHome({
             <span className="choice-copy">
               <span className="choice-title">{item.shortTitle}</span>
               <span className="choice-meta">
-                {shortDate(item)}
+                {[shortDate(item), sourceSharedLine(item)]
+                  .filter(Boolean)
+                  .join(" · ")}
                 {item.place ? ` · ${item.place.name}` : ""}
               </span>
             </span>

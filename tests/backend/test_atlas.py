@@ -209,6 +209,18 @@ class AtlasTests(unittest.TestCase):
         self.assertTrue(evidence[0]['sharedAt']['ambiguous'])
         self.assertEqual(evidence[1]['sharedAt']['raw'], '1713906482000')
         self.assertFalse(evidence[1]['sharedAt']['ambiguous'])
+        with self.store.transaction():
+            self.store.db.execute('DELETE FROM review_annotations WHERE asset_id=?', (self.assets[0],))
+        untitled = next(card for card in atlas_view(self.store, self.alice, self.group)['memories']
+                        if card['id'] == 'photo-' + self.assets[0])
+        self.assertEqual(untitled['title'], 'Photo shared by Ana and Ben')
+        self.assertIsNone(untitled['year'])
+        self._source_evidence(ben_origin, 'Ben', {'raw': 'not a date', 'local': None}, ambiguous=True)
+        malformed = next(card for card in atlas_view(self.store, self.alice, self.group)['memories']
+                         if card['id'] == 'photo-' + self.assets[0])
+        self.assertFalse(malformed['photos'][0]['provenance'][1]['sharedAt']['ambiguous'])
+        self.store.review_event(self.alice, self.group, self.assets, 'Circle story', 'accept')
+        self.assertEqual(atlas_view(self.store, self.alice, self.group)['memories'][0]['title'], 'Circle story')
 
     def test_source_evidence_deduplicates_and_rechecks_withdrawal_and_owner_membership(self):
         resource, ben_origin = self._ben_copy_of_red()

@@ -1,3 +1,4 @@
+import { shareDateLabel } from "../memory/provenance";
 import type { Memory } from "../memories";
 
 let regions: Intl.DisplayNames | undefined;
@@ -43,6 +44,7 @@ function formatMonth(date: Date) {
 
 /** The archive's date label made readable: ISO days become "Sun 14 Aug 2023". */
 export function longDate(memory: Memory) {
+  if (undated(memory)) return shareDateLabel(memory) || memory.date;
   const [label, note] = memory.date.split(" · ");
   const days = label.split(" to ").map((part) => parse(part));
   let text = label;
@@ -57,7 +59,7 @@ export function longDate(memory: Memory) {
 /** A short month label for index rows, "Aug 2023" or "About Aug 2023". */
 export function shortDate(memory: Memory) {
   const first = parse(memory.date.split(" · ")[0].split(" to ")[0]);
-  if (undated(memory)) return "No date";
+  if (undated(memory)) return shareDateLabel(memory) || "No date";
   const text = first ? formatMonth(first) : memory.date.split(" · ")[0];
   return memory.approximate && !/^about /i.test(text) ? `About ${text}` : text;
 }
