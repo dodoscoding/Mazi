@@ -328,7 +328,7 @@ test("interrupted transfers resume at the acknowledged offset after reload", asy
   await page.goto("/#/imports");
   const fixture = execFileSync(".venv/bin/python", [
     "-c",
-    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(67,49),'orange').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('resume-photo.jpg',p.getvalue()); z.writestr('unsupported.bin',bytes(300000)); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(67,49),'orange').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('resume-photo.jpg',p.getvalue()); z.writestr('unsupported.bin',bytes(600000)); z.close(); sys.stdout.buffer.write(a.getvalue())",
   ]);
   const namespace = `resume ${info.project.name}`;
   const selectFile = async () => {
@@ -384,7 +384,7 @@ test("interrupted transfers resume at the acknowledged offset after reload", asy
     "Synthetic interrupted transfer",
   );
   await expect(submit).toBeEnabled();
-  expect(offsets).toEqual([0, 256 * 1024]);
+  expect(offsets).toEqual([0, 512 * 1024]);
   await page.screenshot({
     path: info.outputPath("imports-interrupted.png"),
     fullPage: true,
@@ -397,7 +397,7 @@ test("interrupted transfers resume at the acknowledged offset after reload", asy
   const resumed = await (await started).json();
   expect(resumed.id).toBe(initialRun.id);
   await expect(page.locator("#report-title")).toContainText("inventoried");
-  expect(offsets).toEqual([0, 256 * 1024, 256 * 1024]);
+  expect(offsets).toEqual([0, 512 * 1024, 512 * 1024]);
   await expect(page.locator("#report-title")).toBeFocused();
   await expect(
     page.getByRole("button", { name: "Start importing to group", exact: true }),
@@ -445,7 +445,7 @@ for (const path of ["imports"]) {
     await page.route("**/api/imports/chunk", async (route) => {
       const { offset } = route.request().postDataJSON();
       offsets.push(offset);
-      if (offset === 256 * 1024) {
+      if (offset === 512 * 1024) {
         waiting = true;
         await gate;
       }
@@ -504,7 +504,7 @@ for (const path of ["imports"]) {
           .getByLabel("Export ZIP")
           .evaluate((element: HTMLInputElement) => element.files?.length),
       ).toBe(1);
-      expect(offsets).toEqual([0, 256 * 1024, 512 * 1024]);
+      expect(offsets).toEqual([0, 512 * 1024]);
       expect(finishes).toBe(1);
       expect(failed).toEqual([]);
       let denyReport!: () => void;

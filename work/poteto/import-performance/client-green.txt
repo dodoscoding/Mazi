@@ -1,0 +1,24 @@
+✔ an upload uses its own resume offset while another report is selected (43.997667ms)
+✔ a workspace load failure offers a retry that restores the requested circle without duplicate history (14.860916ms)
+✔ the submitted archive keeps its circle and source when the form changes during hashing (15.138375ms)
+✔ an already completed archive keeps its report without transferring again (15.09ms)
+✔ overlapping gallery refreshes keep only the newest page and cursor (20.060833ms)
+✔ a late report page cannot replace the most recently requested page (21.802083ms)
+✔ repeated load-more clicks request and append each gallery page once (16.350667ms)
+✔ a failed load-more request releases the control and retries the same cursor (19.515833ms)
+✔ source-record pagination prevents duplicate requests and can retry a failure (17.991ms)
+✔ archive transfer fills the allowed chunk size and preserves every byte (50.648ms)
+✔ periodic polling respects COMPLETED lifecycle (14.695667ms)
+✔ periodic polling respects CANCELLED lifecycle (14.876292ms)
+✔ periodic polling respects FAILED lifecycle (16.94675ms)
+✔ periodic polling respects INVENTORIED lifecycle (17.660334ms)
+✔ periodic polling respects PROCESSING lifecycle (16.245292ms)
+✔ media progress excludes records without media and inventory awaits confirmation (15.12825ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 457.524417

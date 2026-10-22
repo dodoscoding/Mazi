@@ -1,0 +1,31 @@
+[
+  {
+    "records": 7500,
+    "photos": 223,
+    "archive_bytes": 538805,
+    "seconds": 0.7986,
+    "counts": {
+      "PENDING": 223,
+      "SKIPPED": 7277
+    },
+    "materializations": 16,
+    "inventory_calls": 16,
+    "insert_statements": 7500,
+    "scan_calls": 16,
+    "archive_bytes_hashed": 8620880
+  },
+  {
+    "records": 30000,
+    "photos": 0,
+    "archive_bytes": 1519005,
+    "seconds": 9.1268,
+    "counts": {
+      "SKIPPED": 30000
+    },
+    "materializations": 61,
+    "inventory_calls": 61,
+    "insert_statements": 30000,
+    "scan_calls": 61,
+    "archive_bytes_hashed": 92659305
+  }
+]
