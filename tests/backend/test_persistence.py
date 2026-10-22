@@ -93,3 +93,32 @@ class ArchiveLockContracts(unittest.TestCase):
         self.assertEqual(archive_lock_key('mazi'), archive_lock_key('mazi'))
         self.assertNotEqual(archive_lock_key('mazi'), archive_lock_key('mazi_recovery_test'))
         self.assertTrue(-(2**63) <= archive_lock_key('mazi') < 2**63)
+
+
+class LazyConnectionContracts(unittest.TestCase):
+    def test_constructor_does_not_open_a_hosted_session(self):
+        from unittest.mock import patch
+        from mazi.persistence import PostgresConnection
+        with patch('psycopg.connect') as connect:
+            connect.return_value.execute.return_value.fetchone.return_value = (1,)
+            db = PostgresConnection('synthetic')
+            db.close()
+        connect.assert_not_called()
+
+    def test_disconnect_closes_once_and_next_query_reopens(self):
+        from unittest.mock import Mock, patch
+        from mazi.persistence import PostgresConnection
+        first, second = Mock(), Mock()
+        for native in (first, second):
+            native.execute.return_value.fetchone.return_value = (1,)
+        with patch('psycopg.connect', side_effect=[first, second]) as connect:
+            db = PostgresConnection('synthetic')
+            db.execute('SELECT 1')
+            db.disconnect()
+            db.disconnect()
+            first.close.assert_called_once_with()
+            db.execute('SELECT 1')
+            db.close()
+        self.assertEqual(connect.call_count, 2)
+        self.assertIsNone(connect.call_args.kwargs['prepare_threshold'])
+        second.close.assert_called_once_with()
