@@ -112,32 +112,59 @@ def settle_poll(store, user, connection, client):
     return 'ok'
 
 
+IDLE_SECONDS = 0.5
+
+
+class Worker:
+    """One unit of background work, shared by the always-on thread and request-driven drains."""
+
+    def __init__(self, store):
+        self.store = store
+        token = os.environ.get('MAZI_DISCORD_BOT_TOKEN')
+        self.client = DiscordClient(token) if token else None
+        if self.client:
+            store.discord_authorize = self.client.authorize
+            store.discord_sources = set(filter(None, os.environ.get('MAZI_DISCORD_SOURCES', '').split(',')))
+        self.next_poll = 0
+
+    def step(self):
+        """Return seconds to wait before the next step; 0 means more work is ready."""
+        try:
+            if self.client and time.monotonic() >= self.next_poll:
+                self.next_poll = time.monotonic() + 30
+                for source in self.store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
+                    if source['id'] not in self.store.discord_sources:
+                        continue
+                    settle_poll(self.store, source['owner_id'], source['id'], self.client)
+            return 0 if self.store.work_once() else IDLE_SECONDS
+        except RateLimited as exc:
+            self.next_poll = time.monotonic() + exc.seconds
+            return min(exc.seconds, 30)
+        except (OSError, ValueError, Conflict):
+            # Do not print credentials, URLs or private message contents. Durable state remains retryable.
+            return 5
+
+
 def worker(root, stop):
     from mazi.memories.memories import MemoryStore
     store = MemoryStore(root)
-    token = os.environ.get('MAZI_DISCORD_BOT_TOKEN')
-    client = DiscordClient(token) if token else None
-    if client:
-        store.discord_authorize = client.authorize
-        store.discord_sources = set(filter(None, os.environ.get('MAZI_DISCORD_SOURCES', '').split(',')))
-    next_poll = 0
+    work = Worker(store)
     try:
         while not stop.is_set():
-            try:
-                if client and time.monotonic() >= next_poll:
-                    next_poll = time.monotonic() + 30
-                    for source in store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
-                        if source['id'] not in store.discord_sources:
-                            continue
-                        settle_poll(store, source['owner_id'], source['id'], client)
-                if not store.work_once():
-                    stop.wait(0.5)
-            except RateLimited as exc:
-                next_poll = time.monotonic() + exc.seconds
-                stop.wait(min(exc.seconds, 30))
-            except (OSError, ValueError, Conflict):
-                # Do not print credentials, URLs or private message contents. Durable state remains retryable.
-                stop.wait(5)
+            delay = work.step()
+            if delay:
+                stop.wait(delay)
     finally:
         store.close()
 
+
+def drain(work, budget_seconds):
+    """Run steps until the queue is idle or the cooperative budget is spent."""
+    deadline = time.monotonic() + budget_seconds
+    while time.monotonic() < deadline:
+        delay = work.step()
+        if delay == IDLE_SECONDS:
+            work.store.reconcile()
+        if delay:
+            return {'pending': False}
+    return {'pending': True}

@@ -12,6 +12,7 @@ import { SoundController } from "./sound/SoundController";
 import { useArchive } from "./useArchive";
 import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
+import { useWorkDrain } from "./useWorkDrain";
 
 export default function App() {
   const reduced = useReducedMotion();
@@ -21,6 +22,7 @@ export default function App() {
   const profile =
     entry.state.status === "ready" ? entry.state.profile : undefined;
   const archive = useArchive(route.path, demo && !!profile, profile?.group_id);
+  useWorkDrain(!!profile);
   useLayoutEffect(() => {
     if (
       entry.state.status === "ready" &&

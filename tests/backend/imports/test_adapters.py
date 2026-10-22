@@ -45,6 +45,14 @@ class AdapterTests(unittest.TestCase):
             photo = next(x for x in american if x.local_blob_reference)
             self.assertTrue(photo.shared_at_assertion["local"].startswith("2020-03-04"))
 
+    def test_whatsapp_dotted_clock_dates_photos(self):
+        text = "[23/04/2024, 21.07.45] Ana: before\n[23/04/2024, 21.08.02] Ana: <attached: photo.jpg>\n[23/04/2024, 21.09.10] Ben: after"
+        items = self.parse("whatsapp", {"chat.txt": text, "photo.jpg": b"image"})
+        photo = next(x for x in items if x.local_blob_reference == "photo.jpg")
+        self.assertEqual(photo.shared_at_assertion["local"], "2024-04-23T21:08:02")
+        self.assertNotIn("AMBIGUOUS_DATE", photo.warnings)
+        self.assertIn("after", str(photo.context))
+
     def test_messenger_reactions_unicode_and_missing_media(self):
         messages = {"title": "Friends", "participants": [{"name": "Ana"}], "messages": [
             {"sender_name": "Ana", "timestamp_ms": 1577836800000, "content": "cafÃ©",
