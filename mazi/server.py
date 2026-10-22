@@ -1,6 +1,8 @@
 """One loopback app origin for the Atlas interface and authorized archive APIs."""
+import hmac
 import mimetypes
 
+from mazi.http_origin import validate_origin
 from mazi.persistence import ArchiveBusy
 import os
 import threading
@@ -25,14 +27,41 @@ APP_PATHS = {'/', '/atlas', '/imports', '/review', '/timeline', '/places',
              '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/introduction', '/circle', '/search'}
 
 
-def handler_for(store, dist=None):
+def handler_for(store, dist=None, drain=None):
+    """drain runs bounded queue work per request; without it the process's worker thread owns the queue."""
     store.shared_mode = True
     build = Path(dist) if dist is not None else DIST
 
     class Handler(memory_handler(store)):
+        def work(self):
+            if drain is None:
+                return self.json(200, {'pending': False, 'mode': 'thread'})
+            try:
+                return self.json(200, drain())
+            except OSError:
+                return self.json(503, {'error': 'Background work unavailable; retry shortly'})
+
+        def do_POST(self):
+            if urlsplit(self.path).path != '/api/work':
+                return super().do_POST()
+            try:
+                validate_origin(self.headers.get('Origin'), self.headers.get('Host', ''))
+                self.user()
+            except ArchiveBusy:
+                return self.json(503, {'error': 'Archive is busy; retry shortly'})
+            except Denied as exc:
+                return self.json(403, {'error': str(exc)})
+            return self.work()
+
         def do_GET(self):
             parts = urlsplit(self.path)
             path = unquote(parts.path)
+            if path == '/api/work':
+                secret = os.environ.get('CRON_SECRET', '')
+                supplied = self.headers.get('Authorization', '')
+                if not secret or not hmac.compare_digest(supplied.encode(), f'Bearer {secret}'.encode()):
+                    return self.json(401, {'error': 'Unauthorized'})
+                return self.work()
             if path == '/api/atlas':
                 try:
                     from .atlas import atlas_view
