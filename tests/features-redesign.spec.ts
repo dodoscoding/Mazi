@@ -303,6 +303,13 @@ test("Search photographs stay usable while included categories load and retry", 
   page,
 }, info) => {
   await enter(page, "Alice");
+  const session = await (await page.request.get("/api/session")).json();
+  const tagName = `Startup tag ${info.project.name}`;
+  const personResponse = await page.request.post("/api/discovery/person", {
+    data: { group: session.group_id, name: tagName },
+  });
+  expect(personResponse.ok()).toBe(true);
+  const person = await personResponse.json();
   let requested = false;
   let fail = true;
   let release!: () => void;
@@ -371,6 +378,20 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect(page.locator("#people")).toContainText("Ben");
   await expect(page.locator(".disc-tag select")).toBeEnabled();
   await expect(page.locator(".disc-tag select option")).not.toHaveCount(1);
+  const confirm = page.getByRole("button", {
+    name: "Confirm tag",
+    exact: true,
+  });
+  await expect(confirm).toBeEnabled();
+  await page.locator(".disc-tag select").selectOption(person.id);
+  const tagged = page.waitForResponse("**/api/discovery/tag");
+  await confirm.click();
+  expect((await tagged).ok()).toBe(true);
+  await expect(page.locator("#notice")).toHaveText("Changes saved.");
+  await expect(page.locator("#results .disc-person")).toContainText([
+    "Ben",
+    tagName,
+  ]);
   await page.screenshot({
     path: info.outputPath("search-context-ready.png"),
     fullPage: true,

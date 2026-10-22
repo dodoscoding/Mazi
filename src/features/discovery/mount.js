@@ -380,18 +380,15 @@ export function mount(root, lifecycle) {
       );
       select.disabled = view === "search" && !contextReady;
       label.append(select);
-      const confirmTag = action(
-        "Confirm tag",
-        async () => {
-          if (!select.value) throw Error("Choose a person first.");
-          await mutate("tag", {
-            person: select.value,
-            asset: item.id,
-            confirmed: true,
-          });
-        },
-        "disc-tag-confirm",
-      );
+      const confirmTag = action("Confirm tag", async () => {
+        if (!select.value) throw Error("Choose a person first.");
+        await mutate("tag", {
+          person: select.value,
+          asset: item.id,
+          confirmed: true,
+        });
+      });
+      confirmTag.className = "disc-tag-confirm";
       confirmTag.disabled = view === "search" && !contextReady;
       card.append(
         label,
