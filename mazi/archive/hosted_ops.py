@@ -113,7 +113,7 @@ def identifier(name):
 
 
 def table_names(db):
-    return [row[0] for row in db._db.execute("SELECT tablename FROM pg_tables WHERE schemaname=current_schema() AND tablename <> 'runtime_schema' ORDER BY tablename")]
+    return [row[0] for row in db.execute("SELECT tablename FROM pg_tables WHERE schemaname=current_schema() AND tablename <> 'runtime_schema' ORDER BY tablename")]
 
 
 def capture_tables(db):
@@ -129,7 +129,7 @@ def capture_tables(db):
 
 def insertion_tables(db, tables):
     dependencies = {name: set() for name in tables}
-    for child, parent in db._db.execute("SELECT child.relname,parent.relname FROM pg_constraint c JOIN pg_class child ON c.conrelid=child.oid JOIN pg_class parent ON c.confrelid=parent.oid JOIN pg_namespace n ON child.relnamespace=n.oid WHERE c.contype='f' AND n.nspname=current_schema()"):
+    for child, parent in db.execute("SELECT child.relname,parent.relname FROM pg_constraint c JOIN pg_class child ON c.conrelid=child.oid JOIN pg_class parent ON c.confrelid=parent.oid JOIN pg_namespace n ON child.relnamespace=n.oid WHERE c.contype='f' AND n.nspname=current_schema()"):
         if child in dependencies and parent in dependencies and child != parent:
             dependencies[child].add(parent)
     ordered = []

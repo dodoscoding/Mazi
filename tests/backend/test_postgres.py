@@ -186,7 +186,7 @@ class PostgresContracts(unittest.TestCase):
     def test_held_lock_timeout_rolls_back_and_recovers(self):
         from mazi.persistence import ArchiveBusy
         other = MemoryStore(self.temp.name)
-        other.db._db.execute("SET lock_timeout TO '50ms'")
+        other.db._lock_timeout = '50ms'
         try:
             with self.store.db:
                 with self.assertRaises(ArchiveBusy):

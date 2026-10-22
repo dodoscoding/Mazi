@@ -106,10 +106,8 @@ class MigrationResumeContracts(unittest.TestCase):
 class RestoreOrderContracts(unittest.TestCase):
     def test_foreign_key_parents_precede_children_and_final_epochs(self):
         from mazi.archive.hosted_ops import insertion_tables
-        class Raw:
-            def execute(self, *args): return [('archive_origins', 'archive_assets'), ('archive_assets', 'groups'), ('discovery_generations', 'groups')]
         class Database:
-            _db = Raw()
+            def execute(self, *args): return [('archive_origins', 'archive_assets'), ('archive_assets', 'groups'), ('discovery_generations', 'groups')]
         ordered = insertion_tables(Database(), {'groups': {}, 'archive_assets': {}, 'archive_origins': {}, 'discovery_processing': {}, 'discovery_generations': {}})
         self.assertLess(ordered.index('groups'), ordered.index('archive_assets'))
         self.assertLess(ordered.index('archive_assets'), ordered.index('archive_origins'))
