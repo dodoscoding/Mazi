@@ -63,6 +63,7 @@ class PeopleExportTests(unittest.TestCase):
         # Supplemental diagnostics wrap real documents; behavior is asserted
         # through public People and complete export member contents below.
         document = self.store._document
+        export_document = self.store._export_document
         calls, references = [], []
         class ObservedDocument(dict):
             pass
@@ -72,7 +73,13 @@ class PeopleExportTests(unittest.TestCase):
             calls.append(asset)
             references.append(weakref.ref(result))
             return result
-        with patch.object(self.store, '_document', observe):
+        def observe_export(user, asset):
+            self.assertTrue(all(reference() is None for reference in references))
+            result = ObservedDocument(export_document(user, asset))
+            calls.append(asset)
+            references.append(weakref.ref(result))
+            return result
+        with patch.object(self.store, '_document', observe), patch.object(self.store, '_export_document', observe_export):
             yield calls
         self.assertTrue(all(reference() is None for reference in references))
 
@@ -109,7 +116,7 @@ class PeopleExportTests(unittest.TestCase):
         self.assertEqual(self.store.gallery(self.ben, self.group), [])
 
     def test_export_withdrawal_during_city_projection_conflicts_before_yield(self):
-        writer, document = self.writer(), self.store._document
+        writer, document = self.writer(), self.store._export_document
         calls, yielded = [], []
         def withdraw_after_first_document(user, asset):
             result = document(user, asset)
@@ -117,7 +124,7 @@ class PeopleExportTests(unittest.TestCase):
             if len(calls) == 1:
                 writer.withdraw(self.alice, self.run)
             return result
-        with patch.object(self.store, '_document', withdraw_after_first_document):
+        with patch.object(self.store, '_export_document', withdraw_after_first_document):
             with self.assertRaisesRegex(Conflict, 'Archive changed while preparing export; retry'):
                 with self.store.export_archive_file(self.ben, self.group):
                     yielded.append(True)
@@ -141,7 +148,7 @@ class PeopleExportTests(unittest.TestCase):
 
     def test_final_admission_recomputes_changed_cities_before_http_headers(self):
         writer = self.writer()
-        build, document = self.store._build_export_archive, self.store._document
+        build, document = self.store._build_export_archive, self.store._export_document
         cities = []
         def change_after_build(*args):
             result = build(*args)
@@ -153,7 +160,7 @@ class PeopleExportTests(unittest.TestCase):
             cities.append(result['cities'])
             return result
         with patch.object(self.store, '_build_export_archive', change_after_build), \
-             patch.object(self.store, '_document', observe):
+             patch.object(self.store, '_export_document', observe):
             statuses, headers, body = self.http_export()
         self.assertEqual(statuses, [409])
         self.assertEqual(headers['Content-Type'], 'application/json')
@@ -380,7 +387,7 @@ class PeopleExportTests(unittest.TestCase):
         ]
         for name, change, restore in cases:
             with self.subTest(change=name):
-                document, calls = self.store._document, []
+                document, calls = self.store._export_document, []
                 def interleave(user, asset):
                     result = document(user, asset)
                     calls.append(asset)
@@ -388,7 +395,7 @@ class PeopleExportTests(unittest.TestCase):
                         change()
                     return result
                 try:
-                    with patch.object(self.store, '_document', interleave):
+                    with patch.object(self.store, '_export_document', interleave):
                         statuses, headers, body = self.http_export()
                     self.assertEqual(statuses, [409])
                     self.assertEqual(headers['Content-Type'], 'application/json')

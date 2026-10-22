@@ -3,8 +3,10 @@
 SQLite write transactions serialize local retrieval with membership/consent
 mutations. Vectors are derivatives, never an authorization source.
 """
+from mazi.archive.export import ExportArray
+
 import hashlib
-from mazi.persistence import initialize_schema
+from mazi.persistence import initialize_schema, insertion_order
 
 import json
 import time
@@ -259,6 +261,9 @@ class DiscoveryStore(SourceStore):
         return self._people(user, group, manage)
 
     def _people(self, user, group, manage=False, *, reuse_cities=False):
+        return list(self._iter_people(user, group, manage, reuse_cities=reuse_cities))
+
+    def _iter_people(self, user, group, manage=False, *, reuse_cities=False):
         city_cache = {} if reuse_cities else None
         city_entries = city_characters = 0
 
@@ -268,7 +273,7 @@ class DiscoveryStore(SourceStore):
                 return self._document(user, asset)['cities']
             if asset in city_cache:
                 return city_cache[asset]
-            cities = tuple(self._document(user, asset)['cities'])
+            cities = tuple(self._export_document(user, asset)['cities'])
             characters = sum(len(city) for city in cities)
             if (len(city_cache) < EXPORT_PEOPLE_CITY_KEYS and
                     city_entries + len(cities) <= EXPORT_PEOPLE_CITY_ENTRIES and
@@ -279,16 +284,46 @@ class DiscoveryStore(SourceStore):
             return cities
 
         visible = set(self._visible_ids(user, group))
-        result = []
-        events = self.accepted_events(user, group)
-        for row in self.db.execute('SELECT * FROM discovery_people WHERE group_id=? ORDER BY name,id', (group,)):
+        events = None if reuse_cities else self.accepted_events(user, group)
+        rows = (self._export_rows('SELECT * FROM discovery_people WHERE group_id=?', (group,), [('name', 'name', False), ('id', 'id', False)])
+                if reuse_cities else self.db.execute('SELECT * FROM discovery_people WHERE group_id=? ORDER BY name,id', (group,)))
+        for row in rows:
             # Departed identities do not resurface through another member's tag.
             if row['account'] and not self.db.execute('SELECT 1 FROM members WHERE group_id=? AND user_id=?', (group, row['account'])).fetchone():
                 continue
-            assets = [r[0] for r in self.db.execute('SELECT t.asset FROM discovery_tags t JOIN members m ON m.user_id=t.actor AND m.group_id=? WHERE t.person=? AND NOT EXISTS (SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)', (group, row['id'])) if r[0] in visible]
+            tag_query = ('SELECT t.asset FROM discovery_tags t JOIN members m ON m.user_id=t.actor AND m.group_id=? '
+                         'WHERE t.person=? AND NOT EXISTS (SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)')
+            tags = (self._export_rows(tag_query, (group, row['id']), [('t.asset', 'asset', False)])
+                    if reuse_cities else self.db.execute(tag_query, (group, row['id'])))
+            assets = [r[0] for r in tags if r[0] in visible]
             if assets or (manage and row['creator'] == user):
-                result.append(dict(id=row['id'], name=row['name'], assets=assets, count=len(assets), is_me=row['account'] == user, verified=bool(row['account']), places=sorted({city for asset in assets for city in asset_cities(asset)}), memories=[dict(id=e['id'], title=e['title']) for e in events if set(e['assets']) & set(assets)]))
-        return result
+                memories = (ExportArray(self._export_person_memories(user, group, visible, set(assets)))
+                            if events is None else [dict(id=e['id'], title=e['title']) for e in events if set(e['assets']) & set(assets)])
+                yield dict(id=row['id'], name=row['name'], assets=assets, count=len(assets), is_me=row['account'] == user, verified=bool(row['account']), places=sorted({city for asset in assets for city in asset_cities(asset)}), memories=memories)
+
+    def _export_document(self, user, asset):
+        self._asset(user, asset)
+        annotation = self.db.execute('SELECT * FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
+        place, conflicting = None, False
+        for payload in self._export_origins(user, asset):
+            _, places = self._date_place_evidence(asset, payload, annotation)
+            for candidate in places:
+                if place is None:
+                    place = candidate
+                elif candidate != place:
+                    conflicting = True
+        cities = set()
+        if place and not conflicting:
+            cities.add(place)
+        for row in self._export_rows('SELECT DISTINCT p.city FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,), [('p.city', 'city', False)]):
+            cities.add(row[0])
+        return dict(cities=sorted(cities))
+
+    def _export_person_memories(self, user, group, visible, assets):
+        for row in self._export_rows("SELECT id,title,asset_ids,updated_at," + insertion_order(self.db, "e") + " AS export_order FROM review_events e WHERE group_id=? AND status='accepted' AND NOT EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h.\"user\"=?) ", (group, user), [("updated_at", "updated_at", True), (insertion_order(self.db, "e"), "export_order", False)]):
+            event_assets = {asset for asset in json.loads(row['asset_ids']) if asset in visible}
+            if len(event_assets) >= 2 and event_assets & assets:
+                yield dict(id=row['id'], title=row['title'])
 
     def nonmember_review(self, user, person, asset, verified, restore=False):
         if verified is not True or type(restore) is not bool:
@@ -667,11 +702,35 @@ class DiscoveryStore(SourceStore):
             return dict(items=result[offset:offset + limit], total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
+    def _export_personal(self, user, group, kind):
+        live = ("EXISTS (SELECT 1 FROM archive_assets a WHERE a.id={asset} AND a.group_id=? AND EXISTS "
+                "(SELECT 1 FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
+                "WHERE o.asset_id=a.id AND o.withdrawn=0))")
+        if kind == 'hidden':
+            query = ('SELECT h.asset,n.title,' + insertion_order(self.db, 'h') + ' AS export_order FROM discovery_hidden h '
+                     'LEFT JOIN review_annotations n ON n.asset_id=h.asset WHERE h."user"=? AND ' + live.format(asset='h.asset'))
+            for row in self._export_rows(query, (user, group), [(insertion_order(self.db, 'h'), 'export_order', False)]):
+                yield dict(id=row['asset'], title=row['title'] or 'Untitled photograph')
+        elif kind == 'suppressed':
+            query = ("SELECT s.person,s.asset,p.name," + insertion_order(self.db, 's') + " AS export_order FROM discovery_suppressions s "
+                     "JOIN discovery_people p ON p.id=s.person WHERE p.group_id=? AND p.account=? AND s.subject IN (?, 'private-review') AND " + live.format(asset='s.asset'))
+            for row in self._export_rows(query, (group, user, user, group), [(insertion_order(self.db, 's'), 'export_order', False)]):
+                yield {key: row[key] for key in ('person', 'asset', 'name')}
+        else:
+            visible = set(self._visible_ids(user, group))
+            query = ('SELECT e.id,e.title,e.asset_ids,e.updated_at,' + insertion_order(self.db, 'e') + ' AS export_order FROM review_events e '
+                     'WHERE e.group_id=? AND EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h."user"=?)')
+            for row in self._export_rows(query, (group, user), [('e.updated_at', 'updated_at', True), (insertion_order(self.db, 'e'), 'export_order', False)]):
+                if sum(asset in visible for asset in json.loads(row['asset_ids'])) >= 2:
+                    yield dict(id=row['id'], title=row['title'])
+
     def _export_discovery(self, user, group, fingerprint, archive=None):
-        fingerprint.json_member('people.json', self._people(user, group, reuse_cities=True), archive)
+        fingerprint.json_member('people.json', ExportArray(self._iter_people(user, group, reuse_cities=True)), archive)
         fingerprint.json_member('personal-discovery.json',
-                                dict(hidden=self.hidden(user, group), hidden_memories=self.hidden_events(user, group),
-                                     suppressed=self.suppressed(user, group), processing=self.settings(user, group)), archive)
+                                dict(hidden=ExportArray(self._export_personal(user, group, 'hidden')),
+                                     hidden_memories=ExportArray(self._export_personal(user, group, 'hidden_memories')),
+                                     suppressed=ExportArray(self._export_personal(user, group, 'suppressed')),
+                                     processing=self.settings(user, group)), archive)
 
     def _capture_export_metadata(self, user, group, ids, fingerprint):
         super()._capture_export_metadata(user, group, ids, fingerprint)
