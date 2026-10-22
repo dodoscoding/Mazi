@@ -49,7 +49,6 @@ test("working page styles are scoped and cannot override hidden controls or reor
       for (const rule of rules) {
         if (rule.cssRules) visit(rule.cssRules);
         if (!rule.selectorText) continue;
-        // Split selector lists only outside :is(), :not() and attribute strings.
         const selectors = rule.selectorText.match(/(?:[^,(]|\([^)]*\))+/g);
         for (const selector of selectors)
           assert.match(
