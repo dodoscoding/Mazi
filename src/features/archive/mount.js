@@ -63,7 +63,7 @@ export function mount(root, lifecycle) {
     container.append(
       element(
         "p",
-        "Suggestions are unavailable above 1,000 visible photographs. The timeline and reviewed decisions remain available.",
+        "Suggestions support up to 10,000 visible photographs within processing and metadata limits. This request exceeded a limit. The timeline and reviewed decisions remain available.",
         "fx-small",
       ),
       button("Retry suggestions", async (retryButton) => {
