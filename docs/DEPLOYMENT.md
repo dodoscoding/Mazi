@@ -37,3 +37,7 @@ Imports therefore advance only while a signed-in tab is open, plus once a day. C
 - Request bodies are capped at 4.5 MB. Import and source uploads send requests of at most 768 KiB, and capsule photos are limited to 2 MiB.
 - `/tmp/mazi` holds per-instance scratch only. It disappears when an instance stops and is never a source of truth.
 - Requests in one instance share one database connection and run one at a time.
+
+## Production
+
+Production runs at https://mazi-three.vercel.app against the Frankfurt Supabase project. The [live verification](../work/poteto/production-deploy/VERIFICATION.md) records a signed-in import, drain, preview, search and a 12.8 MB streamed export.
