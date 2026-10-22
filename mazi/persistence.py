@@ -1,4 +1,5 @@
 """The archive connection boundary; hosted SQL is native PostgreSQL."""
+from contextlib import contextmanager
 import os
 import hashlib
 import re
@@ -128,11 +129,12 @@ class PostgresConnection:
             self._discard()
             raise
 
-    def _begin(self):
+    def _begin(self, *, shared=False):
         if not self._active:
             self._start()
             try:
-                self._db.execute('SELECT pg_advisory_xact_lock(%s)', (self._lock_key,))
+                lock = 'pg_advisory_xact_lock_shared' if shared else 'pg_advisory_xact_lock'
+                self._db.execute(f'SELECT {lock}(%s)', (self._lock_key,))
             except BaseException as error:
                 try:
                     self.rollback()
@@ -146,6 +148,21 @@ class PostgresConnection:
                     self._discard()
                     raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
                 raise
+
+    @contextmanager
+    def read_transaction(self):
+        """Share a policy snapshot with readers while fencing exclusive writers."""
+        self._begin(shared=True)
+        try:
+            yield self
+        except BaseException:
+            try:
+                self.rollback()
+            except Exception:
+                self._discard()
+            raise
+        else:
+            self.commit()
 
     def execute(self, query, params=()):
         import psycopg

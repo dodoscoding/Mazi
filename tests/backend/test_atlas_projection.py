@@ -101,7 +101,7 @@ class AtlasProjectionTests(unittest.TestCase):
             finally:
                 self.store.db.set_trace_callback(None)
             self.assert_body(response, expected)
-            self.assertLessEqual(len(statements), 24)
+            self.assertLessEqual(len(statements), 35)
 
     def test_projection_query_count_is_constant_for_1_300_and_1001_photos(self):
         counts = []

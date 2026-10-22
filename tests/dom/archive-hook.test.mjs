@@ -168,7 +168,6 @@ test("without an authenticated profile no archive requests are made", async (t) 
   assert.deepEqual(calls, []);
 });
 
-
 test("superseded visibility loads abort and pagehide cancels private work", async (t) => {
   const pending = deferred();
   const signals = [];
@@ -176,7 +175,9 @@ test("superseded visibility loads abort and pagehide cancels private work", asyn
   const h = await harness(t, async (path, options) => {
     signals.push(options.signal);
     if (++calls === 1) return pending.promise;
-    return Response.json(path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] });
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] },
+    );
   });
   await h.render("/");
   await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
