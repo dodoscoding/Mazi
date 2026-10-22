@@ -63,6 +63,16 @@ class KeywordScalingTests(unittest.TestCase):
         self.assertEqual(self.candidate(user, **filters), self.store.search(user, self.group, **filters))
 
     def test_small_archive_keyword_page_has_bounded_database_work(self):
+        participants = [{'name': 'Synthetic participant ' + str(n)} for n in range(2500)]
+        metadata = {'title': 'Synthetic conversation', 'participants': participants, 'messages': [
+            {'sender_name': 'Synthetic sender', 'timestamp_ms': 1577836800000,
+             'content': 'oversizedmessengerkeyword', 'photos': [{'uri': 'photos/picture.jpg'}]}]}
+        run = self.submit({'messages/inbox/synthetic/message_1.json': json.dumps(metadata),
+                           'photos/picture.jpg': helpers.picture()}, source='messenger')
+        self.process(run)
+        self.assertEqual(self.store.report(self.alice, run)['state'], 'COMPLETED')
+        self.assertGreater(self.store.db.execute('SELECT length(CAST(payload AS BLOB)) FROM archive_origins').fetchone()[0],
+                           64 * 1024)
         self.seed_projection(300)
         statements = []
         self.store.db.set_trace_callback(statements.append)
@@ -76,6 +86,7 @@ class KeywordScalingTests(unittest.TestCase):
                          (300, None, 'keyword / filters'))
         self.assertLessEqual(len(statements), 20,
                              'A keyword page must batch metadata reads instead of querying every asset')
+        self.assertEqual(self.store.search(self.ben, self.group, query='oversizedmessengerkeyword')['total'], 1)
 
     def test_all_filters_unicode_and_pagination_equal_legacy(self):
         self.seed_details()
