@@ -273,7 +273,7 @@ class ReviewStore(ImportStore):
         return original
 
     def rendition_bytes(self, user, asset):
-        transaction = self.db.read_transaction() if getattr(self.db, "hosted", False) else self.transaction()
+        transaction = self.db.read_transaction() if getattr(self.db, "hosted", False) else self._projection_transaction()
         with transaction:
             _, namespace, key = self._rendition_locator(user, asset)
         return self.objects.read(namespace, key)
