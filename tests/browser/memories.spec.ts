@@ -6,13 +6,42 @@ test("Annual recap and collaborative story editing", async ({
   await page.request.post("/api/entry", {
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
+  const session = await (await page.request.get("/api/session")).json();
+  const priorStories = await page.request.get(
+    `/api/memories/stories?group=${session.group_id}`,
+  );
+  expect(priorStories.ok()).toBe(true);
+  for (const story of await priorStories.json()) {
+    if (!story.can_delete || story.event.title !== "Our summer") continue;
+    expect(
+      (
+        await page.request.post("/api/memories/delete", {
+          data: {
+            group: session.group_id,
+            story: story.id,
+            revision: story.revision,
+          },
+        })
+      ).ok(),
+    ).toBe(true);
+  }
+  const currentStory = page
+    .locator("#stories > article")
+    .filter({
+      has: page.getByRole("heading", { name: "Our summer", exact: true }),
+    })
+    .filter({
+      has: page.getByRole("button", { name: "Delete story", exact: true }),
+    });
   await page.goto("/#/memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
   await page.getByRole("button", { name: "Start a story" }).click();
-  await page
-    .getByLabel("Your recollection")
+  await currentStory
+    .getByRole("textbox", { name: "Your recollection", exact: true })
     .fill("<img src=x onerror=alert(1)> A beautiful day.");
-  await page.getByRole("button", { name: "Save my recollection" }).click();
+  await currentStory
+    .getByRole("button", { name: "Save my recollection" })
+    .click();
   await expect(page.locator("#stories")).toContainText("You: <img");
   await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -25,27 +54,38 @@ test("Annual recap and collaborative story editing", async ({
     path: testInfo.outputPath("evidence.png"),
     fullPage: true,
   });
-  await page.getByLabel("Sub-event title").fill("Morning");
-  await page.getByRole("checkbox", { name: "Photo 1", exact: true }).check();
-  await page
+  await currentStory.getByLabel("Sub-event title").fill("Morning");
+  await currentStory
+    .getByRole("checkbox", { name: "Photo 1", exact: true })
+    .check();
+  await currentStory
     .getByRole("button", { name: "Add sub-event", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
-  await page.getByRole("button", { name: "Show slideshow" }).click();
+  await currentStory.getByRole("button", { name: "Show slideshow" }).click();
   await expect(page.locator("#stories img")).toBeVisible();
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await currentStory.getByRole("button", { name: "Next photo" }).click();
   await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
   const videoDownload = page.waitForEvent("download");
-  await page
+  await currentStory
     .getByRole("button", { name: "Download video (AVI)", exact: true })
     .click();
   expect((await videoDownload).suggestedFilename()).toBe("mazi-memory.avi");
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export story JSON" }).click();
+  await currentStory.getByRole("button", { name: "Export story JSON" }).click();
   expect((await downloadPromise).suggestedFilename()).toBe("mazi-story.json");
-  await page.getByRole("button", { name: "Remove my recollection" }).click();
-  await expect(page.getByLabel("Your recollection")).toHaveValue("");
-  await page.getByRole("button", { name: "Delete story", exact: true }).click();
+  await currentStory
+    .getByRole("button", { name: "Remove my recollection" })
+    .click();
+  await expect(
+    currentStory.getByRole("textbox", {
+      name: "Your recollection",
+      exact: true,
+    }),
+  ).toHaveValue("");
+  await currentStory
+    .getByRole("button", { name: "Delete story", exact: true })
+    .click();
   await expect(page.locator("#stories")).toContainText("No shared stories");
 });
 

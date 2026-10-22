@@ -37,6 +37,32 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     await page.request.get(`/api/archive?group=${profile.group_id}`)
   ).json();
   const initialCount = initialRecords.length;
+  const storiesResponse = await page.request.get(
+    `/api/memories/stories?group=${profile.group_id}`,
+  );
+  expect(storiesResponse.ok()).toBe(true);
+  for (const story of await storiesResponse.json()) {
+    if (!story.can_delete || story.event.title !== "Our summer") continue;
+    expect(
+      (
+        await page.request.post("/api/memories/delete", {
+          data: {
+            group: profile.group_id,
+            story: story.id,
+            revision: story.revision,
+          },
+        })
+      ).ok(),
+    ).toBe(true);
+  }
+  const currentStory = page
+    .locator("#stories > article")
+    .filter({
+      has: page.getByRole("heading", { name: "Our summer", exact: true }),
+    })
+    .filter({
+      has: page.getByRole("button", { name: "Delete story", exact: true }),
+    });
   await page.goto("/");
   await shell(page);
   await page
@@ -57,21 +83,23 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page
     .getByRole("button", { name: "Start a story", exact: true })
     .click();
-  await page
-    .getByLabel("Your recollection")
+  await currentStory
+    .getByRole("textbox", { name: "Your recollection", exact: true })
     .fill("<img src=x onerror=alert(1)> A beautiful day.");
-  await page
+  await currentStory
     .getByRole("button", { name: "Save my recollection", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText("You: <img");
   await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
-  await page.getByLabel("Sub-event title").fill("Morning");
-  await page.getByRole("checkbox", { name: "Photo 1", exact: true }).check();
-  await page
+  await currentStory.getByLabel("Sub-event title").fill("Morning");
+  await currentStory
+    .getByRole("checkbox", { name: "Photo 1", exact: true })
+    .check();
+  await currentStory
     .getByRole("button", { name: "Add sub-event", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
-  await page
+  await currentStory
     .getByRole("button", { name: "Show slideshow", exact: true })
     .click();
   await page.getByRole("button", { name: "Next photo", exact: true }).click();
@@ -81,7 +109,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     ["Export story JSON", "mazi-story.json"],
   ]) {
     const downloading = page.waitForEvent("download");
-    await page.getByRole("button", { name: label, exact: true }).click();
+    await currentStory
+      .getByRole("button", { name: label, exact: true })
+      .click();
     const download = await downloading;
     expect(download.suggestedFilename()).toBe(filename);
     expect(await download.failure()).toBeNull();
@@ -153,8 +183,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     )
       saves++;
   });
-  await page.getByLabel("Your recollection").fill("Edited after navigation");
-  await page
+  await currentStory
+    .getByRole("textbox", { name: "Your recollection", exact: true })
+    .fill("Edited after navigation");
+  await currentStory
     .getByRole("button", { name: "Save my recollection", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText(
@@ -174,7 +206,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page
     .getByRole("button", { name: "Delete capsule", exact: true })
     .click();
-  await page.getByRole("button", { name: "Delete story", exact: true }).click();
+  await currentStory
+    .getByRole("button", { name: "Delete story", exact: true })
+    .click();
   await navigate(page, "My Imports", "imports");
   await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
