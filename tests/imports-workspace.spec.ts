@@ -403,3 +403,191 @@ test("interrupted transfers resume at the acknowledged offset after reload", asy
     page.getByRole("button", { name: "Start importing to group", exact: true }),
   ).toBeEnabled();
 });
+
+for (const path of ["imports"]) {
+  test(`${path} keeps an in-flight upload across hiding and returning`, async ({
+    page,
+  }, info) => {
+    expect(
+      (
+        await page.request.post("/api/entry", {
+          data: { name: "Alice", code: "synthetic-shared-code" },
+        })
+      ).ok(),
+    ).toBe(true);
+    await page.goto(`/#/${path}`);
+    const fixture = execFileSync(".venv/bin/python", [
+      "-c",
+      "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(67,49),'green').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('background.jpg',p.getvalue()); z.writestr('unsupported.bin',bytes(600000)); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    ]);
+    const namespace = `background ${path} ${info.project.name}`;
+    await page.locator('#upload select[name="source"]').selectOption("manual");
+    await page.getByLabel("Source account label").fill(namespace);
+    await page.getByLabel("Export ZIP").setInputFiles({
+      name: "background.zip",
+      mimeType: "application/zip",
+      buffer: fixture,
+    });
+    let releaseChunk!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseChunk = resolve;
+    });
+    let waiting = false;
+    const offsets: number[] = [];
+    const failed: string[] = [];
+    let finishes = 0;
+    page.on("requestfailed", (request) => {
+      if (request.url().includes("/api/imports/")) failed.push(request.url());
+    });
+    page.on("request", (request) => {
+      if (request.url().endsWith("/api/imports/finish")) finishes++;
+    });
+    await page.route("**/api/imports/chunk", async (route) => {
+      const { offset } = route.request().postDataJSON();
+      offsets.push(offset);
+      if (offset === 256 * 1024) {
+        waiting = true;
+        await gate;
+      }
+      await route.continue();
+    });
+    const start = page.waitForResponse("**/api/imports/start");
+    await page
+      .getByRole("button", {
+        name: "Upload and inspect inventory",
+        exact: true,
+      })
+      .click();
+    const run = (await (await start).json()).id;
+    await expect.poll(() => waiting).toBe(true);
+    try {
+      await page.evaluate(() => {
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: true,
+        });
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          value: "hidden",
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await expect(page.getByLabel("Export ZIP")).toHaveCount(1);
+      releaseChunk();
+      await expect
+        .poll(
+          async () =>
+            (
+              await (
+                await page.request.get(`/api/imports/${run}?offset=0`)
+              ).json()
+            ).state,
+        )
+        .toBe("INVENTORIED");
+      await page.evaluate(() => {
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: false,
+        });
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          value: "visible",
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await expect(page.locator("#report-title")).toContainText("inventoried");
+      await expect(page.getByLabel("Source account label")).toHaveValue(
+        namespace,
+      );
+      expect(
+        await page
+          .getByLabel("Export ZIP")
+          .evaluate((element: HTMLInputElement) => element.files?.length),
+      ).toBe(1);
+      expect(offsets).toEqual([0, 256 * 1024, 512 * 1024]);
+      expect(finishes).toBe(1);
+      expect(failed).toEqual([]);
+      await page.route(`**/api/imports/${run}?*`, (route) =>
+        route.fulfill({
+          status: 403,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Synthetic access revoked" }),
+        }),
+      );
+      await page.evaluate(() => {
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: true,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await expect(page.getByLabel("Export ZIP")).toHaveCount(0);
+      await page.evaluate(() => {
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: false,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await expect(
+        page.getByText(
+          "Your session or access changed. Sign in again to continue.",
+        ),
+      ).toBeVisible();
+      await expect(page.getByLabel("Export ZIP")).toHaveCount(0);
+    } finally {
+      releaseChunk();
+    }
+  });
+}
+
+test("circle retains its mounted state across visibility changes", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/circle");
+  await expect(
+    page.getByRole("heading", { name: "Our circle", level: 1 }),
+  ).toBeVisible();
+  await page.locator(".feature-content").evaluate((element) => {
+    element.setAttribute("data-retained-probe", "original");
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator('[data-retained-probe="original"]')).toHaveCount(1);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator('[data-retained-probe="original"]')).toHaveCount(1);
+});
+
+test("imports mounts when opened in a hidden document", async ({ page }) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.addInitScript(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+  });
+  await page.goto("/#/imports");
+  await expect(page.getByLabel("Export ZIP")).toHaveCount(1);
+});
