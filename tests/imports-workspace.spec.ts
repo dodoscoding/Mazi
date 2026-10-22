@@ -314,3 +314,92 @@ test("phone memories preserves view and order with reachable touch controls", as
     await expect(page.locator("#grid-order")).toContainText("Oldest first");
   }
 });
+
+test("interrupted transfers resume at the acknowledged offset after reload", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/imports");
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(67,49),'orange').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('resume-photo.jpg',p.getvalue()); z.writestr('unsupported.bin',bytes(300000)); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  const namespace = `resume ${info.project.name}`;
+  const selectFile = async () => {
+    await page.locator('#upload select[name="source"]').selectOption("manual");
+    await page.getByLabel("Source account label").fill(namespace);
+    await page.getByLabel("Export ZIP").setInputFiles({
+      name: "resume.zip",
+      mimeType: "application/zip",
+      buffer: fixture,
+    });
+  };
+  await selectFile();
+  let fail = true;
+  let releaseChunk!: () => void;
+  const chunkGate = new Promise<void>((resolve) => {
+    releaseChunk = resolve;
+  });
+  let firstChunkWaiting = false;
+  const offsets: number[] = [];
+  await page.route("**/api/imports/chunk", async (route) => {
+    const { offset } = route.request().postDataJSON();
+    offsets.push(offset);
+    if (offset === 0) {
+      firstChunkWaiting = true;
+      await chunkGate;
+    }
+    if (offset > 0 && fail) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error:
+            "Synthetic interrupted transfer. Select the same file to resume.",
+        }),
+      });
+    } else await route.continue();
+  });
+  const submit = page.getByRole("button", {
+    name: "Upload and inspect inventory",
+    exact: true,
+  });
+  const initialStart = page.waitForResponse("**/api/imports/start");
+  await submit.click();
+  const initialRun = await (await initialStart).json();
+  await expect.poll(() => firstChunkWaiting).toBe(true);
+  await expect(submit).toBeDisabled();
+  await expect(
+    page.getByRole("progressbar", { name: "Archive transfer progress" }),
+  ).toBeVisible();
+  await expect(page.locator("#notice")).toHaveText("Transferring archive…");
+  releaseChunk();
+  await expect(page.locator("#notice")).toContainText(
+    "Synthetic interrupted transfer",
+  );
+  await expect(submit).toBeEnabled();
+  expect(offsets).toEqual([0, 256 * 1024]);
+  await page.screenshot({
+    path: info.outputPath("imports-interrupted.png"),
+    fullPage: true,
+  });
+  await page.reload();
+  await selectFile();
+  fail = false;
+  const started = page.waitForResponse("**/api/imports/start");
+  await submit.click();
+  const resumed = await (await started).json();
+  expect(resumed.id).toBe(initialRun.id);
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  expect(offsets).toEqual([0, 256 * 1024, 256 * 1024]);
+  await expect(page.locator("#report-title")).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "Start importing to group", exact: true }),
+  ).toBeEnabled();
+});
