@@ -417,7 +417,7 @@ class DiscoveryStore(SourceStore):
             if large:
                 candidates = []
                 for doc in self._keyword_documents(user, group, '', started, processing=True):
-                    if doc['eligible'] and self._cached_vectors(doc) is None and len(candidates) < limit:
+                    if len(candidates) < limit and doc['eligible'] and self._cached_vectors(doc) is None:
                         candidates.append(doc['id'])
                 ids = candidates
         indexed, discarded = 0, 0
