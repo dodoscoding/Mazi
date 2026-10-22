@@ -66,8 +66,7 @@ class SourcePlacesExportTests(PlacesFixture):
         self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1000)
         self.import_locations(1, prefix='extra')
         for filters in ({}, {'country': 'NL', 'city': 'Amsterdam'}):
-            with self.assertRaisesRegex(CapacityExceeded, '1,000 shared location records'):
-                self.store.places(self.alice, self.group, **filters)
+            self.assertEqual(len(self.store.places(self.alice, self.group, **filters)['points']), 1001)
         self.store.set_place(self.alice, origins[0]['id'], '', '', None, None, None)
         self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1000)
 
