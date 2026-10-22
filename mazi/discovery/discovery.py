@@ -499,13 +499,14 @@ class DiscoveryStore(SourceStore):
             remaining = sum(doc['eligible'] and self._cached_vectors(doc) is None for doc in documents)
         return dict(indexed=indexed, discarded=discarded, remaining=remaining)
 
-    def _keyword_documents(self, user, group, person, started, processing=False):
+    def _keyword_documents(self, user, group, person, started, processing=False, bounded_metadata=True):
         last_asset = last_origin = ''
         asset, records, shared, sources, annotation = None, [], [], set(), None
         asset_bytes = request_bytes = asset_origins = request_origins = 0
         fingerprints, eligible = [], True
         scan_seconds = DISCOVERY_SCAN_SECONDS if processing else KEYWORD_SCAN_SECONDS
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
+        payload = f'CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END' if bounded_metadata else 'o.payload'
         person_match = '''EXISTS (
             SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person
             JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor
@@ -536,10 +537,10 @@ class DiscoveryStore(SourceStore):
             return result
 
         while True:
-            if time.perf_counter() - started > scan_seconds:
+            if bounded_metadata and time.perf_counter() - started > scan_seconds:
                 raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
             batch = self.db.execute(f'''SELECT a.id,o.id AS origin,{byte_length} AS payload_bytes,
-                    CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END AS payload,
+                    {payload} AS payload,
                     r.source,n.title,n.capture_date,n.place,p.country,p.city,{person_match} AS person_match,
                     (EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject='*' AND d.enabled<>0)
                     AND EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject=o.owner_id AND d.enabled<>0)
@@ -554,7 +555,7 @@ class DiscoveryStore(SourceStore):
                 AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id)
                 AND (o.asset_id>? OR (o.asset_id=? AND o.id>?))
                 ORDER BY o.asset_id,o.id LIMIT 256''',
-                (KEYWORD_ORIGIN_BYTES, *((person,) if person else ()), group, group,
+                (*((KEYWORD_ORIGIN_BYTES,) if bounded_metadata else ()), *((person,) if person else ()), group, group,
                  last_asset, user, last_asset, last_asset, last_origin)).fetchall()
             if not batch:
                 break
@@ -564,17 +565,17 @@ class DiscoveryStore(SourceStore):
                     records, shared, sources, asset_bytes = [], [], set(), 0
                     fingerprints, eligible, asset_origins = [], True, 0
                 asset, annotation = row['id'], row
-                if row['payload_bytes'] > KEYWORD_ORIGIN_BYTES:
+                if bounded_metadata and row['payload_bytes'] > KEYWORD_ORIGIN_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 KiB per-origin limit')
                 asset_origins += 1
                 request_origins += 1
-                if asset_origins > 8192 or request_origins > 100000:
+                if bounded_metadata and (asset_origins > 8192 or request_origins > 100000):
                     raise CapacityExceeded('Local discovery exceeded its metadata origin-count budget')
                 asset_bytes += row['payload_bytes']
                 request_bytes += row['payload_bytes']
-                if asset_bytes > KEYWORD_ASSET_BYTES:
+                if bounded_metadata and asset_bytes > KEYWORD_ASSET_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 8 MiB per-photograph limit')
-                if request_bytes > KEYWORD_REQUEST_BYTES:
+                if bounded_metadata and request_bytes > KEYWORD_REQUEST_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
                 records.append(json.loads(row['payload']))
                 if processing:
@@ -587,10 +588,10 @@ class DiscoveryStore(SourceStore):
             del batch
         if asset is not None:
             yield document()
-        if time.perf_counter() - started > scan_seconds:
+        if bounded_metadata and time.perf_counter() - started > scan_seconds:
             raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
 
-    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30):
+    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, bounded_metadata=True):
         self._member(user, group)
         if similar and not self.db.execute('''SELECT 1 FROM archive_assets a
                 WHERE a.id=? AND a.group_id=?
@@ -615,7 +616,7 @@ class DiscoveryStore(SourceStore):
                 ))))''', (group, user))
         total, items = 0, []
         words, objects = query.casefold().split(), model.terms(object_query)
-        for doc in self._keyword_documents(user, group, person, started):
+        for doc in self._keyword_documents(user, group, person, started, bounded_metadata=bounded_metadata):
             if person and not doc['person_match'] or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
                 continue
             if country and country.upper() not in doc['countries']:
@@ -665,9 +666,9 @@ class DiscoveryStore(SourceStore):
                         ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.withdrawn=0)
                     AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=a.id)
                     LIMIT 1001''', (group, user)).fetchall()
-                if len(probe) > 1000:
-                    return self._keyword_search(user, group, query, person, place, country, object_query,
-                                                start, end, source, similar, offset, limit)
+                return self._keyword_search(user, group, query, person, place, country, object_query,
+                                            start, end, source, similar, offset, limit,
+                                            bounded_metadata=len(probe) > 1000)
             visible = self._visible_ids(user, group)
             large = len(visible) > 1000
             if len(visible) > DISCOVERY_ITEMS:
