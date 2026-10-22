@@ -62,6 +62,21 @@ class KeywordScalingTests(unittest.TestCase):
         user = user or self.alice
         self.assertEqual(self.candidate(user, **filters), self.store.search(user, self.group, **filters))
 
+    def test_small_archive_keyword_page_has_bounded_database_work(self):
+        self.seed_projection(300)
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        try:
+            page = self.store.search(self.ben, self.group, query='SYNTHETIC', offset=270)
+        finally:
+            self.store.db.set_trace_callback(None)
+        self.assertEqual([item['id'] for item in page['items']],
+                         [f'capacity-{number:05d}' for number in range(270, 300)])
+        self.assertEqual((page['total'], page['next_offset'], page['mode']),
+                         (300, None, 'keyword / filters'))
+        self.assertLessEqual(len(statements), 20,
+                             'A keyword page must batch metadata reads instead of querying every asset')
+
     def test_all_filters_unicode_and_pagination_equal_legacy(self):
         self.seed_details()
         cases = [{}, {'query': 'STRASSE summer'}, {'query': 'İSTANBUL ΣΊΓΜΑ'}, {'query': 'café'},
