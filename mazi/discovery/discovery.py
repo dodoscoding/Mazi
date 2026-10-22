@@ -308,7 +308,8 @@ class DiscoveryStore(SourceStore):
         return dict(cities=sorted(cities))
 
     def _export_person_memories(self, user, group, visible, assets):
-        for row in self._export_rows("SELECT id,title,asset_ids,updated_at," + insertion_order(self.db, "e") + " AS export_order FROM review_events e WHERE group_id=? AND status='accepted' AND NOT EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h.\"user\"=?) ", (group, user), [("updated_at", "updated_at", True), (insertion_order(self.db, "e"), "export_order", False)]):
+        event_order = "e.id" if getattr(self.db, "hosted", False) else insertion_order(self.db, "e")
+        for row in self._export_rows("SELECT id,title,asset_ids,updated_at," + event_order + " AS export_order FROM review_events e WHERE group_id=? AND status='accepted' AND NOT EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h.\"user\"=?) ", (group, user), [("updated_at", "updated_at", True), (event_order, "export_order", False)]):
             event_assets = {asset for asset in json.loads(row['asset_ids']) if asset in visible}
             if len(event_assets) >= 2 and event_assets & assets:
                 yield dict(id=row['id'], title=row['title'])
@@ -755,10 +756,11 @@ class DiscoveryStore(SourceStore):
             for row in self._export_rows(query, (group, user, user, group), [('s.person', 'person', False), ('s.asset', 'asset', False)]):
                 yield {key: row[key] for key in ('person', 'asset', 'name')}
         else:
+            event_order = "e.id" if getattr(self.db, "hosted", False) else insertion_order(self.db, 'e')
             visible = set(self._visible_ids(user, group))
-            query = ('SELECT e.id,e.title,e.asset_ids,e.updated_at,e.status,' + insertion_order(self.db, 'e') + ' AS export_order FROM review_events e '
+            query = ('SELECT e.id,e.title,e.asset_ids,e.updated_at,e.status,' + event_order + ' AS export_order FROM review_events e '
                      'WHERE e.group_id=? AND EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h."user"=?)')
-            for row in self._export_rows(query, (group, user), [('e.updated_at', 'updated_at', True), ('e.status', 'status', False), (insertion_order(self.db, 'e'), 'export_order', False)]):
+            for row in self._export_rows(query, (group, user), [('e.updated_at', 'updated_at', True), ('e.status', 'status', False), (event_order, 'export_order', False)]):
                 if sum(asset in visible for asset in json.loads(row['asset_ids'])) >= 2:
                     yield dict(id=row['id'], title=row['title'])
 

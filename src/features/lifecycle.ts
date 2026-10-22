@@ -14,15 +14,20 @@ export function createLifecycle(
   const apiFetch: typeof fetch = async (input, init) => {
     if (!active) throw new DOMException("Feature disposed", "AbortError");
     const requestController = controller;
+    const signal = init?.signal
+      ? AbortSignal.any([requestController.signal, init.signal])
+      : requestController.signal;
     let response = await window.fetch(input, {
       ...init,
-      signal: requestController.signal,
+      signal,
       cache: "no-store",
     });
-    if (!active || requestController.signal.aborted)
+    if (!active || signal.aborted)
       throw new DOMException("Feature disposed", "AbortError");
     if (response.status === 401 || response.status === 403) {
       const errorBody = await response.text();
+      if (!active || signal.aborted)
+        throw new DOMException("Feature disposed", "AbortError");
       response = new Response(errorBody, {
         status: response.status,
         headers: response.headers,
@@ -48,13 +53,13 @@ export function createLifecycle(
     const blob = response.blob.bind(response);
     response.json = async () => {
       const value = await json();
-      if (!active || (response.ok && requestController.signal.aborted))
+      if (!active || (response.ok && signal.aborted))
         throw new DOMException("Feature disposed", "AbortError");
       return value;
     };
     response.blob = async () => {
       const value = await blob();
-      if (!active || requestController.signal.aborted)
+      if (!active || signal.aborted)
         throw new DOMException("Feature disposed", "AbortError");
       return value;
     };
