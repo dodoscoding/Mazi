@@ -817,3 +817,14 @@
     gap: 28px;
   }
 }
+
+.discovery-page .disc-context {
+  margin-bottom: 24px;
+}
+.discovery-page .disc-context .disc-pill {
+  max-width: 100%;
+  padding-block: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  text-align: left;
+}
