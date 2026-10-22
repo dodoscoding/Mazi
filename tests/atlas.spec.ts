@@ -324,3 +324,65 @@ test("reduced motion keeps the still year card in the Timeline", async ({
   await expect(panel).toContainText("Nicosia, Cyprus");
   await expect(panel.locator("canvas")).toHaveCount(0);
 });
+
+test("sharing-only same-year memories replay independently with explicit date basis", async ({
+  page,
+}) => {
+  await skipIntro(page);
+  const base = {
+    kind: "photo",
+    source: "whatsapp",
+    date: "Date not recorded",
+    year: null,
+    approximate: false,
+    by: "Circle",
+    description: "Synthetic",
+    place: null,
+    people: { shared: [], conversation: [] },
+    messages: [],
+  };
+  const memories = [1, 2, 3].map((i) => ({
+    ...base,
+    id: `shared-${i}`,
+    shortTitle: `Shared ${i}`,
+    title: `Shared ${i}`,
+    photos: [
+      {
+        src: "/media/ferry.webp",
+        alt: "Synthetic",
+        caption: "",
+        provenance: [
+          {
+            sender: "Ana",
+            source: "whatsapp",
+            sharedAt: {
+              local: `2025-01-0${i}T12:00:00`,
+              raw: null,
+              precision: "second",
+              ambiguous: false,
+            },
+          },
+        ],
+      },
+    ],
+  }));
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories } }),
+  );
+  await page.goto("/#/?selected=shared-3");
+  await expect(page.locator(".readout-year")).toHaveText("2025");
+  await expect(page.locator(".readout-summary")).toContainText("Shared on");
+  const replay = page.getByRole("button", { name: "Replay", exact: true });
+  await expect(replay).toBeEnabled();
+  await replay.click();
+  await expect(page).toHaveURL(/selected=shared-1/);
+  await expect(page).toHaveURL(/selected=shared-2/);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.waitForTimeout(1600);
+  await expect(page).toHaveURL(/selected=shared-2/);
+  await replay.click();
+  await expect(page).toHaveURL(/selected=shared-3/);
+  await expect(replay).toBeVisible();
+  await replay.click();
+  await expect(page).toHaveURL(/selected=shared-1/);
+});
