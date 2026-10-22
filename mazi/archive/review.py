@@ -83,8 +83,18 @@ class ReviewStore(ImportStore):
             "AND m.group_id=o.group_id WHERE o.asset_id=a.id AND o.withdrawn=0) "
             "ORDER BY a.id", (group,))]
 
+    @contextmanager
+    def _projection_transaction(self):
+        try:
+            with self.transaction():
+                yield
+        except sqlite3.OperationalError as error:
+            if (getattr(error, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise ArchiveBusy('Archive is busy; retry shortly') from None
+            raise
+
     def duplicate_suggestions(self, user, group, limit=100):
-        with self.transaction():
+        with self._projection_transaction():
             return self._duplicate_suggestions(user, group, limit)
 
     def _duplicate_suggestions(self, user, group, limit):
@@ -260,7 +270,7 @@ class ReviewStore(ImportStore):
         return self.asset_bytes(user, asset)
 
     def event_suggestions(self, user, group, limit=100):
-        with self.transaction():
+        with self._projection_transaction():
             return self._event_suggestions(user, group, limit)
 
     def _event_suggestions(self, user, group, limit):

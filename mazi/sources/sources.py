@@ -361,7 +361,7 @@ class SourceStore(ReviewStore):
                 'WHERE o.group_id=? AND o.withdrawn=0', (group,))
 
     def places(self, user, group, country='', city='', paths=False):
-        with self.transaction():
+        with self._projection_transaction():
             return self._places(user, group, country, city, paths)
 
     def _places(self, user, group, country, city, paths):
