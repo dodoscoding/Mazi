@@ -68,7 +68,17 @@ export function useEntry() {
           setState({ status: "signed-out", error: "" });
           return true;
         }
+        if (
+          retainReady &&
+          profile.current &&
+          (profile.current.user_id !== value.user_id ||
+            profile.current.group_id !== value.group_id)
+        ) {
+          window.dispatchEvent(new Event("mazi:access-lost"));
+          return false;
+        }
         accessLost.current = false;
+        profile.current = value;
         sessionStorage.setItem("mazi.group", value.group_id);
         setState({
           status: value.introduced ? "ready" : "onboarding",
