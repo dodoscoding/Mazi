@@ -73,6 +73,7 @@ Browser checks use synthetic fixtures. See [Firefox setup on macOS](work/poteto/
 | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | [Product context](PRODUCT.md) and [specification](docs/SPEC.md)                                | Who Mazi serves and how the archive works.                    |
 | [Development guide](docs/DEVELOPMENT.md) and [hosted setup](docs/SUPABASE_SETUP.md)            | Run the app and manage an archive.                            |
+| [Vercel deployment](docs/DEPLOYMENT.md)                                                        | Host the interface and API on Vercel with the hosted archive. |
 | [App architecture](docs/PROTOTYPE_STACK.md)                                                    | React interface, Python domains, storage, and current limits. |
 | [Roadmap](docs/ROADMAP.md) and [decisions](docs/DECISIONS.md)                                  | Delivery gates, accepted choices, and open risks.             |
 | [Contracts](docs/CONTRACTS.md), [privacy](docs/PRIVACY.md), and [imports](docs/IMPORTS.md)     | Data rules, access, consent, and supported sources.           |

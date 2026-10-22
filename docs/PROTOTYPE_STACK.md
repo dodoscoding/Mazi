@@ -6,7 +6,7 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 
 `npm run dev` supervises a Vite interface and a loopback Python API/worker. Vite forwards `/api`, `/health` and `/land.geojson` without rewriting the browser Host, preserving Origin validation. The browser uses one origin and one HttpOnly session cookie. `npm start` builds the interface and serves both assets and APIs from Python.
 
-`python -m mazi` is the backend entry point. With ignored `.env.supabase` present, normal startup selects hosted PostgreSQL/private Storage; `--local` or `MAZI_BACKEND=local` retains SQLite and file keys in `.mazi-imports`. Hosted scratch defaults to `.mazi-hosted`; it is separate from the local source. The background worker uses a separate connection with the same configuration. Startup never transfers an archive or seeds samples. The historical `.mazi-pilot` archive remains separate. [Hosted setup](SUPABASE_SETUP.md) documents credentials, transfer and recovery.
+`python -m mazi` is the backend entry point. With ignored `.env.supabase` present, normal startup selects hosted PostgreSQL/private Storage; `--local` or `MAZI_BACKEND=local` retains SQLite and file keys in `.mazi-imports`. Hosted scratch defaults to `.mazi-hosted`; it is separate from the local source. The background worker uses a separate connection with the same configuration. Startup never transfers an archive or seeds samples. The historical `.mazi-pilot` archive remains separate. [Hosted setup](SUPABASE_SETUP.md) documents credentials, transfer and recovery. On Vercel, `api/index.py` serves the same handler as one function and signed-in tabs drive the worker through `/api/work`; [deployment](DEPLOYMENT.md) describes the tradeoff.
 
 ## Ownership
 
