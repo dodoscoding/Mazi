@@ -46,7 +46,13 @@ sys.stdout.buffer.write(archive.getvalue())
   await expect(page.locator("#report-title")).toContainText("inventoried", {
     timeout: 15000,
   });
-  await expect(page.locator("#report-summary")).toContainText("3 discovered");
+  await expect(page.locator("#report-summary")).toContainText(
+    "3 records scanned",
+  );
+  await expect(page.locator("#report-state")).toContainText("confirmation");
+  await expect(page.locator("#report-summary")).toContainText(
+    "3 media candidates",
+  );
   await expect(page.locator("#gallery article")).toHaveCount(0);
   await page.getByRole("button", { name: "Start importing to group" }).click();
   await expect(page.locator("#report-title")).toContainText("completed");
