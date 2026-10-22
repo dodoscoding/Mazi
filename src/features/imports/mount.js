@@ -86,6 +86,8 @@ export function mount(root, lifecycle) {
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.error || "Request failed. Please retry.");
+    if (/^\/api\/imports\/(finish|confirm|retry)$/.test(path))
+      window.dispatchEvent(new Event("mazi:work"));
     return data;
   }
   function notice(message, tone = "info") {
