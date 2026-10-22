@@ -6,7 +6,7 @@ presentation grouping; every original remains accessible through its own ID.
 from __future__ import annotations
 
 from mazi.persistence import ArchiveBusy, initialize_schema, insertion_order
-from mazi.archive.export import ExportFingerprint, ExportWriter, export_cleanup, write_export_object
+from mazi.archive.export import ExportArray, ExportFingerprint, ExportWriter, export_cleanup, write_export_object
 
 import io
 import sqlite3
@@ -508,8 +508,8 @@ class ReviewStore(ImportStore):
     def export_archive_file(self, user, group):
         """Own a private completed ZIP, exposing it only after policy admission."""
         ids = self._visible_ids(user, group)
-        if len(ids) > 1000:
-            raise CapacityExceeded("Export supports up to 1,000 photographs")
+        if len(ids) > 10000:
+            raise CapacityExceeded("Export supports up to 10,000 photographs")
         for asset in ids:
             self._asset(user, asset)
         captured = ExportFingerprint(self._check_export_size)
@@ -539,35 +539,63 @@ class ReviewStore(ImportStore):
         if size > EXPORT_BYTES:
             raise CapacityExceeded('Export exceeds the local 128 MiB archive limit')
 
-    def _export_asset(self, user, asset):
-        row, namespace, key = self._asset_locator(user, asset, original=True)
-        origins, identities, offset = [], [], 0
+    def _export_rows(self, query, params, order, page_size=128):
+        after = None
+        ordering = ','.join(expression + (' DESC' if descending else ' ASC')
+                            for expression, _, descending in order)
         while True:
-            page, total = self._origin_page(user, asset, offset)
-            for origin in page:
-                origins.append(json.loads(origin['payload']))
-                identities.append({key: origin[key] for key in
-                                   ('id', 'asset_id', 'group_id', 'owner_id', 'run_id', 'occurrence', 'fingerprint')})
-            offset += len(page)
-            if offset >= total:
+            predicates, values = [], []
+            if after is not None:
+                for index, (expression, _, descending) in enumerate(order):
+                    equal = [prior[0] + '=?' for prior in order[:index]]
+                    comparison = expression + ('<?' if descending else '>?')
+                    predicates.append('(' + ' AND '.join([*equal, comparison]) + ')')
+                    values.extend(after[:index + 1])
+            clause = ' AND (' + ' OR '.join(predicates) + ')' if predicates else ''
+            rows = self.db.execute(query + clause + ' ORDER BY ' + ordering + ' LIMIT ?',
+                                   (*params, *values, page_size)).fetchall()
+            if not rows:
+                return
+            for row in rows:
+                yield row
+            after = tuple(rows[-1][key] for _, key, _ in order)
+
+    def _export_origins(self, user, asset, identity=False):
+        self._asset(user, asset)
+        order = insertion_order(self.db, 'o')
+        after = 0
+        columns = ('o.id,o.asset_id,o.group_id,o.owner_id,o.run_id,o.occurrence,o.fingerprint'
+                   if identity else 'o.payload')
+        while True:
+            origin = self.db.execute("SELECT " + columns + ", " + order + " AS export_order FROM archive_origins o "
+                                     "JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
+                                     "WHERE o.asset_id=? AND o.withdrawn=0 AND " + order + ">? ORDER BY " + order + " LIMIT 1",
+                                     (asset, after)).fetchone()
+            if origin is None:
                 break
-        metadata = {"id": asset, "sha256": row['sha256'], "mime": row["mime"], "origins": origins,
-                    "annotation": dict(self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone() or {})}
-        identity = dict(asset=asset, group=row['group_id'], namespace=namespace,
-                        key=key, sha256=row['sha256'], size=row['size'], origins=identities)
-        return metadata, identity
+            after = origin['export_order']
+            if identity:
+                yield {key: origin[key] for key in
+                       ('id', 'asset_id', 'group_id', 'owner_id', 'run_id', 'occurrence', 'fingerprint')}
+            else:
+                yield json.loads(origin['payload'])
 
     def _export_manifest(self, user, group, ids, fingerprint, archive=None, output=None):
         fingerprint.identity('visible-assets', ids)
-        manifest = []
-        for asset in ids:
-            metadata, identity = self._export_asset(user, asset)
-            if archive is not None:
-                write_export_object(self.objects, identity, archive, output, "originals/" + asset,
-                                    "Stored original changed while preparing export; retry")
-            fingerprint.identity('original', identity)
-            manifest.append(metadata)
-        fingerprint.json_member('manifest.json', {"group": group, "assets": manifest}, archive, ensure_ascii=False)
+        def records():
+            for asset in ids:
+                row, namespace, key = self._asset_locator(user, asset, original=True)
+                identity = dict(asset=asset, group=row['group_id'], namespace=namespace,
+                                key=key, sha256=row['sha256'], size=row['size'],
+                                origins=ExportArray(self._export_origins(user, asset, identity=True)))
+                if archive is not None:
+                    write_export_object(self.objects, identity, archive, output, "originals/" + asset,
+                                        "Stored original changed while preparing export; retry")
+                fingerprint.identity('original', identity)
+                yield {"id": asset, "sha256": row['sha256'], "mime": row['mime'],
+                       "origins": ExportArray(self._export_origins(user, asset)),
+                       "annotation": dict(self.db.execute("SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?", (asset,)).fetchone() or {})}
+        fingerprint.json_member('manifest.json', {"group": group, "assets": ExportArray(records())}, archive, ensure_ascii=False)
 
     def _capture_export_metadata(self, user, group, ids, fingerprint):
         self._export_manifest(user, group, ids, fingerprint)
