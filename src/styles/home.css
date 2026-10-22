@@ -992,6 +992,7 @@
   animation: dossier-in 500ms var(--ease-arrive) 900ms both;
 }
 .dossier > * {
+  flex-shrink: 0;
   animation: dossier-in 500ms var(--ease-arrive) both;
   animation-delay: calc(900ms + var(--d, 0) * 50ms);
 }
@@ -1089,8 +1090,7 @@
   font: 400 14px / 1 var(--font-mono);
 }
 .dossier-sources {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 .dossier-sources .hud-label {
   padding-bottom: 4px;

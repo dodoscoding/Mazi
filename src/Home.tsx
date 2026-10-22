@@ -1,3 +1,4 @@
+import { buildChronology } from "./memory/chronology";
 import { sourceSharedLine } from "./memory/provenance";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
@@ -11,12 +12,7 @@ import { AtlasStage } from "./atlas/AtlasStage";
 import type { StageView } from "./atlas/AtlasStage";
 import { plural, shortDate } from "./atlas/format";
 import { Intro, claimIntro } from "./atlas/Intro";
-import {
-  buildAtlas,
-  firstMemoryOfYear,
-  placeIdOf,
-  yearCounts,
-} from "./atlas/model";
+import { buildAtlas, placeIdOf } from "./atlas/model";
 import type { PlaceNode } from "./atlas/model";
 import { Portal } from "./atlas/Portal";
 import { Scrubber } from "./atlas/Scrubber";
@@ -234,8 +230,20 @@ function AtlasHome({
   const phone = layout === "phone";
   const compact = phone || layout === "tablet";
   const { theme } = useTheme();
-  const atlas = useMemo(() => buildAtlas(memories), [memories]);
-  const counts = useMemo(() => yearCounts(memories), [memories]);
+  const chronology = useMemo(() => buildChronology(memories), [memories]);
+  const yearOf = useCallback(
+    (memory: Memory) => chronology.byId.get(memory.id)!.date.year,
+    [chronology],
+  );
+  const atlas = useMemo(() => buildAtlas(memories, yearOf), [memories, yearOf]);
+  const counts = useMemo(() => {
+    const values: Record<number, number> = {};
+    for (const entry of chronology.ordered) {
+      const year = entry.date.year!;
+      values[year] = (values[year] || 0) + 1;
+    }
+    return values;
+  }, [chronology]);
   const byPlace = useMemo(
     () => new Map(atlas.places.map((place) => [place.id, place])),
     [atlas],
@@ -245,7 +253,8 @@ function AtlasHome({
     [memories],
   );
   const selectedPlace = placeIdOf(selected);
-  const year = selected.year;
+  const selectedDate = chronology.byId.get(selected.id)!.date;
+  const year = selectedDate.year;
   const [focusPlace, setFocusPlace] = useState<string | null>(null);
   const [view, setView] = useState<StageView>("globe");
   const [failed, setFailed] = useState(false);
@@ -344,11 +353,11 @@ function AtlasHome({
       const ids = place.memories;
       const inYear =
         year !== null
-          ? ids.find((id) => byId.get(id)?.year === year)
+          ? ids.find((id) => yearOf(byId.get(id)!) === year)
           : undefined;
       return inYear ?? ids[0];
     },
-    [byId, year],
+    [byId, year, yearOf],
   );
   const choosePlace = useCallback(
     (placeId: string) => {
@@ -360,29 +369,36 @@ function AtlasHome({
   );
   const chooseYear = useCallback(
     (value: number) => {
-      const memory = firstMemoryOfYear(memories, value);
+      const memory = chronology.ordered.find(
+        (entry) => entry.date.year === value,
+      )?.memory;
       if (memory) chooseMemory(memory.id);
     },
-    [memories, chooseMemory],
+    [chronology, chooseMemory],
   );
 
-  // Replay walks the years, 1.2 s each (1.5 s steps under reduced motion).
   useEffect(() => {
     if (!playing) return;
     const timer = setTimeout(
       () => {
-        const next = atlas.years.find((value) => value > (year ?? -Infinity));
-        if (next === undefined) setPlaying(false);
-        else chooseYear(next);
+        const index = chronology.ordered.findIndex(
+          (entry) => entry.memory.id === selected.id,
+        );
+        const next = chronology.ordered[index + 1];
+        if (!next) setPlaying(false);
+        else chooseMemory(next.memory.id);
       },
       reduced ? 1500 : 1200,
     );
     return () => clearTimeout(timer);
-  }, [playing, year, atlas.years, chooseYear, reduced]);
+  }, [playing, selected.id, chronology, chooseMemory, reduced]);
   const toggleReplay = () => {
     if (playing) return setPlaying(false);
-    const last = atlas.years[atlas.years.length - 1];
-    if (year === null || year === last) chooseYear(atlas.years[0]);
+    const index = chronology.ordered.findIndex(
+      (entry) => entry.memory.id === selected.id,
+    );
+    if (index < 0 || index === chronology.ordered.length - 1)
+      chooseMemory(chronology.ordered[0].memory.id);
     setPlaying(true);
   };
 
@@ -502,8 +518,8 @@ function AtlasHome({
   const memoriesThisYear = year === null ? 0 : counts[year] || 0;
   const yearSummary =
     year === null
-      ? "Date not recorded"
-      : `${plural(placesThisYear, "place")} · ${plural(memoriesThisYear, "memory", "memories")}`;
+      ? selectedDate.label
+      : `${selectedDate.basis === "shared" ? selectedDate.label + " · " : ""}${plural(placesThisYear, "place")} · ${plural(memoriesThisYear, "memory", "memories")}`;
   const valueText =
     year === null
       ? `No date recorded for ${selected.shortTitle}`
@@ -703,23 +719,26 @@ function AtlasHome({
   const timebar = (
     <div className="atlas-timebar">
       <div className="timebar-row">
-        {!phone && (
-          <button
-            type="button"
-            className="replay"
-            onClick={toggleReplay}
-            disabled={atlas.years.length < 2}
-          >
-            <svg viewBox="0 0 12 12" aria-hidden="true">
-              {playing ? (
-                <path d="M2 1h3v10H2zM7 1h3v10H7z" />
-              ) : (
-                <path d="M2 1l9 5-9 5z" />
-              )}
-            </svg>
-            {playing ? "Pause" : "Replay"}
-          </button>
-        )}
+        <button
+          type="button"
+          className="replay"
+          onClick={toggleReplay}
+          disabled={chronology.ordered.length < 2}
+          title={
+            chronology.ordered.length < 2
+              ? "Replay needs at least two memories with capture or sharing dates"
+              : undefined
+          }
+        >
+          <svg viewBox="0 0 12 12" aria-hidden="true">
+            {playing ? (
+              <path d="M2 1h3v10H2zM7 1h3v10H7z" />
+            ) : (
+              <path d="M2 1l9 5-9 5z" />
+            )}
+          </svg>
+          {playing ? "Pause" : "Replay"}
+        </button>
         <Scrubber
           years={atlas.years}
           counts={counts}
@@ -733,6 +752,11 @@ function AtlasHome({
           compact={compact}
         />
       </div>
+      {chronology.ordered.length < 2 && (
+        <p className="hud-label">
+          Replay needs at least two memories with capture or sharing dates.
+        </p>
+      )}
       {!compact && (
         <p className="hud-label atlas-hints" aria-hidden="true">
           <span>Drag to turn</span>
@@ -782,7 +806,7 @@ function AtlasHome({
         aria-hidden={portalOpen || undefined}
       >
         <div className="atlas-readout">
-          <p className="readout-year">{year ?? "Undated"}</p>
+          <p className="readout-year">{year ?? "Date unknown"}</p>
           <p className="hud-label readout-summary">{yearSummary}</p>
         </div>
         <div className="atlas-view" role="group" aria-label="View">
