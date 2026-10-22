@@ -361,13 +361,38 @@ class SourceStore(ReviewStore):
                 'WHERE o.group_id=? AND o.withdrawn=0', (group,))
 
     def places(self, user, group, country='', city='', paths=False):
+        with self._projection_transaction():
+            return self._places(user, group, country, city, paths)
+
+    def _places(self, user, group, country, city, paths):
         self._member(user, group)
         if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
             raise ValueError('Invalid filters')
         clause, params = self._places_query(user, group)
-        rows = [dict(row) for row in self.db.execute('SELECT p.*,o.asset_id' + clause + ' ORDER BY p.day,p.origin LIMIT 1001', params)]
-        if len(rows) > 1000:
-            raise CapacityExceeded('Local map supports up to 1,000 shared location records')
+        byte_length = (lambda column: f'octet_length({column})') if getattr(self.db, 'hosted', False) else (lambda column: f'length(CAST({column} AS BLOB))')
+        text_bytes = ' + '.join(f'COALESCE({byte_length(column)},0)' for column in ('p.origin', 'p.country', 'p.city', 'p.day', 'o.asset_id'))
+        rows, request_bytes = [], 2
+        last_day = last_origin = ''
+        started = time.perf_counter()
+        while True:
+            if time.perf_counter() - started > 15:
+                raise CapacityExceeded('Local map exceeded its 15 second processing budget')
+            batch = self.db.execute(f'SELECT p.origin,CASE WHEN {text_bytes}<=8192 THEN p.country END AS country,'
+                                    f'CASE WHEN {text_bytes}<=8192 THEN p.city END AS city,p.latitude,p.longitude,'
+                                    f'CASE WHEN {text_bytes}<=8192 THEN p.day END AS day,o.asset_id,{text_bytes} AS text_bytes'
+                                    + clause + " AND (COALESCE(p.day,'')>? OR (COALESCE(p.day,'')=? AND p.origin>?))"
+                                    + " ORDER BY COALESCE(p.day,''),p.origin LIMIT 128", (*params, last_day, last_day, last_origin)).fetchall()
+            if not batch:
+                break
+            for row in batch:
+                if row['text_bytes'] > 8192:
+                    raise CapacityExceeded('Local map exceeded its 8 KiB location record budget')
+                point = {key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')}
+                request_bytes += len(json.dumps(point).encode('utf-8')) + (2 if rows else 0)
+                if len(rows) == 20000 or request_bytes > 8 * 1024 * 1024:
+                    raise CapacityExceeded('Local map supports up to 20,000 location records within an 8 MiB response budget')
+                rows.append(point)
+            last_day, last_origin = batch[-1]['day'] or '', batch[-1]['origin']
         countries = sorted({r['country'] for r in rows})
         narrowed = [r for r in rows if not country or r['country'] == country.upper()]
         cities = sorted({r['city'] for r in narrowed})

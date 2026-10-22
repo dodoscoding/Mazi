@@ -226,8 +226,7 @@ class DiscoveryTests(unittest.TestCase):
         self.store.hide(self.ben, self.asset, True)
         self.assertEqual(self.store.places(self.ben, self.group)['points'], [])
         self.store.export_archive(self.ben, self.group)
-        with self.assertRaises(ValueError):
-            self.store.places(self.alice, self.group)
+        self.assertEqual(len(self.store.places(self.alice, self.group)['points']), 1001)
 
     def test_image_reference_consent_and_cross_group_denial(self):
         self.enable()

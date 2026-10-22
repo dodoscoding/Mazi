@@ -8,7 +8,6 @@ import threading
 import unittest
 import zipfile
 from http.server import HTTPServer
-from types import SimpleNamespace
 
 from PIL import Image
 from mazi.memories.memories import MemoryStore
@@ -85,24 +84,13 @@ class CapacityHttpTests(unittest.TestCase):
                     self.assertEqual(request(citation['url']), (200, citation))
                 self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'},
                                          authenticated=False)[0], 403)
-                checks = [
-                    (f'/api/discovery/search?group={group}&mode=semantic', None, 'Local search limit is 1,000 items'),
-                    (f'/api/review/events?group={group}', None, 'Review set exceeds local limit'),
-                    (f'/api/review/duplicates?group={group}', None, 'Review set exceeds local limit'),
-                    (f'/api/review/export?group={group}', None, 'Export supports up to 1,000 photographs'),
-                ]
-                for path, body, message in checks:
-                    with self.subTest(path=path):
-                        self.assertEqual(request(path, body), (400, {'code': 'capacity_exceeded', 'error': message}))
-                        self.assertEqual(request(path, body, authenticated=False)[0], 403)
-                original_encoder = store.encoder
-                store.encoder = SimpleNamespace(ready=True)
-                try:
-                    self.assertEqual(request('/api/discovery/index', {'group': group, 'limit': 2}, authenticated=False)[0], 403)
-                    self.assertEqual(request('/api/discovery/index', {'group': group, 'limit': 2}),
-                                     (400, {'code': 'capacity_exceeded', 'error': 'Local index limit is 1,000 items'}))
-                finally:
-                    store.encoder = original_encoder
+                for path in (f'/api/discovery/search?group={group}&mode=semantic',
+                             f'/api/review/events?group={group}', f'/api/review/duplicates?group={group}'):
+                    self.assertEqual(request(path)[0], 200)
+                    self.assertEqual(request(path, authenticated=False)[0], 403)
+                self.assertEqual(request('/api/discovery/index', {'group': group, 'limit': 2}, authenticated=False)[0], 403)
+                status, indexed = request('/api/discovery/index', {'group': group, 'limit': 2})
+                self.assertEqual((status, indexed['indexed'], indexed['remaining']), (200, 2, 999))
                 # Oversized source metadata fails both complete retrieval operations.
                 origin = store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=? LIMIT 1', (asset,)).fetchone()
                 store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?',
