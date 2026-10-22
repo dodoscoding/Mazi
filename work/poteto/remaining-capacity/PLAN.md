@@ -24,3 +24,21 @@ Model the Domain selects a per-photograph evidence projection and exact signatur
 ## Throughput checkpoint
 
 Prioritize semantic/index metadata projection, event evidence and Places, then exact duplicate candidates. Use focused backend files while other workstreams run. Root owns final full-suite verification and PR/merge.
+
+## Verification progress
+
+Initial failing-before command used `/Users/altanesmer/Desktop/Ales/Mazi/.venv/bin/python -m unittest tests.backend.discovery.test_remaining_capacity`. It failed with `Local search limit is 1,000 items` at 10,000 photographs and `Review set exceeds local limit` at 1,001, before implementation. The imported test class initially also caused five existing archive tests to run; that fixture import was corrected to a module alias.
+
+Focused backend runs after implementation passed 38 tests in 10.096 seconds, 27 in 4.200 seconds, 17 in 2.318 seconds, 13 in 7.096 seconds and 33 in 5.780 seconds. These overlapping runs exercised actual 1,001-photo unified HTTP imports, complete 10,000-record metadata scans, all existing keyword budgets, learned-model consent races, review decisions and complete Places recovery.
+
+The first real 10,000-photo public import run passed in 202.810 seconds including import and 10,000 public location/correction writes. Tiny synthetic 8 by 8 PNGs were distinct by RGB value. Its measured operations took 0.2482 seconds for related search, 0.7082 for the first five index records, 0.1124 for events, 2.5378 for duplicates and 0.0573 for Places. Search returned total 10,000 and its final ten rows; index returned five indexed and 9,995 remaining; event returned every photograph; duplicate review returned its ordered 100-suggestion limit; Places returned all 10,000 rows. This process loaded the modules before the final event/Places keyset-paging adjustment. A final-source rerun is pending; do not present those early timings as final-source timings.
+
+A stale earlier run was terminated before reaching its result after a test fixture bug was corrected. It used capped owned-origin recovery output to locate locations. The corrected fixture reads synthetic imported origin IDs directly, then uses public location/correction methods for all 10,000. No benchmark mocks pixel decoding or import processing.
+
+The exact duplicate index partitions all 64 signature bits into seven nonoverlapping blocks of sizes 9, 9, 9, 9, 9, 9 and 10. A pair differing in at most six bits must share a whole block. Unioned candidate sets therefore preserve every qualifying pair. The regression compares against all brute-force pairs, including a six-block-difference boundary, and checks deterministic ordering, dismissal and hiding.
+
+The docs checker fails on preexisting en dashes in `docs/PROTOTYPE_STACK.md` line 50, also present at base `31d32bd`. Root owns this preexisting CI repair. `git diff --check` passed.
+
+## Remaining limitations
+
+Local SQLite evidence does not establish hosted PostgreSQL performance, learned-model inference throughput, browser rendering or production milestone acceptance. Larger index requests retain two full metadata scans per batch for complete current remaining counts. Only five images are inferred per call; the tests measure first and last batch completion rather than the full wall time of 2,000 sequential batches. Hash-degenerate duplicate sets can exhaust explicit comparison or preview budgets. Cooperative time checks cannot interrupt locks, SQL, image decode or model inference. There is no schema or storage change, and source originals and privacy consent are unchanged. Search-page Atlas/People startup remains a separate UI concern owned by root.
