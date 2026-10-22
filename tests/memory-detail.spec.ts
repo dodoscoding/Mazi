@@ -639,10 +639,16 @@ test("source sharing is visible on cards, portal and detail without a capture da
     "04/05/2024, 21:00 · date order unclear",
   );
 
-  await page
+  const openMemory = page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true })
-    .click();
+    .getByRole("link", { name: "Open memory", exact: true });
+  await openMemory.scrollIntoViewIfNeeded();
+  if ((page.viewportSize()?.width || 1440) <= 600) {
+    const action = await openMemory.boundingBox();
+    const navigation = await page.locator(".tab-bar").boundingBox();
+    expect(action!.y + action!.height).toBeLessThanOrEqual(navigation!.y);
+  }
+  await openMemory.click();
   await expect(page.locator(".memory-detail h1")).toHaveText(
     "Photo shared by Ana",
   );

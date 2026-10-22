@@ -241,6 +241,18 @@ test("slash opens search and arrow keys walk places from the page", async ({
 test("the atlas, flat map and portal have no axe violations", async ({
   page,
 }) => {
+  const settleAnimations = () =>
+    page.evaluate(async () => {
+      await Promise.all(
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.effect?.getComputedTiming().iterations !== Infinity,
+          )
+          .map((animation) => animation.finished.catch(() => {})),
+      );
+    });
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const theme of ["night"] as const) {
@@ -250,12 +262,14 @@ test("the atlas, flat map and portal have no axe violations", async ({
     );
     await openAtlas(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} globe`,
     ).toEqual([]);
     await page.getByRole("button", { name: "Flat map" }).click();
     await expect(page.getByRole("img", { name: /Flat map/ })).toBeVisible();
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} flat map`,
@@ -267,7 +281,7 @@ test("the atlas, flat map and portal have no axe violations", async ({
         level: 2,
       }),
     ).toBeFocused();
-    await page.waitForTimeout(400);
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} portal`,
