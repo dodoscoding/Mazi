@@ -1,0 +1,115 @@
+{
+  "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+  "original_fixture": [
+    {
+      "query": "bright red square",
+      "scores": {
+        "red": {
+          "visual": 0.292691847797423,
+          "text": 0.4922238609660789,
+          "combined": 0.3625280524064526
+        },
+        "blue": {
+          "visual": 0.24076481024043309,
+          "text": 0.6204994170604571,
+          "combined": 0.3736719226274415
+        },
+        "green": {
+          "visual": 0.24102410304981145,
+          "text": 0.5455061816234185,
+          "combined": 0.3475928305505739
+        }
+      }
+    },
+    {
+      "query": "a photo of a red square",
+      "scores": {
+        "red": {
+          "visual": 0.28060788020894695,
+          "text": 0.5433511904816448,
+          "combined": 0.37256803880439116
+        },
+        "blue": {
+          "visual": 0.25126856522606156,
+          "text": 0.6321692890009886,
+          "combined": 0.38458381854728596
+        },
+        "green": {
+          "visual": 0.25001047189296594,
+          "text": 0.5861866587076983,
+          "combined": 0.3676721372781222
+        }
+      }
+    },
+    {
+      "query": "a plain red image",
+      "scores": {
+        "red": {
+          "visual": 0.3278077525528466,
+          "text": 0.5125155100346644,
+          "combined": 0.39245546767148287
+        },
+        "blue": {
+          "visual": 0.2708072037160127,
+          "text": 0.6439567405646308,
+          "combined": 0.401409541613029
+        },
+        "green": {
+          "visual": 0.26905517502983695,
+          "text": 0.5608805772396033,
+          "combined": 0.37119406580325515
+        }
+      }
+    },
+    {
+      "query": "a blue square",
+      "scores": {
+        "red": {
+          "visual": 0.24602341090166915,
+          "text": 0.48118297383217257,
+          "combined": 0.32832925792734535
+        },
+        "blue": {
+          "visual": 0.300656080721514,
+          "text": 0.6303660810698041,
+          "combined": 0.4160545808434155
+        },
+        "green": {
+          "visual": 0.23954564212108492,
+          "text": 0.553152396126901,
+          "combined": 0.3493080060231205
+        }
+      }
+    }
+  ],
+  "learned_fixture": [
+    {
+      "scene": "lake",
+      "document": "Archive item one photo-0.jpg",
+      "source_sha256": "fa64b0da367697d6bc7054c340b2facb607cf6e182656c47fdb237b1d4aca6eb",
+      "jpeg_sha256": "e139b7f7ea7ac1e9fffaa7e793e3c67db4db963e1454a8fe0c8e7882dddc5c64",
+      "visual": 0.32791039795537413,
+      "text": 0.4997577104942927,
+      "combined": 0.3880569573439956
+    },
+    {
+      "scene": "birthday",
+      "document": "Archive item two photo-1.jpg",
+      "source_sha256": "bd515dfdc9daec06b3bdee66eb3354d194270ade30f779c01a6c73311d62f291",
+      "jpeg_sha256": "3e4b797eef071d46c11422978c08f7bf358c3af3b237f1a987c88f36950f8b1b",
+      "visual": 0.15441788333702827,
+      "text": 0.5070561890315664,
+      "combined": 0.27784129033011656
+    },
+    {
+      "scene": "harbor",
+      "document": "Archive item three photo-2.jpg",
+      "source_sha256": "062d054b58a9d44a1ede2bd6abc5df0af838990313f63265c64bdb189027992c",
+      "jpeg_sha256": "2aa6ed20b23bc9309e686c0b8ecaf6163e496b77788875908459432ca1d62240",
+      "visual": 0.20940090505080958,
+      "text": 0.49809512984371573,
+      "combined": 0.3104438837283267
+    }
+  ],
+  "learned_query": "people relaxing on a wooden dock beside a mountain lake"
+}
