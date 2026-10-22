@@ -259,3 +259,43 @@ class DrainBudgetTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ConnectionLeaseTests(unittest.TestCase):
+    def test_success_and_failure_disconnect_under_the_request_lock(self):
+        store = Mock()
+        store.db.hosted = True
+        disconnected = threading.Event()
+
+        def disconnect():
+            self.assertTrue(index._request_lock.locked())
+            disconnected.set()
+
+        store.db.disconnect.side_effect = disconnect
+
+        class Handler(BaseHTTPRequestHandler):
+            _mazi_store = store
+
+            def log_message(self, *args):
+                pass
+
+            def do_GET(self):
+                if self.path == '/broken':
+                    raise RuntimeError('synthetic failure')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', '0')
+                self.end_headers()
+
+        for path, expected in (('/ok', 200), ('/broken', 500)):
+            with self.subTest(path=path), contextlib.redirect_stderr(io.StringIO()):
+                disconnected.clear()
+                status, _, _ = call(index.make_app(lambda: Handler), 'GET', path)
+                self.assertEqual(status, expected)
+                self.assertTrue(disconnected.wait(1))
+
+    def test_handler_eviction_closes_its_owned_store(self):
+        handler = Mock()
+        with patch.object(index, '_state', {'handler': handler}):
+            index._forget('handler', RuntimeError('failure'))
+        handler._mazi_store.close.assert_called_once_with()
