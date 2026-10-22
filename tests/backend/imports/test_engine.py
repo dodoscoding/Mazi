@@ -67,6 +67,60 @@ class EngineTests(unittest.TestCase):
                         state["active"] -= 1
         return state, patch.object(self.store.objects, "materialize", tracked)
 
+    def scanning_run(self, records=1201):
+        text = "\n".join(f"01/01/2024, 12:00 - Alice: synthetic {i}" for i in range(records))
+        data = zip_bytes({"_chat.txt": text.encode()})
+        run = self.store.begin_import(self.alice, self.group, "whatsapp", "scan", len(data), hashlib.sha256(data).hexdigest(), {"date_order": "DMY"})
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        return run
+
+    def test_scan_reuses_inventory_and_workspace_with_bounded_checkpoints(self):
+        from mazi.imports import engine
+        run = self.scanning_run()
+        state, tracking = self.tracked_archives()
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        with tracking, patch.object(engine, "inventory", wraps=engine.inventory) as parse:
+            self.store.scan(run, 500)
+            self.assertEqual(self.store.report(self.alice, run)["checkpoint"], 500)
+            self.assertEqual(state["active"], 1)
+            self.store.scan(run, 500)
+            self.store.scan(run, 500)
+            self.assertEqual(parse.call_count, 1)
+        self.assertEqual(state, {"opens": 1, "active": 0, "peak": 1})
+        self.assertEqual(self.store.report(self.alice, run)["no_media"], 1201)
+        inserts = [sql for sql in statements if sql.startswith("INSERT INTO import_items")]
+        self.assertLessEqual(len(inserts), 10)
+
+    def test_scan_external_cancel_releases_workspace_without_more_rows(self):
+        run = self.scanning_run()
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.scan(run, 500)
+            other = ImportStore(self.temp.name)
+            try:
+                other.cancel(self.alice, run)
+            finally:
+                other.close()
+            self.store.work_once()
+            self.assertEqual(state["active"], 0)
+        self.assertEqual(self.store.report(self.alice, run)["checkpoint"], 500)
+
+    def test_scan_restart_reconstructs_once_and_keeps_ordinals(self):
+        from mazi.imports import engine
+        run = self.scanning_run()
+        self.store.scan(run, 500)
+        self.store.close()
+        self.store = ImportStore(self.temp.name)
+        with patch.object(engine, "inventory", wraps=engine.inventory) as parse:
+            self.store.scan(run, 500)
+            self.store.scan(run, 500)
+            self.assertEqual(parse.call_count, 1)
+        report = self.store.report(self.alice, run)
+        self.assertEqual(report["discovered"], 1201)
+        self.assertEqual(report["state"], "INVENTORIED")
+
     def test_processing_reuses_one_archive_and_releases_at_completion(self):
         run = self.submit({"a.jpg": picture(), "b.jpg": picture(), "invalid.jpg": b"bad"})
         state, tracking = self.tracked_archives()
