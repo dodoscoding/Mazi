@@ -254,9 +254,7 @@ test("Ask says when the archive has no evidence and links nothing", async ({
   await expect(page).toHaveURL(/#\/imports/);
 });
 
-test("PR 6 screens have no axe violations in night or day", async ({
-  page,
-}) => {
+test("PR 6 screens have no axe violations", async ({ page }) => {
   test.setTimeout(120000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await enter(page);
@@ -269,7 +267,7 @@ test("PR 6 screens have no axe violations in night or day", async ({
     ["/ask", "#private:not([hidden])"],
     ["/about", ".about-page"],
   ];
-  for (const theme of ["night", "day"]) {
+  for (const theme of ["night"]) {
     await page.evaluate(
       (value) => localStorage.setItem("mazi.theme", value),
       theme,

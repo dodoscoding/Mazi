@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { EntrySky } from "./entry/EntrySky";
 import { SoundToggle } from "./sound/SoundToggle";
-import { useTheme } from "./theme/useTheme";
 import { IconButton } from "./ui/Button";
 import { Icon } from "./ui/icons";
 import type { useEntry } from "./useEntry";
@@ -13,18 +12,6 @@ export { Introduction } from "./entry/Introduction";
 // Server messages from mazi/identity/core.py that the design gives its own copy.
 const WRONG_CODE = "The shared code is incorrect";
 const REMOVED = "Group access denied";
-
-function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const next = theme === "night" ? "day" : "night";
-  return (
-    <IconButton
-      icon={next === "day" ? "sun" : "moon"}
-      label={`Switch to ${next}`}
-      onClick={toggle}
-    />
-  );
-}
 
 function Removed({
   onRetry,
@@ -104,7 +91,6 @@ export function Entry({ entry }: { entry: ReturnType<typeof useEntry> }) {
           <span className="entry-narrow">One circle · private</span>
         </p>
         <div className="entry-header-actions">
-          <ThemeToggle />
           <SoundToggle variant="pill" />
         </div>
       </header>

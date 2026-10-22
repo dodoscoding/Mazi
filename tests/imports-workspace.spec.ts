@@ -29,7 +29,7 @@ test("import workspace exposes source and file controls in both themes", async (
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  for (const theme of ["night", "day"]) {
+  for (const theme of ["night"]) {
     await page.evaluate((value) => {
       document.documentElement.dataset.theme = value;
     }, theme);
@@ -228,7 +228,7 @@ test("working pages fit narrow and zoomed viewports in both themes", async ({
   const widths = info.project.name === "phone" ? [320, 390] : [720, 1440];
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
-    for (const theme of ["night", "day"]) {
+    for (const theme of ["night"]) {
       await page.evaluate(
         (value) => localStorage.setItem("mazi.theme", value),
         theme,

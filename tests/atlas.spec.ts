@@ -237,12 +237,12 @@ test("slash opens search and arrow keys walk places from the page", async ({
   await expect(page).toHaveURL(/#\/search/);
 });
 
-test("the atlas, flat map and portal have no axe violations in night or day", async ({
+test("the atlas, flat map and portal have no axe violations", async ({
   page,
 }) => {
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const theme of ["night", "day"] as const) {
+  for (const theme of ["night"] as const) {
     await page.addInitScript(
       (value) => localStorage.setItem("mazi.theme", value),
       theme,

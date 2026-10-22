@@ -1,8 +1,6 @@
 import { initials } from "./ui/initials";
 import { useEffect, useId, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { useTheme } from "./theme/useTheme";
-import type { Theme } from "./theme/useTheme";
 import { Icon } from "./ui/icons";
 import type { LinkFor } from "./useRoute";
 import "./styles/about.css";
@@ -130,12 +128,7 @@ export function About({
   heading: RefObject<HTMLHeadingElement | null>;
   onSignOut: () => void;
 }) {
-  const { theme, setTheme } = useTheme();
   const [confirming, setConfirming] = useState(false);
-  const themes: [Theme, string][] = [
-    ["night", "Night"],
-    ["day", "Day"],
-  ];
   return (
     <div className="about-page">
       <article className="about-story">
@@ -164,51 +157,6 @@ export function About({
         </ol>
       </article>
       <aside className="about-aside">
-        <section className="about-panel" aria-labelledby="about-device">
-          <h2 id="about-device" className="about-panel-title">
-            This device
-          </h2>
-          <div className="about-row">
-            <span>Theme</span>
-            <div role="radiogroup" aria-label="Theme" className="about-segment">
-              {themes.map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={theme === value}
-                  tabIndex={theme === value ? 0 : -1}
-                  onClick={() => setTheme(value)}
-                  onKeyDown={(event) => {
-                    if (
-                      ![
-                        "ArrowLeft",
-                        "ArrowRight",
-                        "ArrowUp",
-                        "ArrowDown",
-                      ].includes(event.key)
-                    )
-                      return;
-                    event.preventDefault();
-                    const next = value === "night" ? "day" : "night";
-                    setTheme(next);
-                    (
-                      event.currentTarget.parentElement?.querySelector(
-                        `[data-value="${next}"]`,
-                      ) as HTMLElement | null
-                    )?.focus();
-                  }}
-                  data-value={value}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="about-note">
-            Your choice is remembered in this browser only.
-          </p>
-        </section>
         <a
           className="about-replay"
           href="#/introduction"
