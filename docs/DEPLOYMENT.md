@@ -27,9 +27,9 @@ Deploy with `vercel deploy`, or `vercel deploy --prod` for production. [vercel.j
 
 ## Background work
 
-Vercel has no always-on process. Imports still queue durably, but they progress only when something asks. A signed-in, visible tab calls `POST /api/work`. Each call runs queued work for about 20 seconds on a second database connection. The tab calls again at once while work remains and otherwise every minute. A daily cron calls `GET /api/work` with `CRON_SECRET`.
+Vercel has no always-on process. Imports still queue durably, but they progress only when something asks. An open, signed-in tab calls `POST /api/work`. Each call runs queued work for about 20 seconds on a second database connection. The tab calls again at once while work remains and otherwise every minute. A daily cron calls `GET /api/work` with `CRON_SECRET`.
 
-Imports therefore advance only while a signed-in tab is open, plus once a day. Closing every tab pauses them; reopening the app resumes them. Several instances may drain at once. Item claims use leases and scans commit each batch once, so concurrent drains do not duplicate work. The local `python -m mazi` server keeps its worker thread and answers `mode: "thread"`, which stops the tab from polling.
+Imports therefore advance while a signed-in tab is open, including when it is hidden, plus once a day. Browsers may throttle or suspend background tabs, so hidden-tab progress is not guaranteed. Closing every tab pauses them; reopening the app resumes them. Several instances may drain at once. Item claims use leases and scans commit each batch once, so concurrent drains do not duplicate work. The local `python -m mazi` server keeps its worker thread and answers `mode: "thread"`, which stops the tab from polling.
 
 ## Limits
 
