@@ -146,7 +146,7 @@ def time_assertion(raw, date_order=None):
             try:
                 parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
             except ValueError:
-                match = re.fullmatch(r"(\d{1,2})[/.](\d{1,2})[/.](\d{2,4}),? (\d{1,2}):(\d{2})(?::(\d{2}))? ?(AM|PM)?", value, re.I)
+                match = re.fullmatch(r"(\d{1,2})[/.](\d{1,2})[/.](\d{2,4}),? (\d{1,2})[:.](\d{2})(?:[:.](\d{2}))? ?(AM|PM)?", value, re.I)
                 if not match:
                     return result
                 a, b, year, hour, minute, second, meridiem = match.groups()
