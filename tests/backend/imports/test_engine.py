@@ -3,6 +3,8 @@ import io
 import json
 import tempfile
 import unittest
+from contextlib import contextmanager
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -47,6 +49,66 @@ class EngineTests(unittest.TestCase):
         self.store.confirm(user or self.alice, run)
         while self.store.work_once():
             pass
+
+    def tracked_archives(self):
+        materialize = self.store.objects.materialize
+        state = {"opens": 0, "active": 0, "peak": 0}
+        @contextmanager
+        def tracked(area, key):
+            with materialize(area, key) as path:
+                if area == "archives":
+                    state["opens"] += 1
+                    state["active"] += 1
+                    state["peak"] = max(state["peak"], state["active"])
+                try:
+                    yield path
+                finally:
+                    if area == "archives":
+                        state["active"] -= 1
+        return state, patch.object(self.store.objects, "materialize", tracked)
+
+    def test_processing_reuses_one_archive_and_releases_at_completion(self):
+        run = self.submit({"a.jpg": picture(), "b.jpg": picture(), "invalid.jpg": b"bad"})
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.process(run)
+        self.assertEqual(state, {"opens": 1, "active": 0, "peak": 1})
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 2, "FAILED": 1})
+        asset = self.store.gallery(self.ben, self.group)[0]["id"]
+        self.assertEqual(self.store.asset_bytes(self.ben, asset, True), picture())
+
+    def test_processing_workspace_closes_on_cancel_and_store_close(self):
+        run = self.submit({"a.jpg": picture(), "b.jpg": picture()})
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            self.assertEqual(state["active"], 1)
+            self.store.cancel(self.alice, run)
+            self.assertEqual(state["active"], 0)
+        run = self.submit({"c.jpg": picture(), "d.jpg": picture()})
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            self.assertEqual(state["active"], 1)
+            self.store.close()
+            self.assertEqual(state["active"], 0)
+        self.store = ImportStore(self.temp.name)
+        while self.store.work_once():
+            pass
+        self.assertEqual(self.store.report(self.alice, run)["state"], "COMPLETED")
+
+    def test_processing_rejects_replaced_archive_and_releases_workspace(self):
+        run = self.submit({"a.jpg": picture()})
+        self.store.objects.remove("archives", run)
+        self.store.objects.retain("archives", run, zip_bytes({"other.jpg": picture()}))
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+        self.assertEqual(state["active"], 0)
+        self.assertEqual(self.store.gallery(self.ben, self.group), [])
 
     def test_upload_resume_scan_restart_and_manual_shared_pipeline(self):
         data = zip_bytes({"a.jpg": picture(), "bad.jpg": b"bad", "movie.mp4": b"video"})

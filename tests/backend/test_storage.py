@@ -139,6 +139,21 @@ class StorageTests(unittest.TestCase):
 
 
 class StorageHTTPTests(unittest.TestCase):
+    def test_append_has_one_readback_before_receipt(self):
+        db = sqlite3.connect(':memory:')
+        db.row_factory = sqlite3.Row
+        db.executescript(STORAGE_SCHEMA)
+        calls = []
+        def request(req, **kwargs):
+            calls.append(req.method)
+            return io.BytesIO(b'hello' if req.method == 'GET' else b'')
+        objects = HostedObjects(db, 'https://test.supabase.co', 'sb_secret_test')
+        with patch('mazi.storage.urlopen', request), db:
+            objects.append('archives', 'a', 0, b'hello')
+        self.assertEqual(calls, ['POST', 'GET'])
+        self.assertEqual(db.execute('SELECT count(*) FROM object_receipts').fetchone()[0], 1)
+        db.close()
+
     def test_modern_secret_only_apikey_and_legacy_bearer(self):
         requests = []
         def request(req, **kwargs):
