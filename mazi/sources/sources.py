@@ -361,6 +361,10 @@ class SourceStore(ReviewStore):
                 'WHERE o.group_id=? AND o.withdrawn=0', (group,))
 
     def places(self, user, group, country='', city='', paths=False):
+        with self.transaction():
+            return self._places(user, group, country, city, paths)
+
+    def _places(self, user, group, country, city, paths):
         self._member(user, group)
         if not isinstance(country, str) or not isinstance(city, str) or type(paths) is not bool:
             raise ValueError('Invalid filters')
