@@ -1,0 +1,218 @@
+{
+  "revision": "2cc937b2787fb8f8b00c9624829ad11ad9a8719f",
+  "visibilityMethod": "Native macOS Chromium window/tab transitions; browser records unmodified visibility events with no focus or visibility emulation",
+  "events": [
+    {
+      "kind": "request",
+      "path": "/api/imports/start"
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 0
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 262144
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 524288
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 786432
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 1048576
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 1310720
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 1572864
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 1835008
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 2097152
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 2359296
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 2621440
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 2883584
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 3145728
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 3407872
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 3670016
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 3932160
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 4194304
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/chunk",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+      "offset": 4456448
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/finish",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe"
+    },
+    {
+      "kind": "request",
+      "path": "/api/imports/confirm",
+      "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe"
+    }
+  ],
+  "errors": [],
+  "archiveBytes": 4700761,
+  "photoCount": 80,
+  "beforeHide": {
+    "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+    "source": "manual",
+    "state": "UPLOADING",
+    "received": 262144,
+    "size": 4700761,
+    "checkpoint": 0,
+    "scan_complete": false,
+    "withdrawn": false,
+    "error": null,
+    "discovered": 0,
+    "counts": {},
+    "next_offset": null,
+    "coverage": "Only supplied records; archive coverage is incomplete.",
+    "unique_assets": 0
+  },
+  "hiddenDOM": {
+    "hidden": true,
+    "roots": 1,
+    "fileInputs": 1
+  },
+  "whileHidden": {
+    "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+    "source": "manual",
+    "state": "INVENTORIED",
+    "received": 4700761,
+    "size": 4700761,
+    "checkpoint": 80,
+    "scan_complete": true,
+    "withdrawn": false,
+    "error": null,
+    "discovered": 80,
+    "counts": {
+      "PENDING": 80
+    },
+    "next_offset": null,
+    "coverage": "Only supplied records; archive coverage is incomplete.",
+    "unique_assets": 0
+  },
+  "nativeVisibilityEvents": [
+    {
+      "state": "hidden",
+      "at": 1792672592254
+    }
+  ],
+  "visibilityAfterInventory": "hidden",
+  "afterReturn": {
+    "files": 1,
+    "label": "background-native-1792672511135"
+  },
+  "afterConfirm": {
+    "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+    "source": "manual",
+    "state": "PROCESSING",
+    "received": 4700761,
+    "size": 4700761,
+    "checkpoint": 80,
+    "scan_complete": true,
+    "withdrawn": false,
+    "error": null,
+    "discovered": 80,
+    "counts": {
+      "PENDING": 80
+    },
+    "next_offset": null,
+    "coverage": "Only supplied records; archive coverage is incomplete.",
+    "unique_assets": 0
+  },
+  "afterClose": {
+    "id": "a4db0c2b-9e99-4476-8d33-678c6b4a2afe",
+    "source": "manual",
+    "state": "COMPLETED",
+    "received": 4700761,
+    "size": 4700761,
+    "checkpoint": 80,
+    "scan_complete": true,
+    "withdrawn": false,
+    "error": null,
+    "discovered": 80,
+    "counts": {
+      "AVAILABLE_TO_GROUP": 80
+    },
+    "next_offset": null,
+    "coverage": "Only supplied records; archive coverage is incomplete.",
+    "unique_assets": 80
+  },
+  "pass": true
+}
