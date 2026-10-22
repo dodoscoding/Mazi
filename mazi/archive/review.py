@@ -26,6 +26,11 @@ from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.engine import ImportStore
 
+DUPLICATE_COMPARISONS = 5_000_000
+DUPLICATE_PREVIEW_BYTES = 256 * 1024 * 1024
+REVIEW_ITEMS = 10000
+REVIEW_METADATA_BYTES = 64 * 1024 * 1024
+REVIEW_SCAN_SECONDS = 15
 EXPORT_BYTES = 128 * 1024 * 1024
 
 SCHEMA = """
@@ -78,17 +83,52 @@ class ReviewStore(ImportStore):
             "AND m.group_id=o.group_id WHERE o.asset_id=a.id AND o.withdrawn=0) "
             "ORDER BY a.id", (group,))]
 
+    @contextmanager
+    def _projection_transaction(self):
+        try:
+            with self.transaction():
+                yield
+        except sqlite3.OperationalError as error:
+            if (getattr(error, 'sqlite_errorcode', 0) & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise ArchiveBusy('Archive is busy; retry shortly') from None
+            raise
+
     def duplicate_suggestions(self, user, group, limit=100):
+        with self._projection_transaction():
+            return self._duplicate_suggestions(user, group, limit)
+
+    def _duplicate_suggestions(self, user, group, limit):
         if type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("Invalid suggestion limit")
         ids = self._visible_ids(user, group)
-        if len(ids) > 1000:
-            raise CapacityExceeded("Review set exceeds local limit")
-        signatures = {asset: signature(self.asset_bytes(user, asset)) for asset in ids}
-        result = []
-        for position, left in enumerate(ids):
-            for right in ids[position + 1:]:
-                left_hash, left_color, left_ratio = signatures[left]
+        if len(ids) > REVIEW_ITEMS:
+            raise CapacityExceeded('Duplicate review supports up to 10,000 visible photographs')
+        large = len(ids) > 1000
+        started, image_bytes = time.perf_counter(), 0
+        signatures, buckets = {}, {}
+        for asset in ids:
+            data = self.asset_bytes(user, asset)
+            image_bytes += len(data)
+            if large and image_bytes > DUPLICATE_PREVIEW_BYTES:
+                raise CapacityExceeded('Duplicate review exceeded its 256 MiB preview byte budget')
+            signatures[asset] = signature(data)
+            if large and time.perf_counter() - started > REVIEW_SCAN_SECONDS:
+                raise CapacityExceeded('Duplicate review exceeded its 15 second processing budget')
+            fingerprint = signatures[asset][0]
+            for part in range(7):
+                key = (part, (fingerprint >> (part * 9)) & (1023 if part == 6 else 511))
+                buckets.setdefault(key, []).append(asset)
+        result, comparisons = [], 0
+        for left in ids:
+            left_hash, left_color, left_ratio = signatures[left]
+            candidates = set()
+            for part in range(7):
+                key = (part, (left_hash >> (part * 9)) & (1023 if part == 6 else 511))
+                candidates.update(right for right in buckets[key] if right > left)
+            for right in sorted(candidates):
+                comparisons += 1
+                if large and (comparisons > DUPLICATE_COMPARISONS or time.perf_counter() - started > REVIEW_SCAN_SECONDS):
+                    raise CapacityExceeded('Duplicate review exceeded its comparison processing budget')
                 right_hash, right_color, right_ratio = signatures[right]
                 distance = (left_hash ^ right_hash).bit_count()
                 if distance > 6 or max(abs(a - b) for a, b in zip(left_color, right_color)) > 24 or abs(left_ratio - right_ratio) > 0.05:
@@ -230,17 +270,51 @@ class ReviewStore(ImportStore):
         return self.asset_bytes(user, asset)
 
     def event_suggestions(self, user, group, limit=100):
+        with self._projection_transaction():
+            return self._event_suggestions(user, group, limit)
+
+    def _event_suggestions(self, user, group, limit):
         if type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("Invalid suggestion limit")
         visible = set(self._visible_ids(user, group))
-        if len(visible) > 1000:
-            raise CapacityExceeded("Review set exceeds local limit")
+        if len(visible) > REVIEW_ITEMS:
+            raise CapacityExceeded("Event review supports up to 10,000 visible photographs")
+        large = len(visible) > 1000
+        started, metadata_bytes = time.perf_counter(), 0
         evidence = {}
-        for row in self.db.execute("SELECT o.asset_id,o.payload FROM archive_origins o "
-                                   "JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id "
-                                   "WHERE o.group_id=? AND o.withdrawn=0", (group,)):
+        byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
+        payload_column = f'CASE WHEN {byte_length}<=65536 THEN o.payload ELSE NULL END' if large else 'o.payload'
+        def origins():
+            last_asset = last_origin = ''
+            while True:
+                query = f"SELECT o.asset_id,{payload_column} AS payload,o.id FROM archive_origins o "
+                query += "JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.group_id=? AND o.withdrawn=0"
+                params = (group,)
+                if large:
+                    query += ' AND (o.asset_id>? OR (o.asset_id=? AND o.id>?)) ORDER BY o.asset_id,o.id LIMIT 256'
+                    params += (last_asset, last_asset, last_origin)
+                batch = self.db.execute(query, params)
+                if not large:
+                    yield from batch
+                    return
+                batch = batch.fetchall()
+                if not batch:
+                    return
+                yield from batch
+                last_asset, last_origin = batch[-1][0], batch[-1][2]
+                if time.perf_counter() - started > REVIEW_SCAN_SECONDS:
+                    raise CapacityExceeded('Event review exceeded its 15 second processing budget')
+
+        for row in origins():
             if row[0] not in visible:
                 continue
+            if row[1] is None:
+                raise CapacityExceeded('Event review exceeded its 64 KiB metadata limit per origin')
+            metadata_bytes += len(row[1].encode('utf-8'))
+            if large and metadata_bytes > REVIEW_METADATA_BYTES:
+                raise CapacityExceeded('Event review exceeded its metadata byte budget')
+            if large and time.perf_counter() - started > REVIEW_SCAN_SECONDS:
+                raise CapacityExceeded('Event review exceeded its 15 second processing budget')
             payload = json.loads(row[1])
             dates, cities = self._date_place_evidence(row[0], payload)
             accumulated = evidence.setdefault(row[0], (set(), set()))

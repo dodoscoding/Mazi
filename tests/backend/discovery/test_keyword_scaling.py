@@ -245,8 +245,7 @@ class KeywordScalingTests(unittest.TestCase):
         self.assertEqual(([item['id'] for item in result['items']], result['total'], result['next_offset']),
                          (['capacity-01000'], 1001, None))
         self.assertEqual((result['mode'], result['model'], result['unindexed']), ('keyword / filters', None, 0))
-        with self.assertRaises(CapacityExceeded):
-            self.store.search(self.ben, self.group, mode='semantic')
+        self.assertEqual(self.store.search(self.ben, self.group, mode='semantic')['total'], 1001)
 
 
 if __name__ == '__main__':
