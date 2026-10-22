@@ -4,6 +4,7 @@ import hashlib
 import http.client
 import io
 import json
+import sqlite3
 import threading
 import zipfile
 from http.server import HTTPServer
@@ -157,6 +158,35 @@ class PlacesHttpTests(PlacesFixture):
         status, raw, _ = self.request(query)
         points = json.loads(raw)['points']
         self.assertEqual((status, len(points), len({point['origin'] for point in points})), (200, 20000, 20000))
+
+    def test_projection_contention_returns_retryable_json_and_recovers(self):
+        from mazi.sources.sources import SourceStore
+        self.import_locations(1)
+        other = SourceStore(self.temp.name)
+        self.addCleanup(other.close)
+        self.store.db.execute('PRAGMA busy_timeout=1')
+        paths = ('/api/places?group=', '/api/review/events?group=', '/api/review/duplicates?group=')
+        other.db.execute('BEGIN IMMEDIATE')
+        try:
+            for prefix in paths:
+                with self.subTest(path=prefix):
+                    status, raw, content_type = self.request(prefix + self.group)
+                    self.assertEqual((status, json.loads(raw)), (503, {'error': 'Archive is busy; retry shortly'}))
+                    self.assertIn('application/json', content_type)
+                    self.assertFalse(self.store.db.in_transaction)
+        finally:
+            other.db.rollback()
+        for prefix in paths:
+            with self.subTest(recovery=prefix):
+                self.assertEqual(self.request(prefix + self.group)[0], 200)
+
+    def test_projection_translation_preserves_other_sqlite_errors(self):
+        failure = sqlite3.OperationalError('synthetic non-busy failure')
+        for operation in (self.store.places, self.store.event_suggestions, self.store.duplicate_suggestions):
+            with self.subTest(operation=operation.__name__), patch.object(self.store, 'transaction', side_effect=failure):
+                with self.assertRaises(sqlite3.OperationalError) as raised:
+                    operation(self.alice, self.group)
+                self.assertIs(raised.exception, failure)
 
     def test_busy_location_scan_returns_retryable_json_and_recovers_after_unlock(self):
         from mazi.sources.sources import SourceStore
