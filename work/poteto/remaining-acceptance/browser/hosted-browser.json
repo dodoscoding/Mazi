@@ -1,0 +1,24 @@
+[
+  {
+    "screen": "desktop",
+    "import": true,
+    "search": true,
+    "previewDecoded": true,
+    "exportZipValid": true,
+    "sources": true,
+    "signOut": true,
+    "searchAxeViolations": 0,
+    "pageErrors": []
+  },
+  {
+    "screen": "phone",
+    "import": false,
+    "search": true,
+    "previewDecoded": true,
+    "exportZipValid": true,
+    "sources": true,
+    "signOut": true,
+    "searchAxeViolations": 0,
+    "pageErrors": []
+  }
+]

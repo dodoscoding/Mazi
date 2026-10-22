@@ -1,0 +1,4 @@
+psycopg.errors.UndefinedColumn: column e._mazi_order does not exist
+LINE 1: ...CT e.id,e.title,e.asset_ids,e.updated_at,e.status,e._mazi_or...
+                                                             ^
+when serializing dict item 'hidden_memories'

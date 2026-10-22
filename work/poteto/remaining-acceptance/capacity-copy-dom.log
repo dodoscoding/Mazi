@@ -1,0 +1,74 @@
+✔ answer capacity explains the limit and preserves the question for recovery (122.853625ms)
+✔ answer processing exhaustion clears prior citations and allows an explicit retry (77.113333ms)
+✔ search capacity clears stale results and offers browsing without losing filters (108.960584ms)
+✔ review capacity keeps timeline and reviewed decisions available with honest summaries (53.558167ms)
+✔ index capacity stops cleanly and retains browsing recovery until a retry succeeds (88.248667ms)
+✔ ordinary search 400 stays retryable without claiming capacity (87.325833ms)
+✔ ordinary answer 400 does not claim the archive is too large (51.986916ms)
+✔ ordinary search 503 stays retryable without claiming capacity (60.445709ms)
+✔ ordinary answer 503 does not claim the archive is too large (42.639958ms)
+✔ discovery 401 still clears private input and reports access loss (70.942042ms)
+✔ archive 401 still clears private input and reports access loss (36.028417ms)
+✔ discovery 403 still clears private input and reports access loss (60.216542ms)
+✔ archive 403 still clears private input and reports access loss (37.617042ms)
+✔ an older search capacity failure cannot replace newer successful results (82.392584ms)
+✔ finishing the full review timeline cannot claim all caught up while suggestions are unavailable (1047.6015ms)
+✔ review suggestion retries stay locked while pending and preserve correction drafts (27.895708ms)
+✔ stopping indexing waits for the current batch before another run can begin (38.074083ms)
+✖ semantic capacity offers an explicit Words & filters retry preserving the search (134.964208ms)
+✔ keyword metadata-budget exhaustion hides stale totals and keeps filters for retry (144.011541ms)
+✔ Words & filters recovery clears a failed similar-image reference (99.645958ms)
+✖ semantic capacity recovery describes the failed request after the selector changes (70.513667ms)
+✔ keyword capacity recovery describes the failed request after the selector changes (74.818416ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 20
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2454.810625
+
+✖ failing tests:
+
+test at tests/dom/discovery-keyword.test.mjs:65:1
+✖ semantic capacity offers an explicit Words & filters retry preserving the search (134.964208ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /1,000 visible photographs/. Input:
+
+  '\n' +
+    '        Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search.\n' +
+    '        No partial results are shown. Your search and filters are still here.\n' +
+    '        \n' +
+    '          Use Words & filters\n' +
+    '        \n' +
+    '        Browse photographs or\n' +
+    '        search the review timeline instead.\n' +
+    '      '
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi/tests/dom/discovery-keyword.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '\n        Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search.\n        No partial results are shown. Your search and filters are still here.\n        \n          Use Words & filters\n        \n        Browse photographs or\n        search the review timeline instead.\n      ',
+    expected: /1,000 visible photographs/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/dom/discovery-keyword.test.mjs:240:3
+✖ semantic capacity recovery describes the failed request after the selector changes (70.513667ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /1,000 visible photographs/. Input:
+
+  'Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search.'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi/tests/dom/discovery-keyword.test.mjs:256:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search.',
+    expected: /1,000 visible photographs/,
+    operator: 'match',
+    diff: 'simple'
+  }

@@ -1,0 +1,7 @@
+{"check": "browser-shell", "command": ["npm", "test", "--", "--workers=2"], "exit_code": 0}
+{"check": "browser-unified", "command": ["npm", "run", "test:app"], "exit_code": 1}
+{"check": "browser-domains", "command": ["npm", "run", "test:domains"], "exit_code": 1}
+{"check": "dom-full", "command": ["npm", "run", "test:dom"], "exit_code": 0}
+{"check": "unit-full", "command": ["npm", "run", "test:unit"], "exit_code": 0}
+{"check": "lint", "command": ["npm", "run", "lint"], "exit_code": 0}
+{"check": "docs-final-initial", "command": ["npm", "run", "check:docs"], "exit_code": 1}

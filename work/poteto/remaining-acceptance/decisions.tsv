@@ -1,0 +1,14 @@
+ts	phase	decision	why	evidence	result
+2026-10-22T08:00:00Z	frame	Split UI, capacity and export into isolated worktrees	Avoid concurrent writes and preserve existing work	PLAN.md	open
+2026-10-22T07:28:10.405281+00:00	frame	Correct the initial log timestamp	The initial timestamp was a placeholder; this row records the observed time	PLAN.md	corrected
+2026-10-22T07:32:56.706252+00:00	provider	Create an isolated private hosted schema and bucket	The hosted tests refuse the live archive	hosted_fixture.py	configured
+2026-10-22T07:32:56.706391+00:00	provider	Run current PostgreSQL and private Storage contracts	Exercise real provider behavior with synthetic records	postgres.log; hosted-journey.log	8 PostgreSQL and 1 Storage journey passed
+2026-10-22T07:32:56.706394+00:00	provider	Run local Auth and private Storage access tests	Verify real denied-access behavior with retained JWTs	m0.log	9 passed
+2026-10-22T07:32:56.706396+00:00	model	Install pinned local CLIP and run inference tests	Exercise the optional processing path with real model files	clip-runtime.log; clip-retrieval.json	2 runtime tests passed
+2026-10-22T07:35:59.354499+00:00	scope	Retain external acceptance boundaries in the final report	The only physical phone is offline and production deployment is a separate milestone	docs/SUPABASE_SETUP.md; docs/DEVELOPMENT.md	physical-device and cloud-app acceptance unverified
+2026-10-22T08:31:01.191829+00:00	acceptance	Use browser evidence for phone acceptance	User accepted browser evidence while the physical phone is offline	browser/hosted-browser.json	accepted; physical hardware not tested
+2026-10-22T08:31:01.191970+00:00	capacity	Measure every sequential baseline index batch	First and last batch checks cannot establish complete processing	index-throughput.log	10000 indexed in 2000 batches; 1257.369 seconds
+2026-10-22T08:31:01.191973+00:00	export	Fix PostgreSQL review-event ordering	Hosted browser download exposed a SQLite-only order assumption	hosted-export-before-fix.log; postgres-final.log	PR85 merged; actual hosted downloads pass
+2026-10-22T08:31:01.191974+00:00	tests	Separate baseline and actual-model fixtures	Full baseline tests expect the baseline encoder; caption fusion made the old learned fixture contradictory	browser-domains-baseline-final.log; ../learned-browser-acceptance/PLAN.md	PR86 and PR87 merged with independent review
+2026-10-22T08:31:01.191976+00:00	ci	Finish with local verification	User accepted local verification after GitHub billing blocked jobs before startup	ci-annotations.json	no remote green CI claim
+2026-10-22T08:31:01.191977+00:00	cleanup	Delete only isolated synthetic provider resources	Preserve the live archive and local user state	hosted-cleanup.log	12 objects and private bucket removed; isolated schema removed; live mazi retains 48 tables

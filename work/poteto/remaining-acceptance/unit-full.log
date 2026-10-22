@@ -1,0 +1,25 @@
+
+> mazi@0.1.0 test:unit
+> node --test "tests/unit/*.test.ts"
+
+✔ groups memories by place name and country with mean coordinates and per-year counts (0.779459ms)
+✔ journeys join consecutive distinct places in year order, once per ordered pair (0.109459ms)
+✔ years are the sorted distinct years of dated memories (0.0745ms)
+✔ memories without a place are returned as unplaced in API order (0.053042ms)
+✔ undated memories never form journeys (0.081042ms)
+✔ the same city name in two countries is two places (0.069291ms)
+✔ an empty archive has no places, journeys or years (0.046ms)
+✔ scrubbing to a year selects that year's first memory in API order (0.051292ms)
+✔ opening and closing the portal asks for the dive and the way back (0.532125ms)
+✔ reduced motion drops the whoosh (0.052708ms)
+✔ a new memory in the same year chimes; a new year ticks once (0.051709ms)
+✔ stepping inside the portal chimes (0.042458ms)
+✔ the archive arriving and other screens stay silent (0.056458ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.622792

@@ -1,0 +1,7 @@
+test_cross_modal_ranking_without_lexical_or_color_aliases (tests.backend.discovery.test_clip_runtime.CLIPRuntimeTests.test_cross_modal_ranking_without_lexical_or_color_aliases) ... ok
+test_long_text_windows_are_finite_and_deterministic (tests.backend.discovery.test_clip_runtime.CLIPRuntimeTests.test_long_text_windows_are_finite_and_deterministic) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 2.088s
+
+OK

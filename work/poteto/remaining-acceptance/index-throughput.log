@@ -1,0 +1,21 @@
+{"batches": 100, "remaining": 9500, "seconds": 29.209}
+{"batches": 200, "remaining": 9000, "seconds": 61.823}
+{"batches": 300, "remaining": 8500, "seconds": 97.715}
+{"batches": 400, "remaining": 8000, "seconds": 136.26}
+{"batches": 500, "remaining": 7500, "seconds": 178.255}
+{"batches": 600, "remaining": 7000, "seconds": 224.249}
+{"batches": 700, "remaining": 6500, "seconds": 274.754}
+{"batches": 800, "remaining": 6000, "seconds": 328.408}
+{"batches": 900, "remaining": 5500, "seconds": 385.487}
+{"batches": 1000, "remaining": 5000, "seconds": 446.486}
+{"batches": 1100, "remaining": 4500, "seconds": 510.582}
+{"batches": 1200, "remaining": 4000, "seconds": 576.864}
+{"batches": 1300, "remaining": 3500, "seconds": 645.771}
+{"batches": 1400, "remaining": 3000, "seconds": 724.245}
+{"batches": 1500, "remaining": 2500, "seconds": 805.437}
+{"batches": 1600, "remaining": 2000, "seconds": 889.079}
+{"batches": 1700, "remaining": 1500, "seconds": 974.437}
+{"batches": 1800, "remaining": 1000, "seconds": 1065.038}
+{"batches": 1900, "remaining": 500, "seconds": 1158.819}
+{"batches": 2000, "remaining": 0, "seconds": 1256.909}
+{"fixture": "10000 seeded metadata records sharing one real JPEG; actual baseline encoder; no inference, clock or budget mocks", "indexed": 10000, "batches": 2000, "seconds": 1257.369, "maximum_batch_seconds": 2.733, "final_search_unindexed": 0}

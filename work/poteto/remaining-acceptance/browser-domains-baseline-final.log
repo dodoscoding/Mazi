@@ -1,0 +1,62 @@
+
+> mazi@0.1.0 test:domains
+> playwright test --config tests/browser/playwright.config.ts
+
+
+Running 24 tests using 1 worker
+
+(node:67955) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   1 [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.0s)
+(node:67990) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   2 [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (4.1s)
+(node:68009) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   3 [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (5.0s)
+(node:68029) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓   4 [archive-phone] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (5.3s)
+(node:68059) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [sources-desktop] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (966ms)
+(node:68068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [sources-phone] › tests/browser/sources.spec.ts:4:1 › authorized places, filters, optional paths, source controls and privacy (1.2s)
+(node:68076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   7 [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+  ✓   8 [discovery-desktop] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (1.7s)
+  ✓   9 [discovery-desktop] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure (3.4s)
+(node:68085) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  10 [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+  ✓  11 [discovery-phone] › tests/browser/discovery.spec.ts:4:1 › People, combined retrieval, hiding and consent work without recognition (1.8s)
+  ✓  12 [discovery-phone] › tests/browser/discovery.spec.ts:124:1 › HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure (3.0s)
+(node:68114) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [answers-desktop] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (1.7s)
+(node:68122) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  14 [answers-phone] › tests/browser/answers.spec.ts:4:1 › Grounded answers, live evidence, abstention and safe rendering (1.7s)
+(node:68133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [memories-desktop] › tests/browser/browse-features.spec.ts:22:1 › Memories filters the photo grid by year with removable chips (2.4s)
+  ✓  16 [memories-desktop] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results (2.5s)
+  ✓  17 [memories-desktop] › tests/browser/browse-features.spec.ts:140:1 › Discover renders rediscovery prompts from the archive (2.2s)
+  ✓  18 [memories-desktop] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (1.2s)
+  ✓  19 [memories-desktop] › tests/browser/memories.spec.ts:92:1 › Capsules stay sealed with a changed browser clock (405ms)
+(node:68247) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  20 [memories-phone] › tests/browser/browse-features.spec.ts:22:1 › Memories filters the photo grid by year with removable chips (2.6s)
+  ✓  21 [memories-phone] › tests/browser/browse-features.spec.ts:95:1 › archive Search groups a memory with its thumbnail and shows no results (2.5s)
+  ✓  22 [memories-phone] › tests/browser/browse-features.spec.ts:140:1 › Discover renders rediscovery prompts from the archive (2.2s)
+  ✓  23 [memories-phone] › tests/browser/memories.spec.ts:3:1 › Annual recap and collaborative story editing (1.4s)
+  ✓  24 [memories-phone] › tests/browser/memories.spec.ts:92:1 › Capsules stay sealed with a changed browser clock (355ms)
+
+  2 skipped
+  22 passed (57.9s)

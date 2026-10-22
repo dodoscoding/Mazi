@@ -1,0 +1,19 @@
+{
+  "product_revision": "fa4eed0974053845dfef46b5901839a931488042",
+  "unified": {
+    "passed": 34,
+    "log": "browser-unified-final.log"
+  },
+  "baseline_domains": {
+    "passed": 22,
+    "skipped": 2,
+    "reason": "learned-model cases run separately",
+    "log": "browser-domains-baseline-final.log"
+  },
+  "learned_domains": {
+    "passed": 2,
+    "log": "browser-learned-final.log"
+  },
+  "remote_ci": "blocked before startup by account billing; user accepted local verification",
+  "physical_phone": "offline; user accepted browser evidence"
+}

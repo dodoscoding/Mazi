@@ -1,0 +1,9 @@
+
+> mazi@0.1.0 test:postgres
+> node --env-file=.env.supabase -e "process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'unittest', 'tests.backend.test_postgres'], {stdio:'inherit', env:{...process.env, MAZI_TEST_POSTGRES:'1'}}).status ?? 1)"
+
+........
+----------------------------------------------------------------------
+Ran 8 tests in 27.730s
+
+OK
