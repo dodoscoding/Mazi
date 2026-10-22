@@ -27,6 +27,8 @@ export function mount(root, lifecycle) {
     $("#prompts").hidden = true;
     $("#discover-sub").hidden = true;
   } else promptSkeleton(root);
+  let contextController = new AbortController();
+  lifecycle.onDispose(() => contextController.abort());
   let contextRevision = 0,
     contextReady = false,
     contextWanted = false,
@@ -51,6 +53,8 @@ export function mount(root, lifecycle) {
   function clearPrivate() {
     generation++;
     contextRevision++;
+    contextController.abort();
+    contextController = new AbortController();
     contextReady = false;
     contextLoading = false;
     photoTotal = null;
@@ -113,7 +117,9 @@ export function mount(root, lifecycle) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           }
-        : {},
+        : expectedContext === undefined
+          ? {}
+          : { signal: contextController.signal },
     );
     const value = await response.json();
     if (expectedContext !== undefined && expectedContext !== contextRevision)
