@@ -745,20 +745,20 @@ class DiscoveryStore(SourceStore):
                 "(SELECT 1 FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id "
                 "WHERE o.asset_id=a.id AND o.withdrawn=0))")
         if kind == 'hidden':
-            query = ('SELECT h.asset,n.title,' + insertion_order(self.db, 'h') + ' AS export_order FROM discovery_hidden h '
+            query = ('SELECT h.asset,n.title FROM discovery_hidden h '
                      'LEFT JOIN review_annotations n ON n.asset_id=h.asset WHERE h."user"=? AND ' + live.format(asset='h.asset'))
-            for row in self._export_rows(query, (user, group), [(insertion_order(self.db, 'h'), 'export_order', False)]):
+            for row in self._export_rows(query, (user, group), [('h.asset', 'asset', False)]):
                 yield dict(id=row['asset'], title=row['title'] or 'Untitled photograph')
         elif kind == 'suppressed':
-            query = ("SELECT s.person,s.asset,p.name," + insertion_order(self.db, 's') + " AS export_order FROM discovery_suppressions s "
+            query = ("SELECT s.person,s.asset,p.name FROM discovery_suppressions s "
                      "JOIN discovery_people p ON p.id=s.person WHERE p.group_id=? AND p.account=? AND s.subject IN (?, 'private-review') AND " + live.format(asset='s.asset'))
-            for row in self._export_rows(query, (group, user, user, group), [(insertion_order(self.db, 's'), 'export_order', False)]):
+            for row in self._export_rows(query, (group, user, user, group), [('s.person', 'person', False), ('s.asset', 'asset', False)]):
                 yield {key: row[key] for key in ('person', 'asset', 'name')}
         else:
             visible = set(self._visible_ids(user, group))
-            query = ('SELECT e.id,e.title,e.asset_ids,e.updated_at,' + insertion_order(self.db, 'e') + ' AS export_order FROM review_events e '
+            query = ('SELECT e.id,e.title,e.asset_ids,e.updated_at,e.status,' + insertion_order(self.db, 'e') + ' AS export_order FROM review_events e '
                      'WHERE e.group_id=? AND EXISTS (SELECT 1 FROM discovery_hidden_events h WHERE h.event=e.id AND h."user"=?)')
-            for row in self._export_rows(query, (group, user), [('e.updated_at', 'updated_at', True), (insertion_order(self.db, 'e'), 'export_order', False)]):
+            for row in self._export_rows(query, (group, user), [('e.updated_at', 'updated_at', True), ('e.status', 'status', False), (insertion_order(self.db, 'e'), 'export_order', False)]):
                 if sum(asset in visible for asset in json.loads(row['asset_ids'])) >= 2:
                     yield dict(id=row['id'], title=row['title'])
 
