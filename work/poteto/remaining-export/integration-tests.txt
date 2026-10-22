@@ -1,0 +1,19 @@
+................................................................................................................/Users/altanesmer/Desktop/Ales/Mazi-wt/remaining-export/mazi/discovery/discovery.py:103: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b3b3f10>
+  def _visible_ids(self, user, group):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/remaining-export/mazi/discovery/discovery.py:103: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b3b23e0>
+  def _visible_ids(self, user, group):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/remaining-export/mazi/discovery/discovery.py:103: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b3b22f0>
+  def _visible_ids(self, user, group):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/remaining-export/mazi/discovery/discovery.py:103: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10b3b2110>
+  def _visible_ids(self, user, group):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...........................
+----------------------------------------------------------------------
+Ran 139 tests in 246.255s
+
+OK
+Location export synthetic profile: {"final_validation_seconds": 1.2907276249970892, "location_scan_seconds": 0.6768065830037813, "maximum_page_rows": 128, "maximum_projected_page_utf8_bytes": 27648, "pages": 158, "rows": 20000}
+Real 10000-photo local seconds {'related': 0.2458, 'index': 0.6262, 'events': 0.1191, 'duplicates': 1.9058, 'places': 1.2677}

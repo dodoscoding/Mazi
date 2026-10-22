@@ -26,6 +26,21 @@ def seed_metadata(fixture, mode):
                                       json.dumps([assets[(number + offset) % len(assets)] for offset in range(20)]),
                                       f'Memory {number:03d}', 'accepted', fixture.alice, '2026-10-22 12:00:00'))
         fixture.store.db.commit()
+    if mode == 'personal':
+        assets = fixture.store._visible_ids(fixture.ben, fixture.group)
+        for number, decision in enumerate(('reject', 'accept', 'reject', 'accept')):
+            event = fixture.store.review_event(fixture.alice, fixture.group, assets[number:number + 2], f'Memory {number}', decision)
+            fixture.store.hide_event(fixture.ben, fixture.group, event, True)
+        fixture.store.db.execute("UPDATE review_events SET updated_at='2026-10-22 12:00:00'")
+        fixture.store.db.commit()
+        person = fixture.store.create_person(fixture.alice, fixture.group, 'Ben')
+        fixture.store.propose_identity(fixture.alice, person, fixture.ben)
+        fixture.store.confirm_identity(fixture.ben, person)
+        for asset in reversed(assets):
+            fixture.store.tag(fixture.alice, person, asset, True)
+            fixture.store.disassociate(fixture.ben, person, asset)
+        for asset in reversed(assets[5:]):
+            fixture.store.hide(fixture.ben, asset, True)
     if mode == 'origins':
         origin = dict(fixture.store.db.execute('SELECT * FROM archive_origins LIMIT 1').fetchone())
         for number in range(10000):
