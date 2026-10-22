@@ -257,6 +257,9 @@ export function mount(root, lifecycle) {
   }
   async function search(offset = 0) {
     const revision = ++generation;
+    photoTotal = null;
+    $("#result-total").textContent = "";
+    $("#result-types").hidden = true;
     const mode = $("#mode").value;
     $("#notice").textContent = "";
     $("#search-recovery").hidden = true;
@@ -319,12 +322,10 @@ export function mount(root, lifecycle) {
       $("#index-progress").textContent =
         `${result.unindexed} eligible photographs need indexing; these use words and filters until the index is built.`;
     $("#count").textContent = `${result.total} photographs · ${result.mode}`;
-    if (!offset) {
-      photoTotal = result.total;
-      completedQuery = $("#query").value;
-      counts = renderGroups(root, atlas, completedQuery, people);
-      renderTypes(result.total);
-    }
+    photoTotal = result.total;
+    completedQuery = $("#query").value;
+    counts = renderGroups(root, atlas, completedQuery, people);
+    renderTypes(result.total);
     $("#more").hidden = next === null;
     $("#clear-similar").hidden = !similar;
     options(
