@@ -3,6 +3,8 @@ import io
 import json
 import tempfile
 import unittest
+from contextlib import contextmanager
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -48,6 +50,89 @@ class EngineTests(unittest.TestCase):
         while self.store.work_once():
             pass
 
+    def tracked_archives(self):
+        materialize = self.store.objects.materialize
+        state = {"opens": 0, "active": 0, "peak": 0}
+        @contextmanager
+        def tracked(area, key):
+            with materialize(area, key) as path:
+                if area == "archives":
+                    state["opens"] += 1
+                    state["active"] += 1
+                    state["peak"] = max(state["peak"], state["active"])
+                try:
+                    yield path
+                finally:
+                    if area == "archives":
+                        state["active"] -= 1
+        return state, patch.object(self.store.objects, "materialize", tracked)
+
+    def test_processing_reuses_one_archive_and_releases_at_completion(self):
+        run = self.submit({"a.jpg": picture(), "b.jpg": picture(), "invalid.jpg": b"bad"})
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.process(run)
+        self.assertEqual(state, {"opens": 1, "active": 0, "peak": 1})
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 2, "FAILED": 1})
+        asset = self.store.gallery(self.ben, self.group)[0]["id"]
+        self.assertEqual(self.store.asset_bytes(self.ben, asset, True), picture())
+
+    def test_processing_workspace_closes_on_cancel_and_store_close(self):
+        run = self.submit({"a.jpg": picture(), "b.jpg": picture()})
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            self.assertEqual(state["active"], 1)
+            self.store.cancel(self.alice, run)
+            self.assertEqual(state["active"], 0)
+        run = self.submit({"c.jpg": picture(), "d.jpg": picture()})
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            self.assertEqual(state["active"], 1)
+            self.store.close()
+            self.assertEqual(state["active"], 0)
+        self.store = ImportStore(self.temp.name)
+        while self.store.work_once():
+            pass
+        self.assertEqual(self.store.report(self.alice, run)["state"], "COMPLETED")
+
+    def test_processing_workspace_replaces_run_and_observes_external_cancel(self):
+        first = self.submit({"a.jpg": picture(), "b.jpg": picture()})
+        second_group = self.store.create_group(self.alice, "Other circle")
+        second = self.submit({"c.jpg": picture(), "d.jpg": picture()}, group=second_group)
+        self.store.confirm(self.alice, first)
+        self.store.confirm(self.alice, second)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+            other = ImportStore(self.temp.name)
+            try:
+                other.cancel(self.alice, first)
+                self.store.work_once()
+                self.assertEqual(state, {"opens": 2, "active": 1, "peak": 1})
+                other.cancel(self.alice, second)
+                self.assertFalse(self.store.work_once())
+                self.assertEqual(state["active"], 0)
+            finally:
+                other.close()
+        self.assertEqual(len(self.store.gallery(self.alice, self.group)), 1)
+        self.assertEqual(len(self.store.gallery(self.alice, second_group)), 1)
+
+    def test_processing_rejects_replaced_archive_and_releases_workspace(self):
+        run = self.submit({"a.jpg": picture()})
+        self.store.objects.remove("archives", run)
+        self.store.objects.retain("archives", run, zip_bytes({"a.jpg": b"replaced bytes"}))
+        self.store.confirm(self.alice, run)
+        state, tracking = self.tracked_archives()
+        with tracking:
+            self.store.work_once()
+        self.assertEqual(state["active"], 0)
+        self.assertEqual(self.store.report(self.alice, run)["items"][0]["reason"], "ARCHIVE_INVALID")
+        self.assertEqual(self.store.gallery(self.ben, self.group), [])
+
     def test_upload_resume_scan_restart_and_manual_shared_pipeline(self):
         data = zip_bytes({"a.jpg": picture(), "bad.jpg": b"bad", "movie.mp4": b"video"})
         run = self.store.begin_import(self.alice, self.group, "manual", "account", len(data), hashlib.sha256(data).hexdigest(), {})
@@ -87,6 +172,100 @@ class EngineTests(unittest.TestCase):
         partial = self.submit({"chat.txt": text.splitlines()[1], "a.jpg": picture()}, "whatsapp")
         self.process(partial)
         self.assertEqual(len(self.store.gallery(self.ben, self.group)[0]["origins"]), 3)
+
+    def test_slow_preparation_completes_with_unreclaimed_token(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        def slow_prepare(current):
+            result = prepare(current)
+            clock[0] = 161
+            return result
+        with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", slow_prepare):
+            self.store.complete(job)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1})
+        asset = self.store.gallery(self.ben, self.group)[0]["id"]
+        self.assertEqual(self.store.asset_bytes(self.ben, asset, True), picture())
+
+    def test_replacement_claim_during_preparation_fences_old_token(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        other = ImportStore(self.temp.name)
+        replacement = []
+        def reclaimed_prepare(current):
+            result = prepare(current)
+            clock[0] = 161
+            replacement.append(other.claim(now=161))
+            return result
+        try:
+            with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", reclaimed_prepare):
+                with self.assertRaises(Conflict):
+                    self.store.complete(job)
+            self.assertEqual(self.store.gallery(self.ben, self.group), [])
+            other.complete(replacement[0], now=162)
+            self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+        finally:
+            other.close()
+
+    def test_slow_preparation_observes_cancel_withdrawal_and_departure(self):
+        for action in ("cancel", "withdraw", "remove"):
+            with self.subTest(action=action):
+                run = self.submit({f"slow-{action}.jpg": picture()}, user=self.ben)
+                self.store.confirm(self.ben, run)
+                job = self.store.claim(now=100)
+                prepare = self.store.prepare
+                clock = [101]
+                def revoked_prepare(current):
+                    result = prepare(current)
+                    if action == "remove":
+                        self.store.remove_member(self.alice, self.group, self.ben)
+                    else:
+                        getattr(self.store, action)(self.ben, run)
+                    clock[0] = 161
+                    return result
+                with patch("mazi.imports.engine.time.time", lambda: clock[0]), patch.object(self.store, "prepare", revoked_prepare):
+                    with self.assertRaises((Denied, Conflict)):
+                        self.store.complete(job)
+                self.assertEqual(self.store.gallery(self.alice, self.group), [])
+
+    def test_expired_job_cannot_start_preparation(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        job = self.store.claim(now=100)
+        with patch.object(self.store, "prepare") as prepare:
+            with self.assertRaises(Conflict):
+                self.store.complete(job, now=161)
+            prepare.assert_not_called()
+
+    def test_late_failure_keeps_retry_backoff_and_attempt_limit(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        now = 100
+        for attempt in range(1, 4):
+            job = self.store.claim(now=now)
+            self.assertEqual(job["attempts"], attempt)
+            self.store.fail(job, now=now + 61)
+            item = self.store.report(self.alice, run)["items"][0]
+            self.assertEqual(item["reason"], "RETRY_LIMIT" if attempt == 3 else "RETRY_SCHEDULED")
+            self.assertIsNone(self.store.claim(now=now + 61))
+            now += 61 + 2 ** attempt
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"FAILED": 1})
+        self.assertEqual(self.store.gallery(self.ben, self.group), [])
+
+    def test_late_failure_cannot_replace_newer_claim(self):
+        run = self.submit()
+        self.store.confirm(self.alice, run)
+        old = self.store.claim(now=100)
+        current = self.store.claim(now=161)
+        with self.assertRaises(Conflict):
+            self.store.fail(old, now=162)
+        self.store.complete(current, now=162)
+        self.assertEqual(self.store.report(self.alice, run)["counts"], {"AVAILABLE_TO_GROUP": 1})
 
     def test_lease_fencing_cancel_and_membership_revocation(self):
         run = self.submit({"a.jpg": picture(), "b.jpg": picture()}, user=self.ben)

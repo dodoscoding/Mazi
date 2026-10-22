@@ -2,6 +2,7 @@ import hashlib
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from tests.backend.imports import test_engine as helpers
 from mazi.identity.core import Denied, Conflict
@@ -50,6 +51,39 @@ class SourceTests(helpers.EngineTests):
         self.finish(resource, movie)
         self.assertEqual(self.store.resource_bytes(self.ben, resource['id']), movie)
         self.assertEqual(self.store.resources(self.alice, self.connection)[-1]['state'], 'RETAINED_NO_PREVIEW')
+
+    def test_source_preparation_can_finish_after_lease_deadline(self):
+        resource, data = self.begin()
+        self.store.resource_chunk(self.alice, resource['id'], 0, data)
+        self.store.finish_resource(self.alice, resource['id'])
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        def slow_prepare(current):
+            result = prepare(current)
+            clock[0] = 161
+            return result
+        with patch('mazi.imports.engine.time.time', lambda: clock[0]), patch.object(self.store, 'prepare', slow_prepare):
+            self.store.complete(job)
+        self.assertEqual(self.store.resources(self.alice, self.connection)[0]['state'], 'AVAILABLE_TO_GROUP')
+        self.assertEqual(len(self.store.gallery(self.ben, self.group)), 1)
+
+    def test_source_revocation_during_slow_preparation_still_fences_publication(self):
+        resource, data = self.begin()
+        self.store.resource_chunk(self.alice, resource['id'], 0, data)
+        self.store.finish_resource(self.alice, resource['id'])
+        job = self.store.claim(now=100)
+        clock = [101]
+        prepare = self.store.prepare
+        def revoked_prepare(current):
+            result = prepare(current)
+            self.store.set_source(self.alice, self.connection, False, 'revoked')
+            clock[0] = 161
+            return result
+        with patch('mazi.imports.engine.time.time', lambda: clock[0]), patch.object(self.store, 'prepare', revoked_prepare):
+            with self.assertRaises((Denied, Conflict)):
+                self.store.complete(job)
+        self.assertEqual(self.store.gallery(self.ben, self.group), [])
 
     def test_pause_revocation_and_late_worker_stop(self):
         resource, data = self.begin()
