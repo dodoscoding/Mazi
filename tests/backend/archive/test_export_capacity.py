@@ -66,6 +66,37 @@ class ExportCapacityTests(unittest.TestCase):
                 self.assertEqual(archive.read('people.json'), expected_people)
                 self.assertEqual(archive.read('personal-discovery.json'), expected_personal)
 
+    def test_reverse_personal_actions_preserve_exact_hidden_and_suppressed_order(self):
+        self.seed(4)
+        person = self.store.create_person(self.alice, self.group, 'Ben')
+        self.store.propose_identity(self.alice, person, self.ben)
+        self.store.confirm_identity(self.ben, person)
+        for asset in reversed(self.store._visible_ids(self.ben, self.group)):
+            self.store.tag(self.alice, person, asset, True)
+            self.store.disassociate(self.ben, person, asset)
+            self.store.hide(self.ben, asset, True)
+        expected = dict(hidden=self.store.hidden(self.ben, self.group),
+                        hidden_memories=self.store.hidden_events(self.ben, self.group),
+                        suppressed=self.store.suppressed(self.ben, self.group),
+                        processing=self.store.settings(self.ben, self.group))
+        with self.store.export_archive_file(self.ben, self.group) as output:
+            with zipfile.ZipFile(output) as archive:
+                self.assertEqual(archive.read('personal-discovery.json'), json.dumps(expected).encode())
+
+    def test_hidden_memory_timestamp_ties_preserve_mixed_status_order(self):
+        self.seed(5)
+        assets = self.store._visible_ids(self.ben, self.group)
+        for index, decision in enumerate(('reject', 'accept', 'reject', 'accept')):
+            event = self.store.review_event(self.alice, self.group, assets[index:index + 2], f'Memory {index}', decision)
+            self.store.hide_event(self.ben, self.group, event, True)
+        self.store.db.execute("UPDATE review_events SET updated_at='2026-10-22 12:00:00'")
+        self.store.db.commit()
+        expected = self.store.hidden_events(self.ben, self.group)
+        self.assertEqual([item['title'] for item in expected], ['Memory 1', 'Memory 3', 'Memory 0', 'Memory 2'])
+        with self.store.export_archive_file(self.ben, self.group) as output:
+            with zipfile.ZipFile(output) as archive:
+                self.assertEqual(json.loads(archive.read('personal-discovery.json'))['hidden_memories'], expected)
+
     def test_ten_thousand_originals_and_manifest_records_are_complete(self):
         self.seed(10000)
         with self.store.export_archive_file(self.ben, self.group) as output:
