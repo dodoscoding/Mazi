@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 import { group, mountFeature, until, deferred } from "./feature-harness.mjs";
 
 const settings = {
@@ -395,7 +396,17 @@ test("changing consent clears supported citations and the cloned evidence sheet"
       };
     throw Error(`Unexpected ${path}`);
   });
-  const { $, root } = feature;
+  const { $, root, window } = feature;
+  root.className = "feature-content";
+  window.happyDOM.setViewport({ width: 390, height: 844 });
+  for (const path of ["features/features.css", "features/workspace.css"]) {
+    const style = window.document.createElement("style");
+    style.textContent = await readFile(
+      new URL(`../../src/${path}`, import.meta.url),
+      "utf8",
+    );
+    window.document.head.append(style);
+  }
   globalThis.matchMedia = () => ({ matches: true });
   await until(() => !$("#ask").disabled, "ready to ask");
   $("#question").value = "When was this photograph?";
@@ -406,12 +417,34 @@ test("changing consent clears supported citations and the cloned evidence sheet"
     $("#evidence-list .evidence-title").textContent,
     "Synthetic private photograph",
   );
-  $("#answer .evidence-toggle").click();
+  assert.equal(window.getComputedStyle($("#evidence-panel")).display, "none");
+  const toggle = $("#answer .evidence-toggle");
+  assert.equal(window.getComputedStyle(toggle).display, "inline-flex");
+  assert.equal(toggle.getAttribute("aria-haspopup"), "dialog");
+  toggle.focus();
+  toggle.click();
   const dialog = $(".evidence-sheet");
   assert.equal(dialog.open, true);
+  assert.equal(dialog.getAttribute("aria-label"), "Evidence for this answer");
   assert.ok(dialog.textContent.includes("Synthetic private photograph"));
-  dialog.querySelector(".fx-sheet-handle").click();
+  const close = dialog.querySelector(".fx-sheet-handle");
+  assert.equal(
+    close.getAttribute("aria-label"),
+    "Close Evidence for this answer",
+  );
+  const source = dialog.querySelector(".evidence-title");
+  assert.equal(
+    source.getAttribute("aria-label"),
+    "Source 1: Synthetic private photograph, open the supporting record",
+  );
+  assert.equal(
+    source.getAttribute("href"),
+    `/answer-evidence?group=${group.id}&asset=synthetic-record`,
+  );
+  assert.equal(dialog.querySelectorAll(".evidence-title").length, 1);
+  close.click();
   await until(() => !dialog.open, "evidence sheet closed");
+  assert.equal(window.document.activeElement, toggle);
   change(feature, "#personal", false);
   await until(
     () => !$("#personal").disabled && !$("#personal").checked,

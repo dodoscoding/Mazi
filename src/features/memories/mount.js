@@ -54,9 +54,18 @@ export function mount(root, lifecycle) {
   }
   function renderStory(story) {
     const panel = node("article", "");
-    panel.className = "panel";
-    panel.append(node("h3", story.event.title), node("p", story.notice));
+    panel.className = "panel story";
+    const header = node("header", "");
+    header.className = "story-head";
+    header.append(node("h3", story.event.title), node("p", story.notice));
+    panel.append(header);
+    const saved = node("section", "");
+    saved.className = "story-saved";
+    saved.append(node("h4", "Saved recollections"));
     const contributions = node("div", "");
+    contributions.className = "story-recollections";
+    contributions.setAttribute("role", "region");
+    contributions.setAttribute("aria-label", "Saved recollections");
     function updateContributions() {
       contributions.replaceChildren(
         ...story.contributions.map((entry) =>
@@ -65,7 +74,11 @@ export function mount(root, lifecycle) {
       );
     }
     updateContributions();
-    panel.append(contributions);
+    saved.append(contributions);
+    panel.append(saved);
+    const writing = node("section", "");
+    writing.className = "story-writing";
+    writing.setAttribute("aria-label", "Your recollection");
     const form = node("form", ""),
       label = node("label", "Your recollection"),
       input = node("textarea", "");
@@ -73,13 +86,17 @@ export function mount(root, lifecycle) {
     input.value =
       story.contributions.find((entry) => entry.editable)?.text || "";
     label.append(input);
+    form.className = "story-form";
     const save = node("button", "Save my recollection");
+    save.className = "story-save";
     const remove = node("button", "Remove my recollection");
     remove.type = "button";
+    remove.className = "story-remove";
     let saving = false;
     let conflicted = false;
     const refreshSaved = node("button", "Refresh saved story");
     refreshSaved.type = "button";
+    refreshSaved.className = "story-recover";
     refreshSaved.hidden = true;
     refreshSaved.onclick = async () => {
       if (refreshSaved.disabled) return;
@@ -150,9 +167,14 @@ export function mount(root, lifecycle) {
       event.preventDefault();
       void writeRecollection(input.value);
     };
-    panel.append(form);
+    writing.append(form);
     remove.onclick = () => void writeRecollection("");
-    panel.append(remove, refreshSaved);
+    writing.append(remove, refreshSaved);
+    panel.append(writing);
+    const tools = node("section", "");
+    tools.className = "story-tools";
+    tools.setAttribute("aria-label", "Photos and exports");
+    tools.append(node("h4", "Photos & exports"));
     const download = node("button", "Export story JSON");
     download.type = "button";
     download.onclick = async () => {
@@ -180,7 +202,7 @@ export function mount(root, lifecycle) {
         }
       }
     };
-    panel.append(download);
+    tools.append(download);
     if (story.can_delete) {
       const button = node("button", "Delete story");
       button.type = "button";
@@ -189,9 +211,11 @@ export function mount(root, lifecycle) {
           story: story.id,
           revision: story.revision,
         });
-      panel.append(button);
+      button.className = "story-delete";
+      tools.append(button);
     }
-    advancedStory(panel, story);
+    advancedStory(tools, story);
+    panel.append(tools);
     return panel;
   }
   async function refresh() {
@@ -294,6 +318,7 @@ export function mount(root, lifecycle) {
     const gallery = node("div", ""),
       image = node("img", ""),
       caption = node("p", "");
+    gallery.className = "story-gallery";
     image.alt = "Photograph from this approved memory";
     image.hidden = true;
     image.style.maxWidth = "100%";
@@ -383,6 +408,7 @@ export function mount(root, lifecycle) {
     const form = node("form", ""),
       label = node("label", "Sub-event title"),
       title = node("input", "");
+    form.className = "story-subevents";
     title.required = true;
     title.maxLength = 200;
     label.append(title);
