@@ -87,7 +87,7 @@ test("independent feature routes load circle context without requesting Atlas", 
     assert.deepEqual(h.current.memories, []);
   }
   assert.equal(calls.filter((path) => path.startsWith("/api/atlas")).length, 0);
-  assert.equal(calls.filter((path) => path === "/api/groups").length, 9);
+  assert.equal(calls.filter((path) => path === "/api/groups").length, 1);
 });
 
 test("Atlas routes still load current memories and demo search remains local", async (t) => {
@@ -102,7 +102,7 @@ test("Atlas routes still load current memories and demo search remains local", a
     await h.render(path);
     assert.equal(h.current.memories[0].id, "photo");
   }
-  assert.equal(calls.filter((path) => path.startsWith("/api/atlas")).length, 3);
+  assert.equal(calls.filter((path) => path.startsWith("/api/atlas")).length, 1);
   const before = calls.length;
   await h.render("/search", true);
   assert.equal(calls.length, before);
@@ -166,4 +166,26 @@ test("without an authenticated profile no archive requests are made", async (t) 
   assert.deepEqual(h.current.groups, []);
   await h.render("/", false, null);
   assert.deepEqual(calls, []);
+});
+
+test("superseded visibility loads abort and pagehide cancels private work", async (t) => {
+  const pending = deferred();
+  const signals = [];
+  let calls = 0;
+  const h = await harness(t, async (path, options) => {
+    signals.push(options.signal);
+    if (++calls === 1) return pending.promise;
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] },
+    );
+  });
+  await h.render("/");
+  await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
+  assert.equal(signals[0].aborted, true);
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () => h.window.dispatchEvent(new h.window.Event("pagehide")));
+  assert.equal(signals.at(-1).aborted, true);
+  assert.deepEqual(h.current.memories, []);
 });

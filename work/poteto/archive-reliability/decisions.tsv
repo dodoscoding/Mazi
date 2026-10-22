@@ -1,0 +1,9 @@
+ts	phase	decision	why	evidence	result
+2026-10-22	frame	Reuse deployed worktree and exact investigated release	Preserve unrelated original checkout and deploy-only integration	cf26a7d	open
+2026-10-22	design	Choose cached services with SQL disconnect at request boundaries	Preserve import scan cache while releasing warm idle capacity	design.md	verified
+2026-10-22	connections	Use transaction pooling with request-end SQL cleanup	Twenty clients passed without holding warm sessions; existing worker cache preserved	hosted-verification.json	verified
+2026-10-22	loading	Use shared policy locks for Atlas reads	Twenty simultaneous exclusive readers hit the five-second timeout; shared readers pass and writers remain fenced	tests/backend/test_postgres.py	verified
+2026-10-22	previews	Batch preview authorization in one read transaction before Storage	New standalone transaction setup amplified existing eleven queries; scope excludes network download	performance-evidence.md	verified
+2026-10-22	metadata	Display sender and explicitly labeled sharing dates	Source dates do not establish capture chronology	metadata-evidence.md	verified
+2026-10-22	shipping	Separate shared main backport and hosted release PR	Avoid merging unrelated release-only history into main	main backport PR95	verified
+2026-10-22	forge	Use GitHub CLI fallback	Origin installed but cannot resolve this repository	gh PR95	verified

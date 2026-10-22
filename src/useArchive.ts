@@ -22,6 +22,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
   const [state, setState] = useState<ArchiveState>(empty);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
+  const needsAtlas = !isFeaturePath(path, demo);
   useEffect(() => {
     if (!groupId) {
       setState(empty);
@@ -31,17 +32,20 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       setState({ ...empty, status: "ready", memories: samples });
       return;
     }
-    const controller = new AbortController();
+    let controller: AbortController | undefined;
     let generation = 0;
     async function load() {
       const current = ++generation;
+      controller?.abort();
+      const request = new AbortController();
+      controller = request;
       setState(empty);
       if (document.hidden) return;
       try {
         const response = await fetch("/api/groups", {
-          signal: controller.signal,
+          signal: request.signal,
         });
-        if (current !== generation || controller.signal.aborted) return;
+        if (current !== generation || request.signal.aborted) return;
         if (response.status === 403 || response.status === 401) {
           sessionStorage.removeItem("mazi.group");
           window.dispatchEvent(new Event("mazi:access-lost"));
@@ -51,16 +55,16 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
         if (!response.ok)
           throw Error("Your archive could not load. Please retry.");
         const groups: Circle[] = await response.json();
-        if (current !== generation || controller.signal.aborted) return;
+        if (current !== generation || request.signal.aborted) return;
         const group = groups.find((item) => item.id === groupId)?.id || "";
         if (group) sessionStorage.setItem("mazi.group", group);
         let memories: Memory[] = [];
-        if (group && !isFeaturePath(path, demo)) {
+        if (group && needsAtlas) {
           const result = await fetch(
             "/api/atlas?" + new URLSearchParams({ group }),
-            { signal: controller.signal },
+            { signal: request.signal },
           );
-          if (current !== generation || controller.signal.aborted) return;
+          if (current !== generation || request.signal.aborted) return;
           if (result.status === 403 || result.status === 401)
             window.dispatchEvent(new Event("mazi:access-lost"));
           if (!result.ok)
@@ -69,10 +73,10 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
             );
           memories = (await result.json()).memories;
         }
-        if (current === generation && !controller.signal.aborted)
+        if (current === generation && !request.signal.aborted)
           setState({ status: "ready", groups, group, memories, error: "" });
       } catch (error) {
-        if (current === generation && !controller.signal.aborted)
+        if (current === generation && !request.signal.aborted)
           setState({
             ...empty,
             status: "error",
@@ -87,6 +91,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     };
     const clear = () => {
       generation++;
+      controller?.abort();
       setState(empty);
     };
     document.addEventListener("visibilitychange", visibility);
@@ -97,7 +102,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     window.addEventListener("mazi:access-lost", clear);
     return () => {
       generation++;
-      controller.abort();
+      controller?.abort();
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", clear);
       window.removeEventListener("pageshow", visibility);
@@ -105,7 +110,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       window.removeEventListener("mazi:group", visibility);
       window.removeEventListener("mazi:access-lost", clear);
     };
-  }, [path, demo, groupId, version]);
+  }, [needsAtlas, demo, groupId, version]);
   const chooseGroup = (id: string) => {
     sessionStorage.setItem("mazi.group", id);
     window.dispatchEvent(new Event("mazi:group"));

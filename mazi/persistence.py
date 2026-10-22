@@ -1,4 +1,5 @@
 """The archive connection boundary; hosted SQL is native PostgreSQL."""
+from contextlib import contextmanager
 import os
 import hashlib
 import re
@@ -8,6 +9,14 @@ from urllib.parse import urlparse
 
 class ArchiveBusy(TimeoutError):
     """A bounded archive lock wait expired; the operation can be retried."""
+
+
+class ArchiveUnavailable(RuntimeError):
+    """The hosted database cannot serve this operation; retry explicitly."""
+
+
+class ArchiveSchemaMismatch(RuntimeError):
+    """The configured database schema is incompatible with this application."""
 
 
 SCHEMA_VERSION = 1
@@ -81,66 +90,152 @@ class Cursor:
 
 class PostgresConnection:
     hosted = True
-    def __init__(self, url, schema='mazi'):
-        import psycopg
-        from psycopg import sql
+    def __init__(self, url, schema='mazi', *, lock_timeout='5s'):
         if not re.fullmatch(r'[a-z][a-z0-9_]*', schema):
             raise ValueError('Invalid application database schema')
-        self._db = psycopg.connect(url, autocommit=True, connect_timeout=15)
-        self._db.execute(sql.SQL('SET search_path TO {}, pg_catalog').format(sql.Identifier(schema)))
-        self._db.execute("SET lock_timeout TO '5s'")
-        self._db.execute("SET extra_float_digits TO 3")
-        try:
-            version = self._db.execute('SELECT version FROM runtime_schema WHERE singleton=1').fetchone()
-            if not version or version[0] != SCHEMA_VERSION:
-                raise RuntimeError('Hosted archive schema version does not match this application')
-        except BaseException:
-            self._db.close()
-            raise
+        if not re.fullmatch(r'[0-9]+(?:ms|s)', lock_timeout):
+            raise ValueError('Invalid database lock timeout')
+        self._url = url
+        self._schema = schema
+        self._lock_timeout = lock_timeout
+        self._db = None
         self._active = False
+        self._checked = False
         self._lock_key = archive_lock_key(schema)
 
-    def _begin(self):
-        if not self._active:
-            self._db.execute('BEGIN')
+    def _start(self):
+        import psycopg
+        try:
+            if self._db is None:
+                self._db = psycopg.connect(self._url, autocommit=True,
+                                          connect_timeout=15, prepare_threshold=None)
+            # One simple-query exchange; all settings belong to this transaction.
+            self._db.execute(
+                f'BEGIN; SET LOCAL search_path TO "{self._schema}", pg_catalog; '
+                f"SET LOCAL lock_timeout TO '{self._lock_timeout}'; SET LOCAL extra_float_digits TO 3")
             self._active = True
+            if not self._checked:
+                try:
+                    version = self._db.execute('SELECT version FROM runtime_schema WHERE singleton=1').fetchone()
+                except psycopg.errors.UndefinedTable:
+                    raise ArchiveSchemaMismatch('Hosted archive schema is not initialized') from None
+                if not version or version[0] != SCHEMA_VERSION:
+                    raise ArchiveSchemaMismatch('Hosted archive schema version does not match this application')
+                self._checked = True
+        except (psycopg.OperationalError, psycopg.InterfaceError):
+            self._discard()
+            raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+        except BaseException:
+            self._discard()
+            raise
+
+    def _begin(self, *, shared=False):
+        if not self._active:
+            self._start()
             try:
-                self._db.execute('SELECT pg_advisory_xact_lock(%s)', (self._lock_key,))
+                lock = 'pg_advisory_xact_lock_shared' if shared else 'pg_advisory_xact_lock'
+                self._db.execute(f'SELECT {lock}(%s)', (self._lock_key,))
             except BaseException as error:
-                self.rollback()
+                try:
+                    self.rollback()
+                except Exception:
+                    self._discard()
                 from psycopg.errors import LockNotAvailable
                 if isinstance(error, LockNotAvailable):
                     raise ArchiveBusy("Archive is busy; retry shortly") from None
+                import psycopg
+                if isinstance(error, (psycopg.OperationalError, psycopg.InterfaceError)):
+                    self._discard()
+                    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
                 raise
+
+    @contextmanager
+    def read_transaction(self):
+        """Share a policy snapshot with readers while fencing exclusive writers."""
+        self._begin(shared=True)
+        try:
+            yield self
+        except BaseException:
+            try:
+                self.rollback()
+            except Exception:
+                self._discard()
+            raise
+        else:
+            self.commit()
 
     def execute(self, query, params=()):
         import psycopg
         if query.strip().upper() == 'BEGIN IMMEDIATE':
             self._begin()
             return Cursor(self._db.cursor())
+        standalone = not self._active
         try:
-            return Cursor(self._db.execute(bind_sql(query), params))
+            if standalone:
+                self._start()
+            result = Cursor(self._db.execute(bind_sql(query), params))
+            if standalone:
+                self.commit()
+            return result
         except psycopg.errors.LockNotAvailable:
+            if standalone:
+                self.rollback()
             raise ArchiveBusy("Archive is busy; retry shortly") from None
-        except psycopg.IntegrityError as error:
-            raise sqlite3.IntegrityError(str(error)) from error
+        except (psycopg.OperationalError, psycopg.InterfaceError):
+            self._discard()
+            raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+        except BaseException as error:
+            if standalone:
+                try:
+                    self.rollback()
+                except Exception:
+                    self._discard()
+            if isinstance(error, psycopg.IntegrityError):
+                raise sqlite3.IntegrityError(str(error)) from error
+            raise
 
-    def commit(self):
+    def _finish(self, command):
+        import psycopg
         if self._active:
-            self._db.execute('COMMIT'); self._active = False
+            try:
+                self._db.execute(command)
+            except (psycopg.OperationalError, psycopg.InterfaceError):
+                self._discard()
+                raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+            except BaseException:
+                self._discard()
+                raise
+            finally:
+                self._active = False
 
-    def rollback(self):
-        if self._active:
-            self._db.execute('ROLLBACK'); self._active = False
+    def commit(self): self._finish('COMMIT')
+    def rollback(self): self._finish('ROLLBACK')
 
-    def close(self): self._db.close()
+    def disconnect(self):
+        db, self._db = self._db, None
+        self._active = False
+        self._checked = False
+        if db is not None:
+            db.close()
+
+    def _discard(self):
+        try:
+            self.disconnect()
+        except Exception:
+            pass
+
+    def close(self): self.disconnect()
     def __enter__(self):
-        try: self._begin()
-        except BaseException:
-            self.rollback(); raise
+        self._begin()
         return self
     def __exit__(self, kind, error, trace):
-        self.rollback() if kind else self.commit()
+        if not kind:
+            self.commit()
+            return
+        try:
+            self.rollback()
+        except Exception:
+            self._discard()
 
 
 def hosted_configuration(environ=None):
@@ -184,10 +279,7 @@ def open_database(root):
         return db
     if backend != 'supabase': raise ValueError('Unknown archive backend')
     url, schema = hosted_configuration()
-    try:
-        return PostgresConnection(url, schema)
-    except Exception:
-        raise RuntimeError('Hosted database unavailable or application schema incompatible') from None
+    return PostgresConnection(url, schema)
 
 def initialize_schema(db, schema):
     if not getattr(db, 'hosted', False): db.executescript(schema)

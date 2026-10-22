@@ -1,0 +1,14 @@
+{
+  "isolated_schema": "mazi_reliability_test",
+  "postgres_contracts_passed": 10,
+  "postgres_contract_seconds": 19.836,
+  "concurrent_stores": 20,
+  "concurrent_atlas_passed": 20,
+  "concurrent_seconds": 2.161,
+  "clients_closed": 20,
+  "cursor_after_disconnect": "passed",
+  "production_300_projection_seconds": 1.143,
+  "production_300_projection_baseline_seconds": 22.028,
+  "production_cards": 300,
+  "scope": "read-only production projection; synthetic mutation tests in isolated schema"
+}

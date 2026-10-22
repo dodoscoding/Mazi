@@ -1,0 +1,19 @@
+{
+  "revision": "cf26a7d9a3e342108079c1cd05829d9154f12ad4",
+  "synthetic_300": {
+    "atlas_selects": 916,
+    "atlas_statements": 918,
+    "rendition_statements": 11
+  },
+  "production_read_local_client": {
+    "connection_seconds": 0.278,
+    "groups_seconds": 0.027,
+    "atlas_seconds": 22.028,
+    "cards": 300
+  },
+  "transaction_pool_probe": {
+    "port": 6543,
+    "schema_version": 1,
+    "seconds": 0.265
+  }
+}

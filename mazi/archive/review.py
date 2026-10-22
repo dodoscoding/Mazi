@@ -254,20 +254,28 @@ class ReviewStore(ImportStore):
                                 (group, selected, selected, user))
             self._audit(user, "review.rendition", asset)
 
-    def rendition_bytes(self, user, asset):
-        original = self._asset(user, asset)
+    def _rendition_locator(self, user, asset, *, original=None):
+        if original is None:
+            original = self._asset_locator(user, asset)
+        row = original[0]
         selected = self.db.execute("SELECT selected_id FROM review_renditions WHERE asset_id=? AND group_id=?",
-                                   (asset, original["group_id"])).fetchone()
+                                   (asset, row["group_id"])).fetchone()
         if selected and selected[0] != asset:
             pair = tuple(sorted((asset, selected[0])))
             approved = self.db.execute("SELECT 1 FROM review_pairs WHERE group_id=? AND left_id=? AND right_id=? AND status='merged'",
-                                       (original["group_id"], *pair)).fetchone()
+                                       (row["group_id"], *pair)).fetchone()
             if approved:
                 try:
-                    return self.asset_bytes(user, selected[0])
+                    return self._asset_locator(user, selected[0])
                 except Denied:
                     pass
-        return self.asset_bytes(user, asset)
+        return original
+
+    def rendition_bytes(self, user, asset):
+        transaction = self.db.read_transaction() if getattr(self.db, "hosted", False) else self._projection_transaction()
+        with transaction:
+            _, namespace, key = self._rendition_locator(user, asset)
+        return self.objects.read(namespace, key)
 
     def event_suggestions(self, user, group, limit=100):
         with self._projection_transaction():

@@ -1,4 +1,19 @@
-export type Photo = { src: string; alt: string; caption: string };
+export type PhotoProvenance = {
+  sender: string | null;
+  source: string;
+  sharedAt: {
+    local: string | null;
+    raw: string | null;
+    precision: string;
+    ambiguous: boolean;
+  };
+};
+export type Photo = {
+  src: string;
+  alt: string;
+  caption: string;
+  provenance?: PhotoProvenance[];
+};
 export type Place = {
   name: string;
   country: string;

@@ -571,3 +571,96 @@ test("capture memory evidence at the responsive widths", async ({
     ).toBe(true);
   }
 });
+
+test("source sharing is visible on cards, portal and detail without a capture date", async ({
+  page,
+}, testInfo) => {
+  const sourcePhoto = {
+    ...archive[0],
+    id: "source-photo",
+    kind: "photo",
+    title: "Photo shared by Ana",
+    shortTitle: "Photo shared by Ana",
+    date: "Date not recorded",
+    year: null,
+    dateBasis: "undated",
+    approximate: true,
+    photos: [
+      {
+        ...photo("ferry", "Photo shared by Ana"),
+        provenance: [
+          {
+            sender: "Ana",
+            source: "whatsapp",
+            sharedAt: {
+              local: "2024-04-23T21:08:02",
+              raw: "23/04/2024, 21:08:02",
+              precision: "second",
+              ambiguous: false,
+            },
+          },
+          {
+            sender: "Ben",
+            source: "whatsapp",
+            sharedAt: {
+              local: null,
+              raw: "04/05/2024, 21:00",
+              precision: "unknown",
+              ambiguous: true,
+            },
+          },
+        ],
+      },
+    ],
+    people: { shared: ["Uploader"], conversation: [] },
+    messages: [],
+    place: null,
+  };
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories: [sourcePhoto] } }),
+  );
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator(".featured")).toContainText("Photo shared by Ana");
+  await expect(page.locator(".featured")).toContainText(
+    "Shared by Ana and Ben",
+  );
+  await expect(page.locator(".featured")).toContainText("Shared on");
+  await expect(page.locator(".featured")).not.toContainText(
+    "Date not recorded",
+  );
+  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await expect(page.locator(".dossier")).toContainText("Shared by Ana and Ben");
+  await expect(page.locator(".dossier")).toContainText(
+    "Added to archive by Uploader",
+  );
+  await expect(page.locator(".dossier")).toContainText(
+    "04/05/2024, 21:00 · date order unclear",
+  );
+  await page
+    .locator(".dossier")
+    .getByRole("link", { name: "Open memory", exact: true })
+    .click();
+  await expect(page.locator(".memory-detail h1")).toHaveText(
+    "Photo shared by Ana",
+  );
+  await expect(page.locator(".sources")).toContainText("Shared by Ana");
+  await expect(page.locator(".sources")).toContainText("Shared by Ben");
+  await expect(page.locator(".sources")).toContainText(
+    "04/05/2024, 21:00 · date order unclear",
+  );
+  await expect(page.locator(".date-chip")).not.toContainText("About");
+  await expect(page.locator(".people")).toContainText("Added to archive by");
+  await expect(page.locator(".people")).toContainText("Uploader");
+  await page.screenshot({
+    path: testInfo.outputPath("source-sharing.png"),
+    fullPage: true,
+  });
+  await page.goto("/#/timeline");
+  await expect(page.locator(".tl-card")).toContainText("Shared by Ana and Ben");
+  await expect(page.locator(".tl-date")).toContainText("Shared on");
+  await expect(
+    page.locator(".timeline-page").getByText("2024", { exact: true }),
+  ).toHaveCount(0);
+});
