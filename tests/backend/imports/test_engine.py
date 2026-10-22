@@ -139,6 +139,16 @@ class EngineTests(unittest.TestCase):
         self.store.scan(run, 500)
         self.assertEqual(self.store.report(self.alice, run)["discovered"], 1201)
 
+    def test_scan_fails_if_saved_checkpoint_exceeds_rebuilt_inventory(self):
+        run = self.scanning_run(records=2)
+        self.store.db.execute("UPDATE import_runs SET checkpoint=3 WHERE id=?", (run,))
+        self.store.db.commit()
+        self.assertFalse(self.store.scan(run, 500))
+        report = self.store.report(self.alice, run)
+        self.assertEqual(report["state"], "FAILED")
+        self.assertEqual(report["error"], "Inventory shorter than saved checkpoint")
+        self.assertIsNone(self.store._scan_session)
+
     def test_scan_checkpoint_race_reconstructs_without_duplicate_rows(self):
         run = self.scanning_run()
         self.store.scan(run, 500)
