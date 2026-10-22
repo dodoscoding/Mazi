@@ -276,7 +276,6 @@ class ReviewStore(ImportStore):
         transaction = self.db.read_transaction() if getattr(self.db, "hosted", False) else self.transaction()
         with transaction:
             _, namespace, key = self._rendition_locator(user, asset)
-        # Storage can be slow; authorization is resolved before releasing its policy lock.
         return self.objects.read(namespace, key)
 
     def event_suggestions(self, user, group, limit=100):

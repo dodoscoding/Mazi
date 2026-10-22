@@ -222,7 +222,7 @@ class PostgresConnection:
         try:
             self.disconnect()
         except Exception:
-            pass  # Preserve the operation failure if native cleanup also fails.
+            pass
 
     def close(self): self.disconnect()
     def __enter__(self):
