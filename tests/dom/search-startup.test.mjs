@@ -297,3 +297,42 @@ for (const outcome of ["pending", "failed"]) {
     }
   });
 }
+
+test("a canceled circle's denied context cannot sign out the current circle through the real lifecycle", async (t) => {
+  const context = deferred();
+  const feature = await mountFeature(
+    t,
+    "discovery",
+    (path) => {
+      if (path === "/api/groups")
+        return [group, { ...group, id: "second", name: "Second circle" }];
+      if (path.startsWith("/api/discovery/search")) return searchPage;
+      if (path.startsWith("/api/discovery/state")) return context.promise;
+      if (path.startsWith("/api/atlas")) return { memories: [] };
+      throw Error(`Unexpected ${path}`);
+    },
+    { route: "/search", realLifecycle: true },
+  );
+  const { $, root, window } = feature;
+  let accessLost = 0;
+  window.addEventListener("mazi:access-lost", () => {
+    accessLost++;
+  });
+  await until(() => $("#results h3"), "first circle");
+  $("#include-context").click();
+  $("#groups").value = "second";
+  $("#groups").onchange();
+  await until(
+    () => $("#results h3") && $("#groups").value === "second",
+    "second circle",
+  );
+  $("#query").value = "keep current search";
+  context.resolve(
+    Object.assign(Error("Old circle access denied"), { status: 403 }),
+  );
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(root.hidden, false);
+  assert.equal(accessLost, 0);
+  assert.equal($("#query").value, "keep current search");
+  assert.equal($("#results h3").textContent, photograph.title);
+});
