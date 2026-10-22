@@ -1,6 +1,6 @@
 # Mazi
 
-<img src="docs/assets/mazi-logo.png" alt="Mazi logo" width="160">
+<img src="public/mazi-logo.png" alt="Mazi logo" width="160">
 
 Mazi is a private memory archive for one small circle of friends. Bring your photographs and conversations together, then revisit them through a visual Atlas, a timeline, and shared stories.
 
