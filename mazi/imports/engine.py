@@ -105,9 +105,8 @@ class ImportStore(Store):
         with ExitStack() as stack:
             path = stack.enter_context(self.objects.materialize("archives", row["id"]))
             archive = stack.enter_context(Archive(path))
-            # Source resources use a component identity as manifest and wrap verified bytes locally.
-            generated = json.loads(job["payload"])["original_metadata_reference"].startswith("source:#")
-            if not generated and archive.manifest != row["manifest"]:
+            source_resource = json.loads(job["payload"])["original_metadata_reference"].startswith("source:#")
+            if not source_resource and archive.manifest != row["manifest"]:
                 raise ArchiveError("Archive checksum differs")
             self._archive_session = (identity, stack.pop_all(), archive)
         return archive
