@@ -29,7 +29,7 @@ test at tests/dom/imports.test.mjs:483:1
 ✖ archive transfer fills the allowed chunk size and preserves every byte (48.714167ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
   + actual - expected
-  
+
     [
   +   262144,
   +   262144,
@@ -39,7 +39,7 @@ test at tests/dom/imports.test.mjs:483:1
   -   524288,
       17
     ]
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:503:10)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -54,9 +54,9 @@ test at tests/dom/imports.test.mjs:483:1
 test at tests/dom/imports.test.mjs:509:3
 ✖ periodic polling respects COMPLETED lifecycle (16.198375ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   2 !== 1
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -71,9 +71,9 @@ test at tests/dom/imports.test.mjs:509:3
 test at tests/dom/imports.test.mjs:509:3
 ✖ periodic polling respects CANCELLED lifecycle (16.823625ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   2 !== 1
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -88,9 +88,9 @@ test at tests/dom/imports.test.mjs:509:3
 test at tests/dom/imports.test.mjs:509:3
 ✖ periodic polling respects FAILED lifecycle (16.64625ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   2 !== 1
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:523:12)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -105,9 +105,9 @@ test at tests/dom/imports.test.mjs:509:3
 test at tests/dom/imports.test.mjs:527:1
 ✖ media progress excludes records without media and inventory awaits confirmation (14.074208ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   '97' !== '0'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/.codex/worktrees/import-performance/Mazi/tests/dom/imports.test.mjs:539:10)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
