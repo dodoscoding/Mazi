@@ -371,7 +371,7 @@ class SourceStore(ReviewStore):
         clause, params = self._places_query(user, group)
         byte_length = (lambda column: f'octet_length({column})') if getattr(self.db, 'hosted', False) else (lambda column: f'length(CAST({column} AS BLOB))')
         text_bytes = ' + '.join(f'COALESCE({byte_length(column)},0)' for column in ('p.origin', 'p.country', 'p.city', 'p.day', 'o.asset_id'))
-        rows, request_bytes = [], 0
+        rows, request_bytes = [], 2
         last_day = last_origin = ''
         started = time.perf_counter()
         while True:
@@ -388,7 +388,7 @@ class SourceStore(ReviewStore):
                 if row['text_bytes'] > 8192:
                     raise CapacityExceeded('Local map exceeded its 8 KiB location record budget')
                 point = {key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')}
-                request_bytes += len(json.dumps(point).encode('utf-8'))
+                request_bytes += len(json.dumps(point).encode('utf-8')) + (2 if rows else 0)
                 if len(rows) == 20000 or request_bytes > 8 * 1024 * 1024:
                     raise CapacityExceeded('Local map supports up to 20,000 location records within an 8 MiB response budget')
                 rows.append(point)
