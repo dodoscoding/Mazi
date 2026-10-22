@@ -2,7 +2,7 @@
 
 This foreground macOS helper transfers selected Photos resources into the unified local Mazi archive. It retains the existing permission, source scope and resumable transfer contract; it is not a separate archive app.
 
-Run `sh tools/apple-photos/build.sh`, then open `tools/apple-photos/build/MaziPhotos.app` after starting Mazi. The default app URL is `http://127.0.0.1:5173`, matching `npm run dev` and `npm start`. Browser and companion requests use the same API through that origin.
+Run `sh tools/apple-photos/build.sh`, then open `tools/apple-photos/build/MaziPhotos.app` after starting Mazi. Sign in with your Mazi name and the circle's shared code, the same entry the browser uses. The default app URL is `http://127.0.0.1:5173`, matching `npm run dev` and `npm start`. Browser and companion requests use the same API through that origin.
 
 For a custom local port, launch the executable with the matching URL:
 
