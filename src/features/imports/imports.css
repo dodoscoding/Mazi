@@ -145,6 +145,9 @@
   }
 }
 @media (max-width: 600px) {
+  .fx-imports[data-mode="imports"] .upload-actions progress {
+    flex: none;
+  }
   .fx-imports[data-mode="imports"] .source-cards,
   .fx-imports[data-mode="imports"] .upload-fields {
     grid-template-columns: minmax(0, 1fr);
