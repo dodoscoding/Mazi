@@ -19,16 +19,24 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     person = store.create_person(alice, group, 'Ben')
     store.propose_identity(alice, person, ben)
     store.confirm_identity(ben, person)
+    from .discovery_learned_fixture import photographs
+    learned = list(photographs()) if os.environ.get('MAZI_EMBEDDING_MODEL_DIR') else None
     for index, color in enumerate(['red', 'blue', 'green']):
-        image = io.BytesIO()
-        Image.new('RGB', (80, 80), color).save(image, 'JPEG')
-        data = image.getvalue()
+        if learned is None:
+            image = io.BytesIO()
+            Image.new('RGB', (80, 80), color).save(image, 'JPEG')
+            data = image.getvalue()
+            title = ['Bicycle beside the sea', 'Dinner with friends', 'Garden in the morning'][index]
+            place = ['Amsterdam', 'Istanbul', 'Amsterdam'][index]
+        else:
+            data, title = learned[index]
+            place = ''
         resource = store.begin_resource(alice, source, dict(item=str(index), component='photo', version='original', filename=f'photo-{index}.jpg', date='2024-01-02', kind='image', albums=[]), len(data), hashlib.sha256(data).hexdigest())
         store.resource_chunk(alice, resource['id'], 0, data)
         store.finish_resource(alice, resource['id'])
         while store.work_once(): pass
         asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
-        store.correct_asset(alice, asset, title=['Bicycle beside the sea','Dinner with friends','Garden in the morning'][index], capture_date='2024-01-02', place=['Amsterdam','Istanbul','Amsterdam'][index])
+        store.correct_asset(alice, asset, title=title, capture_date='2024-01-02', place=place)
         store.tag(alice, person, asset, True)
     configure_shared(store, group, {"Alice": alice, "Ben": ben})
     store.close()
