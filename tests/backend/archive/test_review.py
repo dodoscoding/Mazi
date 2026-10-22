@@ -26,6 +26,25 @@ class ReviewTests(unittest.TestCase):
     def tearDown(self):
         helpers.EngineTests.tearDown(self)
 
+    def test_busy_preview_is_retryable_without_reading_storage(self):
+        import sqlite3
+        from mazi.persistence import ArchiveBusy
+        run = self.submit({"photo.jpg": helpers.picture()})
+        self.process(run)
+        asset = self.store.gallery(self.alice, self.group)[0]["id"]
+        self.store.db.execute("PRAGMA busy_timeout=1")
+        other = sqlite3.connect(Path(self.temp.name) / "mazi.sqlite3")
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            with patch.object(self.store.objects, 'read') as read:
+                with self.assertRaises(ArchiveBusy):
+                    self.store.rendition_bytes(self.alice, asset)
+                read.assert_not_called()
+        finally:
+            other.rollback()
+            other.close()
+        self.assertTrue(self.store.rendition_bytes(self.alice, asset))
+
     def test_review_merge_rendition_undo_and_revocation(self):
         from io import BytesIO
         from PIL import Image
