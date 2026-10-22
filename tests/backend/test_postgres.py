@@ -183,6 +183,36 @@ class PostgresContracts(unittest.TestCase):
             self.assertEqual(self.store.notifications(self.user, self.group)['enabled'], enabled)
             self.assertEqual(self.store.db.execute('SELECT enabled FROM memory_notifications WHERE group_id=? AND "user"=?', (self.group, self.user)).fetchone()[0], int(enabled))
 
+    def test_policy_readers_overlap_and_fence_withdrawal_until_commit(self):
+        from mazi.atlas import atlas_view
+        from mazi.persistence import ArchiveBusy
+        with self.store.db:
+            self.store.db.execute('INSERT INTO import_runs(id,owner_id,group_id,source,namespace,manifest,options,size,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                (self.fixture, self.user, self.group, 'manual', 'synthetic', self.fixture, '{}', 1, 'COMPLETED', 0))
+            self.store.db.execute('INSERT INTO archive_assets VALUES(?,?,?,?,?,?,?,?,?)',
+                (self.fixture, self.group, self.fixture, 'synthetic', 'synthetic', 'image/jpeg', 1, 8, 8))
+            self.store.db.execute('INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)',
+                (self.fixture, self.fixture, self.group, self.user, self.fixture, self.fixture, self.fixture, '{}'))
+        reader = MemoryStore(self.temp.name)
+        writer = MemoryStore(self.temp.name)
+        reader.db._lock_timeout = writer.db._lock_timeout = '50ms'
+        try:
+            with self.store.db.read_transaction():
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    result = pool.submit(atlas_view, reader, self.user, self.group).result(timeout=10)
+                    self.assertEqual([card['id'] for card in result['memories']], ['photo-' + self.fixture])
+                with self.assertRaises(ArchiveBusy):
+                    writer.withdraw(self.user, self.fixture)
+                self.assertEqual(self.store.db.execute('SELECT withdrawn FROM import_runs WHERE id=?',
+                                                      (self.fixture,)).fetchone()[0], 0)
+            writer.withdraw(self.user, self.fixture)
+            self.assertEqual(self.store.db.execute('SELECT withdrawn FROM import_runs WHERE id=?',
+                                                  (self.fixture,)).fetchone()[0], 1)
+            self.assertEqual(atlas_view(reader, self.user, self.group), {'memories': []})
+        finally:
+            reader.close()
+            writer.close()
+
     def test_held_lock_timeout_rolls_back_and_recovers(self):
         from mazi.persistence import ArchiveBusy
         other = MemoryStore(self.temp.name)
