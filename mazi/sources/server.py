@@ -124,7 +124,6 @@ class Worker:
         self.client = DiscordClient(token) if token else None
         if self.client:
             store.discord_authorize = self.client.authorize
-            store.discord_sources = set(filter(None, os.environ.get('MAZI_DISCORD_SOURCES', '').split(',')))
         self.next_poll = 0
 
     def step(self):
@@ -133,8 +132,6 @@ class Worker:
             if self.client and time.monotonic() >= self.next_poll:
                 self.next_poll = time.monotonic() + 30
                 for source in self.store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
-                    if source['id'] not in self.store.discord_sources:
-                        continue
                     settle_poll(self.store, source['owner_id'], source['id'], self.client)
             return 0 if self.store.work_once() else IDLE_SECONDS
         except RateLimited as exc:

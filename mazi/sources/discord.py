@@ -120,6 +120,7 @@ def poll_source(store, user, connection, client):
     scope = json.loads(source['scope'])
     if source['kind'] != 'discord':
         raise ValueError('Not a Discord source')
+    store.discord_linked(source['group_id'], scope['guild'])
     for channel in scope['channels']:
         store._source(user, connection, True)
         client.authorize(scope['guild'], channel)

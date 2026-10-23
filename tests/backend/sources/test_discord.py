@@ -1,6 +1,8 @@
 import hashlib
 import json
+import time
 import unittest
+from unittest.mock import patch
 from tests.backend.sources import test_sources
 from mazi.identity.core import Denied
 from mazi.sources.discord import DiscordClient, channel_permissions, poll_source, RateLimited, snowflake
@@ -28,16 +30,22 @@ class FakeDiscord:
         return picture()
 
 
+def link(store, user, group, guild='10'):
+    return store.link_discord(user, store.begin_discord_link(user, group), lambda: {'id': guild, 'name': 'Synthetic server'})
+
+
 class DiscordTests(unittest.TestCase):
-    setUp = test_sources.SourceTests.setUp
     tearDown = test_sources.SourceTests.tearDown
+
+    def setUp(self):
+        test_sources.SourceTests.setUp(self)
+        link(self.store, self.alice, self.group)
 
     def test_switch_scope_replay_and_permission_change_before_worker_commit(self):
         connection = self.store.create_source(self.alice, self.group, 'discord', 'Selected channel',
             {'guild': '10', 'channels': ['20'], 'start': '2024-01-01', 'end': '2030-12-31'})
         client = FakeDiscord()
         self.store.discord_authorize = client.authorize
-        self.store.discord_sources = {connection}
         with self.assertRaises(Denied):
             poll_source(self.store, self.alice, connection, client)
         self.assertEqual(client.reads, 0)
@@ -93,7 +101,6 @@ class DiscordTests(unittest.TestCase):
             FakeDiscord.authorize(client, guild, channel)
         client.authorize = authorize
         self.store.discord_authorize = client.authorize
-        self.store.discord_sources = {connection}
         poll_source(self.store, self.alice, connection, client)
         job = self.store.claim()
         prepared = self.store.prepare(job)
@@ -113,6 +120,49 @@ class DiscordTests(unittest.TestCase):
             with self.assertRaises(Denied):
                 client.attachment({'url':url,'size':10})
         self.assertEqual(RateLimited(0).seconds, 1)
+
+    def test_discord_source_requires_its_server_linked_to_the_same_circle(self):
+        scope = {'guild': '11', 'channels': ['20'], 'start': '2024-01-01', 'end': '2024-12-31'}
+        with self.assertRaises(Denied) as refused:
+            self.store.create_source(self.alice, self.group, 'discord', 'Other server', scope)
+        self.assertEqual(str(refused.exception), 'Connect this Discord server first')
+        other = self.store.create_group(self.alice, 'Other circle')
+        link(self.store, self.alice, other, '11')
+        with self.assertRaises(Denied):
+            self.store.create_source(self.alice, self.group, 'discord', 'Other server', scope)
+        link(self.store, self.ben, self.group, '11')
+        self.store.create_source(self.alice, self.group, 'discord', 'Other server', scope)
+        self.assertEqual(self.store.discord_guilds(self.alice, self.group),
+                         [{'id': '10', 'name': 'Synthetic server'}, {'id': '11', 'name': 'Synthetic server'}])
+        with self.assertRaises(Denied):
+            self.store.discord_guilds(self.outsider, self.group)
+
+    def test_link_request_is_single_use_bound_to_its_member_and_expires(self):
+        exchanges = []
+        def exchange():
+            exchanges.append(1)
+            return {'id': '12', 'name': 'Lake house'}
+        state = self.store.begin_discord_link(self.alice, self.group)
+        with self.assertRaises(Denied):
+            self.store.link_discord(self.ben, state, exchange)
+        with self.assertRaises(Denied):
+            self.store.link_discord(self.alice, state, exchange)
+        state = self.store.begin_discord_link(self.alice, self.group)
+        self.assertEqual(self.store.link_discord(self.alice, state, exchange), {'id': '12', 'name': 'Lake house'})
+        with self.assertRaises(Denied):
+            self.store.link_discord(self.alice, state, exchange)
+        with patch('mazi.sources.sources.time.time', return_value=time.time() - 601):
+            state = self.store.begin_discord_link(self.alice, self.group)
+        with self.assertRaises(Denied):
+            self.store.link_discord(self.alice, state, exchange)
+        state = self.store.begin_discord_link(self.ben, self.group)
+        self.store.remove_member(self.alice, self.group, self.ben)
+        with self.assertRaises(Denied):
+            self.store.link_discord(self.ben, state, exchange)
+        with self.assertRaises(Denied):
+            self.store.begin_discord_link(self.outsider, self.group)
+        self.assertEqual(exchanges, [1])
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM discord_link_requests').fetchone()[0], 0)
 
     def test_channel_permissions_apply_everyone_role_then_member_overwrites(self):
         roles = [{'id': '10', 'permissions': str((1 << 10) | (1 << 11))}, {'id': '50', 'permissions': str(1 << 16)},
@@ -153,7 +203,6 @@ class DiscordTests(unittest.TestCase):
         self.store.set_source(self.alice,connection,True,'authorized')
         client=FakeDiscord()
         self.store.discord_authorize=client.authorize
-        self.store.discord_sources={connection}
         poll_source(self.store,self.alice,connection,client)
         stale=self.store.claim()
         prepared=self.store.prepare(stale)

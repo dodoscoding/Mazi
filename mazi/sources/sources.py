@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import os
+import secrets
 import sqlite3
 import time
 import uuid
@@ -23,6 +24,7 @@ from mazi.archive.review import ReviewStore
 
 PLACES_EXPORT_ROW_BYTES = 2 * 1024
 PLACES_EXPORT_SCAN_SECONDS = 3
+DISCORD_LINK_SECONDS = 600
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS continuous_sources (
@@ -49,6 +51,13 @@ CREATE TABLE IF NOT EXISTS discord_cursors (
  connection TEXT NOT NULL, channel TEXT NOT NULL, cursor TEXT NOT NULL,
  PRIMARY KEY(connection,channel)
 );
+CREATE TABLE IF NOT EXISTS discord_link_requests (
+ state TEXT PRIMARY KEY, user_id TEXT NOT NULL, group_id TEXT NOT NULL, expires_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS discord_guilds (
+ group_id TEXT NOT NULL, guild_id TEXT NOT NULL, name TEXT NOT NULL, linked_by TEXT NOT NULL,
+ linked_at REAL NOT NULL, PRIMARY KEY(group_id,guild_id)
+);
 """
 
 
@@ -64,12 +73,17 @@ def text(value, limit=200):
     return value.strip()
 
 
+def discord_id(value):
+    if not isinstance(value, str) or not value.isascii() or not value.isdigit() or len(value) > 20:
+        raise ValueError('Invalid Discord ID')
+    return value
+
+
 class SourceStore(ReviewStore):
     def __init__(self, root):
         super().__init__(root)
         initialize_schema(self.db, SCHEMA)
         self.discord_authorize = None
-        self.discord_sources = set()
         self.resource_dir = self.root / 'source-resources'
         self.resource_dir.mkdir(mode=0o700, exist_ok=True)
 
@@ -94,15 +108,54 @@ class SourceStore(ReviewStore):
             if not isinstance(scope.get('channels'), list) or not 1 <= len(scope['channels']) <= 20:
                 raise ValueError('Select 1–20 channels')
             for snowflake in [scope.get('guild'), *scope['channels']]:
-                if not isinstance(snowflake, str) or not snowflake.isascii() or not snowflake.isdigit() or len(snowflake) > 20:
-                    raise ValueError('Invalid Discord ID')
+                discord_id(snowflake)
         with self.transaction():
             self._member(user, group)
+            if kind == 'discord':
+                self.discord_linked(group, scope['guild'])
             connection = str(uuid.uuid4())
             self.db.execute('INSERT INTO continuous_sources(id,owner_id,group_id,kind,label,scope) VALUES(?,?,?,?,?,?)',
                             (connection, user, group, kind, label, json.dumps(scope, sort_keys=True)))
             self._audit(user, 'source.create', connection)
         return connection
+
+    def discord_linked(self, group, guild):
+        if not self.db.execute('SELECT 1 FROM discord_guilds WHERE group_id=? AND guild_id=?', (group, guild)).fetchone():
+            raise Denied('Connect this Discord server first')
+
+    def discord_guilds(self, user, group):
+        self._member(user, group)
+        return [dict(row) for row in self.db.execute(
+            'SELECT guild_id AS id,name FROM discord_guilds WHERE group_id=? ORDER BY name,guild_id', (group,))]
+
+    def begin_discord_link(self, user, group):
+        state = secrets.token_urlsafe(32)
+        with self.transaction():
+            self._member(user, group)
+            now = time.time()
+            self.db.execute('DELETE FROM discord_link_requests WHERE expires_at<?', (now,))
+            self.db.execute('INSERT INTO discord_link_requests VALUES(?,?,?,?)', (state, user, group, now + DISCORD_LINK_SECONDS))
+        return state
+
+    def link_discord(self, user, state, exchange):
+        """Consume a link request, then record the server Discord reports for the code."""
+        if not isinstance(state, str) or not 0 < len(state) <= 128:
+            raise ValueError('Invalid link state')
+        with self.transaction():
+            request = self.db.execute('SELECT * FROM discord_link_requests WHERE state=?', (state,)).fetchone()
+            self.db.execute('DELETE FROM discord_link_requests WHERE state=?', (state,))
+        if not request or request['user_id'] != user or request['expires_at'] < time.time():
+            raise Denied('This Discord connection expired; connect the server again')
+        self._member(user, request['group_id'])
+        guild = exchange()
+        guild_id, name = discord_id(guild.get('id')), text(guild.get('name'), 100)
+        with self.transaction():
+            self._member(user, request['group_id'])
+            self.db.execute('INSERT INTO discord_guilds VALUES(?,?,?,?,?) ON CONFLICT(group_id,guild_id) DO UPDATE SET '
+                            'name=excluded.name,linked_by=excluded.linked_by,linked_at=excluded.linked_at',
+                            (request['group_id'], guild_id, name, user, time.time()))
+            self._audit(user, 'source.discord.link', guild_id)
+        return {'id': guild_id, 'name': name}
 
     def _source(self, user, connection, active=False):
         row = self.db.execute('SELECT * FROM continuous_sources WHERE id=?', (connection,)).fetchone()
@@ -260,9 +313,14 @@ class SourceStore(ReviewStore):
         resource = self.db.execute('SELECT id FROM source_resources WHERE id=?', (job['run_id'],)).fetchone()
         if resource:
             _, source = self._resource(row['owner_id'], resource['id'], True)
-            if source['kind'] == 'discord' and (self.discord_authorize is None or source['id'] not in self.discord_sources):
-                raise Denied('Discord permission verification unavailable')
+            if source['kind'] == 'discord':
+                self._verify_discord(source)
         return row
+
+    def _verify_discord(self, source):
+        if self.discord_authorize is None:
+            raise Denied('Discord permission verification unavailable')
+        self.discord_linked(source['group_id'], json.loads(source['scope'])['guild'])
 
     def _authorize_discord(self, job):
         resource = self.db.execute('SELECT id FROM source_resources WHERE id=?', (job['run_id'],)).fetchone()
@@ -271,8 +329,7 @@ class SourceStore(ReviewStore):
         transfer, source = self._resource(job['owner_id'], resource['id'], True)
         if source['kind'] != 'discord':
             return
-        if self.discord_authorize is None or source['id'] not in self.discord_sources:
-            raise Denied('Discord permission verification unavailable')
+        self._verify_discord(source)
         metadata = json.loads(transfer['metadata'])
         self.discord_authorize(metadata['guild'], metadata['channel'])
 

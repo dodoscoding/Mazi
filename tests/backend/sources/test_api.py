@@ -6,7 +6,7 @@ import unittest
 from http.server import HTTPServer
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
-from tests.backend.sources import test_sources
+from tests.backend.sources import test_discord, test_sources
 from mazi.sources.server import handler_for
 
 
@@ -45,6 +45,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.request('/api/sources/chunk',chunk)[0],403)
         self.assertEqual(self.request('/api/sources/resources?connection='+self.connection,cookie='')[0],403)
         self.assertEqual(self.request('/api/sources/create',{'group':self.group,'kind':'apple','label':'x','scope':{}})[0],400)
+        test_discord.link(self.store,self.alice,self.group)
         discord=self.store.create_source(self.alice,self.group,'discord','Guild',{'guild':'10','channels':['20'],'start':'2020-01-01','end':'2030-01-01'})
         payload['connection']=discord
         self.assertEqual(self.request('/api/sources/begin',payload)[0],403)
