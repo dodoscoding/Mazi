@@ -99,6 +99,7 @@ class MemoryTests(unittest.TestCase):
         second = self.store.create_story(self.alice, self.group, self.event)
         self.store.write_story(self.alice, self.group, second['id'], 1, 'Another perspective')
         self.store.db.execute('INSERT INTO shared_profiles VALUES(?,?,?,NULL)', (self.ben, 'ben', 'Ben'))
+        self.store.db.commit()
         notebook = self.store.event_notebook(self.ben, self.group, self.event)
         self.assertEqual(notebook['eventId'], self.event)
         notes = [note for section in notebook['sections'] for note in section['notes']]

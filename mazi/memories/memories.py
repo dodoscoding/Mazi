@@ -92,12 +92,15 @@ class MemoryStore(AdvancedMixin, AnswerStore):
     def create_story(self, user, group, event):
         with self.transaction():
             if event not in {e['id'] for e in self._approved(user, group)}: raise Denied('Memory unavailable')
-            if self.db.execute('SELECT count(*) FROM advanced_stories WHERE group_id=?', (group,)).fetchone()[0] >= 100:
-                raise Conflict('Local limit of 100 stories reached')
-            story = str(uuid.uuid4())
-            self.db.execute('INSERT INTO advanced_stories VALUES(?,?,?,?,1)', (story, group, event, user))
-            self._audit(user, 'story.create', story)
-            return self._story_view(user, group, story)
+            return self._story_view(user, group, self._create_story(user, group, event))
+
+    def _create_story(self, user, group, event):
+        if self.db.execute('SELECT count(*) FROM advanced_stories WHERE group_id=?', (group,)).fetchone()[0] >= 100:
+            raise Conflict('Local limit of 100 stories reached')
+        story = str(uuid.uuid4())
+        self.db.execute('INSERT INTO advanced_stories VALUES(?,?,?,?,1)', (story, group, event, user))
+        self._audit(user, 'story.create', story)
+        return story
 
     def _revision(self, row, revision):
         if type(revision) is not int or revision < 1: raise ValueError('Invalid revision')
@@ -108,13 +111,53 @@ class MemoryStore(AdvancedMixin, AnswerStore):
         with self.transaction():
             row, _ = self._story(user, group, story)
             self._revision(row, revision)
-            if content:
-                self.db.execute('INSERT INTO story_contributions VALUES(?,?,?) ON CONFLICT(story,author) DO UPDATE SET content=excluded.content', (story, user, content))
-            else:
-                self.db.execute('DELETE FROM story_contributions WHERE story=? AND author=?', (story, user))
-            self.db.execute('UPDATE advanced_stories SET revision=revision+1 WHERE id=?', (story,))
-            self._audit(user, 'story.contribute', story)
+            self._write_contribution(user, story, content)
             return self._story_view(user, group, story)
+
+    def _write_contribution(self, user, story, content):
+        if content:
+            self.db.execute('INSERT INTO story_contributions VALUES(?,?,?) ON CONFLICT(story,author) DO UPDATE SET content=excluded.content', (story, user, content))
+        else:
+            self.db.execute('DELETE FROM story_contributions WHERE story=? AND author=?', (story, user))
+        self.db.execute('UPDATE advanced_stories SET revision=revision+1 WHERE id=?', (story,))
+        self._audit(user, 'story.contribute', story)
+
+    def _event_notebook(self, user, group, event):
+        if event not in {item['id'] for item in self._approved(user, group)}:
+            raise Denied('Memory unavailable')
+        sections = []
+        for story in self.db.execute('SELECT id,revision FROM advanced_stories WHERE group_id=? AND event_id=? ORDER BY id', (group, event)):
+            notes = []
+            for note in self.db.execute('SELECT c.author,c.content,p.display_name FROM story_contributions c LEFT JOIN shared_profiles p ON p.user_id=c.author WHERE c.story=? ORDER BY c.author', (story['id'],)):
+                target = dict(kind='saved', storyId=story['id'], revision=story['revision'])
+                notes.append(dict(id=story['id'] + ':' + note['author'], authorName=note['display_name'] or 'Group member', text=note['content'],
+                                  ownership=dict(kind='mine', target=target) if note['author'] == user else dict(kind='other')))
+            sections.append(dict(id=story['id'], notes=notes))
+        return dict(eventId=event, sections=sections)
+
+    def event_notebook(self, user, group, event):
+        event = text(event, 100)
+        with self.transaction():
+            return self._event_notebook(user, group, event)
+
+    def write_event_note(self, user, group, event, target, content):
+        event, content = text(event, 100), text(content, 2000)
+        if not isinstance(target, dict) or target.get('kind') not in ('new', 'saved'):
+            raise ValueError('Invalid note target')
+        with self.transaction():
+            notebook = self._event_notebook(user, group, event)
+            if target['kind'] == 'new':
+                if not content: raise ValueError('Write a recollection before saving')
+                if any(note['ownership']['kind'] == 'mine' for section in notebook['sections'] for note in section['notes']):
+                    raise Conflict('Your note was already saved; refresh before editing')
+                story = notebook['sections'][0]['id'] if notebook['sections'] else self._create_story(user, group, event)
+            else:
+                story = text(target.get('storyId'), 100)
+                row, approved = self._story(user, group, story)
+                if approved['id'] != event: raise Denied('Note unavailable')
+                self._revision(row, target.get('revision'))
+            self._write_contribution(user, story, content)
+            return self._event_notebook(user, group, event)
 
     def delete_story(self, user, group, story, revision):
         with self.transaction():
