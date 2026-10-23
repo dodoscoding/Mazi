@@ -472,14 +472,19 @@ class ImportStore(Store):
                                          prepared["mime"], prepared["size"], prepared["width"], prepared["height"]))
                         asset = self.db.execute("SELECT id FROM archive_assets WHERE group_id=? AND sha256=?",
                                                 (row["group_id"], prepared["sha256"])).fetchone()[0]
+                        origin = str(uuid.uuid4())
                         self.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,0)',
-                                        (str(uuid.uuid4()), asset, row["group_id"], row["owner_id"], row["run_id"], row["occurrence"],
+                                        (origin, asset, row["group_id"], row["owner_id"], row["run_id"], row["occurrence"],
                                          fingerprint, json.dumps(payload, ensure_ascii=False)))
+                        self._origin_published(origin)
                         self._audit(row["owner_id"], "import.available_to_group", row["id"])
             self.db.execute("UPDATE import_items SET outcome=?,reason=?,asset_id=?,lease_token=NULL,lease_until=NULL WHERE id=?",
                             (outcome, reason, asset, row["id"]))
             self._reconcile_run(row["run_id"])
         self._check_archive_session()
+
+    def _origin_published(self, origin):
+        """Runs inside the transaction that inserted the origin."""
 
     def fail(self, job, now=None):
         now = time.time() if now is None else now
