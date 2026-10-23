@@ -293,3 +293,43 @@ class DiscordTests(unittest.TestCase):
         [resource] = self.store.resources(self.alice, connection)
         self.assertEqual([c['text'] for c in resource['metadata']['context']], ['Before', 'Photo'])
         self.assertEqual(client.reads, 2)
+
+    def test_replay_after_partial_poll_accepts_renamed_sender_and_legacy_caption(self):
+        for legacy in (False, True):
+            with self.subTest(legacy=legacy):
+                connection = self.enabled()
+                client = FakeDiscord()
+                messages = [message(1, 'First', attachments=[1]), message(2, 'Second', attachments=[1])]
+                client.messages = paged(messages)
+                original_attachment = client.attachment
+                def interrupted(attachment):
+                    if attachment['id'] == '41':
+                        raise OSError('Synthetic interrupted poll')
+                    return original_attachment(attachment)
+                client.attachment = interrupted
+                with self.assertRaises(OSError):
+                    poll_source(self.store, self.alice, connection, client)
+                [resource] = self.store.resources(self.alice, connection)
+                stored = resource['metadata']
+                if legacy:
+                    stored.pop('sender_label')
+                    stored.pop('context')
+                    stored['text'] = 'Second'
+                    self.store.db.execute('UPDATE source_resources SET metadata=? WHERE id=?',
+                                          (json.dumps(stored), resource['id']))
+                    self.store.db.commit()
+                messages[1]['author']['username'] = 'renamed'
+                client.attachment = original_attachment
+                poll_source(self.store, self.alice, connection, client)
+                resources = self.store.resources(self.alice, connection)
+                self.assertEqual(len(resources), 2)
+                replayed = next(r for r in resources if r['id'] == resource['id'])
+                self.assertEqual(replayed['metadata'], stored)
+                self.assertIsNotNone(self.store.db.execute(
+                    'SELECT cursor FROM discord_cursors WHERE connection=?', (connection,)).fetchone())
+                checksum = hashlib.sha256(original_attachment(messages[1]['attachments'][0])).hexdigest()
+                current = dict(stored, sender_label='renamed', context=[])
+                current.pop('text', None)
+                for field, changed in (('filename', 'other.jpg'), ('sender', '99'), ('shared_at', '2024-01-02T11:00:00Z')):
+                    with self.subTest(field=field), self.assertRaises(Conflict):
+                        self.store.begin_resource(self.alice, connection, dict(current, **{field: changed}), resource['size'], checksum)
