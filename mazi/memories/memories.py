@@ -156,6 +156,9 @@ class MemoryStore(AdvancedMixin, AnswerStore):
                 row, approved = self._story(user, group, story)
                 if approved['id'] != event: raise Denied('Note unavailable')
                 self._revision(row, target.get('revision'))
+                if not self.db.execute('SELECT 1 FROM story_contributions WHERE story=? AND author=?', (story, user)).fetchone():
+                    raise Conflict('Your note is no longer saved; refresh before editing')
+
             self._write_contribution(user, story, content)
             return self._event_notebook(user, group, event)
 
