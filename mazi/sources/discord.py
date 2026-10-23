@@ -47,31 +47,24 @@ class DiscordClient:
                 raise RateLimited(json.loads(exc.read(4096)).get('retry_after', 60)) from None
             raise
 
-    def authorize(self, guild, channel):
+    def _permissions(self, guild):
         me = self.request('/users/@me')
         member = self.request(f'/guilds/{guild}/members/{me["id"]}')
-        roles = self.request(f'/guilds/{guild}/roles')
+        return me['id'], member['roles'], self.request(f'/guilds/{guild}/roles')
+
+    def authorize(self, guild, channel):
+        user, member_roles, roles = self._permissions(guild)
         info = self.request(f'/channels/{channel}')
         if info.get('guild_id') != guild or info.get('type') not in (0, 5):
             raise ProviderDenied('Only selected text and announcement channels are supported')
-        owned = {guild, *member['roles']}
-        permissions = 0
-        for role in roles:
-            if role['id'] in owned:
-                permissions |= int(role['permissions'])
-        if permissions & 8:  # ADMINISTRATOR
-            return
-        overwrites = info.get('permission_overwrites', [])
-        for layer in ([o for o in overwrites if o['id'] == guild],
-                      [o for o in overwrites if o['type'] == 0 and o['id'] in member['roles']],
-                      [o for o in overwrites if o['type'] == 1 and o['id'] == me['id']]):
-            allow = deny = 0
-            for overwrite in layer:
-                allow |= int(overwrite['allow'])
-                deny |= int(overwrite['deny'])
-            permissions = (permissions & ~deny) | allow
-        if permissions & ((1 << 10) | (1 << 16)) != ((1 << 10) | (1 << 16)):
+        if not readable(channel_permissions(guild, member_roles, roles, info.get('permission_overwrites', []), user)):
             raise ProviderDenied('View Channel and Read Message History are required')
+
+    def readable_channels(self, guild):
+        user, member_roles, roles = self._permissions(guild)
+        channels = [c for c in self.request(f'/guilds/{guild}/channels') if c.get('type') in (0, 5)
+                    and readable(channel_permissions(guild, member_roles, roles, c.get('permission_overwrites', []), user))]
+        return [{'id': c['id'], 'name': c['name']} for c in sorted(channels, key=lambda c: c.get('position', 0))]
 
     def messages(self, channel, before):
         return self.request(f'/channels/{channel}/messages?limit=100&before={before}')
@@ -88,6 +81,33 @@ class DiscordClient:
         if len(data) != attachment['size']:
             raise ValueError('Attachment size mismatch')
         return data
+
+
+ADMINISTRATOR = 1 << 3
+VIEW_AND_HISTORY = (1 << 10) | (1 << 16)
+
+
+def channel_permissions(guild, member_roles, roles, overwrites, user):
+    owned = {guild, *member_roles}
+    permissions = 0
+    for role in roles:
+        if role['id'] in owned:
+            permissions |= int(role['permissions'])
+    if permissions & ADMINISTRATOR:
+        return permissions
+    for layer in ([o for o in overwrites if o['id'] == guild],
+                  [o for o in overwrites if o['type'] == 0 and o['id'] in member_roles],
+                  [o for o in overwrites if o['type'] == 1 and o['id'] == user]):
+        allow = deny = 0
+        for overwrite in layer:
+            allow |= int(overwrite['allow'])
+            deny |= int(overwrite['deny'])
+        permissions = (permissions & ~deny) | allow
+    return permissions
+
+
+def readable(permissions):
+    return bool(permissions & ADMINISTRATOR) or permissions & VIEW_AND_HISTORY == VIEW_AND_HISTORY
 
 
 def snowflake(day):
