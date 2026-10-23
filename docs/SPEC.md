@@ -33,6 +33,8 @@ The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is 
 | Access | Sign-in and active group membership on every read. All imported content has the same group audience. | Private staging and individual/component audience controls are deferred. Recognition at M5 needs its own decision. |
 | Operations | Audit events, export, deletion, recovery drill, quotas, alerts, accessibility, monitored production. | Generated recaps, video, and capsules at M7. |
 
+The local event notebook lets members open an approved event title to read imported chat excerpts and add their own recollections. It retains all existing event stories and current access checks. The [event notebook decision](DECISIONS.md#event-notebook-decision-23-october-2026) records this owner-approved extension.
+
 Keyword search covers group titles, user captions, and imported source text. It does not promise object recognition. On This Day excludes removed or technically unavailable material and uncertain anniversary dates.
 
 ## Primary journeys
