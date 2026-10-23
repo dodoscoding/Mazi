@@ -66,6 +66,9 @@ def handler_for(store):
                 self.json(503, {'error': str(exc)})
             except RateLimited:
                 self.json(503, {'error': 'Discord is busy; retry shortly'})
+            except ProviderDenied as exc:
+                # 403 means lost Mazi access to the app; a Discord refusal leaves the session intact.
+                self.json(409, {'error': str(exc)})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (ValueError, TypeError):
@@ -124,6 +127,9 @@ def handler_for(store):
                 self.json(503, {'error': str(exc)})
             except RateLimited:
                 self.json(503, {'error': 'Discord is busy; retry shortly'})
+            except ProviderDenied as exc:
+                # 403 means lost Mazi access to the app; a Discord refusal leaves the session intact.
+                self.json(409, {'error': str(exc)})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:

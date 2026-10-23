@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from tests.backend.sources import test_discord, test_sources
-from mazi.sources.discord import TOKEN_URL, DiscordClient
+from mazi.sources.discord import TOKEN_URL, DiscordClient, ProviderDenied
 from mazi.sources.server import handler_for
 
 
@@ -85,15 +85,16 @@ class ApiTests(unittest.TestCase):
             self.assertEqual((url.scheme, url.netloc, url.path), ('https', 'discord.com', '/oauth2/authorize'))
             self.assertEqual(query, {'client_id': '123456', 'scope': 'bot identify', 'permissions': '66560',
                 'response_type': 'code', 'redirect_uri': self.base + '/places'})
-            self.assertEqual(self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'}, cookie=ben)[0], 403)
-            self.assertEqual(self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'})[0], 403)
+            self.assertEqual(self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'}, cookie=ben)[0], 409)
+            self.assertEqual(self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'})[0], 409)
             state = parse_qs(urlsplit(json.loads(self.request('/api/sources/discord/connect', {'group': self.group})[1])['url']).query)['state'][0]
             status, body, _ = self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'})
             self.assertEqual((status, json.loads(body)), (200, {'guild': {'id': '77', 'name': 'Lake house'}}))
             self.assertEqual(parse_qs(client.http.requests[0].data.decode()), {'grant_type': ['authorization_code'],
                 'code': ['synthetic-code'], 'redirect_uri': [self.base + '/places'], 'client_id': ['123456'], 'client_secret': ['synthetic-secret']})
             self.assertEqual(len(client.http.requests), 1)
-            self.assertEqual(self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'})[0], 403)
+            status, body, _ = self.request('/api/sources/discord/link', {'state': state, 'code': 'synthetic-code'})
+            self.assertEqual((status, json.loads(body)), (409, {'error': 'This Discord connection expired; connect the server again'}))
             self.assertEqual(json.loads(self.request('/api/sources/discord/guilds?group=' + self.group, cookie=ben)[1]), [{'id': '77', 'name': 'Lake house'}])
             status, body, _ = self.request(f'/api/sources/discord/channels?group={self.group}&guild=77')
             self.assertEqual((status, json.loads(body)), (200, [{'id': '71', 'name': 'photos'}]))
@@ -103,6 +104,15 @@ class ApiTests(unittest.TestCase):
             scope['guild'] = '78'
             status, body, _ = self.request('/api/sources/create', {'group': self.group, 'kind': 'discord', 'label': 'Elsewhere', 'scope': scope})
             self.assertEqual((status, json.loads(body)), (403, {'error': 'Connect this Discord server first'}))
+            def removed(path):
+                raise ProviderDenied('Discord access unavailable')
+            client.request = removed
+            status, body, _ = self.request(f'/api/sources/discord/channels?group={self.group}&guild=77')
+            self.assertEqual((status, json.loads(body)), (409, {'error': 'Discord access unavailable'}))
+            client.http.open = lambda request, timeout: (_ for _ in ()).throw(HTTPError(TOKEN_URL, 400, 'invalid_grant', {}, io.BytesIO()))
+            state = parse_qs(urlsplit(json.loads(self.request('/api/sources/discord/connect', {'group': self.group})[1])['url']).query)['state'][0]
+            status, body, _ = self.request('/api/sources/discord/link', {'state': state, 'code': 'stale-code'})
+            self.assertEqual((status, json.loads(body)), (409, {'error': 'Discord did not accept this connection; connect the server again'}))
         with patch('mazi.sources.server.discord_from_env', return_value=None):
             status, body, _ = self.request('/api/sources/discord/connect', {'group': self.group})
             self.assertEqual((status, json.loads(body)), (503, {'error': 'Discord is not configured on this server'}))

@@ -149,7 +149,7 @@ class SourceStore(ReviewStore):
             request = self.db.execute('SELECT * FROM discord_link_requests WHERE state=?', (state,)).fetchone()
             self.db.execute('DELETE FROM discord_link_requests WHERE state=?', (state,))
         if not request or request['user_id'] != user or request['expires_at'] < time.time():
-            raise Denied('This Discord connection expired; connect the server again')
+            raise Conflict('This Discord connection expired; connect the server again')
         self._member(user, request['group_id'])
         guild = exchange()
         guild_id, name = discord_id(guild.get('id')), text(guild.get('name'), 100)

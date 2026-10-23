@@ -4,7 +4,7 @@ import time
 import unittest
 from unittest.mock import patch
 from tests.backend.sources import test_sources
-from mazi.identity.core import Denied
+from mazi.identity.core import Conflict, Denied
 from mazi.sources.discord import DiscordClient, channel_permissions, discord_from_env, poll_source, RateLimited, snowflake
 
 
@@ -154,17 +154,17 @@ class DiscordTests(unittest.TestCase):
             exchanges.append(1)
             return {'id': '12', 'name': 'Lake house'}
         state = self.store.begin_discord_link(self.alice, self.group)
-        with self.assertRaises(Denied):
+        with self.assertRaises(Conflict):
             self.store.link_discord(self.ben, state, exchange)
-        with self.assertRaises(Denied):
+        with self.assertRaises(Conflict):
             self.store.link_discord(self.alice, state, exchange)
         state = self.store.begin_discord_link(self.alice, self.group)
         self.assertEqual(self.store.link_discord(self.alice, state, exchange), {'id': '12', 'name': 'Lake house'})
-        with self.assertRaises(Denied):
+        with self.assertRaises(Conflict):
             self.store.link_discord(self.alice, state, exchange)
         with patch('mazi.sources.sources.time.time', return_value=time.time() - 601):
             state = self.store.begin_discord_link(self.alice, self.group)
-        with self.assertRaises(Denied):
+        with self.assertRaises(Conflict):
             self.store.link_discord(self.alice, state, exchange)
         state = self.store.begin_discord_link(self.ben, self.group)
         self.store.remove_member(self.alice, self.group, self.ben)

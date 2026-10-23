@@ -68,10 +68,10 @@ class DiscordClient:
             grant = self._json(Request(TOKEN_URL, data=body, headers={
                 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'MaziLocal/0.1'}), (400, 401, 403), 64 * 1024)
         except ProviderDenied:
-            raise Denied('Discord did not accept this connection; connect the server again') from None
+            raise ProviderDenied('Discord did not accept this connection; connect the server again') from None
         guild = grant.get('guild') if isinstance(grant, dict) else None
         if not isinstance(guild, dict):
-            raise Denied('Discord did not report a server; add the bot to a server and try again')
+            raise ProviderDenied('Discord did not report a server; add the bot to a server and try again')
         return {'id': guild.get('id'), 'name': guild.get('name')}
 
     def _permissions(self, guild):
