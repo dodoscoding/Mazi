@@ -10,6 +10,47 @@ const scenarios = [
   "session-channels",
 ];
 
+test("Discord channels do not wait for the archive overview", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  await page.goto("/places");
+  await expect(page.locator("#workspace")).toBeVisible();
+  const [group] = await (await page.request.get("/api/groups")).json();
+  const { url } = await (
+    await page.request.post("/api/sources/discord/connect", {
+      data: { group: group.id },
+    })
+  ).json();
+  const state = new URL(url).searchParams.get("state")!;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(/\/api\/archive\?/, async (route) => {
+    await gate;
+    await route.continue().catch(() => {});
+  });
+  try {
+    await page.goto(
+      `/places?code=synthetic-code&state=${encodeURIComponent(state)}`,
+    );
+    await expect(
+      page.getByRole("combobox", { name: "Server", exact: true }),
+    ).toHaveValue("77");
+    await expect(
+      page.getByRole("group", { name: "Channels" }).getByLabel("#photos"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("group", { name: "Channels" }).getByLabel("#general"),
+    ).toBeVisible();
+  } finally {
+    release();
+  }
+});
+
 for (const scenario of scenarios) {
   test(`Discord return completes once through ${scenario}`, async ({
     page,
