@@ -5,7 +5,6 @@ from mazi.capacity import CapacityExceeded
 from mazi.persistence import ArchiveBusy
 from mazi.http_origin import validate_origin
 import json
-import os
 import threading
 import time
 from http.server import HTTPServer
@@ -14,13 +13,28 @@ from urllib.parse import parse_qs, urlsplit
 
 from mazi.identity.core import Conflict, Denied
 from mazi.archive.server import handler_for as review_handler
-from .sources import SourceStore
-from .discord import DiscordClient, ProviderDenied, RateLimited, poll_source
+from .sources import SourceStore, discord_id
+from .discord import ProviderDenied, RateLimited, discord_from_env, poll_source
 
+
+class DiscordUnavailable(Exception):
+    pass
 
 
 def handler_for(store):
     class Handler(review_handler(store)):
+        def discord(self):
+            client = discord_from_env()
+            if client is None:
+                raise DiscordUnavailable('Discord is not configured on this server')
+            return client
+
+        def discord_redirect(self):
+            # Discord requires the exact registered URI; only loopback development runs over http.
+            host = self.headers.get('Host', '')
+            scheme = 'http' if urlsplit('//' + host).hostname in ('127.0.0.1', 'localhost') else 'https'
+            return f'{scheme}://{host}/places'
+
         def do_GET(self):
             parts = urlsplit(self.path)
             if not parts.path.startswith('/api/sources') and parts.path != '/api/places':
@@ -32,6 +46,13 @@ def handler_for(store):
                     return self.json(200, store.places(user, group, query.get('country', [''])[0], query.get('city', [''])[0], query.get('paths', ['0'])[0] == '1'))
                 if parts.path == '/api/sources':
                     return self.json(200, store.sources(user, group))
+                if parts.path == '/api/sources/discord/guilds':
+                    return self.json(200, store.discord_guilds(user, group))
+                if parts.path == '/api/sources/discord/channels':
+                    guild = discord_id(query.get('guild', [''])[0])
+                    store._member(user, group)
+                    store.discord_linked(group, guild)
+                    return self.json(200, self.discord().readable_channels(guild))
                 if parts.path == '/api/sources/resources':
                     return self.json(200, store.resources(user, query.get('connection', [''])[0]))
                 if parts.path == '/api/sources/original':
@@ -41,12 +62,19 @@ def handler_for(store):
                 return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
+            except DiscordUnavailable as exc:
+                self.json(503, {'error': str(exc)})
+            except RateLimited:
+                self.json(503, {'error': 'Discord is busy; retry shortly'})
+            except ProviderDenied as exc:
+                # 403 means lost Mazi access to the app; a Discord refusal leaves the session intact.
+                self.json(409, {'error': str(exc)})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except (ValueError, TypeError):
                 self.json(400, {'error': 'Invalid request'})
             except OSError:
-                self.json(503, {'error': 'Stored resource unavailable'})
+                self.json(503, {'error': 'Discord is unavailable; retry shortly' if '/discord/' in parts.path else 'Stored resource unavailable'})
 
         def do_POST(self):
             path = urlsplit(self.path).path
@@ -63,6 +91,14 @@ def handler_for(store):
                 if not isinstance(body, dict):
                     raise ValueError('Expected object')
                 user = self.user()
+                if path == '/api/sources/discord/connect':
+                    client = self.discord()
+                    return self.json(200, {'url': client.install_url(self.discord_redirect(), store.begin_discord_link(user, body['group']))})
+                if path == '/api/sources/discord/link':
+                    client, code = self.discord(), body['code']
+                    if not isinstance(code, str) or not 0 < len(code) <= 512:
+                        raise ValueError('Invalid authorization code')
+                    return self.json(200, {'guild': store.link_discord(user, body['state'], lambda: client.exchange(code, self.discord_redirect()))})
                 if path == '/api/sources/create':
                     return self.json(201, {'id': store.create_source(user, body['group'], body['kind'], body['label'], body['scope'])})
                 if path == '/api/sources/state':
@@ -87,6 +123,13 @@ def handler_for(store):
                 self.json(200, {'ok': True})
             except ArchiveBusy:
                 return self.json(503, {"error": "Archive is busy; retry shortly"})
+            except DiscordUnavailable as exc:
+                self.json(503, {'error': str(exc)})
+            except RateLimited:
+                self.json(503, {'error': 'Discord is busy; retry shortly'})
+            except ProviderDenied as exc:
+                # 403 means lost Mazi access to the app; a Discord refusal leaves the session intact.
+                self.json(409, {'error': str(exc)})
             except Denied as exc:
                 self.json(403, {'error': str(exc)})
             except Conflict as exc:
@@ -94,13 +137,13 @@ def handler_for(store):
             except (ValueError, KeyError, TypeError):
                 self.json(400, {'error': 'Invalid request'})
             except OSError:
-                self.json(503, {'error': 'Storage unavailable; retry later'})
+                self.json(503, {'error': 'Discord is unavailable; retry shortly' if '/discord/' in path else 'Storage unavailable; retry later'})
     return Handler
 
 
-def settle_poll(store, user, connection, client):
+def settle_poll(store, user, connection, client, deadline=float('inf')):
     try:
-        poll_source(store, user, connection, client)
+        poll_source(store, user, connection, client, deadline)
     except ProviderDenied:
         try:
             store.set_source(user, connection, False, 'revoked')
@@ -120,11 +163,9 @@ class Worker:
 
     def __init__(self, store):
         self.store = store
-        token = os.environ.get('MAZI_DISCORD_BOT_TOKEN')
-        self.client = DiscordClient(token) if token else None
+        self.client = discord_from_env()
         if self.client:
             store.discord_authorize = self.client.authorize
-            store.discord_sources = set(filter(None, os.environ.get('MAZI_DISCORD_SOURCES', '').split(',')))
         self.next_poll = 0
 
     def step(self):
@@ -132,10 +173,9 @@ class Worker:
         try:
             if self.client and time.monotonic() >= self.next_poll:
                 self.next_poll = time.monotonic() + 30
+                deadline = time.monotonic() + 15
                 for source in self.store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
-                    if source['id'] not in self.store.discord_sources:
-                        continue
-                    settle_poll(self.store, source['owner_id'], source['id'], self.client)
+                    settle_poll(self.store, source['owner_id'], source['id'], self.client, deadline)
             return 0 if self.store.work_once() else IDLE_SECONDS
         except RateLimited as exc:
             self.next_poll = time.monotonic() + exc.seconds

@@ -55,6 +55,27 @@ class AtlasTests(unittest.TestCase):
         self.assertEqual(cards[0]['messages'], [])
         self.assertTrue(cards[0]['photos'][0]['src'].startswith('/api/review/rendition/'))
 
+    def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
+        from mazi.sources.discord import poll_source
+        from tests.backend.sources.test_discord import FakeDiscord, link, message, paged
+        link(self.store, self.alice, self.group)
+        connection = self.store.create_source(self.alice, self.group, 'discord', 'Lake', {
+            'guild': '10', 'channels': ['20'], 'start': '2024-01-01', 'end': '2024-12-31'})
+        self.store.set_source(self.alice, connection, True, 'authorized')
+        client = FakeDiscord()
+        self.store.discord_authorize = client.authorize
+        client.messages = paged([message(1, 'Göle vardık', author={'id': '31', 'global_name': 'Ayşe'}),
+                                 message(2, 'Look at this', attachments=[1], author={'id': '32', 'username': 'mehmet'})])
+        poll_source(self.store, self.alice, connection, client)
+        while self.store.work_once():
+            pass
+        [card] = [card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] not in ('Red', 'Blue')]
+        self.assertEqual(card['messages'], [
+            {'name': 'Ayşe', 'time': '2024-01-02T10:00:01+00:00', 'text': 'Göle vardık'},
+            {'name': 'mehmet', 'time': '2024-01-02T10:00:02+00:00', 'text': 'Look at this'}])
+        self.assertEqual(card['title'], 'Photo shared by mehmet')
+        self.assertEqual(card['people']['conversation'], ['Ayşe', 'mehmet'])
+
     def test_hidden_photo_suppresses_event_title_and_membership_denies(self):
         self.store.review_event(self.alice, self.group, self.assets, 'Private event title', 'accept')
         self.store.hide(self.ben, self.assets[0], True)

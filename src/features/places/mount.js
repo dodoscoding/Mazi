@@ -41,6 +41,10 @@ export function mount(root, lifecycle) {
   let originRequest = 0;
   let runRequest = 0;
   let originReady = false;
+  let guildRequest = 0;
+  let channelRequest = 0;
+  const guildNames = new Map();
+  const channelNames = new Map();
   const active = () => root.isConnected && !root.hidden;
   toastNotice($("#notice"), lifecycle);
   async function api(path, body) {
@@ -98,10 +102,10 @@ export function mount(root, lifecycle) {
       $("#notice").dataset.tone = "";
     }
     try {
-      await handler();
+      const message = await handler();
       if (!saved || request !== runRequest || !active()) return;
       $("#notice").dataset.tone = "success";
-      $("#notice").textContent = saved;
+      $("#notice").textContent = typeof message === "string" ? message : saved;
     } catch (error) {
       if (request !== runRequest || !active() || error.name === "AbortError")
         return;
@@ -440,8 +444,23 @@ export function mount(root, lifecycle) {
         node("p", `${source.scope.start} – ${source.scope.end}`, {
           class: "fx-small",
         }),
-        node("code", source.id),
       );
+      if (source.kind === "discord") {
+        const { guild, channels } = source.scope;
+        const names = channels.map((id) => channelNames.get(id));
+        card.append(
+          node(
+            "p",
+            `${guildNames.get(guild) || "Discord server"} · ${
+              names.every(Boolean)
+                ? names.map((name) => `#${name}`).join(", ")
+                : `${channels.length} ${channels.length === 1 ? "channel" : "channels"}`
+            }`,
+            { class: "fx-small" },
+          ),
+        );
+      }
+      card.append(node("code", source.id));
       const actions = node("div", undefined, { class: "fx-actions" });
       if (
         source.kind === "apple" &&
@@ -621,10 +640,90 @@ export function mount(root, lifecycle) {
       }
     }
   }
+  async function loadGuilds(preferred) {
+    const request = ++guildRequest;
+    const selectedGroup = group;
+    const select = $("#guild");
+    const previous = select.value;
+    let guilds;
+    try {
+      guilds = await api(
+        "/api/sources/discord/guilds?" + new URLSearchParams({ group }),
+      );
+    } catch (error) {
+      if (request !== guildRequest || !active() || error.name === "AbortError")
+        return;
+      $("#guild-status").textContent =
+        "Connected servers could not load. Refresh places to retry.";
+      return;
+    }
+    if (request !== guildRequest || group !== selectedGroup || !active())
+      return;
+    for (const guild of guilds) guildNames.set(guild.id, guild.name);
+    select.replaceChildren(
+      node("option", guilds.length ? "Choose a server" : "No servers yet", {
+        value: "",
+      }),
+      ...guilds.map((guild) => node("option", guild.name, { value: guild.id })),
+    );
+    select.disabled = !guilds.length;
+    const wanted = preferred || previous;
+    select.value = guilds.some((guild) => guild.id === wanted) ? wanted : "";
+    $("#guild-status").textContent = guilds.length
+      ? ""
+      : "Connect a Discord server first. It will be listed here for everyone in this circle.";
+    if (select.value !== previous || preferred) await loadChannels();
+  }
+  async function loadChannels() {
+    const request = ++channelRequest;
+    const guild = $("#guild").value;
+    const status = $("#channels-status");
+    $("#channel-list").replaceChildren();
+    if (!guild) {
+      status.textContent = "Choose a server to see its channels.";
+      return;
+    }
+    status.textContent = "Loading channels…";
+    let channels;
+    try {
+      channels = await api(
+        "/api/sources/discord/channels?" +
+          new URLSearchParams({ group, guild }),
+      );
+    } catch (error) {
+      if (
+        request !== channelRequest ||
+        !active() ||
+        error.name === "AbortError"
+      )
+        return;
+      status.textContent = `Channels could not load: ${error.message}. Choose the server again to retry.`;
+      return;
+    }
+    if (request !== channelRequest || !active()) return;
+    for (const channel of channels) channelNames.set(channel.id, channel.name);
+    $("#channel-list").replaceChildren(
+      ...channels.map((channel) => {
+        const label = node("label", undefined, { class: "fx-check" });
+        label.append(
+          node("input", undefined, {
+            type: "checkbox",
+            name: "channels",
+            value: channel.id,
+          }),
+          `#${channel.name}`,
+        );
+        return label;
+      }),
+    );
+    status.textContent = channels.length
+      ? "Choose up to 20 channels."
+      : "The bot cannot read any text channel here yet. Give it View Channel and Read Message History, then choose the server again.";
+  }
   async function refresh() {
     await Promise.allSettled([
       map(),
-      loadSources(),
+      loadGuilds().then(loadSources),
       loadOrigins(),
       loadOverview(),
     ]);
@@ -688,6 +787,12 @@ export function mount(root, lifecycle) {
     $("#apple-fields").hidden = $("#kind").value !== "apple";
     $("#discord-fields").hidden = $("#kind").value !== "discord";
   };
+  $("#guild").onchange = () => run(loadChannels, null);
+  $("#discord-connect").onclick = () =>
+    run(async () => {
+      const { url } = await api("/api/sources/discord/connect", { group });
+      location.assign(url);
+    }, null);
   $("#source-form").onsubmit = (event) => {
     event.preventDefault();
     run(async () => {
@@ -697,12 +802,23 @@ export function mount(root, lifecycle) {
           .split(",")
           .map((v) => v.trim())
           .filter(Boolean);
+      const channels = [
+        ...root.querySelectorAll("#channel-list input:checked"),
+      ].map((input) => input.value);
+      if (data.kind === "discord" && !data.guild)
+        throw Error("Choose a connected Discord server.");
+      if (data.kind === "discord" && !channels.length)
+        throw Error("Choose at least one channel.");
+      if (data.kind === "discord" && channels.length > 20)
+        throw Error(
+          `Choose at most 20 channels; ${channels.length} are selected.`,
+        );
       const scope = {
         start: data.start,
         end: data.end,
         ...(data.kind === "apple"
           ? { albums: split(data.albums), types: split(data.types) }
-          : { guild: data.guild.trim(), channels: split(data.channels) }),
+          : { guild: data.guild, channels }),
       };
       await api("/api/sources/create", {
         group,
@@ -753,5 +869,34 @@ export function mount(root, lifecycle) {
     }
   }
   $("#retry-workspace").onclick = loadWorkspace;
-  loadWorkspace();
+  // Discord returns here with code and state, or error when the member cancels.
+  const returned = new URLSearchParams(location.search);
+  const link = returned.get("code") &&
+    returned.get("state") && {
+      code: returned.get("code"),
+      state: returned.get("state"),
+    };
+  const cancelled = returned.has("error");
+  if (link || cancelled)
+    window.history.replaceState(
+      window.history.state,
+      "",
+      location.pathname + location.hash,
+    );
+  loadWorkspace().then(() => {
+    if (!active() || $("#workspace").hidden || !(link || cancelled)) return;
+    $("#kind").value = "discord";
+    $("#kind").onchange();
+    if (cancelled) {
+      $("#notice").dataset.tone = "";
+      $("#notice").textContent =
+        "Discord connection cancelled. Nothing was changed.";
+      return;
+    }
+    run(async () => {
+      const { guild } = await api("/api/sources/discord/link", link);
+      await loadGuilds(guild.id);
+      return `${guild.name} is connected. Choose its channels to create a source.`;
+    });
+  });
 }

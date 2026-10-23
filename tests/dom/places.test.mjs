@@ -22,6 +22,7 @@ function base(path) {
   if (path.startsWith("/api/places?")) return places;
   if (
     path.startsWith("/api/sources?") ||
+    path.startsWith("/api/sources/discord/guilds?") ||
     path.startsWith("/api/archive?") ||
     path.startsWith("/api/review/my-contributions?")
   )
@@ -283,4 +284,138 @@ test("disposed places view ignores a late source overview", async (t) => {
   ]);
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal($("#origin-counts").children.length, 0);
+});
+
+function fillSource($, window, label) {
+  $("#source-form [name=label]").value = label;
+  $("#source-form [name=start]").value = "2024-01-01";
+  $("#source-form [name=end]").value = "2024-12-31";
+  $("#source-form").dispatchEvent(
+    new window.Event("submit", { bubbles: true, cancelable: true }),
+  );
+}
+
+test("returning from Discord links the server and creates a source from chosen channels", async (t) => {
+  const posts = [];
+  let guilds = [];
+  const { $, root, window } = await mountFeature(
+    t,
+    "places",
+    (path, body) => {
+      if (path === "/api/sources/discord/link") {
+        posts.push([path, body]);
+        guilds = [{ id: "77", name: "Lake house" }];
+        return { guild: guilds[0] };
+      }
+      if (path.startsWith("/api/sources/discord/guilds?")) return guilds;
+      if (path.startsWith("/api/sources/discord/channels?"))
+        return [{ id: "71", name: "photos" }];
+      if (path === "/api/sources/create") {
+        posts.push([path, body]);
+        return { id: "source" };
+      }
+      return base(path);
+    },
+    {
+      url: "http://localhost/places?code=synthetic-code&state=synthetic-state",
+    },
+  );
+  assert.equal(window.location.href, "http://localhost/places");
+  await until(
+    () => $("#notice").textContent.includes("Lake house is connected"),
+    "link result announced",
+  );
+  assert.deepEqual(posts, [
+    [
+      "/api/sources/discord/link",
+      { code: "synthetic-code", state: "synthetic-state" },
+    ],
+  ]);
+  assert.equal($("#discord-fields").hidden, false);
+  assert.equal($("#guild").value, "77");
+  assert.deepEqual(
+    [...root.querySelectorAll("#channel-list label")].map((l) => l.textContent),
+    ["#photos"],
+  );
+  fillSource($, window, "Lake trip");
+  await until(
+    () => $("#notice").textContent === "Choose at least one channel.",
+    "empty channel choice explained",
+  );
+  $("#channel-list input").checked = true;
+  fillSource($, window, "Lake trip");
+  await until(() => posts.length === 2, "source created");
+  assert.deepEqual(posts[1][1], {
+    group: group.id,
+    kind: "discord",
+    label: "Lake trip",
+    scope: {
+      start: "2024-01-01",
+      end: "2024-12-31",
+      guild: "77",
+      channels: ["71"],
+    },
+  });
+});
+
+test("Discord channel limits and refusals stay inside the source form", async (t) => {
+  let channels = Array.from({ length: 21 }, (_, i) => ({
+    id: String(100 + i),
+    name: `room-${i}`,
+  }));
+  const { $, root, window } = await mountFeature(t, "places", (path) => {
+    if (path.startsWith("/api/sources/discord/guilds?"))
+      return [{ id: "77", name: "Lake house" }];
+    if (path.startsWith("/api/sources/discord/channels?")) return channels;
+    return base(path);
+  });
+  await until(() => !$("#guild").disabled, "connected servers listed");
+  assert.equal($("#guild-status").textContent, "");
+  $("#kind").value = "discord";
+  $("#kind").dispatchEvent(new window.Event("change"));
+  $("#guild").value = "77";
+  $("#guild").dispatchEvent(new window.Event("change"));
+  await until(
+    () => root.querySelectorAll("#channel-list input").length === 21,
+    "channels listed",
+  );
+  root
+    .querySelectorAll("#channel-list input")
+    .forEach((input) => (input.checked = true));
+  fillSource($, window, "Everything");
+  await until(
+    () =>
+      $("#notice").textContent ===
+      "Choose at most 20 channels; 21 are selected.",
+    "channel limit explained",
+  );
+  channels = Object.assign(new Error("Discord access unavailable"), {
+    status: 409,
+  });
+  $("#guild").dispatchEvent(new window.Event("change"));
+  await until(
+    () =>
+      $("#channels-status").textContent ===
+      "Channels could not load: Discord access unavailable. Choose the server again to retry.",
+    "refusal explained in the form",
+  );
+  assert.equal($("#signed-out").hidden, true);
+  assert.match($("#places").textContent, /Utrecht/);
+});
+
+test("an empty circle explains connecting first and a cancelled return changes nothing", async (t) => {
+  const { $ } = await mountFeature(t, "places", base, {
+    url: "http://localhost/places?error=access_denied&state=synthetic-state",
+  });
+  await until(
+    () =>
+      $("#notice").textContent ===
+      "Discord connection cancelled. Nothing was changed.",
+    "cancellation announced",
+  );
+  assert.equal($("#guild").disabled, true);
+  assert.match(
+    $("#guild-status").textContent,
+    /^Connect a Discord server first/,
+  );
 });
