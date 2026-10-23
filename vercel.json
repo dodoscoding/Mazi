@@ -1,0 +1,120 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "regions": [
+    "fra1"
+  ],
+  "fluid": true,
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 300,
+      "includeFiles": "{mazi/**,infra/hosted/prod-ca-2021.crt}",
+      "excludeFiles": "{.venv/**,node_modules/**,dist/**,public/**,src/**,tests/**,docs/**,work/**,scripts/**,supabase/**,tools/**,infra/hosted/supabase/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/land.geojson",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/answer-evidence",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ask",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/atlas",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/circle",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/discover",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/imports",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/introduction",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/memories",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/people",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/places",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/review",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/search",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/timeline",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/welcome",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/work",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+node_modules
+.venv
+dist
+work
+test-results
+playwright-report
+.mazi-*
+.models
+.env*
+!.env.supabase.example
+.supabase-secrets
+tools/apple-photos/build

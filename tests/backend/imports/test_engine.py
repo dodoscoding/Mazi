@@ -513,6 +513,28 @@ class EngineTests(unittest.TestCase):
             other.close()
         self.assertEqual(self.store.db.execute("SELECT count(*) FROM archive_origins").fetchone()[0], 1)
 
+    def test_concurrent_scanners_commit_each_batch_once(self):
+        data = zip_bytes({"a.jpg": picture(), "b.jpg": picture()})
+        run = self.store.begin_import(self.alice, self.group, "manual", "account", len(data), hashlib.sha256(data).hexdigest(), {})
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        other = ImportStore(self.temp.name)
+        inventory_read = other.transaction
+
+        def first_scanner_commits(*args):
+            self.store.scan(run, batch_size=1)
+            return inventory_read(*args)
+
+        other.transaction = first_scanner_commits
+        try:
+            self.assertFalse(other.scan(run, batch_size=1))
+        finally:
+            other.close()
+        report = self.store.report(self.alice, run)
+        self.assertEqual((report["checkpoint"], report["discovered"], report["state"]), (1, 1, "SCANNING"))
+        self.store.scan(run)
+        self.assertEqual(self.store.report(self.alice, run)["discovered"], 2)
+
     def test_other_group_has_independent_asset_and_no_foreign_metadata(self):
         run = self.submit()
         self.process(run)
