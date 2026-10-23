@@ -1,7 +1,10 @@
+import { createDiscordReturn } from "./discordReturn";
+
 export function createLifecycle(
   root: HTMLElement,
   search: string,
   restart: () => void,
+  discordReturn = createDiscordReturn(location.search),
 ) {
   let active = true;
   let controller = new AbortController();
@@ -80,6 +83,7 @@ export function createLifecycle(
   return {
     groupId,
     search,
+    discordReturn,
     fetch: apiFetch,
     URL: ScopedURL,
     selectGroup(select: HTMLSelectElement) {

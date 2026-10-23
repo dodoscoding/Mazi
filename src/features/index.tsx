@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createLifecycle } from "./lifecycle";
+import { createDiscordReturn, type DiscordReturn } from "./discordReturn";
 import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
@@ -30,8 +31,16 @@ export const featureRegistry = {
   "/memories": { template: memoriesTemplate, mount: memoriesMount },
 };
 export const featurePaths = Object.keys(featureRegistry);
-export function FeaturePage({ path }: { path: string }) {
+export function FeaturePage({
+  path,
+  discordReturn,
+}: {
+  path: string;
+  discordReturn?: DiscordReturn;
+}) {
   const host = useRef<HTMLDivElement>(null);
+  const localReturn = useRef(createDiscordReturn(location.search));
+  const returned = discordReturn || localReturn.current;
   useEffect(() => {
     const container = host.current!;
     const [pathname, query] = path.split("?");
@@ -53,7 +62,12 @@ export function FeaturePage({ path }: { path: string }) {
       root.className = "feature-content";
       root.innerHTML = feature.template;
       container.append(root);
-      lifecycle = createLifecycle(root, query ? `?${query}` : "", mount);
+      lifecycle = createLifecycle(
+        root,
+        query ? `?${query}` : "",
+        mount,
+        returned,
+      );
       const rewriteLinks = () =>
         root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const href = link.getAttribute("href")!;
@@ -84,6 +98,7 @@ export function FeaturePage({ path }: { path: string }) {
       container.replaceChildren();
     };
     const accessLost = () => {
+      returned.clear();
       accessDenied = true;
       clear();
       const message = document.createElement("p");
@@ -122,7 +137,7 @@ export function FeaturePage({ path }: { path: string }) {
       window.removeEventListener("pagehide", clear);
       window.removeEventListener("pageshow", pageShow);
     };
-  }, [path]);
+  }, [path, returned]);
   return <div ref={host} className="feature-page" />;
 }
 export default FeaturePage;
