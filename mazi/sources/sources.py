@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS shared_places (
  origin TEXT PRIMARY KEY REFERENCES archive_origins(id), country TEXT NOT NULL,
  city TEXT NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, day TEXT
 );
+CREATE TABLE IF NOT EXISTS place_removals (
+ owner_id TEXT NOT NULL, asset_id TEXT NOT NULL, group_id TEXT NOT NULL, removed_at TEXT NOT NULL,
+ PRIMARY KEY(owner_id,asset_id)
+);
 CREATE TABLE IF NOT EXISTS source_outcomes (
  id TEXT PRIMARY KEY, connection TEXT NOT NULL, metadata TEXT NOT NULL, reason TEXT NOT NULL
 );
