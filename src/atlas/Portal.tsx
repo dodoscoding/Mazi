@@ -28,6 +28,7 @@ export function Portal({
   onClose,
   onStep,
   onOpen,
+  onNotebook,
   hasPrevious,
   hasNext,
 }: {
@@ -36,6 +37,7 @@ export function Portal({
   phone: boolean;
   onClose: () => void;
   onStep: (direction: -1 | 1) => void;
+  onNotebook: (event: MouseEvent<HTMLAnchorElement>) => void;
   onOpen: (event: MouseEvent<HTMLAnchorElement>) => void;
   hasPrevious: boolean;
   hasNext: boolean;
@@ -165,7 +167,13 @@ export function Portal({
         </div>
         <div className="dossier-title">
           <h2 id="dossier-title" ref={title} tabIndex={-1}>
-            {memory.title}
+            {memory.kind === "memory" ? (
+              <a href={`#/memory/${memory.id}?notebook=1`} onClick={onNotebook}>
+                {memory.title}
+              </a>
+            ) : (
+              memory.title
+            )}
           </h2>
           <p className="dossier-when">
             <span>{longDate(memory)}</span>

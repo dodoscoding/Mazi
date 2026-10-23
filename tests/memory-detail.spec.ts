@@ -123,6 +123,14 @@ async function enter(page: Page) {
       json: [{ id: group, name: "Synthetic circle", role: "member" }],
     }),
   );
+  await page.route("**/api/memories/notebook?*", (route) =>
+    route.fulfill({
+      json: {
+        eventId: new URL(route.request().url()).searchParams.get("event"),
+        sections: [],
+      },
+    }),
+  );
   await page.route("**/api/atlas?*", (route) =>
     route.fulfill({ json: { memories: archive } }),
   );

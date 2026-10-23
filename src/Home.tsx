@@ -650,7 +650,16 @@ function AtlasHome({
       />
       <div className="feature-info">
         <h2 id="featured-title" aria-live="polite">
-          {selected.title}
+          {selected.kind === "memory" ? (
+            <a
+              href={`#/memory/${selected.id}?notebook=1`}
+              onClick={link(`/memory/${selected.id}?notebook=1`)}
+            >
+              {selected.title}
+            </a>
+          ) : (
+            selected.title
+          )}
         </h2>
         <p className="featured-meta">
           {[
@@ -864,6 +873,7 @@ function AtlasHome({
           onClose={closePortal}
           onStep={stepPortal}
           onOpen={link(`/memory/${portalMemory.id}`, true)}
+          onNotebook={link(`/memory/${portalMemory.id}?notebook=1`)}
           hasPrevious={portalIndex > 0}
           hasNext={portalIndex >= 0 && portalIndex < memories.length - 1}
         />

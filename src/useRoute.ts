@@ -29,6 +29,7 @@ export function readRoute() {
     path: path === "/atlas" ? "/" : path || "/",
     search: query ? `?${query}` : "",
     selected: params.get("selected") || "last-ferry",
+    notebook: params.get("notebook") === "1",
     photo: Math.max(0, Number(params.get("photo")) || 0),
   };
 }

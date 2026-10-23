@@ -226,7 +226,7 @@ export function createGallery(root, lifecycle, api) {
         const section = node("section", undefined, "mem-moment");
         const head = node("div", undefined, "mem-moment-head");
         const title = node("a", memory.title, "mem-moment-title");
-        title.href = `#/memory/${encodeURIComponent(memory.id)}`;
+        title.href = `#/memory/${encodeURIComponent(memory.id)}${memory.kind === "memory" ? "?notebook=1" : ""}`;
         const meta = node(
           "span",
           [

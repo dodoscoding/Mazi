@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import {
   provenanceOf,
@@ -24,6 +24,7 @@ import {
 import type { SourceKind } from "./memory/facts";
 import { Glyph } from "./memory/glyphs";
 import type { GlyphName } from "./memory/glyphs";
+import { EventNotebook } from "./memory/EventNotebook";
 import { Viewer } from "./memory/Viewer";
 import type { LinkFor } from "./useRoute";
 import { useReducedMotion } from "./useRoute";
@@ -42,6 +43,8 @@ const sourceGlyph: Record<SourceKind, GlyphName> = {
 
 export function MemoryView({
   memory,
+  group,
+  notebook,
   memories = [memory],
   photo,
   demo,
@@ -51,6 +54,8 @@ export function MemoryView({
   heading,
 }: {
   memory: Memory;
+  group: string;
+  notebook: boolean;
   memories?: Memory[];
   photo: number;
   demo: boolean;
@@ -60,6 +65,13 @@ export function MemoryView({
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
   const reduced = useReducedMotion();
+  const notebookHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (notebook && memory.kind === "memory" && !demo) {
+      heading.current?.focus({ preventScroll: true });
+      heading.current?.scrollIntoView({ block: "start" });
+    }
+  }, [notebook, memory.id, memory.kind, demo, heading]);
   const photoIndex = Math.min(Math.floor(photo), memory.photos.length - 1);
   const place = placeLine(memory);
   const date = displayDate(memory);
@@ -192,6 +204,12 @@ export function MemoryView({
             </h1>
             <p className="memory-description">{memory.description}</p>
             <Conversation key={memory.id} memory={memory} />
+            <EventNotebook
+              key={`${group}:${memory.id}`}
+              group={group}
+              event={!demo && memory.kind === "memory" ? memory.id : null}
+              heading={notebookHeading}
+            />
             {!demo && (
               <div className="memory-tools">
                 <a
@@ -310,9 +328,10 @@ function Conversation({ memory }: { memory: Memory }) {
   if (!first) return null;
   return (
     <section className="conversation" aria-labelledby="conversation-heading">
-      <h2 id="conversation-heading" className="hud-label">
-        From the conversation
-      </h2>
+      <h2 id="conversation-heading">From the conversation</h2>
+      <p className="conversation-origin">
+        Imported excerpts, shared in the original conversation.
+      </p>
       <blockquote>
         <p>“{first.text}”</p>
       </blockquote>
