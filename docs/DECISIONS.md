@@ -68,7 +68,7 @@ This revises D01 for the current runtime: Next.js and Supabase Auth are not prer
 - Delivery is a stack of pull requests, one per stage.
 - Ambient sound is built. It stays off by default behind a visible toggle.
 - People lines show evidence only. Contributors show as "shared by" and chat participants as "in the conversation". Nothing claims that a person was present.
-- Night is the default theme for everyone. A header toggle switches to day, and the browser remembers the choice.
+- Night is the only theme, following the owner's 22 October 2026 update in PR #97. The entry page, header, phone More sheet, and About offer no day toggle. The browser clears earlier day choices.
 
 The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shapes and stage order. The canvas artboards are the measured contract; this decision does not change archive access, sharing, or production acceptance.
 

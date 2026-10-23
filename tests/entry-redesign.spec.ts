@@ -199,7 +199,7 @@ test("beats slide in normal motion and crossfade under reduced motion", async ({
   await expectBeat(page, 2);
 });
 
-for (const theme of ["night", "day"] as const)
+for (const theme of ["night"] as const)
   test(`entry and introduction have no axe violations in ${theme}`, async ({
     page,
   }) => {
@@ -224,12 +224,10 @@ for (const theme of ["night", "day"] as const)
     }
   });
 
-test("the entry theme toggle switches to day and back", async ({ page }) => {
+test("the entry offers no theme toggle", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Switch to day" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
-  await page.getByRole("button", { name: "Switch to night" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await expect(page.getByRole("button", { name: /^Switch to/ })).toHaveCount(0);
 });
 
 const evidence = "work/poteto/luminous-night/evidence/pr7";
@@ -249,7 +247,7 @@ test("captures evidence screenshots", async ({ page }) => {
       quality: 80,
     });
   let theme: "night" | "day" = "night";
-  for (theme of ["night", "day"] as const) {
+  for (theme of ["night"] as const) {
     await page.goto("/");
     await page.evaluate((value) => {
       localStorage.setItem("mazi.theme", value);

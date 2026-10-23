@@ -1,7 +1,9 @@
 /**
- * Procedural Web Audio for the Atlas. No files, no network: every sound is built
- * from oscillators and a noise buffer. The context exists only after a gesture
- * made while sound is on, so the browser never blocks or startles anyone.
+ * Web Audio for the Atlas. The bed is "Monkeys Spinning Monkeys" by Kevin
+ * MacLeod (CC BY 4.0, credited on About); every one-shot is built from
+ * oscillators and a noise buffer. The context
+ * exists only after a gesture made while sound is on, so the browser never
+ * blocks or startles anyone.
  */
 import type { Cue } from "./cues";
 
@@ -10,11 +12,16 @@ const MASTER = 0.063;
 // The Motion sheet's dive (1600 ms) and back out (1100 ms).
 const DIVE = 1.6;
 const BACK = 1.1;
+const SONG = "/media/sound/monkeys-spinning-monkeys.mp3";
+// The song plays well under the cues' master, quiet enough to talk over.
+const SONG_LEVEL = 0.35;
 
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
 let noise: AudioBuffer | null = null;
-let bed: { gain: GainNode; sources: AudioScheduledSourceNode[] } | null = null;
+let song: { element: HTMLAudioElement; gain: GainNode } | null = null;
+let playing = false;
+let pausing: number | undefined;
 
 export function audioReady() {
   return context !== null;
@@ -55,56 +62,41 @@ function noiseBuffer(audio: AudioContext) {
 }
 
 /**
- * Two detuned pads under a slow low-pass sweep; fades in over 2 s and out over
- * 1.2 s, or stops at once when sound is turned off.
+ * The song on a loop; fades in over 2 s and out over 1.2 s, or stops at once
+ * when sound is turned off. It resumes where it paused.
  */
 export function ambient(on: boolean, immediate = false) {
-  if (!context || !master) return;
+  if (!context) return;
   const now = context.currentTime;
   if (!on) {
-    if (!bed) return;
-    const { gain, sources } = bed;
+    if (!song || !playing) return;
+    const { element, gain } = song;
     const fade = immediate ? 0 : 1.2;
-    bed = null;
+    playing = false;
     gain.gain.cancelScheduledValues(now);
     gain.gain.setValueAtTime(immediate ? 0 : gain.gain.value, now);
     gain.gain.linearRampToValueAtTime(0, now + fade);
-    sources.forEach((source) => source.stop(now + fade + 0.05));
+    pausing = window.setTimeout(() => element.pause(), fade * 1000 + 50);
     return;
   }
-  if (bed) return;
-  const gain = context.createGain();
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.5, now + 2);
-  const filter = context.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.value = 520;
-  filter.Q.value = 0.7;
-  // One sweep every 20 s, between roughly 300 and 740 Hz.
-  const sweep = context.createOscillator();
-  sweep.frequency.value = 0.05;
-  const depth = context.createGain();
-  depth.gain.value = 220;
-  sweep.connect(depth).connect(filter.frequency);
-  const pads = (
-    [
-      ["sine", 110, -7],
-      ["triangle", 164.81, 6],
-    ] as const
-  ).map(([type, frequency, detune]) => {
-    const pad = context!.createOscillator();
-    pad.type = type;
-    pad.frequency.value = frequency;
-    pad.detune.value = detune;
-    const level = context!.createGain();
-    level.gain.value = type === "sine" ? 0.55 : 0.3;
-    pad.connect(level).connect(filter);
-    return pad;
-  });
-  filter.connect(gain).connect(master);
-  const sources = [sweep, ...pads];
-  sources.forEach((source) => source.start(now));
-  bed = { gain, sources };
+  if (playing) return;
+  if (!song) {
+    const element = new Audio(SONG);
+    element.loop = true;
+    element.preload = "auto";
+    const gain = context.createGain();
+    gain.gain.value = 0;
+    context.createMediaElementSource(element).connect(gain);
+    gain.connect(context.destination);
+    song = { element, gain };
+  }
+  window.clearTimeout(pausing);
+  playing = true;
+  const { element, gain } = song;
+  gain.gain.cancelScheduledValues(now);
+  gain.gain.setValueAtTime(gain.gain.value, now);
+  gain.gain.linearRampToValueAtTime(SONG_LEVEL, now + 2);
+  void element.play().catch(() => {});
 }
 
 /** Filtered noise; the dive opens upward over 1.6 s, the way back closes over 1.1 s. */

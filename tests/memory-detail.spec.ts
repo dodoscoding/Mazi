@@ -470,7 +470,7 @@ for (const [value, shown] of [
     await expect(page.getByText("This photo could not load.")).toHaveCount(0);
   });
 
-for (const theme of ["night", "day"] as const)
+for (const theme of ["night"] as const)
   test(`memory screens pass axe in ${theme}`, async ({ page }) => {
     await page.addInitScript(
       (value) => localStorage.setItem("mazi.theme", value),
@@ -513,7 +513,7 @@ test("capture memory evidence screenshots", async ({ page }, testInfo) => {
     ["error", "/memory/photo-broken"],
     ["not-found", "/memory/missing"],
   ];
-  for (const theme of ["night", "day"]) {
+  for (const theme of ["night"]) {
     await page.goto("/");
     await page.evaluate(
       (value) => localStorage.setItem("mazi.theme", value),
