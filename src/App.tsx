@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
 import { FeaturePage } from "./features";
+import { createDiscordReturn } from "./features/discordReturn";
 import { isFeaturePath } from "./featureRoutes";
 import { ArchiveStatus, Home } from "./Home";
 import { MemoryNotFound, MemoryView } from "./MemoryView";
@@ -15,12 +16,24 @@ import { useReducedMotion, useRoute } from "./useRoute";
 import { useWorkDrain } from "./useWorkDrain";
 
 export default function App() {
+  const discordReturn = useRef(createDiscordReturn(location.search));
+  useEffect(() => {
+    const clear = () => discordReturn.current.clear();
+    window.addEventListener("mazi:access-lost", clear);
+    return () => {
+      window.removeEventListener("mazi:access-lost", clear);
+    };
+  }, []);
   const reduced = useReducedMotion();
   const { route, navigate } = useRoute(reduced);
   const demo = new URLSearchParams(location.search).get("demo") === "1";
   const entry = useEntry();
   const profile =
     entry.state.status === "ready" ? entry.state.profile : undefined;
+  useLayoutEffect(() => {
+    if (profile) discordReturn.current.bind(profile.user_id);
+    else if (entry.state.status === "signed-out") discordReturn.current.clear();
+  }, [profile?.user_id, entry.state.status]);
   const archive = useArchive(route.path, demo && !!profile, profile?.group_id);
   useWorkDrain(!!profile);
   useLayoutEffect(() => {
@@ -93,7 +106,13 @@ export default function App() {
       />
     );
   else if (isFeaturePath(route.path, demo))
-    content = <FeaturePage key={route.path} path={route.path + route.search} />;
+    content = (
+      <FeaturePage
+        key={route.path}
+        path={route.path + route.search}
+        discordReturn={discordReturn.current}
+      />
+    );
   else if (archive.status !== "ready")
     content = <ArchiveStatus archive={archive} heading={heading} />;
   else if (route.path === "/")

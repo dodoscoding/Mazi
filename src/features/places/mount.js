@@ -870,7 +870,8 @@ export function mount(root, lifecycle) {
   }
   $("#retry-workspace").onclick = loadWorkspace;
   // Discord returns here with code and state, or error when the member cancels.
-  const returned = new URLSearchParams(location.search);
+  const returned =
+    lifecycle.discordReturn?.params || new URLSearchParams(location.search);
   const link = returned.get("code") &&
     returned.get("state") && {
       code: returned.get("code"),
@@ -888,14 +889,25 @@ export function mount(root, lifecycle) {
     $("#kind").value = "discord";
     $("#kind").onchange();
     if (cancelled) {
+      returned.delete("error");
       $("#notice").dataset.tone = "";
       $("#notice").textContent =
         "Discord connection cancelled. Nothing was changed.";
       return;
     }
     run(async () => {
-      const { guild } = await api("/api/sources/discord/link", link);
-      await loadGuilds(guild.id);
+      let result;
+      try {
+        result = lifecycle.discordReturn
+          ? await lifecycle.discordReturn.finish()
+          : await api("/api/sources/discord/link", link);
+        if (!active()) throw new DOMException("Feature disposed", "AbortError");
+        await loadGuilds(result.guild.id);
+        if (!active()) throw new DOMException("Feature disposed", "AbortError");
+      } finally {
+        if (active()) for (const key of ["code", "state"]) returned.delete(key);
+      }
+      const { guild } = result;
       return `${guild.name} is connected. Choose its channels to create a source.`;
     });
   });
