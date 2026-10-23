@@ -1,0 +1,16 @@
+F
+======================================================================
+FAIL: test_small_archive_keyword_page_has_bounded_database_work (tests.backend.discovery.test_keyword_scaling.KeywordScalingTests.test_small_archive_keyword_page_has_bounded_database_work)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi/tests/backend/discovery/test_keyword_scaling.py", line 87, in test_small_archive_keyword_page_has_bounded_database_work
+    self.assertLessEqual(len(statements), 20,
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+                         'A keyword page must batch metadata reads instead of querying every asset')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2728 not less than or equal to 20 : A keyword page must batch metadata reads instead of querying every asset
+
+----------------------------------------------------------------------
+Ran 1 test in 0.163s
+
+FAILED (failures=1)

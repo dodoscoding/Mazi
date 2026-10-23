@@ -1,0 +1,8 @@
+...../Users/altanesmer/Desktop/Ales/Mazi/tests/backend/discovery/test_keyword_scaling.py:66: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x1091c62f0>
+  participants = [{'name': 'Synthetic participant ' + str(n)} for n in range(2500)]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.........
+----------------------------------------------------------------------
+Ran 14 tests in 2.730s
+
+OK

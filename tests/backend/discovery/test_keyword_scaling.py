@@ -54,38 +54,67 @@ class KeywordScalingTests(unittest.TestCase):
             self.store.db.execute('INSERT INTO discovery_processing VALUES(?,?,1)', (self.group, subject))
         self.store.db.commit()
 
-    def candidate(self, user=None, **filters):
-        with self.store.transaction():
-            return self.store._keyword_search(user or self.alice, self.group, **filters)
+    def test_small_archive_keyword_page_has_bounded_database_work(self):
+        participants = [{'name': 'Synthetic participant ' + str(n)} for n in range(2500)]
+        metadata = {'title': 'Synthetic conversation', 'participants': participants, 'messages': [
+            {'sender_name': 'Synthetic sender', 'timestamp_ms': 1577836800000,
+             'content': 'oversizedmessengerkeyword', 'photos': [{'uri': 'photos/picture.jpg'}]}]}
+        run = self.submit({'messages/inbox/synthetic/message_1.json': json.dumps(metadata),
+                           'photos/picture.jpg': helpers.picture()}, source='messenger')
+        self.process(run)
+        self.assertEqual(self.store.report(self.alice, run)['state'], 'COMPLETED')
+        self.assertGreater(self.store.db.execute('SELECT length(CAST(payload AS BLOB)) FROM archive_origins').fetchone()[0],
+                           64 * 1024)
+        self.seed_projection(300)
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        try:
+            page = self.store.search(self.ben, self.group, query='SYNTHETIC', offset=270)
+        finally:
+            self.store.db.set_trace_callback(None)
+        self.assertEqual([item['id'] for item in page['items']],
+                         [f'capacity-{number:05d}' for number in range(270, 300)])
+        self.assertEqual((page['total'], page['next_offset'], page['mode']),
+                         (300, None, 'keyword / filters'))
+        self.assertLessEqual(len(statements), 20,
+                             'A keyword page must batch metadata reads instead of querying every asset')
+        self.assertEqual(self.store.search(self.ben, self.group, query='oversizedmessengerkeyword')['total'], 1)
 
-    def assert_parity(self, user=None, **filters):
-        user = user or self.alice
-        self.assertEqual(self.candidate(user, **filters), self.store.search(user, self.group, **filters))
-
-    def test_all_filters_unicode_and_pagination_equal_legacy(self):
+    def test_filters_unicode_and_pagination_return_expected_assets(self):
         self.seed_details()
-        cases = [{}, {'query': 'STRASSE summer'}, {'query': 'İSTANBUL ΣΊΓΜΑ'}, {'query': 'café'},
-                 {'query': '   '}, {'query': 'missing'}, {'query': 'summer STRASSE'},
-                 {'object_query': 'bike cafe'}, {'object_query': 'bike café'}, {'object_query': 'dog'},
-                 {'place': 'DAM'}, {'place': 'İSTAN'}, {'place': 'reviewed'}, {'place': 'missing'},
-                 {'country': 'nl'}, {'country': 'TR'}, {'country': 'NO'},
-                 {'source': 'manual'}, {'source': 'whatsapp'}, {'source': 'Manual'},
-                 {'start': '2020-01-02', 'end': '2020-01-02'}, {'start': '2021-01-01'},
-                 {'end': '2021-01-01'}, {'person': 'person-0'}, {'person': 'person-1'}, {'person': 'missing'},
-                 {'query': 'STRASSE', 'country': 'NL', 'place': 'dam', 'object_query': 'bike',
-                  'person': 'person-0', 'start': '2020-01-01', 'end': '2023-01-01', 'source': 'manual'},
-                 {'offset': 0, 'limit': 1}, {'offset': 19, 'limit': 1}, {'offset': 20}, {'offset': 1000000},
-                 {'similar': 'capacity-00000'}]
+        all_assets = list(range(20))
+        capture_2020 = [1, 2, 4, 5, 7, 8, 11, 13, 14, 16, 17, 19]
+        cases = [({}, all_assets), ({'query': 'STRASSE summer'}, all_assets),
+                 ({'query': 'İSTANBUL ΣΊΓΜΑ'}, all_assets), ({'query': 'café'}, all_assets),
+                 ({'query': '   '}, all_assets), ({'query': 'missing'}, []),
+                 ({'query': 'summer STRASSE'}, all_assets), ({'object_query': 'bike cafe'}, all_assets),
+                 ({'object_query': 'bike café'}, all_assets), ({'object_query': 'dog'}, []),
+                 ({'place': 'DAM'}, all_assets), ({'place': 'İSTAN'}, all_assets),
+                 ({'place': 'reviewed'}, [0, 15]), ({'place': 'missing'}, []),
+                 ({'country': 'nl'}, all_assets), ({'country': 'TR'}, all_assets), ({'country': 'NO'}, []),
+                 ({'source': 'manual'}, all_assets), ({'source': 'whatsapp'}, []), ({'source': 'Manual'}, []),
+                 ({'start': '2020-01-02', 'end': '2020-01-02'}, capture_2020),
+                 ({'start': '2021-01-01'}, [0, 10]), ({'end': '2021-01-01'}, capture_2020),
+                 ({'person': 'person-0'}, [0, 3, 6, 9, 12, 15, 18]),
+                 ({'person': 'person-1'}, [1, 4, 7, 10, 13, 16, 19]), ({'person': 'missing'}, []),
+                 ({'query': 'STRASSE', 'country': 'NL', 'place': 'dam', 'object_query': 'bike',
+                   'person': 'person-0', 'start': '2020-01-01', 'end': '2023-01-01', 'source': 'manual'}, [0]),
+                 ({'similar': 'capacity-00000'}, all_assets)]
         for user in (self.alice, self.ben):
-            for filters in cases:
+            for filters, expected in cases:
                 with self.subTest(user=user, filters=filters):
-                    self.assert_parity(user, **filters)
-        self.assertEqual(self.candidate(query='STRASSE')['total'], 20)
-        self.assertEqual(self.candidate(object_query='bike café')['total'], 20)
-        self.assertEqual(self.candidate(query='bike')['total'], 0)
-        self.assertEqual(self.candidate(source='Manual')['total'], 0)
-        # Date and place corrections are independent, not a single certainty flag.
-        rows = {item['id']: item for item in self.candidate()['items']}
+                    page = self.store.search(user, self.group, **filters)
+                    self.assertEqual([item['id'] for item in page['items']],
+                                     [f'capacity-{number:05d}' for number in expected])
+                    self.assertEqual((page['total'], page['next_offset']), (len(expected), None))
+            for offset, limit, expected, next_offset in ((0, 1, [0], 1), (19, 1, [19], None),
+                                                         (20, 30, [], None), (1000000, 30, [], None)):
+                page = self.store.search(user, self.group, offset=offset, limit=limit)
+                self.assertEqual([item['id'] for item in page['items']],
+                                 [f'capacity-{number:05d}' for number in expected])
+                self.assertEqual((page['total'], page['next_offset']), (20, next_offset))
+        self.assertEqual(self.store.search(self.alice, self.group, query='bike')['total'], 0)
+        rows = {item['id']: item for item in self.store.search(self.alice, self.group)['items']}
         self.assertEqual((rows['capacity-00010']['date'], rows['capacity-00010']['place']), ('2022-01-02', 'harbour'))
         self.assertEqual((rows['capacity-00015']['date'], rows['capacity-00015']['place']), (None, 'reviewed'))
 
@@ -131,7 +160,7 @@ class KeywordScalingTests(unittest.TestCase):
             page = self.store.search(self.ben, self.group, offset=10**9)
             self.assertEqual((page['items'], page['total'], page['next_offset']), ([], total, None))
 
-    def test_visibility_reference_people_and_derivative_cleanup_equal_legacy(self):
+    def test_visibility_reference_people_and_derivative_cleanup(self):
         self.seed_details()
         other_group = self.store.create_group(self.alice, 'Another circle')
         self.store.accept(self.ben, self.store.invite(self.alice, other_group))
@@ -146,28 +175,29 @@ class KeywordScalingTests(unittest.TestCase):
                 self.store.db.execute('INSERT INTO discovery_vectors VALUES(?,?,?,?,?,?)',
                                       (row[0], 'text', 'synthetic', 1, 'synthetic', '[1]'))
             self.store.db.commit()
-        def compare_cleanup():
-            before = vectors()
-            expected = self.store.search(self.alice, self.group)
-            expected_vectors = vectors()
-            self.store.db.execute('DELETE FROM discovery_vectors')
-            self.store.db.executemany('INSERT INTO discovery_vectors VALUES(?,?,?,?,?,?)', before)
-            self.store.db.commit()
-            self.assertEqual(self.candidate(), expected)
-            self.assertEqual(vectors(), expected_vectors)
-            self.assertIn(other_asset, [row[0] for row in expected_vectors])
-            for user in (self.alice, self.ben):
-                for person in ('person-0', 'person-1', 'person-2'):
-                    self.assert_parity(user, person=person)
-            return expected_vectors
+        def assert_cleanup(visible, retained):
+            page = self.store.search(self.alice, self.group)
+            self.assertEqual([item['id'] for item in page['items']],
+                             [f'capacity-{number:05d}' for number in visible])
+            self.assertEqual(page['total'], len(visible))
+            self.assertEqual([row[0] for row in vectors()],
+                             sorted([other_asset, *[f'capacity-{number:05d}' for number in retained]]))
+            return {item['id']: item for item in page['items']}
         seed_vectors()
-        compare_cleanup()
+        rows = assert_cleanup(list(range(20)), list(range(20)))
+        self.assertEqual(rows['capacity-00000']['people'],
+                         [dict(id='person-0', name='Zoe', is_me=False, can_remove=True)])
+        self.assertEqual(rows['capacity-00001']['people'],
+                         [dict(id='person-1', name='Alex', is_me=False, can_remove=True)])
+        ben_rows = {item['id']: item for item in self.store.search(self.ben, self.group)['items']}
+        self.assertEqual(ben_rows['capacity-00000']['people'],
+                         [dict(id='person-0', name='Zoe', is_me=True, can_remove=False)])
+        self.assertEqual(ben_rows['capacity-00001']['people'],
+                         [dict(id='person-1', name='Alex', is_me=False, can_remove=True)])
         self.store.db.execute('INSERT INTO discovery_hidden VALUES(?,?)', (self.alice, 'capacity-00000'))
         self.store.db.execute('UPDATE discovery_processing SET enabled=0 WHERE subject=?', (self.ben,))
         self.store.db.commit()
-        retained = compare_cleanup()
-        self.assertIn('capacity-00000', [row[0] for row in retained])
-        self.assertNotIn('capacity-00001', [row[0] for row in retained])
+        assert_cleanup(list(range(1, 20)), [0])
         self.store.db.execute('UPDATE discovery_processing SET enabled=1')
         seed_vectors()
         self.store.db.execute('UPDATE review_annotations SET actor_id=? WHERE asset_id=?', (self.outsider, 'capacity-00005'))
@@ -177,25 +207,28 @@ class KeywordScalingTests(unittest.TestCase):
         self.store.db.execute('UPDATE discovery_people SET account=? WHERE id=?', (self.outsider, 'person-2'))
         self.store.db.execute('UPDATE discovery_tags SET actor=? WHERE person=?', (self.outsider, 'person-1'))
         self.store.db.commit()
-        compare_cleanup()
+        rows = assert_cleanup([1, *range(3, 20)], [0, 1, 3, 4, *range(6, 20)])
+        self.assertEqual(rows['capacity-00001']['people'], [])
+        self.assertEqual(rows['capacity-00003']['people'], [])
+        self.assertEqual(rows['capacity-00005']['people'], [])
+        self.assertEqual([item['id'] for item in self.store.search(self.alice, self.group, person='person-0')['items']],
+                         ['capacity-00006', 'capacity-00009', 'capacity-00012', 'capacity-00015', 'capacity-00018'])
         self.assertNotIn('capacity-00005', [row[0] for row in vectors()])
-        self.assertEqual(self.candidate(person='person-1')['total'], 0)
-        self.assertEqual(self.candidate(person='person-2')['total'], 0)
-        self.assertEqual(self.candidate(query='private-other-circle')['total'], 0)
+        self.assertEqual(self.store.search(self.alice, self.group, person='person-1')['total'], 0)
+        self.assertEqual(self.store.search(self.alice, self.group, person='person-2')['total'], 0)
+        self.assertEqual(self.store.search(self.alice, self.group, query='private-other-circle')['total'], 0)
         for asset in ('capacity-00000', 'capacity-00002', other_asset, 'missing'):
-            for search in (lambda: self.candidate(similar=asset), lambda: self.store.search(self.alice, self.group, similar=asset)):
-                with self.subTest(asset=asset), self.assertRaises(Denied):
-                    search()
+            with self.subTest(asset=asset), self.assertRaises(Denied):
+                self.store.search(self.alice, self.group, similar=asset)
         with self.assertRaises(Denied):
-            self.candidate(self.outsider)
-        # Membership deletion is an independent writer; trigger effects are part of parity.
+            self.store.search(self.outsider, self.group)
         seed_vectors()
         self.store.db.execute('DELETE FROM members WHERE user_id=? AND group_id=?', (self.ben, self.group))
         self.store.db.commit()
-        expected = self.store.search(self.alice, self.group)
-        self.assertEqual(self.candidate(), expected)
+        rows = assert_cleanup([1, *range(3, 20)], [])
+        self.assertTrue(all(item['people'] == [] for item in rows.values()))
         with self.assertRaises(Denied):
-            self.candidate(self.ben)
+            self.store.search(self.ben, self.group)
 
     def test_large_route_denies_hidden_reference_before_ignoring_similarity(self):
         self.seed_projection(1002)

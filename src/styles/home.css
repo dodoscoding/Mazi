@@ -892,6 +892,7 @@
   animation: portal-open 500ms var(--ease-reveal) 600ms both;
 }
 .portal-window {
+  border-radius: 0;
   inset: 0;
   overflow: hidden;
   background: var(--bg-deep);
@@ -899,16 +900,12 @@
     0 0 0 1.5px var(--accent-node),
     0 0 30px 4px var(--glow),
     0 0 90px 10px var(--atmosphere-tint);
-  animation:
-    portal-open 500ms var(--ease-reveal) 600ms both,
-    portal-breathe 9s ease-in-out 1100ms infinite alternate;
+  animation: portal-open 500ms var(--ease-reveal) 600ms both;
 }
 .portal-window img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transform: scale(1.06);
-  animation: photo-settle 500ms var(--ease-arrive) 800ms both;
+  object-fit: contain;
 }
 .portal figcaption {
   position: absolute;
@@ -923,16 +920,6 @@
   from {
     opacity: 0;
     transform: scale(0.2);
-  }
-}
-@keyframes portal-breathe {
-  to {
-    border-radius: 53% 47% 55% 45% / 46% 56% 44% 54%;
-  }
-}
-@keyframes photo-settle {
-  from {
-    transform: scale(1.12);
   }
 }
 .portal-bar {
@@ -992,6 +979,7 @@
   animation: dossier-in 500ms var(--ease-arrive) 900ms both;
 }
 .dossier > * {
+  flex-shrink: 0;
   animation: dossier-in 500ms var(--ease-arrive) both;
   animation-delay: calc(900ms + var(--d, 0) * 50ms);
 }
@@ -1089,8 +1077,7 @@
   font: 400 14px / 1 var(--font-mono);
 }
 .dossier-sources {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 .dossier-sources .hud-label {
   padding-bottom: 4px;
@@ -1531,6 +1518,9 @@
 
 /* 390: phone. Bottom sheet with the index and memories over the globe; the tab bar stays. */
 @media (max-width: 600px) {
+  .portal-layer {
+    bottom: var(--tab-bar-height);
+  }
   .atlas-home {
     --atlas-top: 64px;
     height: calc(100dvh - var(--atlas-top) - var(--tab-bar-height));

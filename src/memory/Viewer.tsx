@@ -4,11 +4,10 @@ import type { Memory, Photo as PhotoData } from "../memories";
 import { Photo } from "../Photo";
 import { Glyph } from "./glyphs";
 
-const drift = 24;
 const settle = { duration: 360, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
 const fade = { duration: 150, easing: "linear" };
 
-type Ghost = { key: number; photo: PhotoData; from: number; dir: number };
+type Ghost = { key: number; photo: PhotoData };
 type Drag = {
   id: number;
   x: number;
@@ -52,12 +51,6 @@ function Thumb({
   );
 }
 
-/**
- * The photo viewer: hero, caption, counter, arrows, filmstrip and touch swipe.
- * Photo changes drift 24px and fade over 360ms; a swipe tracks the finger 1:1.
- * Reduced motion keeps swipe and the arrows but turns movement into a 150ms
- * crossfade.
- */
 export function Viewer({
   memory,
   index,
@@ -78,7 +71,6 @@ export function Viewer({
   const track = useRef<HTMLDivElement>(null);
   const ghostRef = useRef<HTMLImageElement>(null);
   const drag = useRef<Drag | null>(null);
-  const released = useRef(0);
   const shown = useRef(index);
   const ghostKey = useRef(0);
   const [ghost, setGhost] = useState<Ghost | null>(null);
@@ -87,22 +79,14 @@ export function Viewer({
     const previous = shown.current;
     shown.current = index;
     if (previous === index || !track.current) return;
-    const dir = index > previous ? 1 : -1;
-    const from = released.current;
-    released.current = 0;
     track.current.style.transform = "";
     if (typeof track.current.animate === "function")
       track.current.animate(
-        reduced
-          ? [{ opacity: 0 }, { opacity: 1 }]
-          : [
-              { opacity: 0, transform: `translateX(${dir * drift}px)` },
-              { opacity: 1, transform: "none" },
-            ],
+        [{ opacity: 0 }, { opacity: 1 }],
         reduced ? fade : settle,
       );
     if (photos[previous])
-      setGhost({ key: ++ghostKey.current, photo: photos[previous], from, dir });
+      setGhost({ key: ++ghostKey.current, photo: photos[previous] });
   }, [index, photos, reduced]);
 
   useLayoutEffect(() => {
@@ -112,22 +96,10 @@ export function Viewer({
       setGhost(null);
       return;
     }
-    const start = `translateX(${ghost.from}px)`;
-    const animation = element.animate(
-      reduced
-        ? [
-            { opacity: 1, transform: start },
-            { opacity: 0, transform: start },
-          ]
-        : [
-            { opacity: 1, transform: start },
-            {
-              opacity: 0,
-              transform: `translateX(${ghost.from - ghost.dir * drift}px)`,
-            },
-          ],
-      { ...(reduced ? fade : settle), fill: "forwards" },
-    );
+    const animation = element.animate([{ opacity: 1 }, { opacity: 0 }], {
+      ...(reduced ? fade : settle),
+      fill: "forwards",
+    });
     const key = ghost.key;
     void animation.finished
       .then(() => setGhost((value) => (value?.key === key ? null : value)))
@@ -185,7 +157,6 @@ export function Viewer({
         ? index + (current.dx < 0 ? 1 : -1)
         : index;
     if (target !== index && target >= 0 && target < photos.length) {
-      released.current = current.dx;
       go(target);
     } else settleBack(current.dx);
   };

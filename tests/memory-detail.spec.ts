@@ -450,7 +450,7 @@ test("a broken photo URL shows the retry state", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Where" })).toContainText(
     "No place recorded",
   );
-  await expect(page.locator(".date-chip")).toHaveText("Date not recorded");
+  await expect(page.locator(".date-chip")).toHaveText("Capture date unknown");
   const retried = page.waitForRequest("**/media/does-not-exist.webp*");
   await page.getByRole("button", { name: "Retry photo" }).click();
   await retried;
@@ -638,10 +638,17 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".dossier")).toContainText(
     "04/05/2024, 21:00 · date order unclear",
   );
-  await page
+
+  const openMemory = page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true })
-    .click();
+    .getByRole("link", { name: "Open memory", exact: true });
+  await openMemory.scrollIntoViewIfNeeded();
+  if ((page.viewportSize()?.width || 1440) <= 600) {
+    const action = await openMemory.boundingBox();
+    const navigation = await page.locator(".tab-bar").boundingBox();
+    expect(action!.y + action!.height).toBeLessThanOrEqual(navigation!.y);
+  }
+  await openMemory.click();
   await expect(page.locator(".memory-detail h1")).toHaveText(
     "Photo shared by Ana",
   );
@@ -662,5 +669,116 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".tl-date")).toContainText("Shared on");
   await expect(
     page.locator(".timeline-page").getByText("2024", { exact: true }),
-  ).toHaveCount(0);
+  ).not.toHaveCount(0);
+  await expect(page.locator(".tl-date")).toContainText("Capture date unknown");
+});
+
+test("opened photographs preserve portrait and panoramic edges", async ({
+  page,
+}, testInfo) => {
+  await enter(page);
+  const marked = (width: number, height: number) =>
+    `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><path d="M0 0H${width}V${height}H0Z" fill="none" stroke="red" stroke-width="24"/></svg>`)}`;
+  const memories = [
+    {
+      ...archive[0],
+      photos: [
+        {
+          src: marked(300, 900),
+          alt: "Synthetic portrait edges",
+          caption: "Portrait",
+        },
+        {
+          src: marked(1200, 300),
+          alt: "Synthetic panorama edges",
+          caption: "Panorama",
+        },
+      ],
+    },
+  ];
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories } }),
+  );
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+  await page.goto("/#/?selected=harbour-night");
+  await page
+    .getByRole("link", { name: "Open memory", exact: true })
+    .first()
+    .click();
+  const verify = async (selector: string) => {
+    const result = await page
+      .locator(selector)
+      .evaluate((image: HTMLImageElement) => {
+        const style = getComputedStyle(image),
+          rect = image.getBoundingClientRect();
+        const scale = Math.min(
+          rect.width / image.naturalWidth,
+          rect.height / image.naturalHeight,
+        );
+        const content = {
+          left: rect.left + (rect.width - image.naturalWidth * scale) / 2,
+          right: rect.right - (rect.width - image.naturalWidth * scale) / 2,
+          top: rect.top + (rect.height - image.naturalHeight * scale) / 2,
+          bottom: rect.bottom - (rect.height - image.naturalHeight * scale) / 2,
+        };
+        const clips = [];
+        for (
+          let ancestor = image.parentElement;
+          ancestor;
+          ancestor = ancestor.parentElement
+        ) {
+          const css = getComputedStyle(ancestor),
+            box = ancestor.getBoundingClientRect();
+          if (css.overflow === "hidden")
+            clips.push(
+              content.left >= box.left - 1 &&
+                content.right <= box.right + 1 &&
+                content.top >= box.top - 1 &&
+                content.bottom <= box.bottom + 1,
+            );
+        }
+        return {
+          fit: style.objectFit,
+          natural: image.naturalWidth,
+          clips,
+          transform: style.transform,
+        };
+      });
+    expect(result.natural).toBeGreaterThan(0);
+    expect(result.fit).toBe("contain");
+    expect(result.clips.every(Boolean)).toBe(true);
+    expect(result.transform).toBe("none");
+  };
+  await page.waitForTimeout(1200);
+  await verify(".portal-window img");
+  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/portal-portrait-${testInfo.project.name}.png`,
+  });
+  await page
+    .locator(".portal-layer")
+    .getByRole("link", { name: "Open memory", exact: true })
+    .click();
+  await expect(page.locator(".viewer-track .photo-frame")).toHaveClass(
+    /is-loaded/,
+  );
+  await verify(".viewer-track img");
+  await page.waitForTimeout(700);
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/viewer-portrait-${testInfo.project.name}.png`,
+  });
+  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await expect(page.locator(".viewer-track img")).toHaveAttribute(
+    "alt",
+    "Synthetic panorama edges",
+  );
+  await verify(".viewer-track img");
+  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/transition-${testInfo.project.name}.png`,
+  });
+  await page.waitForTimeout(700);
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/uncropped-${testInfo.project.name}.png`,
+  });
 });

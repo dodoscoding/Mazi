@@ -1,8 +1,5 @@
-import {
-  shareDateLabel,
-  sourceSharedLine,
-  provenanceOf,
-} from "../memory/provenance";
+import { chronologyDate } from "../memory/chronology";
+import { sourceSharedLine, provenanceOf } from "../memory/provenance";
 import type { Memory, Photo, Place } from "../memories";
 
 let regions: Intl.DisplayNames | undefined;
@@ -84,8 +81,7 @@ export function monthYear(date: Date) {
 
 /** A memory's date as the Components sheet writes it: exact, or "About". */
 export function dateLabel(memory: Memory) {
-  if (memory.date === "Date not recorded")
-    return shareDateLabel(memory) || memory.date;
+  if (memory.year === null) return chronologyDate(memory).label;
   const date = firstDate(memory);
   const text = date
     ? date.toLocaleDateString(navigator.language, {

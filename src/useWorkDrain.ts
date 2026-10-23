@@ -16,7 +16,7 @@ export function useWorkDrain(active: boolean) {
       timer = setTimeout(tick, delay);
     };
     async function tick() {
-      if (stopped || document.hidden) return;
+      if (stopped) return;
       if (running) {
         kicked = true;
         return;

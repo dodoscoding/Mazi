@@ -361,6 +361,7 @@ class ImportStore(Store):
         try:
             archive = self._processing_archive(job)
             data = archive.read(payload["local_blob_reference"], MAX_FILE)
+            # Bytes are in memory here, so an OSError is a decode failure, not storage.
             try:
                 with Image.open(io.BytesIO(data)) as image:
                     if image.format not in ("JPEG", "PNG"):

@@ -23,13 +23,16 @@ export function placeIdOf(memory: Memory): string | null {
   return memory.place ? `${memory.place.country}:${memory.place.name}` : null;
 }
 
-export function buildAtlas(memories: Memory[]): AtlasModel {
+export function buildAtlas(
+  memories: Memory[],
+  yearOf = (memory: Memory) => memory.year,
+): AtlasModel {
   const byId = new Map<string, PlaceNode>();
   const sums = new Map<string, { latitude: number; longitude: number }>();
   const unplaced: Memory[] = [];
   const years = new Set<number>();
   for (const memory of memories) {
-    if (memory.year !== null) years.add(memory.year);
+    if (yearOf(memory) !== null) years.add(yearOf(memory)!);
     const id = placeIdOf(memory);
     if (!id || !memory.place) {
       unplaced.push(memory);
@@ -55,8 +58,8 @@ export function buildAtlas(memories: Memory[]): AtlasModel {
     sum.longitude += memory.place.longitude;
     node.count++;
     node.memories.push(memory.id);
-    if (memory.year !== null)
-      node.years[memory.year] = (node.years[memory.year] || 0) + 1;
+    if (yearOf(memory) !== null)
+      node.years[yearOf(memory)!] = (node.years[yearOf(memory)!] || 0) + 1;
   }
   const places = [...byId.values()];
   for (const node of places) {
@@ -66,8 +69,8 @@ export function buildAtlas(memories: Memory[]): AtlasModel {
   }
   // Array.prototype.sort is stable, so equal years keep the API order.
   const dated = memories
-    .filter((memory) => memory.year !== null && memory.place)
-    .sort((a, b) => a.year! - b.year!);
+    .filter((memory) => yearOf(memory) !== null && memory.place)
+    .sort((a, b) => yearOf(a)! - yearOf(b)!);
   const journeys: Journey[] = [];
   const seen = new Set<string>();
   for (let index = 1; index < dated.length; index++) {
@@ -76,7 +79,7 @@ export function buildAtlas(memories: Memory[]): AtlasModel {
     const id = `${from}>${to}`;
     if (from === to || seen.has(id)) continue;
     seen.add(id);
-    journeys.push({ id, from, to, year: dated[index].year! });
+    journeys.push({ id, from, to, year: yearOf(dated[index])! });
   }
   return {
     places,

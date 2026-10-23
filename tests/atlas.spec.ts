@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { mkdirSync } from "node:fs";
 
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
@@ -240,6 +241,18 @@ test("slash opens search and arrow keys walk places from the page", async ({
 test("the atlas, flat map and portal have no axe violations", async ({
   page,
 }) => {
+  const settleAnimations = () =>
+    page.evaluate(async () => {
+      await Promise.all(
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.effect?.getComputedTiming().iterations !== Infinity,
+          )
+          .map((animation) => animation.finished.catch(() => {})),
+      );
+    });
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const theme of ["night"] as const) {
@@ -249,12 +262,14 @@ test("the atlas, flat map and portal have no axe violations", async ({
     );
     await openAtlas(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} globe`,
     ).toEqual([]);
     await page.getByRole("button", { name: "Flat map" }).click();
     await expect(page.getByRole("img", { name: /Flat map/ })).toBeVisible();
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} flat map`,
@@ -266,7 +281,7 @@ test("the atlas, flat map and portal have no axe violations", async ({
         level: 2,
       }),
     ).toBeFocused();
-    await page.waitForTimeout(400);
+    await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} portal`,
@@ -323,4 +338,77 @@ test("reduced motion keeps the still year card in the Timeline", async ({
   const panel = page.locator(".timeline-globe");
   await expect(panel).toContainText("Nicosia, Cyprus");
   await expect(panel.locator("canvas")).toHaveCount(0);
+});
+
+test("sharing-only same-year memories replay independently with explicit date basis", async ({
+  page,
+}) => {
+  await skipIntro(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install();
+  const base = {
+    kind: "photo",
+    source: "whatsapp",
+    date: "Date not recorded",
+    year: null,
+    approximate: false,
+    by: "Circle",
+    description: "Synthetic",
+    place: null,
+    people: { shared: [], conversation: [] },
+    messages: [],
+  };
+  const memories = [1, 2, 3].map((i) => ({
+    ...base,
+    id: `shared-${i}`,
+    shortTitle: `Shared ${i}`,
+    title: `Shared ${i}`,
+    photos: [
+      {
+        src: "/media/ferry.webp",
+        alt: "Synthetic",
+        caption: "",
+        provenance: [
+          {
+            sender: "Ana",
+            source: "whatsapp",
+            sharedAt: {
+              local: `2025-01-0${i}T12:00:00`,
+              raw: null,
+              precision: "second",
+              ambiguous: false,
+            },
+          },
+        ],
+      },
+    ],
+  }));
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories } }),
+  );
+  await page.goto("/#/?selected=shared-3");
+  await expect(page.locator(".readout-year")).toHaveText("2025");
+  await expect(page.locator(".readout-summary")).toContainText("Shared on");
+  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Flat map", exact: true }).click();
+  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
+  await page.screenshot({
+    path: `work/poteto/four-fixes/evidence/sharing-chronology-${isPhone(page) ? "phone" : "desktop"}.png`,
+  });
+  const replay = page.getByRole("button", { name: "Replay", exact: true });
+  await expect(replay).toBeEnabled();
+  await replay.click();
+  await expect(page).toHaveURL(/selected=shared-1/);
+  await page.clock.runFor(1500);
+  await expect(page).toHaveURL(/selected=shared-2/);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.clock.runFor(1600);
+  await expect(page).toHaveURL(/selected=shared-2/);
+  await replay.click();
+  await page.clock.runFor(1500);
+  await expect(page).toHaveURL(/selected=shared-3/);
+  await page.clock.runFor(1500);
+  await expect(replay).toBeVisible();
+  await replay.click();
+  await expect(page).toHaveURL(/selected=shared-1/);
 });

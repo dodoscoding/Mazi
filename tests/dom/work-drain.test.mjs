@@ -7,7 +7,7 @@ import { createServer } from "vite";
 import { Window } from "happy-dom";
 import { until } from "./feature-harness.mjs";
 
-async function harness(t, replies) {
+async function harness(t, replies, hidden = false) {
   const calls = [];
   const window = new Window({ url: "http://localhost/" });
   const saved = new Map();
@@ -17,7 +17,9 @@ async function harness(t, replies) {
     Event: window.Event,
     fetch: async (path, options) => {
       calls.push(`${options?.method} ${path}`);
-      const [status, body] = replies.shift() ?? [200, { pending: false }];
+      const reply = replies.shift() ?? [200, { pending: false }];
+      const [status, body] =
+        typeof reply === "function" ? await reply() : reply;
       return Response.json(body, { status });
     },
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -30,7 +32,7 @@ async function harness(t, replies) {
     });
   }
   Object.defineProperty(document, "hidden", {
-    value: false,
+    value: hidden,
     configurable: true,
   });
   const vite = await createServer({
@@ -99,3 +101,57 @@ for (const [label, reply] of [
     assert.equal(h.calls.length, 1);
   });
 }
+
+for (const initiallyHidden of [true, false]) {
+  test(`drains pending work when ${initiallyHidden ? "initially hidden" : "hidden during a request"}`, async (t) => {
+    const h = await harness(
+      t,
+      [
+        () => {
+          Object.defineProperty(document, "hidden", {
+            value: true,
+            configurable: true,
+          });
+          document.dispatchEvent(new Event("visibilitychange"));
+          return [200, { pending: true }];
+        },
+        [200, { pending: false }],
+      ],
+      initiallyHidden,
+    );
+    await h.render(true);
+    await until(
+      () => h.calls.length === 2,
+      "hidden tab continues pending work",
+    );
+    window.dispatchEvent(new Event("mazi:work"));
+    await until(() => h.calls.length === 3, "hidden tab accepts a work kick");
+    await h.render(false);
+    window.dispatchEvent(new Event("mazi:work"));
+    await delay(50);
+    assert.equal(h.calls.length, 3);
+  });
+}
+
+test("work kicks do not overlap a request and logout stops pending work", async (t) => {
+  let finish;
+  const h = await harness(
+    t,
+    [
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    ],
+    true,
+  );
+  await h.render(true);
+  await until(() => h.calls.length === 1, "first request starts");
+  window.dispatchEvent(new Event("mazi:work"));
+  await delay(50);
+  assert.equal(h.calls.length, 1);
+  await h.render(false);
+  finish([200, { pending: true }]);
+  await delay(50);
+  assert.equal(h.calls.length, 1);
+});

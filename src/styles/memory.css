@@ -180,7 +180,7 @@
   position: relative;
   margin: 0;
   height: clamp(360px, calc(100vh - 230px), 600px);
-  border-radius: var(--radius-panel);
+  border-radius: 0;
   overflow: hidden;
   background: var(--stage);
   isolation: isolate;
@@ -206,11 +206,12 @@
   background: var(--stage);
 }
 .viewer-track img {
+  object-fit: contain;
   -webkit-user-drag: none;
 }
 .viewer-ghost {
   z-index: 1;
-  object-fit: cover;
+  object-fit: contain;
   pointer-events: none;
 }
 .viewer-scrim {
@@ -777,7 +778,7 @@
   animation: none;
   mix-blend-mode: normal;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 /* Other chrome fades out 0–160ms, the new chrome fades in 180–600ms. */
 :root:has(.memory-detail)::view-transition-old(root) {

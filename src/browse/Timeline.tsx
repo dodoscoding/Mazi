@@ -1,3 +1,4 @@
+import { buildChronology } from "../memory/chronology";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CSSProperties,
@@ -13,7 +14,7 @@ import { useTheme } from "../theme/useTheme";
 import { Icon } from "../ui/icons";
 import { useReducedMotion } from "../useRoute";
 import type { LinkFor } from "../useRoute";
-import { byYear, dateLabel, placeLabel, plural, sharedLine } from "./model";
+import { dateLabel, placeLabel, plural, sharedLine } from "./model";
 
 type Order = "oldest" | "newest";
 const noBirths: Record<string, number> = {};
@@ -24,9 +25,7 @@ const stagger = (index: number) => ({ "--i": index }) as CSSProperties;
 /** The journey leg into each memory: from the previous place, in date order. */
 function legs(memories: Memory[]) {
   const map = new Map<string, string>();
-  const dated = byYear(memories, "oldest").flatMap((group) =>
-    group.year === null ? [] : group.memories,
-  );
+  const dated = buildChronology(memories).ordered.map((entry) => entry.memory);
   dated.forEach((memory, index) => {
     const from = dated[index - 1]?.place;
     const to = memory.place;
@@ -47,7 +46,32 @@ export function Timeline({
 }) {
   const reduced = useReducedMotion();
   const [order, setOrder] = useState<Order>("oldest");
-  const groups = useMemo(() => byYear(memories, order), [memories, order]);
+  const chronology = useMemo(() => buildChronology(memories), [memories]);
+  const chronological = useMemo(() => {
+    const grouped = new Map<number | null, Memory[]>();
+    for (const entry of [
+      ...chronology.ordered,
+      ...chronology.entries.filter((entry) => entry.date.basis === "unknown"),
+    ]) {
+      const list = grouped.get(entry.date.year) || [];
+      list.push(entry.memory);
+      grouped.set(entry.date.year, list);
+    }
+    return [...grouped].map(([year, memories]) => ({ year, memories }));
+  }, [chronology]);
+  const groups = useMemo(
+    () =>
+      order === "oldest"
+        ? chronological
+        : [...chronological.filter((group) => group.year !== null)]
+            .reverse()
+            .map((group) => ({
+              ...group,
+              memories: [...group.memories].reverse(),
+            }))
+            .concat(chronological.filter((group) => group.year === null)),
+    [chronological, order],
+  );
   const years = useMemo(
     () =>
       groups
@@ -56,12 +80,20 @@ export function Timeline({
     [groups],
   );
   const journey = useMemo(() => legs(memories), [memories]);
-  const atlas = useMemo(() => buildAtlas(memories), [memories]);
-  const chronological = useMemo(() => byYear(memories, "oldest"), [memories]);
+  const atlas = useMemo(
+    () =>
+      buildAtlas(
+        memories,
+        (memory) => chronology.byId.get(memory.id)!.date.year,
+      ),
+    [memories, chronology],
+  );
+
   const layout = useLayout();
   const { theme } = useTheme();
   const [year, setYear] = useState<number | null>(null);
   const [replaying, setReplaying] = useState(false);
+  const [activeMemory, setActiveMemory] = useState<string | null>(null);
   const list = useRef<HTMLOListElement>(null);
   const aside = useRef<HTMLElement>(null);
   const lockUntil = useRef(0);
@@ -113,6 +145,11 @@ export function Timeline({
   }, [groups]);
 
   const goTo = (target: number, scroll = true) => {
+    setReplaying(false);
+    setActiveMemory(
+      chronology.ordered.find((entry) => entry.date.year === target)?.memory
+        .id || null,
+    );
     setYear(target);
     if (!scroll) return;
     const before = scrollY;
@@ -130,17 +167,39 @@ export function Timeline({
     if (next !== undefined && next !== current) goTo(next);
   };
 
+  const showMemory = (id: string) => {
+    setActiveMemory(id);
+    const entry = chronology.byId.get(id)!;
+    setYear(entry.date.year);
+    lockUntil.current = performance.now() + 800;
+    list.current
+      ?.querySelector(`[data-memory-id="${CSS.escape(id)}"]`)
+      ?.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "center",
+      });
+  };
   useEffect(() => {
-    if (!replaying || !years.length) return;
-    let index = 0;
-    goTo(years[0]);
-    const timer = setInterval(() => {
-      index++;
-      if (index >= years.length) setReplaying(false);
-      else goTo(years[index]);
+    if (!replaying) return;
+    const timer = setTimeout(() => {
+      const index = chronology.ordered.findIndex(
+        (entry) => entry.memory.id === activeMemory,
+      );
+      const next = chronology.ordered[index + 1];
+      if (!next) setReplaying(false);
+      else showMemory(next.memory.id);
     }, 1400);
-    return () => clearInterval(timer);
-  }, [replaying, years]);
+    return () => clearTimeout(timer);
+  }, [replaying, activeMemory, chronology, reduced]);
+  const toggleReplay = () => {
+    if (replaying) return setReplaying(false);
+    const index = chronology.ordered.findIndex(
+      (entry) => entry.memory.id === activeMemory,
+    );
+    if (index < 0 || index === chronology.ordered.length - 1)
+      showMemory(chronology.ordered[0].memory.id);
+    setReplaying(true);
+  };
 
   if (!memories.length)
     return (
@@ -170,7 +229,18 @@ export function Timeline({
   const position = (value: number) =>
     max === min ? 50 : ((value - min) / (max - min)) * 100;
   const inView = groups.find((group) => group.year === current);
-  const inViewMemories = inView?.memories || [];
+  const active = activeMemory
+    ? chronology.byId.get(activeMemory)?.memory
+    : undefined;
+  const inViewMemories =
+    active && chronology.byId.get(active.id)?.date.year === current
+      ? [
+          active,
+          ...(inView?.memories || []).filter(
+            (memory) => memory.id !== active.id,
+          ),
+        ]
+      : inView?.memories || [];
   const photos = inViewMemories.reduce(
     (sum, memory) => sum + memory.photos.length,
     0,
@@ -185,12 +255,15 @@ export function Timeline({
   const route = inViewMemories
     .map((memory) => journey.get(memory.id))
     .find(Boolean);
-  // The globe centres on the year's first place in date order.
   const firstPlace =
+    (active && chronology.byId.get(active.id)?.date.year === current
+      ? placeIdOf(active)
+      : null) ??
     chronological
       .find((group) => group.year === current)
       ?.memories.map(placeIdOf)
-      .find(Boolean) ?? null;
+      .find(Boolean) ??
+    null;
   const previous =
     current === null ? undefined : years[years.indexOf(current) - 1];
   const next = current === null ? undefined : years[years.indexOf(current) + 1];
@@ -261,7 +334,7 @@ export function Timeline({
               className={group.year === current ? "is-current" : undefined}
               style={stagger(index)}
             >
-              <h2 className="tl-year">{group.year ?? "Undated"}</h2>
+              <h2 className="tl-year">{group.year ?? "Date unknown"}</h2>
               <span className="tl-rail" aria-hidden="true">
                 <i />
               </span>
@@ -275,6 +348,10 @@ export function Timeline({
                       )}
                       <a
                         className="tl-card"
+                        data-memory-id={memory.id}
+                        aria-current={
+                          activeMemory === memory.id ? "true" : undefined
+                        }
                         href={`#/memory/${memory.id}`}
                         onClick={link(`/memory/${memory.id}`)}
                       >
@@ -340,7 +417,7 @@ export function Timeline({
           )}
           <div className="globe-fallback">
             <span className="hud-label">In view</span>
-            <span className="globe-year">{current ?? "Undated"}</span>
+            <span className="globe-year">{current ?? "Date unknown"}</span>
             <span className="globe-route">
               {route || places.join(" · ") || "No place recorded"}
             </span>
@@ -370,7 +447,7 @@ export function Timeline({
           </button>
           <span className="stepper-years">
             <span aria-hidden="true">{previous ?? ""}</span>
-            <span className="is-current">{current ?? "Undated"}</span>
+            <span className="is-current">{current ?? "Date unknown"}</span>
             <span aria-hidden="true">{next ?? ""}</span>
           </span>
           <button
@@ -443,25 +520,35 @@ export function Timeline({
             The scrubber and the list move together: drag here and the list
             scrolls; scroll the list and the year follows. ← → step by year.
           </p>
-          <div className="timeline-actions">
-            <button
-              type="button"
-              className="button button--primary"
-              disabled={years.length < 2}
-              onClick={() => setReplaying((value) => !value)}
+        </div>
+        {chronology.ordered.length < 2 && (
+          <p className="scrubber-help">
+            Replay needs at least two memories with capture or sharing dates.
+          </p>
+        )}
+        <div className="timeline-actions">
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={chronology.ordered.length < 2}
+            title={
+              chronology.ordered.length < 2
+                ? "Replay needs at least two memories with capture or sharing dates"
+                : undefined
+            }
+            onClick={toggleReplay}
+          >
+            {replaying ? "Pause replay" : "Replay memories"}
+          </button>
+          {inViewMemories[0] && (
+            <a
+              className="button button--secondary"
+              href={`#/?selected=${inViewMemories[0].id}`}
+              onClick={link(`/?selected=${inViewMemories[0].id}`)}
             >
-              {replaying ? "Stop the replay" : "Replay the years"}
-            </button>
-            {inViewMemories[0] && (
-              <a
-                className="button button--secondary"
-                href={`#/?selected=${inViewMemories[0].id}`}
-                onClick={link(`/?selected=${inViewMemories[0].id}`)}
-              >
-                Open on the atlas
-              </a>
-            )}
-          </div>
+              Open on the atlas
+            </a>
+          )}
         </div>
       </aside>
     </section>

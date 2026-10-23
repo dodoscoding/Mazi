@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import type { MouseEvent } from "react";
 import type { Memory } from "../memories";
-import { provenanceOf, sourceSharedLine } from "../memory/provenance";
+import {
+  provenanceOf,
+  sourceSharedLine,
+  shareDate,
+} from "../memory/provenance";
 import { Icon } from "../ui/icons";
 import {
   coordinates,
@@ -203,6 +207,13 @@ export function Portal({
         )}
         <div className="dossier-sources">
           <span className="hud-label">Gathered from</span>
+          {provenanceOf(memory).map((item, index) => (
+            <p key={`sharing-${index}`}>
+              {[item.sender ? `Shared by ${item.sender}` : "", shareDate(item)]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ))}
           {sources.length ? (
             sources.map((source, i) => (
               <p key={source}>

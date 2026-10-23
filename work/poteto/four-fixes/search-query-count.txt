@@ -1,0 +1,16 @@
+[
+  {
+    "path": "default",
+    "sql_statements": 10,
+    "seconds": 0.0020798750047106296,
+    "total": 300,
+    "returned": 30
+  },
+  {
+    "path": "bulk",
+    "sql_statements": 8,
+    "seconds": 0.0016582499956712127,
+    "total": 300,
+    "returned": 30
+  }
+]
