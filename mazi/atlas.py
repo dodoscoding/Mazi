@@ -1,26 +1,20 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
 import re
-from math import asin, cos, radians, sin, sqrt
 
 from mazi.persistence import insertion_order
+from mazi.places import fold, identify, km, lookup
 
 SAME_PLACE_KM = 50
 
 
-def _km(a, b):
-    lat1, lon1, lat2, lon2 = map(radians, (a[0], a[1], b[0], b[1]))
-    h = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
-    return 12742 * asin(sqrt(h))
-
-
 def _place(rows):
     """One place only when every row names the same city within SAME_PLACE_KM."""
-    if len({(row['city'].casefold(), row['country']) for row in rows}) != 1:
+    if len({identify(row['city'], row['country']) or ('name', fold(row['city']), row['country']) for row in rows}) != 1:
         return None
     centre = (sum(row['latitude'] for row in rows) / len(rows),
               sum(row['longitude'] for row in rows) / len(rows))
-    if any(_km(centre, (row['latitude'], row['longitude'])) > SAME_PLACE_KM for row in rows):
+    if any(km(centre, (row['latitude'], row['longitude'])) > SAME_PLACE_KM for row in rows):
         return None
     spellings = [row['city'] for row in rows]
     name = min(set(spellings), key=lambda city: (-spellings.count(city), city))
@@ -117,11 +111,23 @@ def atlas_view(store, user, group):
                         previous = detail['messages'].get(key)
                         if previous is None or position < previous:
                             detail['messages'][key] = position
+        # A city named in Review stands in for every source location of that photograph.
+        reviewed = {}
+        for row in store.db.execute("SELECT asset_id,place FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
+            match = lookup(row['place']) if row['asset_id'] in consumers else {}
+            if match.get('status') == 'matched':
+                city = match['city']
+                reviewed[row['asset_id']] = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+        for asset, row in reviewed.items():
+            for detail, asset_position in consumers[asset]:
+                detail['places'].append((asset_position, -1, row))
         places = store.db.execute(
             'SELECT o.asset_id,p.city,p.country,p.latitude,p.longitude' + joins +
             'JOIN shared_places p ON p.origin=o.id ' + where +
             'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
         for place_position, row in enumerate(places):
+            if row['asset_id'] in reviewed:
+                continue
             for detail, asset_position in consumers.get(row['asset_id'], ()):
                 detail['places'].append((asset_position, place_position, row))
         for result, detail in zip(cards, details):
