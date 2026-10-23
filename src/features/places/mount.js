@@ -856,7 +856,7 @@ export function mount(root, lifecycle) {
         $("h1").tabIndex = -1;
         $("h1").focus();
       }
-      await refresh();
+      void refresh();
     } catch (error) {
       if (!active() || error.name === "AbortError") return;
       const denied = error.status === 401 || error.status === 403;
