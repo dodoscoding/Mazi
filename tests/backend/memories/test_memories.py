@@ -132,3 +132,49 @@ class MemoryTests(unittest.TestCase):
         with self.assertRaises(Denied): self.store.event_notebook(self.ben, self.group, self.event)
         with self.assertRaises(Denied): self.store.write_event_note(self.ben, self.group, self.event, note['ownership']['target'], 'Hidden')
         with self.assertRaises(Denied): self.store.event_notebook(self.outsider, self.group, self.event)
+
+    def test_saved_target_cannot_add_a_note_or_cross_events(self):
+        story = self.store.create_story(self.alice, self.group, self.event)
+        target = dict(kind='saved', storyId=story['id'], revision=1)
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, target, 'Forged')
+        self.store.write_story(self.ben, self.group, story['id'], 1, 'Existing')
+        other = 'synthetic-other-event'
+        self.store.db.execute('INSERT INTO review_events SELECT ?,group_id,asset_ids,?,status,actor_id,updated_at FROM review_events WHERE id=?', (other, 'Other event', self.event))
+        self.store.db.commit()
+        with self.assertRaises(Denied): self.store.write_event_note(self.ben, self.group, other, dict(target, revision=2), 'Wrong event')
+        self.assertEqual(self.store.story(self.ben, self.group, story['id'])['contributions'][0]['text'], 'Existing')
+
+    def test_first_note_failure_rolls_back_and_concurrent_connections_do_not_duplicate(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+        from unittest.mock import patch
+        with patch.object(self.store, '_write_contribution', side_effect=RuntimeError('Synthetic write failure')):
+            with self.assertRaises(RuntimeError): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Failed')
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 0)
+        other = MemoryStore(self.temp.name)
+        barrier = Barrier(2)
+        def save(store, content):
+            barrier.wait()
+            try:
+                store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, content)
+                return 'saved'
+            except Conflict:
+                return 'conflict'
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                first = pool.submit(save, self.store, 'First tab')
+                second = pool.submit(save, other, 'Second tab')
+                self.assertEqual(sorted([first.result(), second.result()]), ['conflict', 'saved'])
+            result = self.store.event_notebook(self.ben, self.group, self.event)
+            self.assertEqual(len(result['sections']), 1)
+            self.assertEqual(len(result['sections'][0]['notes']), 1)
+        finally:
+            other.close()
+
+    def test_notebook_withdrawal_and_departure_remove_access(self):
+        self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Private')
+        self.store.remove_member(self.alice, self.group, self.ben)
+        with self.assertRaises(Denied): self.store.event_notebook(self.ben, self.group, self.event)
+        self.assertEqual(self.store.event_notebook(self.alice, self.group, self.event)['sections'], [])
+        self.store.withdraw(self.alice, self.run2)
+        with self.assertRaises(Denied): self.store.event_notebook(self.alice, self.group, self.event)
