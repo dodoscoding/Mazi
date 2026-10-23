@@ -78,6 +78,17 @@ The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shape
 
 Hobby has no always-on process and allows one cron a day. The worker therefore becomes a bounded drain: a signed-in, visible tab calls `POST /api/work`, and a daily cron calls it with `CRON_SECRET`. Imports advance only while someone has the app open, or once a day. The owner accepted that tradeoff. An always-on container host (Fly.io, Render, Railway) would keep the thread worker but costs about $5-7 a month. The local server keeps its worker thread. [Deployment](DEPLOYMENT.md) records setup and limits; [verification](../work/poteto/production-deploy/VERIFICATION.md) records the live journey. Representative real-device latency and M0-M7 milestones remain separate gates.
 
+## Map places from GPS and Review, 23 October 2026
+
+**D21: Photos place themselves on the map.** Real imports drew no pins because only a manual share wrote a place. The owner decided on 23 October 2026:
+
+- A photograph with EXIF GPS is pinned automatically when it is imported, at the centre of the nearest listed city within 100 km. The exact coordinates never reach the map. This revises the Phase 4 rule that raw EXIF never creates a point.
+- The contributor can remove that pin, and a removed pin stays removed: the removal is recorded for that contributor and photograph, so a rerun or a re-import does not restore it. A later manual share by the same contributor clears the removal.
+- Any circle member can place a memory by naming its city in Review. A name that matches one city pins the photograph there and takes precedence over source locations. A name shared by several cities asks for the country, and unknown text is kept as text.
+- Matching is offline against Natural Earth's public-domain populated places ([map data](history/sources/MAP_DATA.md)). No coordinates or place names leave the server.
+
+The pins live in `shared_places`, so Places, Discovery, Answers and export read them unchanged. The hosted archive needs the `place_removals` migration before the deploy and a backfill afterwards ([Deployment](DEPLOYMENT.md#map-places-rollout)). Accepted gaps: places more than 100 km from any listed city get no pin; another contributor's GPS copy of the same photograph still pins until that contributor removes it; removing one contribution's pin leaves the same contributor's other contributions of that photograph pinned; the Apple Photos companion sends no location.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
