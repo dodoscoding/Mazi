@@ -91,3 +91,43 @@ class MemoryTests(unittest.TestCase):
         self.store.remove_member(self.alice, self.group, self.ben)
         self.assertEqual(self.store.stories(self.alice, self.group), [])
         self.assertEqual(self.store.db.execute('SELECT count(*) FROM story_contributions').fetchone()[0], 0)
+
+    def test_event_notebook_preserves_legacy_notes_and_owns_exact_target(self):
+        first = self.store.create_story(self.alice, self.group, self.event)
+        first = self.store.write_story(self.alice, self.group, first['id'], 1, 'First memory')
+        first = self.store.write_story(self.ben, self.group, first['id'], 2, 'Ben remembers')
+        second = self.store.create_story(self.alice, self.group, self.event)
+        self.store.write_story(self.alice, self.group, second['id'], 1, 'Another perspective')
+        self.store.db.execute('INSERT INTO shared_profiles VALUES(?,?,?,NULL)', (self.ben, 'ben', 'Ben'))
+        notebook = self.store.event_notebook(self.ben, self.group, self.event)
+        self.assertEqual(notebook['eventId'], self.event)
+        notes = [note for section in notebook['sections'] for note in section['notes']]
+        self.assertEqual(sorted(note['text'] for note in notes), ['Another perspective', 'Ben remembers', 'First memory'])
+        mine = next(note for note in notes if note['ownership']['kind'] == 'mine')
+        self.assertEqual(mine['authorName'], 'Ben')
+        self.assertEqual({note['authorName'] for note in notes if note is not mine}, {'Group member'})
+        target = mine['ownership']['target']
+        saved = self.store.write_event_note(self.ben, self.group, self.event, target, 'Changed')
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, target, 'Stale')
+        mine = next(note for section in saved['sections'] for note in section['notes'] if note['ownership']['kind'] == 'mine')
+        removed = self.store.write_event_note(self.ben, self.group, self.event, mine['ownership']['target'], '')
+        self.assertEqual(sorted(note['text'] for section in removed['sections'] for note in section['notes']), ['Another perspective', 'First memory'])
+        self.store.close()
+        self.store = MemoryStore(self.temp.name)
+        self.assertEqual(len(self.store.event_notebook(self.ben, self.group, self.event)['sections']), 2)
+
+    def test_event_note_first_save_is_atomic_and_rechecks_visibility(self):
+        for invalid in ['', 'x' * 2001, []]:
+            with self.assertRaises(ValueError): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, invalid)
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 0)
+        notebook = self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Remembered')
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Lost response retry')
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 1)
+        note = notebook['sections'][0]['notes'][0]
+        self.assertEqual(note['text'], 'Remembered')
+        for target in [None, {}, {'kind': 'saved', 'storyId': note['ownership']['target']['storyId'], 'revision': True}]:
+            with self.assertRaises(ValueError): self.store.write_event_note(self.ben, self.group, self.event, target, 'Invalid')
+        self.store.hide(self.ben, self.assets[0], True)
+        with self.assertRaises(Denied): self.store.event_notebook(self.ben, self.group, self.event)
+        with self.assertRaises(Denied): self.store.write_event_note(self.ben, self.group, self.event, note['ownership']['target'], 'Hidden')
+        with self.assertRaises(Denied): self.store.event_notebook(self.outsider, self.group, self.event)
