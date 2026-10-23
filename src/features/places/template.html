@@ -179,14 +179,33 @@
               >
             </div>
             <div id="discord-fields" class="fx-fields" hidden>
+              <div class="fx-actions">
+                <button
+                  id="discord-connect"
+                  type="button"
+                  class="fx-button fx-button--quiet"
+                >
+                  Connect a Discord server
+                </button>
+              </div>
               <label class="fx-field"
-                >Server ID <input name="guild" inputmode="numeric" /></label
-              ><label class="fx-field"
-                >Channel IDs (comma separated) <input name="channels"
-              /></label>
+                >Server
+                <select name="guild" id="guild" disabled></select
+              ></label>
+              <p id="guild-status" class="fx-small"></p>
+              <div>
+                <fieldset id="channels" class="fix-group">
+                  <legend class="fx-label">Channels</legend>
+                  <p id="channels-status" class="fx-small" role="status">
+                    Choose a server to see its channels.
+                  </p>
+                  <div id="channel-list"></div>
+                </fieldset>
+              </div>
               <p class="fx-small">
-                A server operator must connect the bot before intake can run.
-                Only selected text channels are read.
+                Adding the bot needs Manage Server on that Discord server. Only
+                the channels you choose are read. Photos and videos become
+                memories; nearby messages are kept as their context.
               </p>
             </div>
             <div class="fx-actions">

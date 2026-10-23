@@ -81,3 +81,70 @@ test("authorized places, filters, optional paths, source controls and privacy", 
   await expect(page.locator("#places article")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test("a member connects a Discord server and picks its channels", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.route("https://discord.com/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<title>Synthetic Discord</title>",
+    }),
+  );
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  await page.goto("/places");
+  await page
+    .getByRole("combobox", { name: "Source", exact: true })
+    .selectOption("discord");
+  await page.getByRole("button", { name: "Connect a Discord server" }).click();
+  await page.waitForURL(/^https:\/\/discord\.com\/oauth2\/authorize/);
+  const install = new URL(page.url());
+  expect(install.searchParams.get("redirect_uri")).toBe(`${baseURL}/places`);
+  expect(install.searchParams.get("permissions")).toBe("66560");
+  expect(install.searchParams.get("scope")).toBe("bot identify");
+  const state = install.searchParams.get("state");
+  await page.goto(`/places?code=synthetic-code&state=${state}`);
+  await expect(page.locator("#notice")).toContainText(
+    "Lake house is connected",
+  );
+  expect(new URL(page.url()).search).toBe("");
+  await expect(
+    page.getByRole("combobox", { name: "Server", exact: true }),
+  ).toHaveValue("77");
+  const form = page.locator("#source-form");
+  await form.getByLabel("Name", { exact: true }).fill("Lake trip");
+  await form.getByLabel("From", { exact: true }).fill("2024-01-01");
+  await form.getByLabel("Through", { exact: true }).fill("2024-12-31");
+  await page.getByRole("button", { name: "Create paused source" }).click();
+  await expect(page.locator("#notice")).toContainText(
+    "Choose at least one channel.",
+  );
+  await page
+    .getByRole("group", { name: "Channels" })
+    .getByLabel("#photos")
+    .check();
+  await page.getByRole("button", { name: "Create paused source" }).click();
+  await expect(
+    page.locator("#sources article", { hasText: "Lake trip" }).last(),
+  ).toContainText("Lake house · #photos");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.locator("#source-form").screenshot({
+    path: testInfo.outputPath("discord-source.png"),
+  });
+  await page.goto(`/places?code=synthetic-code&state=${state}`);
+  await expect(page.locator("#notice")).toContainText(
+    "This Discord connection expired",
+  );
+  await expect(page.locator("#workspace")).toBeVisible();
+  expect(errors).toEqual([]);
+});

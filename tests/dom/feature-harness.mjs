@@ -27,9 +27,9 @@ export async function mountFeature(
   t,
   name,
   boundary,
-  { realLifecycle = false, route = `/${name}` } = {},
+  { realLifecycle = false, route = `/${name}`, url } = {},
 ) {
-  const window = new Window({ url: `http://localhost/#${route}` });
+  const window = new Window({ url: url ?? `http://localhost/#${route}` });
   const saved = new Map();
   for (const name of [
     "window",
