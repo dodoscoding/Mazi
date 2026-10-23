@@ -3,12 +3,17 @@ import AxeBuilder from "@axe-core/playwright";
 
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
-type AudioSpy = { contexts: number; calls: Record<string, number> };
+type AudioSpy = {
+  contexts: number;
+  calls: Record<string, number>;
+  gains: GainNode[];
+  songStarts: number[];
+};
 
 /** Counts every AudioContext and every node it creates, without touching output. */
 async function spyOnAudio(page: Page) {
   await page.addInitScript(() => {
-    const spy: AudioSpy = { contexts: 0, calls: {} };
+    const spy: AudioSpy = { contexts: 0, calls: {}, gains: [], songStarts: [] };
     (window as unknown as { __audio: AudioSpy }).__audio = spy;
     const Original = window.AudioContext;
     if (!Original) return;
@@ -32,7 +37,11 @@ async function spyOnAudio(page: Page) {
         const create = descriptor.value as (...args: unknown[]) => unknown;
         proto[name] = function (this: unknown, ...args: unknown[]) {
           spy.calls[name] = (spy.calls[name] || 0) + 1;
-          return create.apply(this, args);
+          const node = create.apply(this, args);
+          if (name === "createGain") spy.gains.push(node as GainNode);
+          if (name === "createMediaElementSource")
+            spy.songStarts.push(spy.gains.at(-1)!.gain.value);
+          return node;
         };
       }
   });
@@ -143,6 +152,7 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   await page.keyboard.press("Shift");
   await expect.poll(async () => (await audio(page)).contexts).toBe(1);
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
+  expect((await audio(page)).songStarts).toEqual([0]);
   expect(await calls(page, "createBufferSource")).toBe(0);
   await page.getByRole("link", { name: "Open memory", exact: true }).click();
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
