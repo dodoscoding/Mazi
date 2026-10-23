@@ -81,6 +81,18 @@ export function mount(root, lifecycle) {
     $("notice").dataset.tone = tone;
     $("notice").textContent = message;
   }
+  function placeNotice({ place_match, place, candidates }) {
+    if (place_match === "matched") return [`Pinned in ${place}.`, "success"];
+    if (place_match === "ambiguous") {
+      const [name, ...rest] = candidates[0].split(", ");
+      return [
+        `Several places match. Add the country, e.g. '${name}, ${rest.at(-1)}'.`,
+      ];
+    }
+    if (place_match === "missing")
+      return ["Not found on the map. Saved as text."];
+    return ["Correction saved for the group.", "success"];
+  }
   async function act(work) {
     try {
       await work();
@@ -336,14 +348,14 @@ export function mount(root, lifecycle) {
         form.addEventListener("submit", (event) => {
           event.preventDefault();
           act(async () => {
-            await api("/api/review/correct", {
+            const saved = await api("/api/review/correct", {
               asset: item.id,
               title: title.value,
               capture_date: date.value || null,
               place: place.value,
               anniversary: anniversary.checked,
             });
-            notice("Correction saved for the group.", "success");
+            notice(...placeNotice(saved));
             await refreshGroup();
           });
         });

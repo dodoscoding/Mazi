@@ -58,6 +58,21 @@ class ReviewHttpTests(unittest.TestCase):
         connection.close()
         return result
 
+    def test_review_place_reports_how_it_matched_the_map(self):
+        ben = self.store.register("ben@example.test", "correct horse battery")
+        self.store.accept(ben, self.store.invite(self.alice, self.group))
+        token = self.store.login("ben@example.test", "correct horse battery")
+        def correct(place):
+            status, body = self.request("/api/review/correct", {"asset": self.asset, "title": "", "capture_date": None, "place": place}, token=token)
+            self.assertEqual(status, 200)
+            return json.loads(body)
+        self.assertEqual(correct("girne"), {"ok": True, "place_match": "matched", "place": "Kyrenia, CY", "candidates": []})
+        self.assertEqual(correct("Victoria"), {"ok": True, "place_match": "ambiguous", "place": None, "candidates": [
+            "Victoria, British Columbia, CA", "Victoria, Texas, US", "Victoria, SC", "Victoria, Entre Ríos, AR", "Victoria, La Araucanía, CL"]})
+        self.assertEqual(correct("Nowhereville"), {"ok": True, "place_match": "missing", "place": None, "candidates": []})
+        self.assertEqual(json.loads(self.request(f"/api/review/timeline?group={self.group}", token=token)[1])["items"][0]["place"], "nowhereville")
+        self.assertEqual(correct(""), {"ok": True, "place_match": "empty", "place": None, "candidates": []})
+
     def test_review_endpoints_authorization_and_withdrawal(self):
         timeline = f"/api/review/timeline?group={self.group}"
         self.assertEqual(self.request("/health")[0], 200)
