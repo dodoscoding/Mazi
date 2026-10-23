@@ -1,0 +1,131 @@
+{
+  "answer": {
+    "evidence": 0,
+    "seconds": 0.059,
+    "status": "abstained"
+  },
+  "archive_bytes": 56934355,
+  "atlas": {
+    "bytes": 337740,
+    "cards": 300,
+    "dated_cards": 300,
+    "seconds": 0.012
+  },
+  "date_order": "DMY",
+  "discovered": 10676,
+  "export": {
+    "bytes": 56887323,
+    "seconds": 0.22,
+    "zip": true
+  },
+  "failed_items": 1,
+  "import_error_present": false,
+  "import_seconds": 14.66,
+  "import_state": "COMPLETED",
+  "inventory_seconds": 3.0,
+  "keyword_search": {
+    "beach": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "birthday": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "car": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "food": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "friends": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "night": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "party": {
+      "seconds": 0.012,
+      "total": 0
+    },
+    "snow": {
+      "seconds": 0.012,
+      "total": 0
+    }
+  },
+  "learned_model": true,
+  "outcome_reasons": {
+    "AVAILABLE_TO_GROUP:IMPORTED": 305,
+    "FAILED:INVALID_MEDIA": 1,
+    "SKIPPED:NO_MEDIA": 10370,
+    "warning:UNCERTAIN_CROSS_EXPORT_IDENTITY": 10676
+  },
+  "outcomes": {
+    "AVAILABLE_TO_GROUP": 305,
+    "FAILED": 1,
+    "SKIPPED": 10370
+  },
+  "related_index": {
+    "batches": 60,
+    "max_batch_seconds": 0.501,
+    "remaining": 0,
+    "seconds": 23.7
+  },
+  "related_search": {
+    "beach": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.102,
+      "total": 300,
+      "unindexed": 0
+    },
+    "birthday": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.102,
+      "total": 300,
+      "unindexed": 0
+    },
+    "car": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.105,
+      "total": 300,
+      "unindexed": 0
+    },
+    "food": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.102,
+      "total": 300,
+      "unindexed": 0
+    },
+    "friends": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.102,
+      "total": 300,
+      "unindexed": 0
+    },
+    "night": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.102,
+      "total": 300,
+      "unindexed": 0
+    },
+    "party": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.103,
+      "total": 300,
+      "unindexed": 0
+    },
+    "snow": {
+      "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+      "seconds": 0.103,
+      "total": 300,
+      "unindexed": 0
+    }
+  },
+  "source": "whatsapp",
+  "transfer_seconds": 0.39,
+  "unique_assets": 300
+}

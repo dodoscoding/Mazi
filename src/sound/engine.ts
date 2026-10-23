@@ -85,6 +85,7 @@ export function ambient(on: boolean, immediate = false) {
     element.loop = true;
     element.preload = "auto";
     const gain = context.createGain();
+    gain.gain.value = 0;
     context.createMediaElementSource(element).connect(gain);
     gain.connect(context.destination);
     song = { element, gain };

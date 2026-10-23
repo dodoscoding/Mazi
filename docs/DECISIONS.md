@@ -68,9 +68,15 @@ This revises D01 for the current runtime: Next.js and Supabase Auth are not prer
 - Delivery is a stack of pull requests, one per stage.
 - Ambient sound is built. It stays off by default behind a visible toggle.
 - People lines show evidence only. Contributors show as "shared by" and chat participants as "in the conversation". Nothing claims that a person was present.
-- Night is the default theme for everyone. A header toggle switches to day, and the browser remembers the choice.
+- Night is the only theme, following the owner's 22 October 2026 update in PR #97. The entry page, header, phone More sheet, and About offer no day toggle. The browser clears earlier day choices.
 
 The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shapes and stage order. The canvas artboards are the measured contract; this decision does not change archive access, sharing, or production acceptance.
+
+## Vercel production runtime, 22 October 2026
+
+**D20: Vercel Hobby with request-driven background work.** The owner asked to deploy the Python application, worker and durable storage, and chose Vercel's free Hobby plan over an always-on container host. Vercel serves the built interface from its CDN and one Python function in `fra1` serves the API through a streaming WSGI bridge. D18's Supabase schema and private bucket remain the only durable state. Streaming keeps the Atlas response and export ZIPs clear of the 4.5 MB non-streamed body limit; uploads already use requests of at most 768 KiB.
+
+Hobby has no always-on process and allows one cron a day. The worker therefore becomes a bounded drain: a signed-in, visible tab calls `POST /api/work`, and a daily cron calls it with `CRON_SECRET`. Imports advance only while someone has the app open, or once a day. The owner accepted that tradeoff. An always-on container host (Fly.io, Render, Railway) would keep the thread worker but costs about $5-7 a month. The local server keeps its worker thread. [Deployment](DEPLOYMENT.md) records setup and limits; [verification](../work/poteto/production-deploy/VERIFICATION.md) records the live journey. Representative real-device latency and M0-M7 milestones remain separate gates.
 
 ## Open choices
 

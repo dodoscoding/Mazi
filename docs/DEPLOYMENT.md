@@ -38,3 +38,7 @@ Imports therefore advance while a signed-in tab is open, including when an Impor
 - `/tmp/mazi` holds per-instance scratch only. It disappears when an instance stops and is never a source of truth.
 - Requests in one instance run one at a time and lazily reuse a SQL connection during each request. The connection closes on success, failure, or abandoned response. Warm idle instances retain no SQL client sessions.
 - The hosted adapter disables automatic prepared statements and applies schema and lock settings inside each transaction. Changing only the pooler port on older application code is unsupported. Configuration and schema errors remain distinct from transient database unavailability, which returns HTTP 503 without clearing the session.
+
+## Production
+
+Production runs at https://mazi-three.vercel.app against the Frankfurt Supabase project. The [live verification](../work/poteto/production-deploy/VERIFICATION.md) records a signed-in import, drain, preview, search and a 12.8 MB streamed export.
