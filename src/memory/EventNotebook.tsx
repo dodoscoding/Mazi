@@ -12,7 +12,7 @@ type Notebook = { eventId: string; sections: { id: string; notes: Note[] }[] };
 type Editor =
   | { kind: "closed" }
   | {
-      kind: "draft" | "saving" | "conflict";
+      kind: "draft" | "saving" | "conflict" | "removed";
       target: Target;
       text: string;
       error: string;
@@ -178,7 +178,7 @@ export function EventNotebook({
       pending.current ||
       saved.kind !== "ready" ||
       saved.editor.kind === "closed" ||
-      (!refresh && saved.editor.kind === "conflict")
+      (!refresh && saved.editor.kind !== "draft")
     )
       return;
     const editor = saved.editor;
@@ -253,9 +253,23 @@ export function EventNotebook({
                   editor.target.kind === "saved" &&
                   note.ownership.target.storyId === editor.target.storyId,
               );
-        if (refresh && editor.target.kind === "saved" && !match)
-          return { kind: "unavailable" };
         const changed = latest.editor.text !== editor.text;
+        if (editor.target.kind === "saved" && !match && (refresh || changed)) {
+          return {
+            kind: "ready",
+            value,
+            editor: {
+              ...latest.editor,
+              target: mine.length ? editor.target : { kind: "new" },
+              kind: mine.length ? "removed" : "draft",
+              error: mine.length
+                ? "Copy your draft before cancelling, then choose the recollection you want to edit. Your other saved recollections are unchanged."
+                : "",
+            },
+            notice:
+              "The saved recollection was removed. Your draft is still here.",
+          };
+        }
         const target =
           match?.ownership.kind === "mine"
             ? match.ownership.target

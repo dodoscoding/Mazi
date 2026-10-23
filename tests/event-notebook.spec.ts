@@ -10,8 +10,10 @@ async function enter(page: import("@playwright/test").Page, name = "Ben") {
     await page.request.get(`/api/atlas?group=${group}`)
   ).json();
   const event = memories.find(
-    (memory: { kind: string }) => memory.kind === "memory",
+    (memory: { kind: string; title: string }) =>
+      memory.kind === "memory" && memory.title === "Our summer",
   );
+  expect(event).toBeDefined();
   await page.emulateMedia({ reducedMotion: "reduce" });
   return { group, event };
 }
@@ -319,22 +321,30 @@ test("event title links open imported excerpts and all notebook entry points use
     "Imported excerpts",
   );
   await page.goto("/#/review");
-  await expect(page.locator("#reviewed-events h3 a").first()).toHaveAttribute(
-    "href",
-    `#/memory/${event.id}?notebook=1`,
-  );
+  await expect(
+    page
+      .locator("#reviewed-events h3")
+      .getByRole("link", { name: event.title, exact: true }),
+  ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
   await page.goto("/#/memories");
   await page
+    .locator("#recap article")
+    .filter({
+      has: page.getByRole("heading", { name: event.title, exact: true }),
+    })
     .getByRole("button", { name: "Start a story", exact: true })
     .click();
-  await expect(page.locator("#stories h3 a").first()).toHaveAttribute(
-    "href",
-    `#/memory/${event.id}?notebook=1`,
-  );
-  await expect(page.locator("#recap h3 a").first()).toHaveAttribute(
-    "href",
-    `#/memory/${event.id}?notebook=1`,
-  );
+  await expect(
+    page
+      .locator("#stories h3")
+      .getByRole("link", { name: event.title, exact: true })
+      .last(),
+  ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
+  await expect(
+    page
+      .locator("#recap h3")
+      .getByRole("link", { name: event.title, exact: true }),
+  ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
 });
 
 test("standalone photographs and sample mode never load private recollections", async ({
@@ -415,3 +425,98 @@ test("pending saves block duplicates, keep newer typing and clear on access loss
     "My earlier recollection",
   );
 });
+
+for (const otherOwnNote of [false, true]) {
+  for (const removal of ["conflict refresh", "successful removal"] as const) {
+    test(`removed saved recollection retains its draft after ${removal} ${otherOwnNote ? "with another own note" : "without another own note"}`, async ({
+      page,
+    }) => {
+      const { event } = await enter(page);
+      const initial = notebook(event.id);
+      if (!otherOwnNote) initial.sections[1].notes = [];
+      const refreshed = structuredClone(initial);
+      refreshed.sections[0].notes = refreshed.sections[0].notes.filter(
+        (note) => note.ownership.kind !== "mine",
+      );
+      let removed = false;
+      let release: () => void = () => {};
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const writes: { target: { kind: string }; text: string }[] = [];
+      await page.route("**/api/memories/notebook?*", (route) =>
+        route.fulfill({ json: removed ? refreshed : initial }),
+      );
+      await page.route("**/api/memories/note", async (route) => {
+        const body = route.request().postDataJSON();
+        writes.push(body);
+        if (writes.length > 1) {
+          expect(body.target).toEqual({ kind: "new" });
+          const saved = notebook(event.id, 3);
+          saved.sections[0].notes[0].text = body.text;
+          return route.fulfill({ json: saved });
+        }
+        removed = true;
+        if (removal === "conflict refresh")
+          return route.fulfill({
+            status: 409,
+            json: { error: "Note removed" },
+          });
+        await gate;
+        return route.fulfill({ json: refreshed });
+      });
+      await page.goto(`/#/memory/${event.id}?notebook=1`);
+      await page
+        .getByRole("button", { name: "Edit your recollection" })
+        .first()
+        .click();
+      const draft = page.getByLabel("Your recollection", { exact: true });
+      const save = page.getByRole("button", {
+        name: "Save recollection",
+        exact: true,
+      });
+      if (removal === "conflict refresh") {
+        await draft.fill("Keep this recovered draft");
+        await save.click();
+        await page.getByRole("button", { name: "Refresh saved notes" }).click();
+      } else {
+        await page
+          .getByRole("button", { name: "Remove my recollection" })
+          .click();
+        await expect.poll(() => writes.length).toBe(1);
+        await draft.fill("Keep this recovered draft");
+        release();
+      }
+      await expect(page.locator(".notebook-status")).toContainText(
+        "The saved recollection was removed",
+      );
+      await expect(draft).toHaveValue("Keep this recovered draft");
+      await expect(page.locator(".event-notebook")).toContainText(
+        "Alice's recollection",
+      );
+      if (otherOwnNote) {
+        await expect(page.locator(".event-notebook")).toContainText(
+          "My later recollection",
+        );
+        await expect(save).toBeDisabled();
+        await expect(
+          page.locator(".event-notebook").getByRole("alert"),
+        ).toContainText("Copy your draft");
+        expect(writes).toHaveLength(1);
+        await page.getByRole("button", { name: "Cancel", exact: true }).click();
+        await page
+          .getByRole("button", { name: "Edit your recollection", exact: true })
+          .click();
+        await expect(draft).toHaveValue("My later recollection");
+      } else {
+        await expect(save).toBeEnabled();
+        await save.click();
+        await expect(draft).toHaveCount(0);
+        expect(writes[1]).toMatchObject({
+          target: { kind: "new" },
+          text: "Keep this recovered draft",
+        });
+      }
+    });
+  }
+}
