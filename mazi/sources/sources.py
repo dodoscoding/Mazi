@@ -73,8 +73,9 @@ def text(value, limit=200):
     return value.strip()
 
 
-def without_context(metadata):
-    return {key: value for key, value in metadata.items() if key != 'context'}
+def without_context(metadata, kind):
+    mutable = {'context', 'sender_label', 'text'} if kind == 'discord' else {'context'}
+    return {key: value for key, value in metadata.items() if key not in mutable}
 
 
 def discord_id(value):
@@ -232,8 +233,8 @@ class SourceStore(ReviewStore):
                 self._resource(user, old['id'])
                 if old['withdrawn']:
                     raise Denied('Resource was withdrawn')
-                # Context depends on where a page boundary fell; the stored context stays.
-                if old['sha256'] != sha256 or old['size'] != size or without_context(json.loads(old['metadata'])) != without_context(metadata):
+                # Provider labels and page context can change during retries; retain the first snapshot.
+                if old['sha256'] != sha256 or old['size'] != size or without_context(json.loads(old['metadata']), source['kind']) != without_context(metadata, source['kind']):
                     raise Conflict('Resource version changed; supply its new version')
                 self.db.execute('UPDATE source_resources SET generation=? WHERE id=?', (source['generation'], old['id']))
                 return dict(old)
