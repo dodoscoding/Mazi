@@ -361,42 +361,45 @@ class ImportStore(Store):
         try:
             archive = self._processing_archive(job)
             data = archive.read(payload["local_blob_reference"], MAX_FILE)
-            with Image.open(io.BytesIO(data)) as image:
-                if image.format not in ("JPEG", "PNG"):
-                    return {"outcome": "UNSUPPORTED", "reason": "UNSUPPORTED_FORMAT_OR_CODEC"}
-                if image.width * image.height > 24_000_000 or getattr(image, "n_frames", 1) > 1:
-                    return {"outcome": "UNSUPPORTED", "reason": "PIXEL_OR_ANIMATION_LIMIT"}
-                mime = Image.MIME[image.format]
-                if payload["declared_media_type"] != mime:
-                    return {"outcome": "UNSUPPORTED", "reason": "SIGNATURE_MISMATCH"}
-                image.verify()
-            with Image.open(io.BytesIO(data)) as image:
-                exif = image.getexif()
-                details = exif.get_ifd(34665) if 34665 in exif else {}
-                capture = details.get(36867) or exif.get(36867) or exif.get(306)
-                assertions = []
-                locations = []
-                if capture:
-                    parsed = None
-                    try:
-                        parsed = datetime.strptime(str(capture), "%Y:%m:%d %H:%M:%S").isoformat()
-                    except ValueError:
-                        pass
-                    assertions.append({"raw": str(capture), "source": "capture_exif", "utc": None, "local": parsed,
-                                       "inferred": False, "precision": "second" if parsed else "unknown",
-                                       "locator": "EXIF:DateTimeOriginal", "offset": str(details[36881]) if 36881 in details else None})
-                if 34853 in exif:
-                    gps = exif.get_ifd(34853)
-                    locations.append({"source": "gps_exif", "raw": {str(k): str(v) for k, v in gps.items()},
-                                      "inferred": False, "locator": "EXIF:GPSInfo"})
-                width, height = image.size
-                image = ImageOps.exif_transpose(image)
-                image.thumbnail((1600, 1600))
-                # Rebuild pixels to strip EXIF, ICC, GPS, and other source metadata.
-                clean = Image.new("RGB", image.size)
-                clean.paste(image.convert("RGB"))
-                output = io.BytesIO()
-                clean.save(output, format="JPEG", quality=85)
+            try:
+                with Image.open(io.BytesIO(data)) as image:
+                    if image.format not in ("JPEG", "PNG"):
+                        return {"outcome": "UNSUPPORTED", "reason": "UNSUPPORTED_FORMAT_OR_CODEC"}
+                    if image.width * image.height > 24_000_000 or getattr(image, "n_frames", 1) > 1:
+                        return {"outcome": "UNSUPPORTED", "reason": "PIXEL_OR_ANIMATION_LIMIT"}
+                    mime = Image.MIME[image.format]
+                    if payload["declared_media_type"] != mime:
+                        return {"outcome": "UNSUPPORTED", "reason": "SIGNATURE_MISMATCH"}
+                    image.verify()
+                with Image.open(io.BytesIO(data)) as image:
+                    exif = image.getexif()
+                    details = exif.get_ifd(34665) if 34665 in exif else {}
+                    capture = details.get(36867) or exif.get(36867) or exif.get(306)
+                    assertions = []
+                    locations = []
+                    if capture:
+                        parsed = None
+                        try:
+                            parsed = datetime.strptime(str(capture), "%Y:%m:%d %H:%M:%S").isoformat()
+                        except ValueError:
+                            pass
+                        assertions.append({"raw": str(capture), "source": "capture_exif", "utc": None, "local": parsed,
+                                           "inferred": False, "precision": "second" if parsed else "unknown",
+                                           "locator": "EXIF:DateTimeOriginal", "offset": str(details[36881]) if 36881 in details else None})
+                    if 34853 in exif:
+                        gps = exif.get_ifd(34853)
+                        locations.append({"source": "gps_exif", "raw": {str(k): str(v) for k, v in gps.items()},
+                                          "inferred": False, "locator": "EXIF:GPSInfo"})
+                    width, height = image.size
+                    image = ImageOps.exif_transpose(image)
+                    image.thumbnail((1600, 1600))
+                    # Rebuild pixels to strip EXIF, ICC, GPS, and other source metadata.
+                    clean = Image.new("RGB", image.size)
+                    clean.paste(image.convert("RGB"))
+                    output = io.BytesIO()
+                    clean.save(output, format="JPEG", quality=85)
+            except OSError:
+                return {"outcome": "FAILED", "reason": "INVALID_MEDIA"}
             sha = hashlib.sha256(data).hexdigest()
             # Include group in object identity: never infer or disclose cross-group reuse.
             key = digest([job["group_id"], sha])

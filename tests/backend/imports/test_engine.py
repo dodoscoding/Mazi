@@ -291,6 +291,14 @@ class EngineTests(unittest.TestCase):
         with self.assertRaises(Denied):
             self.store.asset_bytes(self.outsider, gallery[0]["id"], True)
 
+    def test_truncated_jpeg_fails_once_as_invalid_media(self):
+        output = io.BytesIO()
+        Image.effect_noise((640, 640), 64).convert("RGB").save(output, "JPEG", progressive=True)
+        run = self.submit({"cut.jpg": output.getvalue()[:len(output.getvalue()) * 3 // 5]})
+        self.process(run)
+        item = self.store.report(self.alice, run)["items"][0]
+        self.assertEqual((item["outcome"], item["reason"], item["attempts"]), ("FAILED", "INVALID_MEDIA", 1))
+
     def test_duplicate_bytes_keep_distinct_origins_and_same_manifest_replays(self):
         text = "01/01/2020, 12:00 - Ana: a.jpg (file attached)\n02/01/2020, 12:00 - Ana: a.jpg (file attached)"
         files = {"chat.txt": text, "a.jpg": picture()}

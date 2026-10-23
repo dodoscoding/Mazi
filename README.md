@@ -79,6 +79,7 @@ Browser checks use synthetic fixtures. See [Firefox setup on macOS](work/poteto/
 | [Contracts](docs/CONTRACTS.md), [privacy](docs/PRIVACY.md), and [imports](docs/IMPORTS.md)     | Data rules, access, consent, and supported sources.           |
 | [Design](DESIGN.md) and [interaction guide](docs/HOME_MEMORY_INTERACTIONS.md)                  | Atlas appearance and behavior.                                |
 | [Test plan](docs/TEST_PLAN.md) and [prototype verification](work/design/atlas/VERIFICATION.md) | Acceptance scenarios and recorded evidence.                   |
+| [Performance budgets](docs/PERFORMANCE_BUDGETS.md)                                            | Release ceilings and measured hosted and real-archive results. |
 | [Historical guides](docs/history)                                                              | Earlier experiments, source companions, and format limits.    |
 
 The [original project plan](PROJECT_PLAN.md) and [source brief](docs/source/PRODUCT_BRIEF.md) remain preserved. The [decision register](docs/DECISIONS.md) records changes to the plan.
