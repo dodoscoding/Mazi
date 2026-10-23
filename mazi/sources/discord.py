@@ -14,7 +14,7 @@ from mazi.identity.core import Denied
 
 class ProviderDenied(Denied):
     pass
-from mazi.imports.adapters import MAX_FILE
+from mazi.imports.adapters import MAX_FILE, bounded_context
 
 
 class RateLimited(Exception):
@@ -147,7 +147,22 @@ def snowflake(day):
     return str(max(0, int(epoch - 1420070400000)) << 22)
 
 
-def poll_source(store, user, connection, client):
+def sender(message):
+    author = message.get('author') or {}
+    label = (message.get('member') or {}).get('nick') or author.get('global_name') or author.get('username')
+    return {'id': author.get('id', ''), 'label': (label or 'Discord member')[:100]}
+
+
+def save_checkpoint(store, user, connection, source, channel, checkpoint):
+    with store.transaction():
+        current = store._source(user, connection, True)
+        if current['generation'] != source['generation']:
+            raise Denied('Source changed before checkpoint')
+        store.db.execute('INSERT INTO discord_cursors VALUES(?,?,?) ON CONFLICT(connection,channel) DO UPDATE SET cursor=excluded.cursor', (connection, channel, json.dumps(checkpoint)))
+
+
+def poll_source(store, user, connection, client, deadline=float('inf')):
+    """Import selected channels until done or past the monotonic deadline; each stop is resumable."""
     source = store._source(user, connection, True)
     scope = json.loads(source['scope'])
     if source['kind'] != 'discord':
@@ -166,18 +181,22 @@ def poll_source(store, user, connection, client):
         messages = sorted(client.messages(channel, str(checkpoint['before'])), key=lambda message: int(message['id']), reverse=True)
         if any(int(message['id']) >= checkpoint['before'] for message in messages):
             raise ValueError('Discord pagination did not advance')
+        if any(message.get('channel_id') != channel for message in messages):
+            raise Denied('Unexpected channel')
+        # Text messages are context for neighbouring photos, never memories of their own.
+        chronological = [{'id': m['id'], 'text': m.get('content') or '', 'sender': sender(m), 'time': m['timestamp'], 'locator': m['id']}
+                         for m in reversed(messages) if scope['start'] <= m['timestamp'][:10] <= scope['end']]
+        position = {m['id']: index for index, m in enumerate(chronological)}
         for message in messages:
             current = store._source(user, connection, True)
             if current['generation'] != source['generation']:
                 raise Denied('Source selection changed')
-            if message.get('channel_id') != channel:
-                raise Denied('Unexpected channel')
             if int(message['id']) <= checkpoint['floor']:
                 continue
             checkpoint['high'] = max(checkpoint['high'], int(message['id']))
             day = message['timestamp'][:10]
             if scope['start'] <= day <= scope['end']:
-                if not message.get('attachments'):
+                if not message.get('attachments') and not message.get('content'):
                     store.record_source_outcome(user, connection, {'item': message['id'], 'filename': 'Message without accessible attachments', 'component': 'message', 'version': 'original'}, 'NO_MEDIA_OR_CONTENT_UNAVAILABLE')
                 for attachment in message.get('attachments', []):
                     client.authorize(scope['guild'], channel)
@@ -191,8 +210,8 @@ def poll_source(store, user, connection, client):
                     metadata = dict(item=message['id'], component=attachment['id'],
                         version=message.get('edited_timestamp') or 'original', filename=attachment['filename'],
                         date=day, kind='image' if attachment.get('content_type', '').startswith('image/') else 'video',
-                        guild=scope['guild'], channel=channel,
-                        text=message.get('content', '')[:2000], sender=message.get('author', {}).get('id', ''),
+                        guild=scope['guild'], channel=channel, sender=sender(message)['id'],
+                        sender_label=sender(message)['label'], context=bounded_context(chronological, position[message['id']]),
                         shared_at=message['timestamp'])
                     try:
                         resource = store.begin_resource(user, connection, metadata, len(data), hashlib.sha256(data).hexdigest())
@@ -206,6 +225,11 @@ def poll_source(store, user, connection, client):
                             store.resource_chunk(user, resource['id'], offset, data[offset:offset + 512 * 1024])
                     client.authorize(scope['guild'], channel)
                     store.finish_resource(user, resource['id'])
+            if time.monotonic() > deadline:
+                # Descending pages: the next request continues just below the last handled message.
+                checkpoint['before'] = int(message['id'])
+                save_checkpoint(store, user, connection, source, channel, checkpoint)
+                return
         finished = not messages or len(messages) < 100 or min(int(m['id']) for m in messages) <= checkpoint['floor']
         if finished:
             checkpoint['floor'] = checkpoint['high']
@@ -213,8 +237,4 @@ def poll_source(store, user, connection, client):
             checkpoint['closed'] = int((time.time() * 1000 - 1420070400000)) << 22 >= ceiling
         else:
             checkpoint['before'] = min(int(m['id']) for m in messages)
-        with store.transaction():
-            current = store._source(user, connection, True)
-            if current['generation'] != source['generation']:
-                raise Denied('Source changed before checkpoint')
-            store.db.execute('INSERT INTO discord_cursors VALUES(?,?,?) ON CONFLICT(connection,channel) DO UPDATE SET cursor=excluded.cursor', (connection, channel, json.dumps(checkpoint)))
+        save_checkpoint(store, user, connection, source, channel, checkpoint)

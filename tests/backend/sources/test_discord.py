@@ -30,6 +30,17 @@ class FakeDiscord:
         return picture()
 
 
+def message(offset, content='', attachments=(), **fields):
+    return {'id': str(int(snowflake('2024-01-02')) + offset), 'channel_id': '20', 'timestamp': f'2024-01-02T10:00:{offset:02d}+00:00',
+            'content': content, 'author': {'id': '30', 'username': 'ayse'},
+            'attachments': [{'id': f'4{offset}', 'filename': f'photo{offset}.jpg', 'content_type': 'image/jpeg'} for _ in attachments[:1]],
+            **fields}
+
+
+def paged(messages):
+    return lambda channel, before: sorted([m for m in messages if int(m['id']) < int(before)], key=lambda m: int(m['id']), reverse=True)[:100]
+
+
 def link(store, user, group, guild='10'):
     return store.link_discord(user, store.begin_discord_link(user, group), lambda: {'id': guild, 'name': 'Synthetic server'})
 
@@ -223,3 +234,62 @@ class DiscordTests(unittest.TestCase):
         while self.store.work_once(): pass
         self.assertEqual(len(self.store.gallery(self.ben,self.group)),1)
         self.assertEqual(len(self.store.gallery(self.ben,self.group)[0]['origins']),1)
+
+    def enabled(self):
+        connection = self.store.create_source(self.alice, self.group, 'discord', 'Lake', {'guild': '10', 'channels': ['20'], 'start': '2024-01-01', 'end': '2030-01-01'})
+        self.store.set_source(self.alice, connection, True, 'authorized')
+        return connection
+
+    def test_poll_budget_resumes_below_the_last_handled_message_without_duplicates(self):
+        connection = self.enabled()
+        client = FakeDiscord()
+        messages = [message(i, attachments=[1]) for i in (1, 2, 3)]
+        client.messages = paged(messages)
+        cursor = lambda: json.loads(self.store.db.execute('SELECT cursor FROM discord_cursors WHERE connection=?', (connection,)).fetchone()[0])['before']
+        poll_source(self.store, self.alice, connection, client, deadline=0)
+        self.assertEqual((client.reads, cursor()), (1, int(messages[2]['id'])))
+        poll_source(self.store, self.alice, connection, client, deadline=0)
+        self.assertEqual((client.reads, cursor()), (2, int(messages[1]['id'])))
+        for _ in range(3):
+            poll_source(self.store, self.alice, connection, client)
+        self.assertEqual(client.reads, 3)
+        self.assertEqual(sorted(r['metadata']['item'] for r in self.store.resources(self.alice, connection)), sorted(m['id'] for m in messages))
+
+    def test_text_messages_become_context_with_sender_names_not_outcomes(self):
+        connection = self.enabled()
+        client = FakeDiscord()
+        client.messages = paged([
+            message(1, 'Göle vardık', author={'id': '31', 'global_name': 'Ayşe', 'username': 'ayse'}),
+            message(2, 'Look at this', attachments=[1], author={'id': '32', 'username': 'mehmet'}),
+            message(3, 'Beautiful', author={'id': '33', 'username': 'can'}, member={'nick': 'Can Bey'}),
+            message(4)])
+        poll_source(self.store, self.alice, connection, client)
+        resources = self.store.resources(self.alice, connection)
+        self.assertEqual([r['state'] for r in resources], ['PENDING', 'NO_MEDIA_OR_CONTENT_UNAVAILABLE'])
+        payload = json.loads(self.store.db.execute('SELECT payload FROM import_items WHERE id=?', (resources[0]['id'],)).fetchone()[0])
+        self.assertEqual(payload['sender'], {'id': '32', 'label': 'mehmet'})
+        self.assertEqual([(c['sender']['label'], c['text']) for c in payload['context']],
+                         [('Ayşe', 'Göle vardık'), ('mehmet', 'Look at this'), ('Can Bey', 'Beautiful')])
+
+    def test_long_turkish_caption_fits_resource_metadata(self):
+        connection = self.enabled()
+        client = FakeDiscord()
+        client.messages = paged([message(1, 'Çok güzel bir gün ' * 20), message(2, 'ş' * 2000, attachments=[1]), message(3, 'Görüşürüz ' * 50)])
+        poll_source(self.store, self.alice, connection, client)
+        [resource] = self.store.resources(self.alice, connection)
+        self.assertEqual(resource['state'], 'PENDING')
+        self.assertEqual([c['text'] for c in resource['metadata']['context']], ['ş' * 2000])
+
+    def test_replay_with_different_neighbours_keeps_the_stored_resource(self):
+        connection = self.enabled()
+        client = FakeDiscord()
+        messages = [message(1, 'Before'), message(2, 'Photo', attachments=[1])]
+        client.messages = paged(messages)
+        poll_source(self.store, self.alice, connection, client)
+        self.store.db.execute('DELETE FROM discord_cursors')
+        self.store.db.commit()
+        messages[0]['content'] = 'Edited neighbour'
+        poll_source(self.store, self.alice, connection, client)
+        [resource] = self.store.resources(self.alice, connection)
+        self.assertEqual([c['text'] for c in resource['metadata']['context']], ['Before', 'Photo'])
+        self.assertEqual(client.reads, 2)

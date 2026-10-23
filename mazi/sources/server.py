@@ -135,9 +135,9 @@ def handler_for(store):
     return Handler
 
 
-def settle_poll(store, user, connection, client):
+def settle_poll(store, user, connection, client, deadline=float('inf')):
     try:
-        poll_source(store, user, connection, client)
+        poll_source(store, user, connection, client, deadline)
     except ProviderDenied:
         try:
             store.set_source(user, connection, False, 'revoked')
@@ -167,8 +167,9 @@ class Worker:
         try:
             if self.client and time.monotonic() >= self.next_poll:
                 self.next_poll = time.monotonic() + 30
+                deadline = time.monotonic() + 15
                 for source in self.store.db.execute("SELECT * FROM continuous_sources WHERE kind='discord' AND enabled=1").fetchall():
-                    settle_poll(self.store, source['owner_id'], source['id'], self.client)
+                    settle_poll(self.store, source['owner_id'], source['id'], self.client, deadline)
             return 0 if self.store.work_once() else IDLE_SECONDS
         except RateLimited as exc:
             self.next_poll = time.monotonic() + exc.seconds

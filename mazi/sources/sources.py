@@ -73,6 +73,10 @@ def text(value, limit=200):
     return value.strip()
 
 
+def without_context(metadata):
+    return {key: value for key, value in metadata.items() if key != 'context'}
+
+
 def discord_id(value):
     if not isinstance(value, str) or not value.isascii() or not value.isdigit() or len(value) > 20:
         raise ValueError('Invalid Discord ID')
@@ -209,7 +213,7 @@ class SourceStore(ReviewStore):
             raise Denied('Outside selected server or channels')
 
     def begin_resource(self, user, connection, metadata, size, sha256):
-        if not isinstance(metadata, dict) or len(json.dumps(metadata)) > 12000:
+        if not isinstance(metadata, dict) or len(json.dumps(metadata, ensure_ascii=False)) > 12000:
             raise ValueError('Invalid resource metadata')
         for field in ('item', 'component', 'version', 'filename'):
             text(metadata.get(field))
@@ -228,7 +232,8 @@ class SourceStore(ReviewStore):
                 self._resource(user, old['id'])
                 if old['withdrawn']:
                     raise Denied('Resource was withdrawn')
-                if old['sha256'] != sha256 or old['size'] != size or json.loads(old['metadata']) != metadata:
+                # Context depends on where a page boundary fell; the stored context stays.
+                if old['sha256'] != sha256 or old['size'] != size or without_context(json.loads(old['metadata'])) != without_context(metadata):
                     raise Conflict('Resource version changed; supply its new version')
                 self.db.execute('UPDATE source_resources SET generation=? WHERE id=?', (source['generation'], old['id']))
                 return dict(old)
@@ -297,10 +302,10 @@ class SourceStore(ReviewStore):
                 metadata['component'], 'source:#' + metadata['item'], source_item_id=metadata['item'],
                 local_blob_reference=blob, original_filename=metadata['filename'], declared_media_type=mime,
                 coverage={'complete': False, 'scope': json.loads(source['scope']), 'resource': metadata},
-                sender={'id': metadata.get('sender', '')},
+                sender={'id': metadata.get('sender', ''), **({'label': metadata['sender_label']} if metadata.get('sender_label') else {})},
                 channel={'id': metadata.get('channel', '')},
                 shared_at_assertion={'raw': metadata.get('shared_at'), 'source': 'discord_message'},
-                context=[{'text': metadata.get('text', ''), 'locator': metadata['item']}] if metadata.get('text') else [])
+                context=metadata.get('context') or ([{'text': metadata['text'], 'locator': metadata['item']}] if metadata.get('text') else []))
             # Parent completion retains EXIF; source date is additional evidence in prepare().
             self.db.execute('INSERT INTO import_items(id,run_id,ordinal,occurrence,payload,outcome,reason) VALUES(?,?,0,?,?,?,?) '
                 "ON CONFLICT(id) DO UPDATE SET outcome='PENDING',reason='RESUMED',attempts=0,lease_token=NULL,lease_until=NULL,retry_at=0",
