@@ -2,10 +2,11 @@
 from __future__ import annotations
 import hashlib
 import json
+import os
 import time
 from datetime import datetime, timezone
 from urllib.error import HTTPError
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 from mazi.identity.core import Denied
@@ -26,26 +27,52 @@ class NoRedirect(HTTPRedirectHandler):
         raise Denied('Redirect refused')
 
 
+TOKEN_URL = 'https://discord.com/api/oauth2/token'
+
+
 class DiscordClient:
-    def __init__(self, token):
+    def __init__(self, token, client_id='', client_secret=''):
         self.token = token
+        self.client_id = client_id
+        self.client_secret = client_secret
         self.http = build_opener(NoRedirect)
 
-    def request(self, path):
-        request = Request('https://discord.com/api/v10' + path,
-            headers={'Authorization': 'Bot ' + self.token, 'User-Agent': 'MaziLocal/0.1'})
+    def _json(self, request, denied=(401, 403, 404), limit=4 * 1024 * 1024):
         try:
             with self.http.open(request, timeout=20) as response:
-                data = response.read(4 * 1024 * 1024 + 1)
-                if len(data) > 4 * 1024 * 1024:
+                data = response.read(limit + 1)
+                if len(data) > limit:
                     raise ValueError('Discord response exceeds local limit')
                 return json.loads(data)
         except HTTPError as exc:
-            if exc.code in (401, 403, 404):
+            if exc.code in denied:
                 raise ProviderDenied('Discord access unavailable') from None
             if exc.code == 429:
                 raise RateLimited(json.loads(exc.read(4096)).get('retry_after', 60)) from None
             raise
+
+    def request(self, path):
+        return self._json(Request('https://discord.com/api/v10' + path,
+            headers={'Authorization': 'Bot ' + self.token, 'User-Agent': 'MaziLocal/0.1'}))
+
+    def install_url(self, redirect_uri, state):
+        return 'https://discord.com/oauth2/authorize?' + urlencode({
+            'client_id': self.client_id, 'scope': 'bot identify', 'permissions': VIEW_AND_HISTORY,
+            'response_type': 'code', 'redirect_uri': redirect_uri, 'state': state})
+
+    def exchange(self, code, redirect_uri):
+        """Return the server the bot was just added to; the user access token is discarded."""
+        body = urlencode({'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirect_uri,
+                          'client_id': self.client_id, 'client_secret': self.client_secret}).encode()
+        try:
+            grant = self._json(Request(TOKEN_URL, data=body, headers={
+                'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'MaziLocal/0.1'}), (400, 401, 403), 64 * 1024)
+        except ProviderDenied:
+            raise Denied('Discord did not accept this connection; connect the server again') from None
+        guild = grant.get('guild') if isinstance(grant, dict) else None
+        if not isinstance(guild, dict):
+            raise Denied('Discord did not report a server; add the bot to a server and try again')
+        return {'id': guild.get('id'), 'name': guild.get('name')}
 
     def _permissions(self, guild):
         me = self.request('/users/@me')
@@ -108,6 +135,11 @@ def channel_permissions(guild, member_roles, roles, overwrites, user):
 
 def readable(permissions):
     return bool(permissions & ADMINISTRATOR) or permissions & VIEW_AND_HISTORY == VIEW_AND_HISTORY
+
+
+def discord_from_env():
+    token, client_id, secret = (os.environ.get('MAZI_DISCORD_' + name, '') for name in ('BOT_TOKEN', 'CLIENT_ID', 'CLIENT_SECRET'))
+    return DiscordClient(token, client_id, secret) if token and client_id and secret else None
 
 
 def snowflake(day):

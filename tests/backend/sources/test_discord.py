@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 from tests.backend.sources import test_sources
 from mazi.identity.core import Denied
-from mazi.sources.discord import DiscordClient, channel_permissions, poll_source, RateLimited, snowflake
+from mazi.sources.discord import DiscordClient, channel_permissions, discord_from_env, poll_source, RateLimited, snowflake
 
 
 class FakeDiscord:
@@ -163,6 +163,14 @@ class DiscordTests(unittest.TestCase):
             self.store.begin_discord_link(self.outsider, self.group)
         self.assertEqual(exchanges, [1])
         self.assertEqual(self.store.db.execute('SELECT count(*) FROM discord_link_requests').fetchone()[0], 0)
+
+    def test_discord_is_configured_only_with_bot_token_client_id_and_secret(self):
+        env = {'MAZI_DISCORD_BOT_TOKEN': 'synthetic-bot', 'MAZI_DISCORD_CLIENT_ID': '123'}
+        with patch.dict('os.environ', env, clear=True):
+            self.assertIsNone(discord_from_env())
+        with patch.dict('os.environ', {**env, 'MAZI_DISCORD_CLIENT_SECRET': 'synthetic-secret'}, clear=True):
+            client = discord_from_env()
+        self.assertEqual((client.token, client.client_id, client.client_secret), ('synthetic-bot', '123', 'synthetic-secret'))
 
     def test_channel_permissions_apply_everyone_role_then_member_overwrites(self):
         roles = [{'id': '10', 'permissions': str((1 << 10) | (1 << 11))}, {'id': '50', 'permissions': str(1 << 16)},
