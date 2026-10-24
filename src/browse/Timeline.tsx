@@ -291,10 +291,11 @@ export function Timeline({
     setReplaying(false);
     moves[event.key]();
   };
-  const subtitle =
-    min === max
-      ? `${plural(memories.length, "moment")} in ${min}.`
-      : `${plural(memories.length, "moment")}, ${min} to ${max}.`;
+  const subtitle = !years.length
+    ? `${plural(memories.length, "moment")}, none dated yet.`
+    : min === max
+      ? `${plural(memories.length, "moment")} in ${min}. Scroll and the year in view follows.`
+      : `${plural(memories.length, "moment")}, ${min} to ${max}. Scroll and the year in view follows.`;
 
   return (
     <section className="timeline-page">
@@ -303,9 +304,7 @@ export function Timeline({
           <h1 ref={heading} tabIndex={-1} className="browse-title">
             Timeline
           </h1>
-          <p className="browse-sub">
-            {subtitle} Scroll and the year in view follows.
-          </p>
+          <p className="browse-sub">{subtitle}</p>
         </div>
         <div className="br-segmented" role="group" aria-label="Order">
           {(["oldest", "newest"] as const).map((value) => (

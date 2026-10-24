@@ -2,6 +2,7 @@
 import json
 import re
 
+from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, lookup
 
@@ -21,6 +22,23 @@ def _place(rows):
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
+def _shared_at(assertion, date_order):
+    """Resolve raw-only share evidence as imports do, with its export's settled date order."""
+    if assertion.get('local') or assertion.get('raw') is None:
+        return assertion
+    resolved = time_assertion(assertion['raw'], date_order)
+    return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
+
+
+def _export(row, origin):
+    return row['run_id'], (origin.get('conversation') or {}).get('id')
+
+
+def _timestamps(origin):
+    return [(origin.get('shared_at_assertion') or {}).get('raw'),
+            *(message.get('shared_at') for message in origin.get('context', []))]
+
+
 def atlas_view(store, user, group):
     transaction = store.db.read_transaction() if getattr(store.db, "hosted", False) else store.transaction()
     with transaction:
@@ -38,13 +56,11 @@ def atlas_view(store, user, group):
 
         def card(identifier, title, assets, kind):
             records = [items[asset] for asset in assets]
-            dates = sorted({item['date'] for item in records if item['date']})
-            complete_dates = len([item for item in records if item['date']]) == len(records)
+            # Undated photos do not blank the others; conflicting evidence widens the range.
+            dates = sorted({day for item in records for day in item['dates']})
             date_label = 'Date not recorded'
             if dates:
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
-                if not complete_dates:
-                    date_label += ' · some dates unknown'
             photos = [dict(src='/api/review/rendition/' + item['id'],
                            alt=item['title'] or 'Archive photograph',
                            caption=item['title'] or 'Untitled photograph') for item in records]
@@ -55,8 +71,8 @@ def atlas_view(store, user, group):
             for position, asset in enumerate(assets):
                 consumers.setdefault(asset, []).append((detail, position))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,
-                        date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
-                        approximate=not complete_dates, by='Your circle',
+                        date=date_label, year=int(dates[0][:4]) if dates else None,
+                        approximate=not all(item['date'] for item in records), by='Your circle',
                         description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
                         source='', photos=photos, messages=[],
                         place=None, people=dict(shared=[], conversation=[]),
@@ -74,16 +90,23 @@ def atlas_view(store, user, group):
                  'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
                  'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
         where = 'WHERE o.group_id=? AND o.withdrawn=0 '
-        rows = store.db.execute(
-            'SELECT o.asset_id,o.payload,p.display_name' + joins +
-            'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
-            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
+        origins = ('SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
+                   'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
+                   'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'))
+        # One uploaded chat writes all its dates in one order; any of its timestamps can settle it.
+        # Two streamed passes keep large payloads from accumulating.
+        proven = {}
+        for row in store.db.execute(origins, (user, group)):
+            origin = json.loads(row['payload'])
+            proven.setdefault(_export(row, origin), set()).update(date_orders(_timestamps(origin)))
+        rows = store.db.execute(origins, (user, group))
         for origin_position, row in enumerate(rows):
             targets = consumers.get(row['asset_id'])
             if not targets:
                 continue
             origin = json.loads(row['payload'])
-            assertion = origin.get('shared_at_assertion') or {}
+            assertion = _shared_at(origin.get('shared_at_assertion') or {},
+                                   settle_date_order(proven[_export(row, origin)]))
             sender = (origin.get('sender') or {}).get('label') or None
             raw = assertion.get('raw')
             date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
