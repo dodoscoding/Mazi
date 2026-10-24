@@ -1,9 +1,11 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
 import re
+from datetime import datetime, timezone
 
+from mazi.identity.core import Denied
 from mazi.persistence import insertion_order
-from mazi.places import fold, identify, km, lookup
+from mazi.places import fold, identify, km, label, lookup
 
 SAME_PLACE_KM = 50
 
@@ -21,16 +23,22 @@ def _place(rows):
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
+def _hidden_event_assets(store, user, group):
+    """Photographs of memories this member hid; they must not return as loose photographs."""
+    hidden = set()
+    for row in store.db.execute(
+        'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
+    ):
+        hidden.update(json.loads(row[0]))
+    return hidden
+
+
 def atlas_view(store, user, group):
     transaction = store.db.read_transaction() if getattr(store.db, "hosted", False) else store.transaction()
     with transaction:
         store._member(user, group)
         items = {item['id']: item for item in store._timeline_items(user, group)}
-        hidden_assets = set()
-        for row in store.db.execute(
-            'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
-        ):
-            hidden_assets.update(json.loads(row[0]))
+        hidden_assets = _hidden_event_assets(store, user, group)
         cards, grouped = [], set()
 
         consumers = {}
@@ -153,3 +161,48 @@ def atlas_view(store, user, group):
                 {message['name'] for message in result['messages']} - {'Source participant'}))
         cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
         return {'memories': cards}
+
+
+def _memory_assets(store, user, group, memory):
+    """The photographs behind one Atlas card, rechecked exactly as atlas_view shows them."""
+    visible = set(store._visible_ids(user, group))
+    hidden = _hidden_event_assets(store, user, group)
+    if memory.startswith('photo-'):
+        assets = [memory[6:]]
+        if assets[0] not in visible:
+            raise Denied('Memory unavailable')
+    else:
+        assets = next((event['assets'] for event in store._approved(user, group) if event['id'] == memory), None)
+        if not assets:
+            raise Denied('Memory unavailable')
+    if hidden.intersection(assets):
+        raise Denied('Memory unavailable')
+    return assets
+
+
+def place_memory(store, user, group, memory, place):
+    """Name the city of every photograph in one Atlas card; title, date and anniversary stay as they are.
+
+    A single matching city is stored as its full label so it always resolves to the same pin.
+    Empty text clears the place. Ambiguous or unknown text writes nothing and returns candidates.
+    """
+    if not all(isinstance(value, str) for value in (group, memory, place)) or not 0 < len(memory) <= 200 or len(place) > 200:
+        raise ValueError('Invalid memory or place')
+    match = lookup(place)
+    city = match.get('city')
+    write = {
+        'matched': 'INSERT INTO review_annotations(place,actor_id,updated_at,asset_id,group_id) VALUES(?,?,?,?,?) '
+                   'ON CONFLICT(asset_id) DO UPDATE SET place=excluded.place,actor_id=excluded.actor_id,updated_at=excluded.updated_at',
+        # Clearing never creates an annotation, so it adds no annotation author to an untouched photograph.
+        'empty': "UPDATE review_annotations SET place=?,actor_id=?,updated_at=? WHERE asset_id=? AND group_id=? AND place<>''",
+    }.get(match['status'])
+    with store.transaction():
+        assets = _memory_assets(store, user, group, memory)
+        if write:
+            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            for asset in assets:
+                store.db.execute(write, (label(city) if city else '', user, now, asset, group))
+            store._audit(user, 'atlas.place' if city else 'atlas.place.clear', memory)
+    return {'place_match': match['status'], 'place': city and f'{city.name}, {city.country}',
+            'candidates': [label(candidate) for candidate in match.get('candidates', [])],
+            'pin': city and dict(name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)}
