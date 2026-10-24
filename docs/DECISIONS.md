@@ -89,6 +89,15 @@ Hobby has no always-on process and allows one cron a day. The worker therefore b
 
 The pins live in `shared_places`, so Places, Discovery, Answers and export read them unchanged. The hosted archive needs the `place_removals` migration before the deploy and a backfill afterwards ([Deployment](DEPLOYMENT.md#map-places-rollout)). Accepted gaps: places more than 100 km from any listed city get no pin; another contributor's GPS copy of the same photograph still pins until that contributor removes it; removing one contribution's pin leaves the same contributor's other contributions of that photograph pinned; the Apple Photos companion sends no location.
 
+**D21 addendum, 24 October 2026: name on the map.** Production held 458 photographs, all from WhatsApp or Discord, which strip GPS, so the globe stayed empty and naming a place one photograph at a time in Review was the only way to fill it. The owner decided on 24 October 2026:
+
+- Beside the globe and flat map, an Unplaced memories tray lists every Atlas memory without a place, with a thumbnail, title and date. Picking one and typing a city ("girne", "Victoria, CA") pins every photograph in that memory, and the memory appears on the map at once.
+- Any circle member can do it, the same rule as Review places. The place can be changed or cleared later from the featured memory card.
+- It uses the Review rule above: one matching city is stored on each photograph's Review annotation as the city's full label and wins over source locations; a shared name offers its candidates as choices; unknown text is reported and nothing is written. Title, date and anniversary are left as they are.
+- A Review-named city now also stands in for a photograph's shared locations in the Places list, so Atlas and Places agree.
+
+The write is `POST /api/atlas/place` ([contract](CONTRACTS.md#shared-places-and-archive-export)); it needs no new table or migration. Archive export still lists only contribution locations from `shared_places`.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
