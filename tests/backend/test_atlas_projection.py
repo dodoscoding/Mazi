@@ -188,9 +188,10 @@ class AtlasProjectionTests(unittest.TestCase):
         self.store.db.execute('UPDATE review_events SET asset_ids=? WHERE id=?', (json.dumps([c, b, a]), first))
         self.store.db.commit()
 
-        def expected(identifier, title, members, date, year, basis, kind='memory'):
+        def expected(identifier, title, members, date, year, basis, kind='memory', approximate=None):
             result = photo(members[0], title)
-            result.update(id=identifier, kind=kind, date=date, year=year, approximate=year is None, dateBasis=basis)
+            result.update(id=identifier, kind=kind, date=date, year=year,
+                          approximate=year is None if approximate is None else approximate, dateBasis=basis)
             if kind == 'memory':
                 result['description'] = 'An approved shared memory.'
             result['photos'] = [dict(src='/api/review/rendition/' + asset, alt=titles[asset], caption=titles[asset])
@@ -203,8 +204,8 @@ class AtlasProjectionTests(unittest.TestCase):
         fifth = expected('photo-' + e, 'Five', [e], '2024-01-02', 2024, 'source capture evidence', 'photo')
         fourth = expected('photo-' + d, 'Four', [d], '2022-01-02', 2022, 'source capture evidence', 'photo')
         third = expected('photo-' + c, 'Three', [c], 'Date not recorded', None, 'undated', 'photo')
-        first_card = expected(first, 'First', [c, b, a], '2020-01-02 · some dates unknown', None,
-                              'conflicting source evidence, source capture evidence, undated')
+        first_card = expected(first, 'First', [c, b, a], '2020-01-02 to 2021-01-02', 2020,
+                              'conflicting source evidence, source capture evidence, undated', approximate=True)
         overlap_card = expected(overlap, 'Overlap', [a, d], '2020-01-02 to 2022-01-02', 2020, 'source capture evidence')
         with serving(self.fixture) as request:
             self.assert_body(request(), [fifth, overlap_card, first_card])
@@ -217,9 +218,9 @@ class AtlasProjectionTests(unittest.TestCase):
             self.store.hide(self.ben, b, False)
             self.assert_body(request(), [fifth, overlap_card, first_card])
             self.store.correct_asset(self.alice, c, title='Three', capture_date='2025-02-03', place='')
-            first_card['date'] = '2020-01-02 to 2025-02-03 · some dates unknown'
+            first_card['date'] = '2020-01-02 to 2025-02-03'
             first_card['dateBasis'] = 'conflicting source evidence, reviewed correction, source capture evidence'
-            self.assert_body(request(), [fifth, overlap_card, first_card])
+            self.assert_body(request(), [fifth, first_card, overlap_card])
 
     def test_two_circles_session_and_removed_reader_keep_sources_protected(self):
         imported(self.fixture, 1)
@@ -420,7 +421,7 @@ class AtlasConcurrencyTests(unittest.TestCase):
                             self.assertEqual([card['id'] for card in cards], ['photo-' + assets[2]])
                         elif mutation == 'correction':
                             memory = next(card for card in cards if card['id'] == event)
-                            self.assertEqual(memory['date'], '2025-04-06 · some dates unknown')
+                            self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2025-04-06', 2025, True))
                             self.assertEqual(memory['dateBasis'], 'reviewed correction, undated')
                             self.assertEqual(memory['photos'][0]['caption'], 'Updated title')
             finally:

@@ -6,7 +6,7 @@ import warnings
 import zipfile
 from pathlib import Path
 
-from mazi.imports.adapters import Archive, ArchiveError, inventory, settle_date_order
+from mazi.imports.adapters import Archive, ArchiveError, inventory, date_orders, settle_date_order
 
 
 def zip_bytes(files):
@@ -46,10 +46,10 @@ class AdapterTests(unittest.TestCase):
             self.assertTrue(photo.shared_at_assertion["local"].startswith("2020-03-04"))
 
     def test_an_export_settles_its_date_order_only_when_its_days_agree(self):
-        self.assertEqual(settle_date_order(["04/05/2024, 21:00", "23/05/2024, 10:00", None, 1713906482000]), "DMY")
-        self.assertEqual(settle_date_order(["04/05/2024, 9:00:00\u202fPM", "05/23/2024, 10:00"]), "MDY")
-        self.assertIsNone(settle_date_order(["04/05/2024, 21:00", "05/04/2024, 10:00"]))
-        self.assertIsNone(settle_date_order(["23/05/2024, 10:00", "05/23/2024, 10:00"]))
+        self.assertEqual(settle_date_order(date_orders(["04/05/2024, 21:00", "23/05/2024, 10:00", None, 1713906482000])), "DMY")
+        self.assertEqual(settle_date_order(date_orders(["04/05/2024, 9:00:00\u202fPM", "05/23/2024, 10:00"])), "MDY")
+        self.assertIsNone(settle_date_order(date_orders(["04/05/2024, 21:00", "05/04/2024, 10:00"])))
+        self.assertIsNone(settle_date_order(date_orders(["23/05/2024, 10:00", "05/23/2024, 10:00"])))
 
     def test_whatsapp_dotted_clock_dates_photos(self):
         text = "[23/04/2024, 21.07.45] Ana: before\n[23/04/2024, 21.08.02] Ana: <attached: photo.jpg>\n[23/04/2024, 21.09.10] Ben: after"
