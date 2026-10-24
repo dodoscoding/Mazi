@@ -39,6 +39,16 @@ Imports therefore advance while a signed-in tab is open, including when an Impor
 - Requests in one instance run one at a time and lazily reuse a SQL connection during each request. The connection closes on success, failure, or abandoned response. Warm idle instances retain no SQL client sessions.
 - The hosted adapter disables automatic prepared statements and applies schema and lock settings inside each transaction. Changing only the pooler port on older application code is unsupported. Configuration and schema errors remain distinct from transient database unavailability, which returns HTTP 503 without clearing the session.
 
+## Map places rollout
+
+[D21](DECISIONS.md#map-places-from-gps-and-review-23-october-2026) adds the `place_removals` table. Apply [the migration](../infra/hosted/supabase/migrations/20261024090000_place_removals.sql) in the Supabase SQL Editor before deploying; imports and pin removal fail on the new code until it exists. Then deploy, and pin photographs imported earlier from their EXIF GPS:
+
+```sh
+npm run places:backfill
+```
+
+It reads `.env.supabase`, walks live contributions in batches of 200 and prints counts such as `{"pinned": 37, "existing": 5, "removed": 2, "no_fix": 150, "no_city": 6}`. It is safe to rerun; a second run reports `"pinned": 0`. For a local archive, `.venv/bin/python -m mazi.sources.backfill_places` uses `MAZI_IMPORT_DATA_DIR` (default `.mazi-imports`).
+
 ## Production
 
 Production runs at https://mazi-three.vercel.app against the Frankfurt Supabase project. The [live verification](../work/poteto/production-deploy/VERIFICATION.md) records a signed-in import, drain, preview, search and a 12.8 MB streamed export.

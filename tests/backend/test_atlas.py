@@ -157,6 +157,31 @@ class AtlasTests(unittest.TestCase):
         self.store.set_place(self.alice, self._origin(self.assets[1]), 'US', 'Springfield', 37.2, -93.3, None)
         self.assertIsNone(self._memory()['place'])
 
+    def test_turkish_dotted_capital_agrees_with_lowercase(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'İstanbul', 41.0, 29.0, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'TR', 'istanbul', 41.1, 29.1, None)
+        self.assertEqual(self._memory()['place'],
+                         {'name': 'istanbul', 'country': 'TR', 'latitude': 41.05, 'longitude': 29.05})
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'TR', 'Ankara', 39.93, 32.86, None)
+        self.assertIsNone(atlas_view(self.store, self.ben, self.group)['memories'][0]['place'])
+
+    def _review_place(self, asset, place):
+        self.store.correct_asset(self.ben, asset, title='Red', capture_date='2020-01-02', place=place)
+        return next(card for card in atlas_view(self.store, self.alice, self.group)['memories'] if card['id'] == 'photo-' + asset)['place']
+
+    def test_city_named_in_review_pins_the_photo_over_its_source_location(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, None)
+        kyrenia = {'name': 'Kyrenia', 'country': 'CY', 'latitude': 35.326, 'longitude': 33.333}
+        self.assertEqual(self._review_place(self.assets[0], 'girne'), kyrenia)
+        self.assertEqual(self._review_place(self.assets[1], 'GİRNE'), kyrenia)
+        self.assertEqual(self._memory()['place'], kyrenia)
+
+    def test_unmatched_review_text_leaves_the_source_location(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, None)
+        for text in ('Victoria', 'Nowhereville'):
+            self.assertEqual(self._review_place(self.assets[0], text)['name'], 'Istanbul')
+            self.assertIsNone(self._review_place(self.assets[1], text))
+
     def _ben_copy_of_red(self):
         source = self.store.create_source(self.ben, self.group, 'apple', 'Photos', {
             'start': '2020-01-01', 'end': '2030-01-01', 'albums': [], 'types': ['image']})

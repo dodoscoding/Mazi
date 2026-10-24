@@ -122,3 +122,41 @@ test("review load-more locks repeated requests and retries a failed cursor", asy
     ["First", "Second"],
   );
 });
+
+test("saving a review place says whether it was pinned on the map", async (t) => {
+  const answers = {
+    girne: { place_match: "matched", place: "Kyrenia, CY", candidates: [] },
+    Victoria: {
+      place_match: "ambiguous",
+      place: null,
+      candidates: ["Victoria, British Columbia, CA", "Victoria, Texas, US"],
+    },
+    Nowhereville: { place_match: "missing", place: null, candidates: [] },
+    "": { place_match: "empty", place: null, candidates: [] },
+  };
+  const sent = [];
+  const { $, window } = await mountFeature(t, "archive", (path, body) => {
+    if (path === "/api/review/correct") {
+      sent.push(body.place);
+      return { ok: true, ...answers[body.place] };
+    }
+    if (path.startsWith("/api/review/timeline"))
+      return { items: [item("Harbour")], total: 1, next_offset: null };
+    return base(path);
+  });
+  await until(() => $("#timeline form"), "review form");
+  for (const [place, message] of [
+    ["girne", "Pinned in Kyrenia, CY."],
+    ["Victoria", "Several places match. Add the country, e.g. 'Victoria, CA'."],
+    ["Nowhereville", "Not found on the map. Saved as text."],
+    ["", "Correction saved for the group."],
+  ]) {
+    const form = $("#timeline form");
+    form.querySelector("[name=place]").value = place;
+    form.dispatchEvent(
+      new window.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await until(() => $("#notice").textContent === message, message);
+  }
+  assert.deepEqual(sent, ["girne", "Victoria", "Nowhereville", ""]);
+});
