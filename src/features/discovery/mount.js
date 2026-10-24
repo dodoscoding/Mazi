@@ -1,7 +1,9 @@
 import {
   promptSkeleton,
+  renderFilters,
   renderGroups,
   renderPrompts,
+  sharedByLine,
   skeletonRows,
   suggestions,
 } from "./views";
@@ -16,6 +18,47 @@ export function mount(root, lifecycle) {
   ).split("?")[0];
   const view = path === "/search" ? "search" : "discover";
   root.querySelector(".discovery-page").dataset.view = view;
+  // The URL holds the search so Back from a result restores it.
+  const urlFields = [
+    ["q", "#query"],
+    ["place", "#place"],
+    ["country", "#country"],
+    ["object", "#object"],
+    ["from", "#start"],
+    ["through", "#end"],
+  ];
+  const restored = new URLSearchParams(
+    location.hash.startsWith("#/")
+      ? location.hash.split("?").slice(1).join("?")
+      : location.search,
+  );
+  const filters = {
+    source: restored.get("source") || "",
+    sharedBy: restored.get("by") || "",
+  };
+  for (const [key, id] of urlFields) $(id).value = restored.get(key) || "";
+  $("#clear-query").hidden = !$("#query").value;
+  $(".disc-refine").open = urlFields
+    .slice(1)
+    .some(([key]) => restored.get(key));
+  let disposed = false;
+  lifecycle.onDispose(() => (disposed = true));
+  function rememberSearch() {
+    // A search finishing after navigation must not rewrite the next page's URL.
+    if (disposed) return;
+    const params = new URLSearchParams();
+    for (const [key, id] of urlFields)
+      if ($(id).value) params.set(key, $(id).value);
+    if (filters.source) params.set("source", filters.source);
+    if (filters.sharedBy) params.set("by", filters.sharedBy);
+    const query = params.toString();
+    const url = path + (query ? `?${query}` : "");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      location.hash.startsWith("#/") ? `#${url}` : url,
+    );
+  }
   let atlas = [],
     atlasKey = null,
     heroIndex = 0,
@@ -101,6 +144,7 @@ export function mount(root, lifecycle) {
     $("#search-loading").hidden = true;
     $("#search-none").hidden = true;
     $("#search-recovery").hidden = true;
+    $("#search-filters").hidden = true;
     $("#result-types").hidden = true;
     $("#result-total").textContent = "";
     $("#count").textContent = "";
@@ -263,6 +307,7 @@ export function mount(root, lifecycle) {
   }
   async function search(offset = 0) {
     const revision = ++generation;
+    rememberSearch();
     photoTotal = null;
     $("#result-total").textContent = "";
     $("#result-types").hidden = true;
@@ -317,7 +362,8 @@ export function mount(root, lifecycle) {
       object_query: $("#object").value,
       start: $("#start").value,
       end: $("#end").value,
-      source: $("#source").value,
+      source: filters.source,
+      shared_by: filters.sharedBy,
       similar,
       offset: String(offset),
     });
@@ -330,7 +376,8 @@ export function mount(root, lifecycle) {
     $("#count").textContent = `${result.total} photographs · ${result.mode}`;
     photoTotal = result.total;
     completedQuery = $("#query").value;
-    counts = renderGroups(root, atlas, completedQuery, people);
+    renderFilters(root, result.facets, filters);
+    counts = renderGroups(root, atlas, completedQuery, people, filters);
     renderTypes(result.total);
     $("#more").hidden = next === null;
     $("#clear-similar").hidden = !similar;
@@ -355,6 +402,7 @@ export function mount(root, lifecycle) {
           "p",
           [item.date || "Undated", item.place].filter(Boolean).join(" · "),
         ),
+        node("p", sharedByLine(item), { class: "disc-shared" }),
         node("a", "Open original", {
           href: "/api/archive/" + encodeURIComponent(item.id) + "/original",
           target: "_blank",
@@ -561,7 +609,7 @@ export function mount(root, lifecycle) {
       button.disabled = false;
     });
     if (photoTotal !== null) {
-      counts = renderGroups(root, atlas, completedQuery, people);
+      counts = renderGroups(root, atlas, completedQuery, people, filters);
       renderTypes(photoTotal);
     }
   }
@@ -629,6 +677,16 @@ export function mount(root, lifecycle) {
     $("#query").focus();
     run(() => search());
   };
+  $("#source-filter").onclick = (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    filters.source = button.dataset.source;
+    run(() => search());
+  };
+  $("#shared-by").onchange = () => {
+    filters.sharedBy = $("#shared-by").value;
+    run(() => search());
+  };
   $("#more").onclick = () => run(() => search(next));
   $("#clear-similar").onclick = () =>
     run(async () => {
@@ -644,6 +702,7 @@ export function mount(root, lifecycle) {
       contextWanted = false;
       $("#mode").value = "keyword";
       similar = "";
+      filters.source = filters.sharedBy = "";
       await refresh();
     });
   $("#person-form").onsubmit = (event) => {

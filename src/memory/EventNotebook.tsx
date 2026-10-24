@@ -88,7 +88,7 @@ export function EventNotebook({
     };
     const load = async () => {
       clear();
-      if (!event || !group || document.hidden || disposed) return;
+      if (!event || !group || disposed) return;
       const version = generation.current;
       controller.current = new AbortController();
       setState({ kind: "loading" });
@@ -124,15 +124,8 @@ export function EventNotebook({
           });
       }
     };
-    const visibility = () => {
-      if (document.hidden) clear();
-      else void load();
-    };
     const accessLost = () => clear();
     void load();
-    document.addEventListener("visibilitychange", visibility);
-    window.addEventListener("pagehide", clear);
-    window.addEventListener("pageshow", load);
     window.addEventListener("mazi:access-lost", accessLost);
     return () => {
       disposed = true;
@@ -140,9 +133,6 @@ export function EventNotebook({
       controller.current?.abort();
       pending.current = false;
       current.current = { kind: "unavailable" };
-      document.removeEventListener("visibilitychange", visibility);
-      window.removeEventListener("pagehide", clear);
-      window.removeEventListener("pageshow", load);
       window.removeEventListener("mazi:access-lost", accessLost);
     };
   }, [group, event, retry]);

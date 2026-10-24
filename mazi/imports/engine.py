@@ -12,13 +12,14 @@ import hashlib
 import io
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
 import uuid
 import zipfile
 from contextlib import ExitStack, contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 from typing import Generator
 from pathlib import Path
@@ -77,6 +78,31 @@ class ScanSession:
     checkpoint: int
     resources: ExitStack
     items: Generator[NormalizedImportItem, None, None]
+
+
+EXIF_TIME = re.compile(r"(\d{4})[:-](\d{2})[:-](\d{2})[ T](\d{2}):(\d{2}):(\d{2})(?:[.,]\d+)?\s*(Z|[+-]\d{2}:?\d{2})?")
+EXIF_ZONE = re.compile(r"Z|([+-])(\d{2}):?(\d{2})")
+
+
+def exif_capture(raw, offset=None):
+    """A capture assertion from DateTimeOriginal as cameras and editors write it, zoned by OffsetTimeOriginal."""
+    result = {"raw": str(raw), "source": "capture_exif", "utc": None, "local": None, "inferred": False,
+              "precision": "unknown", "locator": "EXIF:DateTimeOriginal", "offset": None}
+    match = EXIF_TIME.fullmatch(str(raw).strip("\x00 "))
+    if not match:
+        return result
+    try:
+        local = datetime(*map(int, match.groups()[:6]))
+    except ValueError:
+        return result
+    result.update(local=local.isoformat(), precision="second")
+    zone = EXIF_ZONE.fullmatch(match[7] or str(offset or "").strip("\x00 "))
+    if zone:
+        sign, hours, minutes = zone.groups()
+        shift = timedelta(hours=int(hours or 0), minutes=int(minutes or 0)) * (-1 if sign == "-" else 1)
+        result.update(offset=f"{sign or '+'}{hours or '00'}:{minutes or '00'}",
+                      utc=(local - shift).replace(tzinfo=timezone.utc).isoformat())
+    return result
 
 
 class ImportStore(Store):
@@ -379,14 +405,7 @@ class ImportStore(Store):
                     assertions = []
                     locations = []
                     if capture:
-                        parsed = None
-                        try:
-                            parsed = datetime.strptime(str(capture), "%Y:%m:%d %H:%M:%S").isoformat()
-                        except ValueError:
-                            pass
-                        assertions.append({"raw": str(capture), "source": "capture_exif", "utc": None, "local": parsed,
-                                           "inferred": False, "precision": "second" if parsed else "unknown",
-                                           "locator": "EXIF:DateTimeOriginal", "offset": str(details[36881]) if 36881 in details else None})
+                        assertions.append(exif_capture(capture, details.get(36881)))
                     if 34853 in exif:
                         gps = exif.get_ifd(34853)
                         locations.append({"source": "gps_exif", "raw": {str(k): str(v) for k, v in gps.items()},
@@ -472,14 +491,19 @@ class ImportStore(Store):
                                          prepared["mime"], prepared["size"], prepared["width"], prepared["height"]))
                         asset = self.db.execute("SELECT id FROM archive_assets WHERE group_id=? AND sha256=?",
                                                 (row["group_id"], prepared["sha256"])).fetchone()[0]
+                        origin = str(uuid.uuid4())
                         self.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,0)',
-                                        (str(uuid.uuid4()), asset, row["group_id"], row["owner_id"], row["run_id"], row["occurrence"],
+                                        (origin, asset, row["group_id"], row["owner_id"], row["run_id"], row["occurrence"],
                                          fingerprint, json.dumps(payload, ensure_ascii=False)))
+                        self._origin_published(origin)
                         self._audit(row["owner_id"], "import.available_to_group", row["id"])
             self.db.execute("UPDATE import_items SET outcome=?,reason=?,asset_id=?,lease_token=NULL,lease_until=NULL WHERE id=?",
                             (outcome, reason, asset, row["id"]))
             self._reconcile_run(row["run_id"])
         self._check_archive_session()
+
+    def _origin_published(self, origin):
+        """Runs inside the transaction that inserted the origin."""
 
     def fail(self, job, now=None):
         now = time.time() if now is None else now

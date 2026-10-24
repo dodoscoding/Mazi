@@ -1,0 +1,279 @@
+{
+ "label": "phone",
+ "viewport": [
+  375,
+  812
+ ],
+ "steps": [
+  {
+   "step": "1-empty-globe",
+   "stage": "globe",
+   "globeReady": true,
+   "readout": "Shared on Feb 3, 2023 · Capture date unknown · 0 places · 1 memory",
+   "indexTitle": "Places & moments · 0",
+   "trayOpen": false,
+   "trayCount": "3",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya",
+    "Lake weekend"
+   ],
+   "trayRect": {
+    "x": 128,
+    "y": 414,
+    "width": 235,
+    "height": 44,
+    "top": 414,
+    "right": 363,
+    "bottom": 458,
+    "left": 128
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 0,
+   "globeLabels": [],
+   "featured": "Shared on Feb 3, 2023 · Capture date unknown · Shared by Deniz · 1 photo",
+   "toast": null,
+   "status": null,
+   "horizontalScroll": false
+  },
+  {
+   "step": "2-empty-flat",
+   "stage": "flat",
+   "globeReady": true,
+   "readout": "Shared on Feb 3, 2023 · Capture date unknown · 0 places · 1 memory",
+   "indexTitle": "Places & moments · 0",
+   "trayOpen": false,
+   "trayCount": "3",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya",
+    "Lake weekend"
+   ],
+   "trayRect": {
+    "x": 128,
+    "y": 414,
+    "width": 235,
+    "height": 44,
+    "top": 414,
+    "right": 363,
+    "bottom": 458,
+    "left": 128
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 0,
+   "globeLabels": [],
+   "featured": "Shared on Feb 3, 2023 · Capture date unknown · Shared by Deniz · 1 photo",
+   "toast": null,
+   "status": null,
+   "horizontalScroll": false
+  },
+  {
+   "step": "3-typing-girne",
+   "stage": "globe",
+   "globeReady": true,
+   "readout": "Shared on Jul 12, 2024 · Capture date unknown · 0 places · 1 memory",
+   "indexTitle": "Places & moments · 0",
+   "trayOpen": true,
+   "trayCount": "3",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya",
+    "Lake weekend"
+   ],
+   "trayRect": {
+    "x": 12,
+    "y": 148,
+    "width": 351,
+    "height": 356,
+    "top": 148,
+    "right": 363,
+    "bottom": 504,
+    "left": 12
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 0,
+   "globeLabels": [],
+   "featured": "Shared on Jul 12, 2024 · Capture date unknown · Shared by Ana · 2 photos",
+   "toast": null,
+   "status": "",
+   "horizontalScroll": false
+  },
+  {
+   "step": "4-after-globe",
+   "stage": "globe",
+   "globeReady": true,
+   "readout": "Shared on Jul 12, 2024 · Capture date unknown · 1 place · 1 memory",
+   "indexTitle": "Places & moments · 1",
+   "trayOpen": false,
+   "trayCount": "2",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya"
+   ],
+   "trayRect": {
+    "x": 128,
+    "y": 414,
+    "width": 235,
+    "height": 44,
+    "top": 414,
+    "right": 363,
+    "bottom": 458,
+    "left": 128
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 0,
+   "globeLabels": [
+    "Kyrenia · 1"
+   ],
+   "featured": "Shared on Jul 12, 2024 · Capture date unknown · Shared by Ana · Kyrenia · 2 photos",
+   "toast": "Lake weekend is pinned in Kyrenia, CY.",
+   "status": null,
+   "horizontalScroll": false
+  },
+  {
+   "step": "5-after-flat",
+   "stage": "flat",
+   "globeReady": true,
+   "readout": "Shared on Jul 12, 2024 · Capture date unknown · 1 place · 1 memory",
+   "indexTitle": "Places & moments · 1",
+   "trayOpen": false,
+   "trayCount": "2",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya"
+   ],
+   "trayRect": {
+    "x": 128,
+    "y": 414,
+    "width": 235,
+    "height": 44,
+    "top": 414,
+    "right": 363,
+    "bottom": 458,
+    "left": 128
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 1,
+   "globeLabels": [],
+   "featured": "Shared on Jul 12, 2024 · Capture date unknown · Shared by Ana · Kyrenia · 2 photos",
+   "toast": null,
+   "status": null,
+   "horizontalScroll": false
+  },
+  {
+   "step": "6-ambiguous",
+   "stage": "globe",
+   "globeReady": true,
+   "readout": "Shared on Feb 3, 2023 · Capture date unknown · 0 places · 1 memory",
+   "indexTitle": "Places & moments · 1",
+   "trayOpen": true,
+   "trayCount": "2",
+   "trayRows": [
+    "Photo shared by Deniz",
+    "Photo shared by Maya"
+   ],
+   "trayRect": {
+    "x": 12,
+    "y": 148,
+    "width": 351,
+    "height": 356,
+    "top": 148,
+    "right": 363,
+    "bottom": 504,
+    "left": 12
+   },
+   "stageRect": {
+    "x": 0,
+    "y": 0,
+    "width": 375,
+    "height": 748,
+    "top": 0,
+    "right": 375,
+    "bottom": 748,
+    "left": 0
+   },
+   "flatNodes": 0,
+   "globeLabels": [
+    "Kyrenia"
+   ],
+   "featured": "Shared on Feb 3, 2023 · Capture date unknown · Shared by Deniz · 1 photo",
+   "toast": null,
+   "status": "Several places have that name. Which one?Victoria, British Columbia, CAVictoria, Texas, USVictoria, SCVictoria, Entre Ríos, ARVictoria, La Araucanía, CL",
+   "horizontalScroll": false
+  }
+ ],
+ "logs": [
+  "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "warning: [.WebGL-0x11c0044bc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0x11c0044bc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0x11c0044bc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0x11c0044bc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+  "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+ ],
+ "placeResponse": {
+  "ok": true,
+  "place_match": "matched",
+  "place": "Kyrenia, CY",
+  "candidates": [],
+  "pin": {
+   "name": "Kyrenia",
+   "country": "CY",
+   "latitude": 35.326,
+   "longitude": 33.333
+  }
+ },
+ "places": {
+  "count": "2 shared locations · 1 place in 1 country",
+  "rows": [
+   "1. Kyrenia, CY Cyprus",
+   "2. Kyrenia, CY Cyprus"
+  ],
+  "nodes": 2
+ }
+}

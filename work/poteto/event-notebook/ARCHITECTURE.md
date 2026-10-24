@@ -27,7 +27,7 @@ flowchart LR
 
 The event-scoped GET returns every eligible story and contribution with safe author labels. The write command validates event/story association, author ownership and revision. For a first note it selects or creates a story and writes within one archive transaction. A repeated first-save request conflicts instead of silently overwriting. No schema change is needed.
 
-The client receives explicit group/event identity and keeps one active editor targeting an exact saved story. Conflict refresh updates saved context while retaining the draft and requiring another explicit Save. Recoverable failures retain drafts. Hidden/pagehide, access loss, group changes and unmount clear private notes and drafts, abort requests and invalidate late responses. Sample and standalone-photo modes make no notebook requests.
+The client receives explicit group/event identity and keeps one active editor targeting an exact saved story. Conflict refresh updates saved context while retaining the draft and requiring another explicit Save. Recoverable failures retain drafts. Under D24, hiding the page or restoring it from the page cache retains notes, drafts and pending saves. The shared session gate quietly revalidates on return. Access loss, group changes and unmount still clear private notes and drafts, abort requests and invalidate late responses. Sample and standalone-photo modes make no notebook requests.
 
 ## Gotchas
 

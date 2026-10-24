@@ -8,7 +8,7 @@ Click an event title such as Party night to open related imported chat excerpts 
 - The detail page presents imported chat context and member notes with clear authorship and distinct origins.
 - Members can add, edit, and remove their own saved note in place, with real server persistence, revision conflict recovery, retained drafts on recoverable failures, and no other-member edits.
 - Preserve existing many-stories-per-event data. Never overwrite or hide earlier contributions by choosing a single story without exposing the others.
-- Respect withdrawn source context, full-memory visibility, membership, hidden/background clearing, navigation, reduced motion, keyboard and phone use.
+- Respect withdrawn source context, full-memory visibility, membership, D24 background retention with foreground session checks, access-loss clearing, navigation, reduced motion, keyboard and phone use.
 - Existing title creation through Archive review is retained. Link the empty notebook to that existing flow where appropriate. Do not promise complete chat transcripts or semantic topic matching.
 
 ## Grounding

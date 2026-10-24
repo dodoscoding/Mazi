@@ -111,9 +111,9 @@ def handler_for(store):
                     raise ValueError("Expected object")
                 user = self.user()
                 if path == "/api/review/correct":
-                    store.correct_asset(user, body["asset"], title=body.get("title", ""),
-                                        capture_date=body.get("capture_date"), place=body.get("place", ""),
-                                        anniversary=body.get("anniversary", False))
+                    return self.json(200, {"ok": True, **store.correct_asset(
+                        user, body["asset"], title=body.get("title", ""), capture_date=body.get("capture_date"),
+                        place=body.get("place", ""), anniversary=body.get("anniversary", False))})
                 elif path == "/api/review/pair":
                     store.review_pair(user, body["group"], body["left"], body["right"], body["action"])
                 elif path == "/api/review/rendition":

@@ -571,6 +571,33 @@ class EngineTests(unittest.TestCase):
         with Image.open(io.BytesIO(self.store.asset_bytes(self.ben, asset["id"]))) as preview:
             self.assertFalse(preview.getexif())
 
+    def test_exif_capture_time_variants_and_offset_are_read(self):
+        output = io.BytesIO()
+        exif = Image.Exif()
+        exif.get_ifd(0x8769).update({36867: "2010-02-03 04:05:06.250", 36881: "+03:00"})
+        Image.new("RGB", (8, 8), "blue").save(output, "JPEG", exif=exif)
+        run = self.submit({"chat.txt": "01/01/2020, 12:00 - Ana: a.jpg (file attached)", "a.jpg": output.getvalue()}, "whatsapp")
+        self.process(run)
+        [capture] = self.store.gallery(self.ben, self.group)[0]["origins"][0]["capture_assertions"]
+        self.assertEqual((capture["local"], capture["utc"], capture["offset"], capture["precision"]),
+                         ("2010-02-03T04:05:06", "2010-02-03T01:05:06+00:00", "+03:00", "second"))
+
+    def test_exif_capture_time_formats(self):
+        from mazi.imports.engine import exif_capture
+        cases = {
+            ("2010:02:03 04:05:06", None): ("2010-02-03T04:05:06", None, None),
+            ("2010:02:03 04:05:06.123\x00", None): ("2010-02-03T04:05:06", None, None),
+            ("2010-02-03T04:05:06Z", None): ("2010-02-03T04:05:06", "2010-02-03T04:05:06+00:00", "+00:00"),
+            ("2010:02:03 04:05:06+0200", None): ("2010-02-03T04:05:06", "2010-02-03T02:05:06+00:00", "+02:00"),
+            ("2010:02:03 04:05:06", "-05:00"): ("2010-02-03T04:05:06", "2010-02-03T09:05:06+00:00", "-05:00"),
+            ("0000:00:00 00:00:00", None): (None, None, None),
+            ("sometime in spring", None): (None, None, None),
+        }
+        for (raw, offset), expected in cases.items():
+            capture = exif_capture(raw, offset)
+            self.assertEqual((capture["local"], capture["utc"], capture["offset"]), expected, raw)
+            self.assertEqual(capture["raw"], raw)
+
     def test_cancel_twenty_thousand_record_run_preserves_finished_prefix(self):
         text = "ID,Timestamp,Contents,Attachments\n" + "".join(
             f"{i},2020-01-01 12:00:00,message {i},a.jpg\n" for i in range(20_000))

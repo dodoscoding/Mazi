@@ -18,8 +18,8 @@
     "check:docs": "python3 work/poteto/product-plan/verify_docs.py",
     "check:budgets": "node scripts/check-budgets.mjs",
     "typecheck": "tsc -b",
-    "lint": "prettier --check src \"tests/**/*.ts\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",
-    "format": "prettier --write src \"tests/**/*.ts\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",
+    "lint": "prettier --check src \"tests/**/*.ts\" \"tests/dom/*.mjs\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",
+    "format": "prettier --write src \"tests/**/*.ts\" \"tests/dom/*.mjs\" scripts/*.mjs vite.config.ts playwright*.config.ts package.json",
     "m0:start": "supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "m0:stop": "supabase stop",
     "test:m0": "node --test tests/m0/*.test.mjs",
@@ -37,6 +37,7 @@
     "start:local": "npm run build && node scripts/run-app.mjs --built --local",
     "archive:migrate": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.migrate', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
     "archive:hosted": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.hosted_ops', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
+    "places:backfill": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.sources.backfill_places'], {stdio:'inherit', env:process.env}).status ?? 1)\"",
     "test:dom": "node --test tests/dom/*.test.mjs"
   },
   "dependencies": {

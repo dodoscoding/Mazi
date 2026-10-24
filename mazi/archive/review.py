@@ -25,6 +25,7 @@ from PIL import Image, ImageOps, ImageStat
 from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
 from mazi.imports.engine import ImportStore
+from mazi.places import label, lookup
 
 DUPLICATE_COMPARISONS = 5_000_000
 DUPLICATE_PREVIEW_BYTES = 256 * 1024 * 1024
@@ -403,6 +404,10 @@ class ReviewStore(ImportStore):
                             "updated_at=excluded.updated_at",
                             (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
             self._audit(user, "review.correct", asset)
+        match = lookup(place)
+        city = match.get("city")
+        return {"place_match": match["status"], "place": city and f"{city.name}, {city.country}",
+                "candidates": [label(candidate) for candidate in match.get("candidates", [])]}
 
     def _timeline_items(self, user, group, query=""):
         visible = set(self._visible_ids(user, group))
@@ -431,7 +436,7 @@ class ReviewStore(ImportStore):
                                    *[str(c.get("text") or "") for p in records for c in p.get("context", [])]])
             if query.casefold() not in searchable.casefold():
                 continue
-            yield {"id": asset, "title": title, "date": day, "place": place or None,
+            yield {"id": asset, "title": title, "date": day, "dates": sorted(dates), "place": place or None,
                    "date_basis": "reviewed correction" if annotation["capture_date"] else
                                  "conflicting source evidence" if len(dates) > 1 else
                                  "source capture evidence" if day else "undated",

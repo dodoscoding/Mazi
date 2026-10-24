@@ -230,13 +230,15 @@ test("lost first-save response refreshes the saved target and keeps the draft", 
   expect(attempts).toBe(3);
 });
 
-test("background clearing discards notes and drafts and ignores a late save", async ({
+test("backgrounding retains notes, newer drafts and pending saves through authorized restore", async ({
   page,
 }) => {
   const { event } = await enter(page);
-  await page.route("**/api/memories/notebook?*", (route) =>
-    route.fulfill({ json: notebook(event.id) }),
-  );
+  let reads = 0;
+  await page.route("**/api/memories/notebook?*", (route) => {
+    reads++;
+    return route.fulfill({ json: notebook(event.id) });
+  });
   let release: () => void = () => {};
   const gate = new Promise<void>((resolve) => {
     release = resolve;
@@ -266,9 +268,20 @@ test("background clearing discards notes and drafts and ignores a late save", as
     });
     document.dispatchEvent(new Event("visibilitychange"));
   });
-  release();
-  await expect(page.locator("body")).not.toContainText("Private unsaved draft");
-  await expect(page.locator(".notebook-note")).toHaveCount(0);
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent("pagehide", { persisted: true }),
+    ),
+  );
+  const draft = page.getByLabel("Your recollection", { exact: true });
+  await expect(draft).toHaveValue("Private unsaved draft");
+  await expect(page.locator(".event-notebook")).toContainText(
+    "Alice's recollection",
+  );
+  await expect(
+    page.getByRole("button", { name: "Save recollection", exact: true }),
+  ).toBeDisabled();
+  await draft.fill("Newer typing survives backgrounding");
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", {
       value: false,
@@ -279,10 +292,77 @@ test("background clearing discards notes and drafts and ignores a late save", as
   await expect(page.locator(".event-notebook")).toContainText(
     "Alice's recollection",
   );
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: true }),
+    ),
+  );
+  await expect(draft).toHaveValue("Newer typing survives backgrounding");
   await expect(
-    page.getByLabel("Your recollection", { exact: true }),
-  ).toHaveCount(0);
+    page.getByRole("button", { name: "Save recollection", exact: true }),
+  ).toBeDisabled();
+  release();
+  await expect(
+    page.getByRole("button", { name: "Save recollection", exact: true }),
+  ).toBeEnabled();
+  await expect(draft).toHaveValue("Newer typing survives backgrounding");
+  expect(reads).toBe(1);
 });
+
+for (const status of [401, 403]) {
+  test(`foreground session denial ${status} clears notebook and suppresses a late save`, async ({
+    page,
+  }) => {
+    const { event } = await enter(page);
+    await page.route("**/api/memories/notebook?*", (route) =>
+      route.fulfill({ json: notebook(event.id) }),
+    );
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let saving = false;
+    let settled = false;
+    await page.route("**/api/memories/note", async (route) => {
+      saving = true;
+      await gate;
+      await route.fulfill({ json: notebook(event.id, 2) }).catch(() => {});
+      settled = true;
+    });
+    await page.goto(`/#/memory/${event.id}?notebook=1`);
+    await page
+      .getByRole("button", { name: "Edit your recollection" })
+      .first()
+      .click();
+    await page
+      .getByLabel("Your recollection", { exact: true })
+      .fill("Draft cleared after denial");
+    await page
+      .getByRole("button", { name: "Save recollection", exact: true })
+      .click();
+    await expect.poll(() => saving).toBe(true);
+    await page.route("**/api/session", (route) =>
+      route.fulfill({ status, json: { error: "Access denied" } }),
+    );
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", {
+        value: false,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect(page.locator(".event-notebook")).toHaveCount(0);
+    release();
+    await expect.poll(() => settled).toBe(true);
+    await expect(page.locator(".notebook-note")).toHaveCount(0);
+    await expect(
+      page.getByLabel("Your recollection", { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText(
+      "Alice's recollection",
+    );
+  });
+}
 
 test("event title links open imported excerpts and all notebook entry points use event IDs", async ({
   page,

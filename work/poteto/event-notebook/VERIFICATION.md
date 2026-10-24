@@ -63,3 +63,7 @@ The one required mechanical detector run reported three findings, all already pr
 - `6a65c3e` fix(notebook): retain drafts when saved recollections disappear.
 
 The domain runner resolved its relative output directory beneath `tests/browser`; those generated results were moved into this task's ignored `domain-results/` directory after the run. Existing tracked screenshot/report files changed by repository tests were restored to their base contents.
+
+## Main integration, 24 October 2026
+
+The conflict-resolution pass merges main at `2eccda3` and aligns notebook retention with newer D24. Its checks, updated lifecycle contract and independent review are recorded in [merge verification](merge-20261024/VERIFICATION.md). Earlier clear-on-hide evidence above remains historical.

@@ -382,6 +382,33 @@ test("related memories put the same place first and open that memory", async ({
   await expect(page).toHaveURL(/selected=naxos-morning/);
 });
 
+for (const backAction of ["pill", "Escape"]) {
+  test(`portal event title opens the notebook and ${backAction} returns past the portal`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.addInitScript(() =>
+      sessionStorage.setItem("mazi.intro", "seen"),
+    );
+    await page.goto("/#/?selected=harbour-night");
+    await page.getByRole("link", { name: "Open memory", exact: true }).click();
+    await page.locator(".dossier-title h2 a").click();
+    await expect(page).toHaveURL(/#\/memory\/harbour-night\?notebook=1$/);
+    await expect(page.locator(".memory-detail h1")).toBeFocused();
+    await expect(page.locator(".conversation blockquote")).toBeInViewport();
+    if (backAction === "pill")
+      await page
+        .getByRole("link", { name: "Back to atlas", exact: true })
+        .click();
+    else await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/#\/\?selected=harbour-night$/);
+    await expect(page.locator(".featured")).toContainText(
+      "The harbour after the last ferry",
+    );
+    await expect(page.locator(".dossier")).toHaveCount(0);
+  });
+}
+
 test("earlier and later follow the dates, with approximate memories in place", async ({
   page,
 }, testInfo) => {

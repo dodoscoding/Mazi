@@ -55,7 +55,7 @@ class AtlasTests(unittest.TestCase):
         self.assertEqual(cards[0]['messages'], [])
         self.assertTrue(cards[0]['photos'][0]['src'].startswith('/api/review/rendition/'))
 
-    def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
+    def _discord_card(self):
         from mazi.sources.discord import poll_source
         from tests.backend.sources.test_discord import FakeDiscord, link, message, paged
         link(self.store, self.alice, self.group)
@@ -69,12 +69,65 @@ class AtlasTests(unittest.TestCase):
         poll_source(self.store, self.alice, connection, client)
         while self.store.work_once():
             pass
+        return self._non_fixture_card()
+
+    def _non_fixture_card(self):
         [card] = [card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] not in ('Red', 'Blue')]
+        return card
+
+    def _forget_reviewed_date(self, asset, captures=()):
+        with self.store.transaction():
+            self.store.db.execute('DELETE FROM review_annotations WHERE asset_id=?', (asset,))
+            row = self.store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()
+            payload = json.loads(row['payload'])
+            payload['capture_assertions'] = [{'local': local, 'source': 'capture_exif'} for local in captures]
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+
+    def test_an_undated_photo_leaves_the_memory_dated_by_its_other_photos(self):
+        self._forget_reviewed_date(self.assets[1])
+        memory = self._memory()
+        self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2020-01-02', 2020, True))
+
+    def test_conflicting_capture_dates_give_a_range(self):
+        self._forget_reviewed_date(self.assets[1], ['2021-01-02T09:00:00', '2021-03-04T09:00:00'])
+        photo = next(card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] == 'Untitled photograph')
+        self.assertEqual((photo['date'], photo['year'], photo['approximate']), ('2021-01-02 to 2021-03-04', 2021, True))
+        memory = self._memory()
+        self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2020-01-02 to 2021-03-04', 2020, True))
+
+    def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
+        card = self._discord_card()
         self.assertEqual(card['messages'], [
             {'name': 'Ayşe', 'time': '2024-01-02T10:00:01+00:00', 'text': 'Göle vardık'},
             {'name': 'mehmet', 'time': '2024-01-02T10:00:02+00:00', 'text': 'Look at this'}])
         self.assertEqual(card['title'], 'Photo shared by mehmet')
         self.assertEqual(card['people']['conversation'], ['Ayşe', 'mehmet'])
+        self.assertEqual(card['source'], 'discord')
+        self.assertEqual(card['photos'][0]['provenance'][0]['source'], 'discord')
+
+    def test_cards_report_the_import_source_of_their_photographs(self):
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        self.assertEqual({card['title']: card['source'] for card in cards}, {'Red': 'apple', 'Blue': 'apple'})
+
+    def _discord_origin(self):
+        return next((row['id'], json.loads(row['payload'])) for row in self.store.db.execute('SELECT id,payload FROM archive_origins')
+                    if json.loads(row['payload'])['source_type'] == 'discord')
+
+    def test_discord_bot_photo_has_a_resolved_share_date(self):
+        card = self._discord_card()
+        self.assertEqual(card['photos'][0]['provenance'][0]['sharedAt'], dict(
+            local='2024-01-02T10:00:02+00:00', raw='2024-01-02T10:00:02+00:00', precision='second', ambiguous=False))
+        # The stored assertion is part of the origin fingerprint; reshaping it would turn a re-sync into IDENTITY_CONFLICT.
+        self.assertEqual(self._discord_origin()[1]['shared_at_assertion'], {'raw': '2024-01-02T10:00:02+00:00', 'source': 'discord_message'})
+
+    def test_discord_photo_imported_before_resolution_still_shows_its_share_date(self):
+        self._discord_card()
+        origin, payload = self._discord_origin()
+        payload['shared_at_assertion'] = {'raw': '2024-01-02T10:00:02.517000+00:00', 'source': 'discord_message'}
+        with self.store.transaction():
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), origin))
+        self.assertEqual(self._non_fixture_card()['photos'][0]['provenance'][0]['sharedAt'], dict(
+            local='2024-01-02T10:00:02.517000+00:00', raw='2024-01-02T10:00:02.517000+00:00', precision='second', ambiguous=False))
 
     def test_hidden_photo_suppresses_event_title_and_membership_denies(self):
         self.store.review_event(self.alice, self.group, self.assets, 'Private event title', 'accept')
@@ -157,6 +210,31 @@ class AtlasTests(unittest.TestCase):
         self.store.set_place(self.alice, self._origin(self.assets[1]), 'US', 'Springfield', 37.2, -93.3, None)
         self.assertIsNone(self._memory()['place'])
 
+    def test_turkish_dotted_capital_agrees_with_lowercase(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'İstanbul', 41.0, 29.0, None)
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'TR', 'istanbul', 41.1, 29.1, None)
+        self.assertEqual(self._memory()['place'],
+                         {'name': 'istanbul', 'country': 'TR', 'latitude': 41.05, 'longitude': 29.05})
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'TR', 'Ankara', 39.93, 32.86, None)
+        self.assertIsNone(atlas_view(self.store, self.ben, self.group)['memories'][0]['place'])
+
+    def _review_place(self, asset, place):
+        self.store.correct_asset(self.ben, asset, title='Red', capture_date='2020-01-02', place=place)
+        return next(card for card in atlas_view(self.store, self.alice, self.group)['memories'] if card['id'] == 'photo-' + asset)['place']
+
+    def test_city_named_in_review_pins_the_photo_over_its_source_location(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, None)
+        kyrenia = {'name': 'Kyrenia', 'country': 'CY', 'latitude': 35.326, 'longitude': 33.333}
+        self.assertEqual(self._review_place(self.assets[0], 'girne'), kyrenia)
+        self.assertEqual(self._review_place(self.assets[1], 'GİRNE'), kyrenia)
+        self.assertEqual(self._memory()['place'], kyrenia)
+
+    def test_unmatched_review_text_leaves_the_source_location(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, None)
+        for text in ('Victoria', 'Nowhereville'):
+            self.assertEqual(self._review_place(self.assets[0], text)['name'], 'Istanbul')
+            self.assertIsNone(self._review_place(self.assets[1], text))
+
     def _ben_copy_of_red(self):
         source = self.store.create_source(self.ben, self.group, 'apple', 'Photos', {
             'start': '2020-01-01', 'end': '2030-01-01', 'albums': [], 'types': ['image']})
@@ -199,7 +277,7 @@ class AtlasTests(unittest.TestCase):
     def _source_evidence(self, origin, sender, shared_at, *, ambiguous=False):
         row = self.store.db.execute('SELECT payload FROM archive_origins WHERE id=?', (origin,)).fetchone()
         payload = json.loads(row['payload'])
-        payload.update(source='whatsapp', sender={'label': sender}, shared_at_assertion=shared_at,
+        payload.update(source_type='whatsapp', sender={'label': sender}, shared_at_assertion=shared_at,
                        capture_assertions=[], warnings=['AMBIGUOUS_DATE'] if ambiguous else [])
         with self.store.transaction():
             self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), origin))
@@ -242,6 +320,46 @@ class AtlasTests(unittest.TestCase):
         self.assertFalse(malformed['photos'][0]['provenance'][1]['sharedAt']['ambiguous'])
         self.store.review_event(self.alice, self.group, self.assets, 'Circle story', 'accept')
         self.assertEqual(atlas_view(self.store, self.alice, self.group)['memories'][0]['title'], 'Circle story')
+
+    def _whatsapp_shares(self, chat):
+        from tests.backend.imports.test_adapters import zip_bytes
+        files = {'chat.txt': chat}
+        for name, color in (('a.jpg', 'green'), ('b.jpg', 'yellow')):
+            image = io.BytesIO()
+            Image.new('RGB', (20, 20), color).save(image, 'JPEG')
+            files[name] = image.getvalue()
+        data = zip_bytes(files)
+        run = self.store.begin_import(self.alice, self.group, 'whatsapp', 'synthetic-chat', len(data),
+                                      hashlib.sha256(data).hexdigest(), {})
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        self.store.scan(run)
+        self.store.confirm(self.alice, run)
+        while self.store.work_once():
+            pass
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        return {card['photos'][0]['provenance'][0]['sharedAt']['raw']: card['photos'][0]['provenance'][0]['sharedAt']
+                for card in cards if card['title'] not in ('Red', 'Blue')}
+
+    def test_one_unambiguous_day_settles_the_date_order_of_the_whole_chat(self):
+        shares = self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                                       '23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        self.assertEqual(shares['04/05/2024, 21:00'], dict(
+            local='2024-05-04T21:00:00', raw='04/05/2024, 21:00', precision='second', ambiguous=False))
+        self.assertEqual(shares['23/05/2024, 10:00']['local'], '2024-05-23T10:00:00')
+
+    def test_neighbouring_messages_settle_the_date_order_of_a_lone_photo(self):
+        shares = self._whatsapp_shares('05/28/2024, 20:59 - Ben: Ferry?\n'
+                                       '06/04/2024, 21:00 - Ana: a.jpg (file attached)')
+        self.assertEqual(shares['06/04/2024, 21:00']['local'], '2024-06-04T21:00:00')
+        self.assertFalse(shares['06/04/2024, 21:00']['ambiguous'])
+
+    def test_a_chat_without_an_unambiguous_day_stays_ambiguous(self):
+        shares = self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                                       '05/04/2024, 10:00 - Ana: b.jpg (file attached)')
+        self.assertEqual(shares['04/05/2024, 21:00'], dict(
+            local=None, raw='04/05/2024, 21:00', precision='unknown', ambiguous=True))
+        self.assertTrue(shares['05/04/2024, 10:00']['ambiguous'])
 
     def test_source_evidence_deduplicates_and_rechecks_withdrawal_and_owner_membership(self):
         resource, ben_origin = self._ben_copy_of_red()

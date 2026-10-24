@@ -13,7 +13,8 @@ import sqlite3
 import time
 import uuid
 import zipfile
-from datetime import date
+from collections import Counter
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from mazi.capacity import CapacityExceeded
@@ -21,6 +22,7 @@ from mazi.identity.core import Conflict, Denied
 from mazi.imports.adapters import MAX_FILE, NormalizedImportItem, digest
 from mazi.archive.export import ExportArray, write_export_object
 from mazi.archive.review import ReviewStore
+from mazi.places import gps_degrees, lookup, nearest
 
 PLACES_EXPORT_ROW_BYTES = 2 * 1024
 PLACES_EXPORT_SCAN_SECONDS = 3
@@ -43,6 +45,10 @@ CREATE TABLE IF NOT EXISTS source_resources (
 CREATE TABLE IF NOT EXISTS shared_places (
  origin TEXT PRIMARY KEY REFERENCES archive_origins(id), country TEXT NOT NULL,
  city TEXT NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, day TEXT
+);
+CREATE TABLE IF NOT EXISTS place_removals (
+ owner_id TEXT NOT NULL, asset_id TEXT NOT NULL, group_id TEXT NOT NULL, removed_at TEXT NOT NULL,
+ PRIMARY KEY(owner_id,asset_id)
 );
 CREATE TABLE IF NOT EXISTS source_outcomes (
  id TEXT PRIMARY KEY, connection TEXT NOT NULL, metadata TEXT NOT NULL, reason TEXT NOT NULL
@@ -406,6 +412,8 @@ class SourceStore(ReviewStore):
             self._asset(user, row['asset_id'])
             if latitude is None and longitude is None:
                 self.db.execute('DELETE FROM shared_places WHERE origin=?', (origin,))
+                self.db.execute('INSERT INTO place_removals VALUES(?,?,?,?) ON CONFLICT(owner_id,asset_id) DO UPDATE SET removed_at=excluded.removed_at',
+                                (user, row['asset_id'], row['group_id'], datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')))
             else:
                 if type(latitude) not in (float, int) or type(longitude) not in (float, int) or not math.isfinite(latitude) or not math.isfinite(longitude) or not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
                     raise ValueError('Invalid coordinates')
@@ -416,12 +424,56 @@ class SourceStore(ReviewStore):
                     calendar_day(day)
                 self.db.execute('INSERT INTO shared_places VALUES(?,?,?,?,?,?) ON CONFLICT(origin) DO UPDATE SET country=excluded.country,city=excluded.city,latitude=excluded.latitude,longitude=excluded.longitude,day=excluded.day',
                     (origin, country, city, latitude, longitude, day))
+                self.db.execute('DELETE FROM place_removals WHERE owner_id=? AND asset_id=?', (user, row['asset_id']))
             self._audit(user, 'place.update', origin)
+
+    def _origin_published(self, origin):
+        self.share_gps(origin)
+
+    def share_gps(self, origin):
+        """Pin a live origin at the city centre nearest its EXIF GPS; the caller owns the transaction."""
+        row = self.db.execute('SELECT * FROM archive_origins WHERE id=? AND withdrawn=0', (origin,)).fetchone()
+        if not row:
+            return 'withdrawn'
+        if self.db.execute('SELECT 1 FROM shared_places WHERE origin=?', (origin,)).fetchone():
+            return 'existing'
+        if self.db.execute('SELECT 1 FROM place_removals WHERE owner_id=? AND asset_id=?', (row['owner_id'], row['asset_id'])).fetchone():
+            return 'removed'
+        payload = json.loads(row['payload'])
+        fix = next((gps_degrees(item.get('raw')) for item in payload.get('location_assertions') or []
+                    if isinstance(item, dict) and item.get('source') == 'gps_exif'), None)
+        if not fix:
+            return 'no_fix'
+        city = nearest(*fix)
+        if not city:
+            return 'no_city'
+        days, _ = self._date_place_evidence(row['asset_id'], payload)
+        self.db.execute('INSERT INTO shared_places VALUES(?,?,?,?,?,?) ON CONFLICT(origin) DO NOTHING',
+                        (origin, city.country, city.name, city.latitude, city.longitude, next(iter(days)) if len(days) == 1 else None))
+        return 'pinned'
+
+    def backfill_places(self, after='', limit=200):
+        """share_gps over the next live origins by id; returns counts and the next cursor, None when done."""
+        with self.transaction():
+            ids = [row['id'] for row in self.db.execute('SELECT id FROM archive_origins WHERE withdrawn=0 AND id>? ORDER BY id LIMIT ?', (after, limit))]
+            counts = Counter(self.share_gps(origin) for origin in ids)
+        return counts, ids[-1] if len(ids) == limit else None
 
     def _places_query(self, user, group):
         return (' FROM shared_places p JOIN archive_origins o ON o.id=p.origin '
                 'JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
                 'WHERE o.group_id=? AND o.withdrawn=0', (group,))
+
+    def _reviewed_places(self, user, group):
+        """A city named for a photograph this member can see stands in for its shared locations, as on Atlas cards."""
+        points, visible = {}, set(self._visible_ids(user, group))
+        for row in self.db.execute("SELECT asset_id,place,capture_date FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
+            city = row['asset_id'] in visible and lookup(row['place']).get('city')
+            if city:
+                points[row['asset_id']] = {'origin': 'review:' + row['asset_id'], 'country': city.country, 'city': city.name,
+                                           'latitude': city.latitude, 'longitude': city.longitude,
+                                           'day': row['capture_date'], 'asset_id': row['asset_id']}
+        return points
 
     def places(self, user, group, country='', city='', paths=False):
         with self._projection_transaction():
@@ -437,6 +489,14 @@ class SourceStore(ReviewStore):
         rows, request_bytes = [], 2
         last_day = last_origin = ''
         started = time.perf_counter()
+        reviewed = self._reviewed_places(user, group)
+
+        def keep(point):
+            nonlocal request_bytes
+            request_bytes += len(json.dumps(point).encode('utf-8')) + (2 if rows else 0)
+            if len(rows) == 20000 or request_bytes > 8 * 1024 * 1024:
+                raise CapacityExceeded('Local map supports up to 20,000 location records within an 8 MiB response budget')
+            rows.append(point)
         while True:
             if time.perf_counter() - started > 15:
                 raise CapacityExceeded('Local map exceeded its 15 second processing budget')
@@ -450,12 +510,13 @@ class SourceStore(ReviewStore):
             for row in batch:
                 if row['text_bytes'] > 8192:
                     raise CapacityExceeded('Local map exceeded its 8 KiB location record budget')
-                point = {key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')}
-                request_bytes += len(json.dumps(point).encode('utf-8')) + (2 if rows else 0)
-                if len(rows) == 20000 or request_bytes > 8 * 1024 * 1024:
-                    raise CapacityExceeded('Local map supports up to 20,000 location records within an 8 MiB response budget')
-                rows.append(point)
+                if row['asset_id'] not in reviewed:
+                    keep({key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')})
             last_day, last_origin = batch[-1]['day'] or '', batch[-1]['origin']
+        for point in reviewed.values():
+            keep(point)
+        if reviewed:
+            rows.sort(key=lambda r: (r['day'] or '', r['origin']))
         countries = sorted({r['country'] for r in rows})
         narrowed = [r for r in rows if not country or r['country'] == country.upper()]
         cities = sorted({r['city'] for r in narrowed})

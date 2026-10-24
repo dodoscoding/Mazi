@@ -1,30 +1,53 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
 import re
-from math import asin, cos, radians, sin, sqrt
+from datetime import datetime, timezone
 
+from mazi.identity.core import Denied
+from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
 from mazi.persistence import insertion_order
+from mazi.places import fold, identify, km, label, lookup
 
 SAME_PLACE_KM = 50
 
 
-def _km(a, b):
-    lat1, lon1, lat2, lon2 = map(radians, (a[0], a[1], b[0], b[1]))
-    h = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
-    return 12742 * asin(sqrt(h))
-
-
 def _place(rows):
     """One place only when every row names the same city within SAME_PLACE_KM."""
-    if len({(row['city'].casefold(), row['country']) for row in rows}) != 1:
+    if len({identify(row['city'], row['country']) or ('name', fold(row['city']), row['country']) for row in rows}) != 1:
         return None
     centre = (sum(row['latitude'] for row in rows) / len(rows),
               sum(row['longitude'] for row in rows) / len(rows))
-    if any(_km(centre, (row['latitude'], row['longitude'])) > SAME_PLACE_KM for row in rows):
+    if any(km(centre, (row['latitude'], row['longitude'])) > SAME_PLACE_KM for row in rows):
         return None
     spellings = [row['city'] for row in rows]
     name = min(set(spellings), key=lambda city: (-spellings.count(city), city))
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
+
+
+def _shared_at(assertion, date_order):
+    """Resolve raw-only share evidence as imports do, with its export's settled date order."""
+    if assertion.get('local') or assertion.get('raw') is None:
+        return assertion
+    resolved = time_assertion(assertion['raw'], date_order)
+    return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
+
+
+def _export(row, origin):
+    return row['run_id'], (origin.get('conversation') or {}).get('id')
+
+
+def _timestamps(origin):
+    return [(origin.get('shared_at_assertion') or {}).get('raw'),
+            *(message.get('shared_at') for message in origin.get('context', []))]
+
+def _hidden_event_assets(store, user, group):
+    """Photographs of memories this member hid; they must not return as loose photographs."""
+    hidden = set()
+    for row in store.db.execute(
+        'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
+    ):
+        hidden.update(json.loads(row[0]))
+    return hidden
 
 
 def atlas_view(store, user, group):
@@ -32,11 +55,7 @@ def atlas_view(store, user, group):
     with transaction:
         store._member(user, group)
         items = {item['id']: item for item in store._timeline_items(user, group)}
-        hidden_assets = set()
-        for row in store.db.execute(
-            'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
-        ):
-            hidden_assets.update(json.loads(row[0]))
+        hidden_assets = _hidden_event_assets(store, user, group)
         cards, grouped = [], set()
 
         consumers = {}
@@ -44,13 +63,11 @@ def atlas_view(store, user, group):
 
         def card(identifier, title, assets, kind):
             records = [items[asset] for asset in assets]
-            dates = sorted({item['date'] for item in records if item['date']})
-            complete_dates = len([item for item in records if item['date']]) == len(records)
+            # Undated photos do not blank the others; conflicting evidence widens the range.
+            dates = sorted({day for item in records for day in item['dates']})
             date_label = 'Date not recorded'
             if dates:
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
-                if not complete_dates:
-                    date_label += ' · some dates unknown'
             photos = [dict(src='/api/review/rendition/' + item['id'],
                            alt=item['title'] or 'Archive photograph',
                            caption=item['title'] or 'Untitled photograph') for item in records]
@@ -61,8 +78,8 @@ def atlas_view(store, user, group):
             for position, asset in enumerate(assets):
                 consumers.setdefault(asset, []).append((detail, position))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,
-                        date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
-                        approximate=not complete_dates, by='Your circle',
+                        date=date_label, year=int(dates[0][:4]) if dates else None,
+                        approximate=not all(item['date'] for item in records), by='Your circle',
                         description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
                         source='', photos=photos, messages=[],
                         place=None, people=dict(shared=[], conversation=[]),
@@ -80,29 +97,36 @@ def atlas_view(store, user, group):
                  'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
                  'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
         where = 'WHERE o.group_id=? AND o.withdrawn=0 '
-        rows = store.db.execute(
-            'SELECT o.asset_id,o.payload,p.display_name' + joins +
-            'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
-            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
+        origins = ('SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
+                   'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
+                   'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'))
+        # One uploaded chat writes all its dates in one order; any of its timestamps can settle it.
+        # Two streamed passes keep large payloads from accumulating.
+        proven = {}
+        for row in store.db.execute(origins, (user, group)):
+            origin = json.loads(row['payload'])
+            proven.setdefault(_export(row, origin), set()).update(date_orders(_timestamps(origin)))
+        rows = store.db.execute(origins, (user, group))
         for origin_position, row in enumerate(rows):
             targets = consumers.get(row['asset_id'])
             if not targets:
                 continue
             origin = json.loads(row['payload'])
-            assertion = origin.get('shared_at_assertion') or {}
+            assertion = _shared_at(origin.get('shared_at_assertion') or {},
+                                   settle_date_order(proven[_export(row, origin)]))
             sender = (origin.get('sender') or {}).get('label') or None
             raw = assertion.get('raw')
             date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
             ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
                          and date_parts is not None and 1 <= int(date_parts[1]) <= 12
                          and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
-            evidence = dict(sender=sender, source=origin.get('source') or 'archive', sharedAt=dict(
+            evidence = dict(sender=sender, source=origin.get('source_type') or 'archive', sharedAt=dict(
                 local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
                 precision=assertion.get('precision') or 'unknown',
                 ambiguous=bool(ambiguous)))
             evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
             for detail, asset_position in targets:
-                detail['sources'].add(origin.get('source') or 'archive')
+                detail['sources'].add(evidence['source'])
                 if sender or raw is not None or assertion.get('local'):
                     detail['provenance'][asset_position].setdefault(evidence_key, evidence)
                 if row['display_name'] is not None:
@@ -117,11 +141,23 @@ def atlas_view(store, user, group):
                         previous = detail['messages'].get(key)
                         if previous is None or position < previous:
                             detail['messages'][key] = position
+        # A city named in Review stands in for every source location of that photograph.
+        reviewed = {}
+        for row in store.db.execute("SELECT asset_id,place FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
+            match = lookup(row['place']) if row['asset_id'] in consumers else {}
+            if match.get('status') == 'matched':
+                city = match['city']
+                reviewed[row['asset_id']] = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+        for asset, row in reviewed.items():
+            for detail, asset_position in consumers[asset]:
+                detail['places'].append((asset_position, -1, row))
         places = store.db.execute(
             'SELECT o.asset_id,p.city,p.country,p.latitude,p.longitude' + joins +
             'JOIN shared_places p ON p.origin=o.id ' + where +
             'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
         for place_position, row in enumerate(places):
+            if row['asset_id'] in reviewed:
+                continue
             for detail, asset_position in consumers.get(row['asset_id'], ()):
                 detail['places'].append((asset_position, place_position, row))
         for result, detail in zip(cards, details):
@@ -147,3 +183,48 @@ def atlas_view(store, user, group):
                 {message['name'] for message in result['messages']} - {'Source participant'}))
         cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
         return {'memories': cards}
+
+
+def _memory_assets(store, user, group, memory):
+    """The photographs behind one Atlas card, rechecked exactly as atlas_view shows them."""
+    visible = set(store._visible_ids(user, group))
+    hidden = _hidden_event_assets(store, user, group)
+    if memory.startswith('photo-'):
+        assets = [memory[6:]]
+        if assets[0] not in visible:
+            raise Denied('Memory unavailable')
+    else:
+        assets = next((event['assets'] for event in store._approved(user, group) if event['id'] == memory), None)
+        if not assets:
+            raise Denied('Memory unavailable')
+    if hidden.intersection(assets):
+        raise Denied('Memory unavailable')
+    return assets
+
+
+def place_memory(store, user, group, memory, place):
+    """Name the city of every photograph in one Atlas card; title, date and anniversary stay as they are.
+
+    A single matching city is stored as its full label so it always resolves to the same pin.
+    Empty text clears the place. Ambiguous or unknown text writes nothing and returns candidates.
+    """
+    if not all(isinstance(value, str) for value in (group, memory, place)) or not 0 < len(memory) <= 200 or len(place) > 200:
+        raise ValueError('Invalid memory or place')
+    match = lookup(place)
+    city = match.get('city')
+    write = {
+        'matched': 'INSERT INTO review_annotations(place,actor_id,updated_at,asset_id,group_id) VALUES(?,?,?,?,?) '
+                   'ON CONFLICT(asset_id) DO UPDATE SET place=excluded.place,actor_id=excluded.actor_id,updated_at=excluded.updated_at',
+        # Clearing never creates an annotation, so it adds no annotation author to an untouched photograph.
+        'empty': "UPDATE review_annotations SET place=?,actor_id=?,updated_at=? WHERE asset_id=? AND group_id=? AND place<>''",
+    }.get(match['status'])
+    with store.transaction():
+        assets = _memory_assets(store, user, group, memory)
+        if write:
+            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            for asset in assets:
+                store.db.execute(write, (label(city) if city else '', user, now, asset, group))
+            store._audit(user, 'atlas.place' if city else 'atlas.place.clear', memory)
+    return {'place_match': match['status'], 'place': city and f'{city.name}, {city.country}',
+            'candidates': [label(candidate) for candidate in match.get('candidates', [])],
+            'pin': city and dict(name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)}

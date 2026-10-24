@@ -62,11 +62,16 @@ test("capture wins, stable ties remain stable and invalid or ambiguous evidence 
     ["b", "a"],
   );
 });
-test("grouped photos require complete sharing coverage and label ranges and partial capture honestly", () => {
-  assert.equal(
-    chronologyDate(memory("partial", ["2025-01-01", null])).basis,
-    "unknown",
+test("grouped photos take their sharing range from dated photos and ignore undated or ambiguous ones", () => {
+  const partial = chronologyDate(memory("partial", ["2025-01-01", null]));
+  assert.deepEqual(
+    [partial.basis, partial.year, partial.sortKey],
+    ["shared", 2025, "2025-01-01"],
   );
+  const mixed = memory("mixed", ["2025-03-01", "2025-01-01"]);
+  mixed.photos[1].provenance![0].sharedAt.ambiguous = true;
+  assert.equal(chronologyDate(mixed).sortKey, "2025-03-01");
+  assert.equal(chronologyDate(memory("none", [null, null])).basis, "unknown");
   const range = chronologyDate(
     memory("range", ["2024-01-01", "2025-01-01"], {
       date: "2019-01-01 · some dates unknown",

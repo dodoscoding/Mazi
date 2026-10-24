@@ -40,6 +40,12 @@ const glyphs = {
     </>
   ),
   check: <path d="M5 12l5 5 9-10" />,
+  pin: (
+    <>
+      <path d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0113 0c0 5.3-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.3" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof glyphs;

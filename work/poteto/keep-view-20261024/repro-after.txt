@@ -1,0 +1,8 @@
+entry 200
+while hidden {"header":true,"status":null,"canvas":1}
+after visible {"sameHeaderNode":true,"statusesSeen":[]}
+api requests on return ["/api/session"]
+atlas requests for Home -> Imports -> Home []
+timeline -> memory -> Back {"memoryHash":"#/memory/932f01f0cfe5b81aadf5e6928d0a4099478ecceae5db88572acc038a986a962b","afterBack":"#/timeline","afterHistoryBack":"#/"}
+feature hash link -> memory -> Esc "#/review"
+review kept across hide true

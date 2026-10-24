@@ -1,0 +1,8 @@
+entry 200
+while hidden {"header":false,"status":"Opening Mazi…","canvas":0}
+after visible {"sameHeaderNode":false,"statusesSeen":["Opening Mazi…","Loading the atlas","Drawing your atlas…"]}
+api requests on return ["/api/session","/api/groups","/api/atlas"]
+atlas requests for Home -> Imports -> Home ["/api/atlas"]
+timeline -> memory -> Back {"memoryHash":"#/memory/4ed1e76c845589a5df32494a6743e0a3372fe5e3fe9c449c80ceeecccf61cfbc","afterBack":"#/?selected=4ed1e76c845589a5df32494a6743e0a3372fe5e3fe9c449c80ceeecccf61cfbc","afterHistoryBack":"#/memory/4ed1e76c845589a5df32494a6743e0a3372fe5e3fe9c449c80ceeecccf61cfbc"}
+feature hash link -> memory -> Esc "#/?selected=4ed1e76c845589a5df32494a6743e0a3372fe5e3fe9c449c80ceeecccf61cfbc"
+review kept across hide false
