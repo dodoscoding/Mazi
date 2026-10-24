@@ -54,7 +54,7 @@ Each time assertion stores a raw value, parsed local value, timezone or offset i
 
 The resolved display date records the chosen assertion and resolution reason. User correction takes precedence but retains previous assertions. A usual candidate order is valid capture EXIF, Apple capture metadata, other source capture metadata, trustworthy file evidence, then message-sharing time as an explicitly estimated fallback. This is a review heuristic, not proof. File export/creation time is never presented as capture time without its estimate label.
 
-Contradictory offsets, ambiguous locale dates, implausible EXIF, or conflicts between capture sources enter review. Unknown dates remain undated. Capture and share times have separate fields and labels. On This Day uses only an accepted month/day with sufficient precision.
+Contradictory offsets, ambiguous locale dates, implausible EXIF, or conflicts between capture sources enter review. A chat export's day/month order is settled once per uploaded chat by any day above 12 among its retained timestamps; only an export with no deciding or with contradictory days stays ambiguous ([D22](DECISIONS.md#chat-photo-dates-24-october-2026)). A memory's date is the range of its dated photographs; undated ones do not remove it and conflicting capture evidence widens it. Unknown dates remain undated. Capture and share times have separate fields and labels. On This Day uses only an accepted month/day with sufficient precision.
 
 Timestamp, location, identity, duplicate, and cluster confidence are separate values. Each includes evidence, method/model version, and a reason. A score is not called a probability until calibrated against labeled fixtures.
 
