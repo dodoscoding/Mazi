@@ -14,6 +14,8 @@ import { plural, shortDate } from "./atlas/format";
 import { Intro, claimIntro } from "./atlas/Intro";
 import { buildAtlas, placeIdOf } from "./atlas/model";
 import type { PlaceNode } from "./atlas/model";
+import { PlaceForm, UnplacedTray } from "./atlas/PlaceMemories";
+import type { OnPlaced } from "./atlas/PlaceMemories";
 import { Portal } from "./atlas/Portal";
 import { Scrubber } from "./atlas/Scrubber";
 import { useLayout } from "./atlas/useLayout";
@@ -101,6 +103,7 @@ export function Home(props: {
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
@@ -214,6 +217,7 @@ function AtlasHome({
   reduced,
   link,
   chooseMemory,
+  onPlaced,
   openLink,
 }: {
   archive: Archive;
@@ -223,6 +227,7 @@ function AtlasHome({
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
@@ -262,6 +267,7 @@ function AtlasHome({
   const [playing, setPlaying] = useState(false);
   const [snap, setSnap] = useState(0);
   const [drawer, setDrawer] = useState(false);
+  const [placing, setPlacing] = useState<string | null>(null);
   const [introStart, setIntroStart] = useState<number | null>(() =>
     claimIntro() ? performance.now() / 1000 : null,
   );
@@ -662,6 +668,30 @@ function AtlasHome({
             .filter(Boolean)
             .join(" · ")}
         </p>
+        {!demo && (
+          <button
+            type="button"
+            className="button button--ghost feature-place"
+            aria-expanded={placing === selected.id}
+            onClick={() =>
+              setPlacing(placing === selected.id ? null : selected.id)
+            }
+          >
+            {selected.place ? "Change place" : "Add a place"}
+          </button>
+        )}
+        {!demo && placing === selected.id && (
+          <PlaceForm
+            key={selected.id}
+            group={archive.group}
+            memory={selected}
+            autoFocus
+            onPlaced={(id, pin) => {
+              setPlacing(null);
+              onPlaced(id, pin);
+            }}
+          />
+        )}
         <a
           ref={openLink}
           className="primary-action"
@@ -840,6 +870,15 @@ function AtlasHome({
           </button>
         )}
         {!phone && indexRows}
+        {!demo && (
+          <UnplacedTray
+            group={archive.group}
+            memories={atlas.unplaced}
+            onPlaced={onPlaced}
+            onSelect={chooseMemory}
+            defaultOpen={!phone}
+          />
+        )}
         {!phone && (
           <div className="atlas-aside">
             {featured}
