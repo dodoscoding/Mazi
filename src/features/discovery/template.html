@@ -96,6 +96,23 @@
         <a href="#/memories">Browse photographs</a> or
         <a href="#/review">search the review timeline</a> instead.
       </p>
+      <div id="search-filters" class="disc-filters" hidden>
+        <div class="disc-filter">
+          <span id="source-filter-label" class="hud-label">Source</span>
+          <div
+            id="source-filter"
+            class="result-types"
+            role="group"
+            aria-labelledby="source-filter-label"
+          ></div>
+        </div>
+        <label class="disc-filter"
+          ><span class="hud-label">Shared by</span
+          ><select id="shared-by">
+            <option value="">Anyone</option>
+          </select></label
+        >
+      </div>
       <div class="disc-tools">
         <div
           id="result-types"
@@ -114,7 +131,7 @@
         >
       </div>
       <details class="disc-refine">
-        <summary>Refine by place, person, date or source</summary>
+        <summary>Refine by place, person or date</summary>
         <div class="filters">
           <label
             >Country code<input id="country" maxlength="2" placeholder="NL"
@@ -138,16 +155,6 @@
           /></label>
           <label>From<input id="start" type="date" /></label
           ><label>Through<input id="end" type="date" /></label>
-          <label
-            >Source<select id="source">
-              <option value="">Any source</option>
-              <option value="manual">Manual</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="messenger">Messenger</option>
-              <option value="discord">Discord export / bot</option>
-              <option value="apple">Apple Photos</option>
-            </select></label
-          >
         </div>
       </details>
       <div class="disc-index-tools">

@@ -181,16 +181,13 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
     .getByLabel("Search", { exact: true })
     .fill("scaling-keyword-fixture");
   await page.getByLabel("Search mode").selectOption("semantic");
-  await page.getByText("Refine by place, person, date or source").click();
+  await page.getByText("Refine by place, person or date").click();
   await page.locator("#person").selectOption({ label: "Ben" });
   await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
   await page.getByLabel("Country code").fill("NL");
   await page.getByLabel("Object or concept in text").fill("bicycle");
   await page.getByLabel("From", { exact: true }).fill("2024-01-01");
   await page.getByLabel("Through", { exact: true }).fill("2024-12-31");
-  await page
-    .getByRole("combobox", { name: "Source", exact: true })
-    .selectOption("apple");
   await page.getByRole("button", { name: "Search archive" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
