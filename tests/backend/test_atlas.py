@@ -75,6 +75,26 @@ class AtlasTests(unittest.TestCase):
         [card] = [card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] not in ('Red', 'Blue')]
         return card
 
+    def _forget_reviewed_date(self, asset, captures=()):
+        with self.store.transaction():
+            self.store.db.execute('DELETE FROM review_annotations WHERE asset_id=?', (asset,))
+            row = self.store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()
+            payload = json.loads(row['payload'])
+            payload['capture_assertions'] = [{'local': local, 'source': 'capture_exif'} for local in captures]
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+
+    def test_an_undated_photo_leaves_the_memory_dated_by_its_other_photos(self):
+        self._forget_reviewed_date(self.assets[1])
+        memory = self._memory()
+        self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2020-01-02', 2020, True))
+
+    def test_conflicting_capture_dates_give_a_range(self):
+        self._forget_reviewed_date(self.assets[1], ['2021-01-02T09:00:00', '2021-03-04T09:00:00'])
+        photo = next(card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] == 'Untitled photograph')
+        self.assertEqual((photo['date'], photo['year'], photo['approximate']), ('2021-01-02 to 2021-03-04', 2021, True))
+        memory = self._memory()
+        self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2020-01-02 to 2021-03-04', 2020, True))
+
     def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
         card = self._discord_card()
         self.assertEqual(card['messages'], [
