@@ -115,7 +115,7 @@ class ArchiveCapacityTests(unittest.TestCase):
         page = self.store.timeline(self.ben, self.group, limit=1, query='MATCH')
         self.assertEqual((page['items'][0]['title'], page['total'], page['next_offset']), ('Match new', 2, 1))
         page = self.store.timeline(self.ben, self.group, offset=1, limit=1, query='match')
-        self.assertEqual(page, {'items': [{'id': red, 'title': 'Match old', 'date': '2020-01-02',
+        self.assertEqual(page, {'items': [{'id': red, 'title': 'Match old', 'date': '2020-01-02', 'dates': ['2020-01-02'],
                                          'place': 'harbour', 'date_basis': 'reviewed correction',
                                          'origin_count': 101, 'anniversary': True}],
                                 'total': 2, 'next_offset': None})

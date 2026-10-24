@@ -99,6 +99,17 @@ The pins live in `shared_places`, so Places, Discovery, Answers and export read 
 
 [Contracts](CONTRACTS.md#search-and-ai-boundary) record the request and response fields; [verification](../work/poteto/search-filters-20261024/VERIFICATION.md) records the evidence. Accepted gaps: a memory mixing chat and manual photographs is filtered by its chat senders only; tagged person records drop out of People while a filter is set; Person and search mode are not restored from the URL.
 
+## Chat photo dates, 24 October 2026
+
+**D23: A chat photo is dated by its message.** The owner reported that a photo's date sometimes does not show. On 24 October 2026 all 458 live photographs were chat imports (305 WhatsApp, 153 Discord) and none carried an EXIF capture date, so the message's share time is the only date evidence. D09 still applies: a share date is labelled as one and never replaces a capture assertion.
+
+- Discord bot imports keep storing the raw share time, because the stored assertion is part of each origin's fingerprint and reshaping it would turn a re-sync into an identity conflict. Atlas resolves any stored assertion that kept only raw evidence, so Discord photographs, including those imported earlier, get their share date on read without a migration or backfill.
+- A WhatsApp export writes every date in one order. Atlas settles day/month order once per uploaded chat from every timestamp the archive kept for it: photo messages and their neighbouring context messages. Any day above 12 decides; only a chat with no deciding day, or with contradictory ones, stays ambiguous. Stored assertions keep the importer's result, because they are part of the origin fingerprint and a changed value would turn a re-import of the same export into an identity conflict.
+- A memory shows the range of its dated photographs. Undated photographs no longer remove its date or year, and a photograph with conflicting capture evidence contributes its whole range. Either case keeps the memory approximate, and timeline items list every evidenced day as `dates`. This supersedes the rule in [Replay chronology](#replay-chronology-and-uncropped-photographs-22-october-2026) that every photograph needs sharing evidence.
+- EXIF capture times are read with subseconds, `-` separators, a `T` separator, a trailing `Z` or offset, and OffsetTimeOriginal.
+
+Accepted gaps: Discord times are UTC, so a photo shared shortly after local midnight east of UTC shows the previous day. Order settlement sees only the timestamps the archive retained, not every line of the original export.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
@@ -185,7 +196,7 @@ A 60-second lease controls when another worker may reclaim an item. Work must be
 
 The owner requested fixes for slow Search, inactive Replay, unclear undated labels, and cropped opened photographs, with tests before deployment. Atlas and Timeline prefer capture chronology. When capture chronology is unavailable, they may use resolved sharing dates with an explicit sharing label. D09 still applies. Sharing dates never replace stored capture assertions or capture-date search filters.
 
-A grouped memory needs resolved, unambiguous sharing evidence for every photograph before sharing dates position it in Replay. The earliest valid sharing observation for each photograph supplies a sharing range. Partial or conflicting evidence remains visible without guessing a capture date. Replay visits individual dated memories, including several in the same year, and supports pause, completion, and restart. Memories without usable chronology remain available for manual browsing.
+A grouped memory needed resolved, unambiguous sharing evidence for every photograph before sharing dates positioned it in Replay; [D23](#chat-photo-dates-24-october-2026) replaced that with the range of its dated photographs. The earliest valid sharing observation for each photograph supplies a sharing range. Partial or conflicting evidence remains visible without guessing a capture date. Replay visits individual dated memories, including several in the same year, and supports pause, completion, and restart. Memories without usable chronology remain available for manual browsing.
 
 Opened portal and detail photographs preserve the entire image within the available screen area. Thumbnails can remain cropped. This changes framing, not stored image bytes or preview resolution. Search uses batched keyword metadata reads for small archives while preserving existing large-archive budgets and access rules.
 

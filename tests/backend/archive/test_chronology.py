@@ -26,12 +26,12 @@ class ChronologyTests(unittest.TestCase):
     def item(self):
         return next(item for item in self.store.timeline(self.fixture.ben, self.fixture.group)['items'] if item['id'] == self.asset)
 
-    def test_internal_date_conflict_is_not_a_precise_atlas_date(self):
+    def test_internal_date_conflict_is_an_approximate_atlas_range(self):
         self.evidence(self.asset, ['2020-01-02', '2021-01-02'], ['Utrecht'])
         self.assertIsNone(self.item()['date'])
         self.assertEqual(self.item()['date_basis'], 'conflicting source evidence')
         card = next(card for card in atlas_view(self.store, self.fixture.ben, self.fixture.group)['memories'] if card['id'] == 'photo-' + self.asset)
-        self.assertIsNone(card['year'])
+        self.assertEqual((card['date'], card['year'], card['approximate']), ('2020-01-02 to 2021-01-02', 2020, True))
 
     def test_invalid_first_assertion_does_not_hide_valid_evidence(self):
         self.evidence(self.asset, ['invalid', None, '2020-01-02'], [])
