@@ -19,7 +19,7 @@ from pathlib import Path
 
 from mazi.capacity import CapacityExceeded
 from mazi.identity.core import Conflict, Denied
-from mazi.imports.adapters import MAX_FILE, NormalizedImportItem, digest
+from mazi.imports.adapters import MAX_FILE, NormalizedImportItem, digest, time_assertion
 from mazi.archive.export import ExportArray, write_export_object
 from mazi.archive.review import ReviewStore
 from mazi.places import gps_degrees, nearest
@@ -311,7 +311,7 @@ class SourceStore(ReviewStore):
                 coverage={'complete': False, 'scope': json.loads(source['scope']), 'resource': metadata},
                 sender={'id': metadata.get('sender', ''), **({'label': metadata['sender_label']} if metadata.get('sender_label') else {})},
                 channel={'id': metadata.get('channel', '')},
-                shared_at_assertion={'raw': metadata.get('shared_at'), 'source': 'discord_message'},
+                shared_at_assertion={**time_assertion(metadata.get('shared_at')), 'source': 'discord_message'},
                 context=metadata.get('context') or ([{'text': metadata['text'], 'locator': metadata['item']}] if metadata.get('text') else []))
             # Parent completion retains EXIF; source date is additional evidence in prepare().
             self.db.execute('INSERT INTO import_items(id,run_id,ordinal,occurrence,payload,outcome,reason) VALUES(?,?,0,?,?,?,?) '

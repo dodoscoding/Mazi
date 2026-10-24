@@ -2,6 +2,7 @@
 import json
 import re
 
+from mazi.imports.adapters import time_assertion
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, lookup
 
@@ -19,6 +20,14 @@ def _place(rows):
     spellings = [row['city'] for row in rows]
     name = min(set(spellings), key=lambda city: (-spellings.count(city), city))
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
+
+
+def _shared_at(assertion):
+    """Rows imported before resolution kept only raw evidence; resolve them the same way imports do."""
+    if assertion.get('local') or assertion.get('raw') is None:
+        return assertion
+    resolved = time_assertion(assertion['raw'])
+    return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
 
 
 def atlas_view(store, user, group):
@@ -83,7 +92,7 @@ def atlas_view(store, user, group):
             if not targets:
                 continue
             origin = json.loads(row['payload'])
-            assertion = origin.get('shared_at_assertion') or {}
+            assertion = _shared_at(origin.get('shared_at_assertion') or {})
             sender = (origin.get('sender') or {}).get('label') or None
             raw = assertion.get('raw')
             date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
