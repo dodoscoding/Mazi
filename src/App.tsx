@@ -7,6 +7,7 @@ import { FeaturePage } from "./features";
 import { createDiscordReturn } from "./features/discordReturn";
 import { isFeaturePath } from "./featureRoutes";
 import { ArchiveStatus, Home } from "./Home";
+import { usePlacedMemories } from "./atlas/PlaceMemories";
 import { MemoryNotFound, MemoryView } from "./MemoryView";
 import { Shell } from "./Shell";
 import { SoundController } from "./sound/SoundController";
@@ -43,7 +44,10 @@ export default function App() {
     )
       navigate("/", false, true);
   }, [entry.state.status, route.path, navigate]);
-  const memories = archive.memories;
+  const { memories, placed } = usePlacedMemories(
+    archive.memories,
+    archive.group,
+  );
   const memoryById = (id: string) => memories.find((item) => item.id === id);
   const memoryId = route.path.startsWith("/memory/") ? route.path.slice(8) : "";
   const memory = memoryById(memoryId);
@@ -125,6 +129,7 @@ export default function App() {
         reduced={reduced}
         link={link}
         chooseMemory={chooseMemory}
+        onPlaced={placed}
         heading={heading}
         openLink={openLink}
       />

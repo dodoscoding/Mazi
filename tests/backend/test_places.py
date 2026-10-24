@@ -27,6 +27,15 @@ class GpsTests(unittest.TestCase):
 
 
 class LookupTests(unittest.TestCase):
+    def test_a_city_listed_twice_is_one_place(self):
+        self.assertEqual(lookup('Adapazarı')['status'], 'matched')
+        self.assertEqual(lookup('adapazari')['city'].population, 286787)
+
+    def test_every_stored_label_reads_back_as_its_city(self):
+        for city in cities():
+            found = lookup(label(city)).get('city')
+            self.assertEqual((found.name, found.region, found.country), (city.name, city.region, city.country), label(city))
+
     def test_turkish_and_accented_spellings_match(self):
         kyrenia = lookup('girne')
         self.assertEqual(kyrenia['status'], 'matched')

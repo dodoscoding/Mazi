@@ -1,0 +1,266 @@
+/* Unplaced memories tray: a pill beside the globe that opens into a list; naming a city pins the memory. */
+.place-tray {
+  --i: 3;
+  position: absolute;
+  left: 372px;
+  bottom: 132px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: 340px;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-hud);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.place-tray[data-open] {
+  width: 340px;
+  max-height: calc(100% - 132px - 96px);
+  border-radius: var(--radius-panel);
+}
+.place-tray-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--target);
+  padding: 0 16px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text-primary);
+  font: 500 13px / 1 var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.place-tray-toggle:hover {
+  background: var(--bg-raised);
+}
+.place-tray-toggle svg:first-child {
+  color: var(--accent-terminator);
+}
+.place-tray-title {
+  flex: 1;
+}
+.place-tray-count {
+  min-width: 24px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--terminator-tint);
+  color: var(--accent-hot);
+  font: 500 11px / 1.2 var(--font-mono);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.place-tray-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 8px 8px;
+}
+.place-tray-body[hidden] {
+  display: none;
+}
+.place-tray-hint {
+  padding: 2px 8px 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.place-tray-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.place-tray-list > li {
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 var(--line-soft);
+}
+.place-tray-list > li[data-active] {
+  background: var(--bg-raised);
+  box-shadow: none;
+}
+.place-tray-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: var(--target);
+  padding: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-instant) ease-out;
+}
+.place-tray-row:hover {
+  background: var(--bg-raised);
+}
+.place-tray-row:focus-visible {
+  outline-offset: -2px;
+}
+.place-tray-row img {
+  width: 48px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--radius-photo);
+  background: var(--bg-raised);
+}
+.place-tray-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.place-tray-name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.place-tray-meta {
+  font: 400 10px / 1.4 var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The city form, shared by the tray and the featured card. */
+.place-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 8px 10px;
+}
+.place-field {
+  display: flex;
+  gap: 8px;
+}
+/* Field borders use text.muted, not line, so the boundary keeps 3:1 against the panel. */
+.place-field input {
+  flex: 1;
+  min-width: 0;
+  height: var(--target);
+  padding: 0 14px;
+  border: 1px solid var(--text-muted);
+  border-radius: var(--radius-panel);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font: 500 16px var(--font-ui);
+}
+.place-field input::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+.place-field input:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--atmosphere-tint);
+}
+.place-field input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+.place-field .button--primary {
+  min-height: var(--target);
+  padding: 0 18px;
+}
+.place-status:empty {
+  display: none;
+}
+.place-status p {
+  color: var(--text-body);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.place-status .is-error {
+  color: var(--error);
+}
+.place-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.place-candidate {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-primary);
+  font: 400 13px / 1.2 var(--font-ui);
+  cursor: pointer;
+}
+.place-candidate:hover {
+  box-shadow: inset 0 0 0 1px var(--accent-terminator);
+}
+.place-clear {
+  align-self: flex-start;
+  min-height: 36px;
+  font-size: 13px;
+}
+.feature-place {
+  align-self: flex-start;
+  min-height: 32px;
+  margin: -4px 0 0 -12px;
+  font-size: 13px;
+}
+.feature-info .place-form {
+  padding: 0;
+}
+
+@media (max-width: 1150px) {
+  .place-tray {
+    left: 300px;
+  }
+}
+/* 800: the aside docks under the globe, so the tray hangs from the top right. */
+@media (max-width: 800px) {
+  .place-tray {
+    top: 84px;
+    right: var(--gutter);
+    left: auto;
+    bottom: auto;
+  }
+  .place-tray[data-open] {
+    width: min(340px, calc(100% - 2 * var(--gutter)));
+    max-height: calc(100% - 84px - 316px);
+  }
+}
+/* 390: the closed pill shares the Replay line above the sheet; open, it covers the time bar
+   until a place is named, then closes so the new pin is in view. */
+@media (max-width: 600px) {
+  .place-tray {
+    z-index: 3;
+    top: auto;
+    right: 12px;
+    bottom: calc(max(30%, 236px) + 54px);
+    max-width: calc(100% - 140px);
+  }
+  .place-tray[data-open] {
+    top: 84px;
+    left: 12px;
+    bottom: calc(max(30%, 236px) + 8px);
+    width: auto;
+    max-width: none;
+    max-height: none;
+    background: var(--bg-deep);
+  }
+  .place-tray-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}

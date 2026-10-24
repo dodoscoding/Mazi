@@ -217,6 +217,8 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(self.store.people(self.alice, self.group), [])
 
     def test_personal_hides_do_not_count_toward_the_map_limit(self):
+        # A city named in Review would stand in for all 1001 shared locations (D21).
+        self.store.correct_asset(self.alice, self.asset, title='A bicycle beside the sea', capture_date='2020-01-02', place='')
         origin = self.store.db.execute('SELECT * FROM archive_origins WHERE asset_id=?', (self.asset,)).fetchone()
         for index in range(1001):
             identifier = f'extra-origin-{index}'
