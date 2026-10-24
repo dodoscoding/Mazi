@@ -371,7 +371,7 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#person")).toBeDisabled();
   await page
-    .getByText("Refine by place, person, date or source", { exact: true })
+    .getByText("Refine by place, person or date", { exact: true })
     .click();
   await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
   await page

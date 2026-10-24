@@ -433,6 +433,34 @@
 .discovery-page .disc-submit:not(:disabled):hover {
   box-shadow: 0 0 32px var(--glow);
 }
+.discovery-page .disc-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+.discovery-page .disc-filters[hidden] {
+  display: none;
+}
+.discovery-page .disc-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+  margin: 0;
+}
+.discovery-page .disc-filter .result-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.discovery-page .disc-filter select {
+  max-width: 16rem;
+  border-radius: var(--radius-pill);
+  font: 500 13px / 1.2 var(--font-ui);
+}
 .discovery-page .disc-tools {
   display: flex;
   justify-content: space-between;
@@ -599,6 +627,9 @@
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.45;
+}
+.discovery-page .disc-photo .disc-shared:empty {
+  display: none;
 }
 .discovery-page .disc-photo .disc-person {
   display: flex;
