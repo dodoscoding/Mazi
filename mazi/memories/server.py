@@ -38,6 +38,8 @@ def handler_for(store):
                     return self.send(200, store.story_frame(user, query['group'], query['story'], query['asset']), 'image/jpeg')
                 if parts.path == '/api/memories/recap':
                     return self.json(200, store.recap(user, query['group'], int(query['year'])))
+                if parts.path == '/api/memories/notebook':
+                    return self.json(200, store.event_notebook(user, query['group'], query['event']))
                 if parts.path == '/api/memories/stories':
                     return self.json(200, store.stories(user, query['group']))
                 if parts.path in ('/api/memories/story', '/api/memories/export'):
@@ -77,6 +79,8 @@ def handler_for(store):
                     return self.json(200, store.save_subevents(user, body['group'], body['story'], body['revision'], body['sections']))
                 if path == '/api/memories/video':
                     return self.send(200, store.story_video(user, body['group'], body['story']), 'video/x-msvideo')
+                if path == '/api/memories/note':
+                    return self.json(200, store.write_event_note(user, body['group'], body['event'], body['target'], body['text']))
                 if path == '/api/memories/create':
                     return self.json(200, store.create_story(user, body['group'], body['event']))
                 if path == '/api/memories/write':

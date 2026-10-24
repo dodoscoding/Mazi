@@ -138,6 +138,8 @@ export default function App() {
     content = (
       <MemoryView
         memory={memory}
+        group={archive.group}
+        notebook={route.notebook}
         memories={memories}
         photo={route.photo}
         demo={demo}

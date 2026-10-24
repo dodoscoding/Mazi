@@ -607,20 +607,26 @@ export function mount(root, lifecycle) {
     for (const event of reviewed) {
       const card = document.createElement("article");
       card.className = "event-card is-reviewed";
+      const eventHeading = element("h3", "");
+      const eventLabel =
+        event.title ||
+        (event.status === "rejected"
+          ? "Rejected suggestion"
+          : "Untitled event");
+      if (event.status === "accepted") {
+        const link = element("a", eventLabel);
+        link.href = `#/memory/${encodeURIComponent(event.id)}?notebook=1`;
+        eventHeading.append(link);
+      } else eventHeading.textContent = eventLabel;
       card.append(
-        element(
-          "h3",
-          event.title ||
-            (event.status === "rejected"
-              ? "Rejected suggestion"
-              : "Untitled event"),
-        ),
+        eventHeading,
         element(
           "p",
           `${event.assets.length} photographs · ${event.status}`,
           "review-why",
         ),
       );
+
       card.append(
         button("Undo event", async () => {
           await api("/api/review/event", {
