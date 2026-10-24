@@ -296,6 +296,46 @@ class AtlasTests(unittest.TestCase):
         self.store.review_event(self.alice, self.group, self.assets, 'Circle story', 'accept')
         self.assertEqual(atlas_view(self.store, self.alice, self.group)['memories'][0]['title'], 'Circle story')
 
+    def _whatsapp_shares(self, chat):
+        from tests.backend.imports.test_adapters import zip_bytes
+        files = {'chat.txt': chat}
+        for name, color in (('a.jpg', 'green'), ('b.jpg', 'yellow')):
+            image = io.BytesIO()
+            Image.new('RGB', (20, 20), color).save(image, 'JPEG')
+            files[name] = image.getvalue()
+        data = zip_bytes(files)
+        run = self.store.begin_import(self.alice, self.group, 'whatsapp', 'synthetic-chat', len(data),
+                                      hashlib.sha256(data).hexdigest(), {})
+        self.store.write_chunk(self.alice, run, 0, data)
+        self.store.finish_transfer(self.alice, run)
+        self.store.scan(run)
+        self.store.confirm(self.alice, run)
+        while self.store.work_once():
+            pass
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        return {card['photos'][0]['provenance'][0]['sharedAt']['raw']: card['photos'][0]['provenance'][0]['sharedAt']
+                for card in cards if card['title'] not in ('Red', 'Blue')}
+
+    def test_one_unambiguous_day_settles_the_date_order_of_the_whole_chat(self):
+        shares = self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                                       '23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        self.assertEqual(shares['04/05/2024, 21:00'], dict(
+            local='2024-05-04T21:00:00', raw='04/05/2024, 21:00', precision='second', ambiguous=False))
+        self.assertEqual(shares['23/05/2024, 10:00']['local'], '2024-05-23T10:00:00')
+
+    def test_neighbouring_messages_settle_the_date_order_of_a_lone_photo(self):
+        shares = self._whatsapp_shares('05/28/2024, 20:59 - Ben: Ferry?\n'
+                                       '06/04/2024, 21:00 - Ana: a.jpg (file attached)')
+        self.assertEqual(shares['06/04/2024, 21:00']['local'], '2024-06-04T21:00:00')
+        self.assertFalse(shares['06/04/2024, 21:00']['ambiguous'])
+
+    def test_a_chat_without_an_unambiguous_day_stays_ambiguous(self):
+        shares = self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                                       '05/04/2024, 10:00 - Ana: b.jpg (file attached)')
+        self.assertEqual(shares['04/05/2024, 21:00'], dict(
+            local=None, raw='04/05/2024, 21:00', precision='unknown', ambiguous=True))
+        self.assertTrue(shares['05/04/2024, 10:00']['ambiguous'])
+
     def test_source_evidence_deduplicates_and_rechecks_withdrawal_and_owner_membership(self):
         resource, ben_origin = self._ben_copy_of_red()
         assertion = {'raw': '2024-04-23', 'local': '2024-04-23T21:08:02', 'precision': 'second'}
