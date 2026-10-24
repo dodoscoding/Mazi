@@ -2,7 +2,7 @@
 import json
 import re
 
-from mazi.imports.adapters import time_assertion
+from mazi.imports.adapters import settle_date_order, time_assertion
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, lookup
 
@@ -22,11 +22,11 @@ def _place(rows):
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
-def _shared_at(assertion):
-    """Rows imported before resolution kept only raw evidence; resolve them the same way imports do."""
+def _shared_at(assertion, date_order):
+    """Resolve raw-only share evidence as imports do, with its export's settled date order."""
     if assertion.get('local') or assertion.get('raw') is None:
         return assertion
-    resolved = time_assertion(assertion['raw'])
+    resolved = time_assertion(assertion['raw'], date_order)
     return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
 
 
@@ -83,16 +83,24 @@ def atlas_view(store, user, group):
                  'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
                  'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
         where = 'WHERE o.group_id=? AND o.withdrawn=0 '
-        rows = store.db.execute(
-            'SELECT o.asset_id,o.payload,p.display_name' + joins +
+        rows = list(store.db.execute(
+            'SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
             'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
-            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
-        for origin_position, row in enumerate(rows):
+            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group)))
+        origins = [json.loads(row['payload']) for row in rows]
+        # One uploaded chat writes all its dates in one order; any of its timestamps can settle it.
+        exports = [(row['run_id'], (origin.get('conversation') or {}).get('id')) for row, origin in zip(rows, origins)]
+        timestamps = {}
+        for export, origin in zip(exports, origins):
+            timestamps.setdefault(export, []).extend(
+                [(origin.get('shared_at_assertion') or {}).get('raw'),
+                 *(message.get('shared_at') for message in origin.get('context', []))])
+        orders = {export: settle_date_order(raws) for export, raws in timestamps.items()}
+        for origin_position, (row, origin, export) in enumerate(zip(rows, origins, exports)):
             targets = consumers.get(row['asset_id'])
             if not targets:
                 continue
-            origin = json.loads(row['payload'])
-            assertion = _shared_at(origin.get('shared_at_assertion') or {})
+            assertion = _shared_at(origin.get('shared_at_assertion') or {}, orders[export])
             sender = (origin.get('sender') or {}).get('label') or None
             raw = assertion.get('raw')
             date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())

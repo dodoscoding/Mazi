@@ -171,6 +171,23 @@ def time_assertion(raw, date_order=None):
     return result
 
 
+NUMERIC_DATE = re.compile(r"\s*(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b")
+
+
+def settle_date_order(raws):
+    """An export writes every date in one order, so one day above 12 settles 04/05 for all of it."""
+    orders = set()
+    for raw in raws:
+        match = NUMERIC_DATE.match(raw) if isinstance(raw, str) else None
+        if match:
+            first, second = int(match[1]), int(match[2])
+            if first > 12 >= second:
+                orders.add("DMY")
+            elif second > 12 >= first:
+                orders.add("MDY")
+    return orders.pop() if len(orders) == 1 else None
+
+
 def bounded_context(messages, index):
     # Keep the attachment message first so a long neighbor cannot erase it.
     positions = [index] + [p for p in range(max(0, index - 2), min(len(messages), index + 3)) if p != index]
