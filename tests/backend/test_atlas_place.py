@@ -114,6 +114,30 @@ class PlaceMemoryTests(Fixture):
                 place_memory(self.store, self.alice, self.group, memory, place)
 
 
+class PlacesListTests(Fixture):
+    def test_places_list_shows_a_named_city_instead_of_the_shared_location(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, '2020-01-02')
+        self.store.set_place(self.alice, self._origin(self.assets[1]), 'GR', 'Naxos', 37.1, 25.4, None)
+        place_memory(self.store, self.ben, self.group, 'photo-' + self.assets[0], 'girne')
+        self.assertEqual(self.store.places(self.ben, self.group)['points'], [
+            {'origin': self._origin(self.assets[1]), 'country': 'GR', 'city': 'Naxos', 'latitude': 37.1, 'longitude': 25.4,
+             'day': None, 'asset_id': self.assets[1]},
+            {'origin': 'review:' + self.assets[0], 'country': 'CY', 'city': 'Kyrenia', 'latitude': 35.326, 'longitude': 33.333,
+             'day': '2020-01-02', 'asset_id': self.assets[0]}])
+        self.assertEqual(self.store.places(self.ben, self.group, country='CY')['cities'], ['Kyrenia'])
+        with self.assertRaises(Denied):
+            self.store.places(self.outsider, self.group)
+
+    def test_unmatched_text_hidden_and_withdrawn_photos_add_no_point(self):
+        place_memory(self.store, self.ben, self.group, 'photo-' + self.assets[0], 'girne')
+        self.store.correct_asset(self.ben, self.assets[1], title='Blue', capture_date=None, place='Victoria')
+        self.assertEqual([p['city'] for p in self.store.places(self.alice, self.group)['points']], ['Kyrenia'])
+        self.store.hide(self.ben, self.assets[0], True)
+        self.assertEqual(self.store.places(self.ben, self.group)['points'], [])
+        self.store.delete_origin(self.alice, self._origin(self.assets[0]))
+        self.assertEqual(self.store.places(self.alice, self.group)['points'], [])
+
+
 class PlaceMemoryHttpTests(Fixture):
     def setUp(self):
         super().setUp()
