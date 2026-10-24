@@ -235,6 +235,27 @@ test("an unknown city is reported, writes nothing and keeps the memory in the tr
   assert.equal(h.$$(".place-tray-row").length, 1);
 });
 
+test("on a phone the tray closes after a pin so the globe shows it", async (t) => {
+  const h = await harness(t);
+  await h.render(
+    createElement(h.module.UnplacedTray, {
+      group: "circle-1",
+      memories: [memory("photo-c", "Harbour", ["c"])],
+      onPlaced: () => {},
+      onSelect: () => {},
+      defaultOpen: true,
+      closeOnPlace: true,
+    }),
+  );
+  await h.click(h.$(".place-tray-row"));
+  await h.type("girne");
+  assert.equal(
+    h.$(".place-tray-toggle").getAttribute("aria-expanded"),
+    "false",
+  );
+  assert.equal(h.$(".place-tray-body").hidden, true);
+});
+
 test("a placed memory can be cleared, and placed memories update at once then from the server", async (t) => {
   const fresh = memory("trip", "Lake weekend", ["a"], {
     ...KYRENIA,

@@ -877,6 +877,7 @@ function AtlasHome({
             onPlaced={onPlaced}
             onSelect={chooseMemory}
             defaultOpen={!phone}
+            closeOnPlace={phone}
           />
         )}
         {!phone && (

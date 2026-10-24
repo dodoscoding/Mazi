@@ -216,12 +216,15 @@ export function UnplacedTray({
   onPlaced,
   onSelect,
   defaultOpen,
+  closeOnPlace = false,
 }: {
   group: string;
   memories: Memory[];
   onPlaced: OnPlaced;
   onSelect: (id: string) => void;
   defaultOpen: boolean;
+  /** On a phone the open tray covers the globe, so it closes to show the new pin. */
+  closeOnPlace?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [active, setActive] = useState<string | null>(null);
@@ -230,6 +233,7 @@ export function UnplacedTray({
   if (!memories.length) return null;
   const placed: OnPlaced = (memory, pin) => {
     setActive(null);
+    if (closeOnPlace) setOpen(false);
     toggle.current?.focus({ preventScroll: true });
     onPlaced(memory, pin);
   };

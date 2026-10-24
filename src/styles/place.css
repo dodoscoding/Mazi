@@ -239,19 +239,28 @@
     max-height: calc(100% - 84px - 316px);
   }
 }
-/* 390: below the view switch, above the sheet and its time bar. */
+/* 390: the closed pill shares the Replay line above the sheet; open, it covers the time bar
+   until a place is named, then closes so the new pin is in view. */
 @media (max-width: 600px) {
   .place-tray {
-    top: 84px;
+    z-index: 3;
+    top: auto;
     right: 12px;
-    max-width: calc(100% - 24px);
+    bottom: calc(max(30%, 236px) + 54px);
+    max-width: calc(100% - 140px);
   }
   .place-tray[data-open] {
+    top: 84px;
     left: 12px;
+    bottom: calc(max(30%, 236px) + 8px);
     width: auto;
     max-width: none;
-    max-height: calc(100% - 84px - max(30%, 236px) - 72px);
-    min-height: 168px;
-    z-index: 1;
+    max-height: none;
+    background: var(--bg-deep);
+  }
+  .place-tray-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
