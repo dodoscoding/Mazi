@@ -1,6 +1,6 @@
 # Chat photo dates verification, 24 October 2026
 
-Branch `fix/chat-photo-dates`, cut from `origin/main` 548ba3f. Decision [D22](../../../docs/DECISIONS.md#chat-photo-dates-24-october-2026).
+Branch `fix/chat-photo-dates`, cut from `origin/main` 548ba3f. Decision [D23](../../../docs/DECISIONS.md#chat-photo-dates-24-october-2026).
 
 ## Measured
 
@@ -14,7 +14,7 @@ Each bug has a failing test committed before its fix.
 | EXIF parsed in one format | `test_engine` EXIF tests: `local` `None` for `2010-02-03 04:05:06.250` with OffsetTimeOriginal | `engine.exif_capture` |
 | Timeline "in undefined." | `tests/dom/timeline-dates.test.mjs`: subtitle `1 moment in undefined.` | Subtitle reads `1 moment, none dated yet.` |
 
-The first full backend run after the fixes failed six tests. Four expected the old rule; they now expect D22 ranges and the additive timeline `dates` field. Two exposed a real regression: settling date order held every origin in memory, 36,608,540 bytes against a 4 MiB budget. Atlas now streams two passes and keeps only the proven orders per chat. That budget test now passes.
+The first full backend run after the fixes failed six tests. Four expected the old rule; they now expect D23 ranges and the additive timeline `dates` field. Two exposed a real regression: settling date order held every origin in memory, 36,608,540 bytes against a 4 MiB budget. Atlas now streams two passes and keeps only the proven orders per chat. That budget test now passes.
 
 Gates on the final head, run one at a time:
 
