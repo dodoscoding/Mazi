@@ -55,7 +55,7 @@ class AtlasTests(unittest.TestCase):
         self.assertEqual(cards[0]['messages'], [])
         self.assertTrue(cards[0]['photos'][0]['src'].startswith('/api/review/rendition/'))
 
-    def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
+    def _discord_card(self):
         from mazi.sources.discord import poll_source
         from tests.backend.sources.test_discord import FakeDiscord, link, message, paged
         link(self.store, self.alice, self.group)
@@ -69,12 +69,40 @@ class AtlasTests(unittest.TestCase):
         poll_source(self.store, self.alice, connection, client)
         while self.store.work_once():
             pass
+        return self._non_fixture_card()
+
+    def _non_fixture_card(self):
         [card] = [card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['title'] not in ('Red', 'Blue')]
+        return card
+
+    def test_discord_photo_shows_its_sender_and_neighbouring_messages(self):
+        card = self._discord_card()
         self.assertEqual(card['messages'], [
             {'name': 'Ayşe', 'time': '2024-01-02T10:00:01+00:00', 'text': 'Göle vardık'},
             {'name': 'mehmet', 'time': '2024-01-02T10:00:02+00:00', 'text': 'Look at this'}])
         self.assertEqual(card['title'], 'Photo shared by mehmet')
         self.assertEqual(card['people']['conversation'], ['Ayşe', 'mehmet'])
+
+    def _discord_origin(self):
+        return next((row['id'], json.loads(row['payload'])) for row in self.store.db.execute('SELECT id,payload FROM archive_origins')
+                    if json.loads(row['payload'])['source_type'] == 'discord')
+
+    def test_discord_bot_photo_has_a_resolved_share_date(self):
+        card = self._discord_card()
+        self.assertEqual(card['photos'][0]['provenance'][0]['sharedAt'], dict(
+            local='2024-01-02T10:00:02+00:00', raw='2024-01-02T10:00:02+00:00', precision='second', ambiguous=False))
+        self.assertEqual(self._discord_origin()[1]['shared_at_assertion'], {'raw': '2024-01-02T10:00:02+00:00', 'local': '2024-01-02T10:00:02+00:00',
+                                  'utc': '2024-01-02T10:00:02+00:00', 'offset': '+0000', 'precision': 'second',
+                                  'source': 'discord_message', 'inferred': False})
+
+    def test_discord_photo_imported_before_resolution_still_shows_its_share_date(self):
+        self._discord_card()
+        origin, payload = self._discord_origin()
+        payload['shared_at_assertion'] = {'raw': '2024-01-02T10:00:02.517000+00:00', 'source': 'discord_message'}
+        with self.store.transaction():
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), origin))
+        self.assertEqual(self._non_fixture_card()['photos'][0]['provenance'][0]['sharedAt'], dict(
+            local='2024-01-02T10:00:02.517000+00:00', raw='2024-01-02T10:00:02.517000+00:00', precision='second', ambiguous=False))
 
     def test_hidden_photo_suppresses_event_title_and_membership_denies(self):
         self.store.review_event(self.alice, self.group, self.assets, 'Private event title', 'accept')
