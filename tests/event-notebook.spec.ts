@@ -24,7 +24,7 @@ test("event notebook saves, reloads, edits and removes only your note", async ({
 }) => {
   const { group, event } = await enter(page);
   await page.goto(`/#/memory/${event.id}?notebook=1`);
-  await expect(page.locator(".memory-detail h1")).toBeFocused();
+  await expect(page.locator("#notebook-heading")).toBeFocused();
   await page.getByRole("button", { name: "Add your recollection" }).click();
   await page
     .getByLabel("Your recollection", { exact: true })
@@ -395,8 +395,8 @@ test("event title links open imported excerpts and all notebook entry points use
     `#/memory/${event.id}?notebook=1`,
   );
   await title.click();
-  await expect(page.locator(".memory-detail h1")).toBeFocused();
-  await expect(page.locator(".conversation blockquote")).toBeInViewport();
+  await expect(page.locator("#notebook-heading")).toBeFocused();
+  await expect(page.locator("#notebook-heading")).toBeInViewport();
   await expect(page.locator(".conversation")).toContainText(
     "Imported excerpts",
   );
@@ -600,3 +600,21 @@ for (const otherOwnNote of [false, true]) {
     });
   }
 }
+
+test("event notes are discoverable before the photograph viewer", async ({
+  page,
+}) => {
+  const { event } = await enter(page);
+  await page.goto(`/#/memory/${event.id}`);
+  const jump = page.getByRole("link", { name: "View notes", exact: true });
+  await expect(jump).toBeInViewport();
+  await jump.click();
+  const notes = page.getByRole("heading", {
+    name: "Notes from your circle",
+    exact: true,
+  });
+  await expect(notes).toBeFocused();
+  await expect(notes).toBeInViewport();
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`/memory/${event.id}$`));
+});
