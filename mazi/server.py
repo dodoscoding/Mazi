@@ -1,5 +1,6 @@
 """One loopback app origin for the Atlas interface and authorized archive APIs."""
 import hmac
+import json
 import mimetypes
 
 from mazi.http_origin import validate_origin
@@ -41,7 +42,30 @@ def handler_for(store, dist=None, drain=None):
             except OSError:
                 return self.json(503, {'error': 'Background work unavailable; retry shortly'})
 
+        def place(self):
+            try:
+                validate_origin(self.headers.get('Origin'), self.headers.get('Host', ''))
+                if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+                    raise ValueError('JSON required')
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= 4096:
+                    raise ValueError('Invalid request size')
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict):
+                    raise ValueError('Expected object')
+                from .atlas import place_memory
+                return self.json(200, {'ok': True, **place_memory(
+                    store, self.user(), body['group'], body['memory'], body.get('place', ''))})
+            except ArchiveBusy:
+                return self.json(503, {'error': 'Archive is busy; retry shortly'})
+            except Denied as exc:
+                return self.json(403, {'error': str(exc)})
+            except (KeyError, ValueError, TypeError):
+                return self.json(400, {'error': 'Invalid request'})
+
         def do_POST(self):
+            if urlsplit(self.path).path == '/api/atlas/place':
+                return self.place()
             if urlsplit(self.path).path != '/api/work':
                 return super().do_POST()
             try:
