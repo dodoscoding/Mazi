@@ -1146,6 +1146,7 @@
 .featured h2 a,
 .dossier-title h2 a {
   color: inherit;
+  text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
 }
@@ -1164,4 +1165,27 @@
 
 .memory-detail h1 {
   scroll-margin-top: calc(var(--header-height) + 24px);
+}
+
+.notes-link,
+.detail-notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.notes-link:hover,
+.detail-notes-link:hover {
+  color: var(--accent-node);
+}
+@media (max-width: 600px) {
+  .detail-notes-link {
+    padding: 0 var(--space-3);
+    border-radius: 22px;
+    background: rgba(5, 7, 12, 0.75);
+    color: var(--on-photo);
+  }
 }

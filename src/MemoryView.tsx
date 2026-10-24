@@ -68,10 +68,10 @@ export function MemoryView({
   const notebookHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (notebook && memory.kind === "memory" && !demo) {
-      heading.current?.focus({ preventScroll: true });
-      heading.current?.scrollIntoView({ block: "start" });
+      notebookHeading.current?.focus({ preventScroll: true });
+      notebookHeading.current?.scrollIntoView({ block: "start" });
     }
-  }, [notebook, memory.id, memory.kind, demo, heading]);
+  }, [notebook, memory.id, memory.kind, demo]);
   const photoIndex = Math.min(Math.floor(photo), memory.photos.length - 1);
   const place = placeLine(memory);
   const date = displayDate(memory);
@@ -169,6 +169,28 @@ export function MemoryView({
               .join(" / ")}
           </p>
         </div>
+        {!demo && memory.kind === "memory" && (
+          <a
+            className="detail-notes-link"
+            href={`#/memory/${memory.id}?notebook=1`}
+            onClick={(event) => {
+              if (
+                !notebook ||
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              )
+                return link(`/memory/${memory.id}?notebook=1`)(event);
+              event.preventDefault();
+              notebookHeading.current?.focus({ preventScroll: true });
+              notebookHeading.current?.scrollIntoView({ block: "start" });
+            }}
+          >
+            View notes <Glyph name="chevron-right" size={14} />
+          </a>
+        )}
         {moments.length > 1 && position >= 0 && (
           <nav className="moments" aria-label="Other memories">
             <span className="hud-label">

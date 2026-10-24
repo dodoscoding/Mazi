@@ -316,7 +316,7 @@ export function EventNotebook({
   return (
     <section className="event-notebook" aria-labelledby="notebook-heading">
       <h2 id="notebook-heading" ref={heading} tabIndex={-1}>
-        The circle remembers
+        Notes from your circle
       </h2>
       <p className="notebook-intro">
         Recollections written by your circle, alongside the imported excerpts.
