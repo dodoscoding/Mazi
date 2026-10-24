@@ -364,7 +364,7 @@ for (const status of [401, 403]) {
   });
 }
 
-test("event title links open imported excerpts and all notebook entry points use event IDs", async ({
+test("event title links open notes alongside imported excerpts and use event IDs", async ({
   page,
 }) => {
   const { group, event } = await enter(page);
@@ -394,12 +394,33 @@ test("event title links open imported excerpts and all notebook entry points use
     "href",
     `#/memory/${event.id}?notebook=1`,
   );
+  await expect(title).toHaveCSS("text-decoration-line", "underline");
+  await expect(
+    page
+      .locator(".featured")
+      .getByRole("link", { name: "View notes", exact: true }),
+  ).toBeVisible();
   await title.click();
   await expect(page.locator("#notebook-heading")).toBeFocused();
   await expect(page.locator("#notebook-heading")).toBeInViewport();
   await expect(page.locator(".conversation")).toContainText(
     "Imported excerpts",
   );
+  await page.goto("/#/memories");
+  const galleryTitle = page
+    .locator(".mem-moment-title")
+    .filter({ hasText: event.title });
+  await expect(galleryTitle).toHaveCSS("text-decoration-line", "underline");
+  await expect(
+    page
+      .locator(".mem-moment-head")
+      .filter({ has: galleryTitle })
+      .getByRole("link", { name: "View notes", exact: true }),
+  ).toBeVisible();
+  await galleryTitle.click();
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator("#notebook-heading")).toBeFocused();
+  await expect(page.locator("#notebook-heading")).toBeInViewport();
   await page.goto("/#/review");
   await expect(
     page
@@ -445,6 +466,20 @@ test("standalone photographs and sample mode never load private recollections", 
   await page.goto("/?demo=1#/memory/last-ferry");
   await expect(page.locator(".memory-detail h1")).toBeVisible();
   await expect(page.locator(".event-notebook")).toHaveCount(0);
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+  await page.goto("/?demo=1#/?selected=last-ferry");
+  await expect(
+    page
+      .locator(".featured")
+      .getByRole("link", { name: "View notes", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await expect(page.locator(".dossier")).toBeVisible();
+  await expect(
+    page
+      .locator(".dossier")
+      .getByRole("link", { name: "View notes", exact: true }),
+  ).toHaveCount(0);
   expect(requests).toBe(0);
 });
 
@@ -613,6 +648,11 @@ test("event notes are discoverable before the photograph viewer", async ({
     name: "Notes from your circle",
     exact: true,
   });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(notes).toBeFocused();
+  await expect(notes).toBeInViewport();
+  await jump.scrollIntoViewIfNeeded();
+  await jump.click();
   await expect(notes).toBeFocused();
   await expect(notes).toBeInViewport();
   await page.goBack();

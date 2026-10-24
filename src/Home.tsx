@@ -713,6 +713,15 @@ function AtlasHome({
         >
           Open memory
         </a>
+        {!demo && selected.kind === "memory" && (
+          <a
+            className="notes-link"
+            href={`#/memory/${selected.id}?notebook=1`}
+            onClick={link(`/memory/${selected.id}?notebook=1`)}
+          >
+            View notes <Icon name="chevron-right" size={14} />
+          </a>
+        )}
       </div>
     </article>
   );
@@ -912,6 +921,7 @@ function AtlasHome({
       {portal && portalMemory && (
         <Portal
           memory={portalMemory}
+          demo={demo}
           closing={portal.closing}
           phone={compact}
           onClose={closePortal}

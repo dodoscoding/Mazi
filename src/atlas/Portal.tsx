@@ -23,6 +23,7 @@ import {
  */
 export function Portal({
   memory,
+  demo,
   closing,
   phone,
   onClose,
@@ -33,6 +34,7 @@ export function Portal({
   hasNext,
 }: {
   memory: Memory;
+  demo: boolean;
   closing: boolean;
   phone: boolean;
   onClose: () => void;
@@ -255,6 +257,15 @@ export function Portal({
         >
           Open memory <kbd aria-hidden="true">↵</kbd>
         </a>
+        {!demo && memory.kind === "memory" && (
+          <a
+            className="notes-link"
+            href={`#/memory/${memory.id}?notebook=1`}
+            onClick={onNotebook}
+          >
+            View notes <Icon name="chevron-right" size={14} />
+          </a>
+        )}
       </section>
     </div>
   );

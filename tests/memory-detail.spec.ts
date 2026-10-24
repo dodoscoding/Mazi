@@ -392,10 +392,20 @@ for (const backAction of ["pill", "Escape"]) {
     );
     await page.goto("/#/?selected=harbour-night");
     await page.getByRole("link", { name: "Open memory", exact: true }).click();
+    await expect(page.locator(".dossier-title h2 a")).toHaveCSS(
+      "text-decoration-line",
+      "underline",
+    );
+    await expect(
+      page
+        .locator(".dossier")
+        .getByRole("link", { name: "View notes", exact: true }),
+    ).toBeVisible();
     await page.locator(".dossier-title h2 a").click();
     await expect(page).toHaveURL(/#\/memory\/harbour-night\?notebook=1$/);
-    await expect(page.locator(".memory-detail h1")).toBeFocused();
-    await expect(page.locator(".conversation blockquote")).toBeInViewport();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("#notebook-heading")).toBeFocused();
+    await expect(page.locator("#notebook-heading")).toBeInViewport();
     if (backAction === "pill")
       await page
         .getByRole("link", { name: "Back to atlas", exact: true })

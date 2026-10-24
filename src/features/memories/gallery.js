@@ -242,6 +242,11 @@ export function createGallery(root, lifecycle, api) {
         title.id = id;
         section.setAttribute("aria-labelledby", id);
         head.append(title, meta);
+        if (memory.kind === "memory") {
+          const notes = node("a", "View notes", "notes-link");
+          notes.href = `#/memory/${encodeURIComponent(memory.id)}?notebook=1`;
+          head.append(notes);
+        }
         section.append(head, tiles([memory]));
         return section;
       }),

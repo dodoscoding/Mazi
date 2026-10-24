@@ -316,7 +316,9 @@
   padding-top: 12px;
   color: var(--text-primary);
   font: 400 26px / 1.1 var(--font-display);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
 }
 .memories-page .mem-moment-title:hover {
   color: var(--accent-atmosphere);
