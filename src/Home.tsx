@@ -867,7 +867,7 @@ function AtlasHome({
           phone={compact}
           onClose={closePortal}
           onStep={stepPortal}
-          onOpen={link(`/memory/${portalMemory.id}`, true)}
+          onOpen={link(`/memory/${portalMemory.id}`, true, true)}
           hasPrevious={portalIndex > 0}
           hasNext={portalIndex >= 0 && portalIndex < memories.length - 1}
         />
