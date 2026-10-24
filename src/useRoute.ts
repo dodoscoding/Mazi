@@ -5,6 +5,7 @@ export type Route = ReturnType<typeof readRoute>;
 export type LinkFor = (
   url: string,
   animate?: boolean,
+  replace?: boolean,
 ) => (event: MouseEvent<HTMLAnchorElement>) => void;
 export function useReducedMotion() {
   const [reduced, setReduced] = useState(
@@ -34,10 +35,26 @@ export function readRoute() {
 }
 let activeTransition: ViewTransition | undefined;
 let navigationVersion = 0;
+/** How many in-app history entries precede the current one. */
+let depth = -1;
+function syncEntry() {
+  const known = history.state?.depth;
+  if (typeof known === "number") depth = known;
+  else {
+    // The first load, or an entry a plain hash link created.
+    depth += 1;
+    history.replaceState({ ...history.state, depth }, "");
+  }
+}
+export const canGoBack = () => (history.state?.depth ?? 0) > 0;
 export function useRoute(reduced: boolean) {
-  const [route, setRoute] = useState(readRoute);
+  const [route, setRoute] = useState(() => {
+    syncEntry();
+    return readRoute();
+  });
   useEffect(() => {
     const update = () => {
+      syncEntry();
       navigationVersion++;
       activeTransition?.skipTransition();
       setRoute(readRoute());
@@ -56,7 +73,9 @@ export function useRoute(reduced: boolean) {
     (url: string, animate = false, replace = false) => {
       activeTransition?.skipTransition();
       const version = ++navigationVersion;
-      history[replace ? "replaceState" : "pushState"]({}, "", `#${url}`);
+      if (replace)
+        history.replaceState({ ...history.state, depth }, "", `#${url}`);
+      else history.pushState({ depth: ++depth }, "", `#${url}`);
       const update = () => {
         if (version === navigationVersion)
           flushSync(() => setRoute(readRoute()));
