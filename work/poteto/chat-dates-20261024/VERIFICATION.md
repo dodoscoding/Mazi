@@ -8,7 +8,7 @@ Each bug has a failing test committed before its fix.
 
 | Bug | Failing test (before) | Fix |
 | --- | --- | --- |
-| Discord bot photos undated | `test_atlas` Discord tests: `sharedAt.local` was `None` for new and old-shape rows | `sources.py` stores `time_assertion(...)`; `atlas.py` resolves raw-only assertions on read |
+| Discord bot photos undated | `test_atlas` Discord tests: `sharedAt.local` was `None` for new and old-shape rows | `atlas.py` resolves raw-only assertions on read. `sources.py` keeps the raw-only stored shape so re-syncs keep the same fingerprint (review change, see below) |
 | WhatsApp 04/05 judged per message | `test_atlas` WhatsApp tests: `local` `None`, `ambiguous` `True` although 23/05 was in the chat | `adapters.date_orders` and `settle_date_order`; Atlas settles the order once per uploaded chat |
 | One undated or conflicting photo blanks a memory | `test_atlas` range tests: `('2020-01-02 · some dates unknown', None)` and `('Date not recorded', None)`; `chronology.test.ts` partial memory `unknown` | Server card date and year come from dated photos; client sharing range ignores undated photos |
 | EXIF parsed in one format | `test_engine` EXIF tests: `local` `None` for `2010-02-03 04:05:06.250` with OffsetTimeOriginal | `engine.exif_capture` |
@@ -42,3 +42,8 @@ Browser evidence. `evidence/seed_serve.py` seeds a local archive with production
 - Hosted Postgres. Backend tests ran on SQLite; the two-pass Atlas read was not timed on Supabase.
 - Before screenshots were not captured; the committed failing tests are the before evidence.
 - Phone layout and Firefox were not driven.
+
+## Review change
+
+Review reverted the import-time change in `mazi/sources/sources.py`. The stored `shared_at_assertion` feeds the origin fingerprint, so storing the resolved shape would make re-syncing an already-imported Discord channel fail with `IDENTITY_CONFLICT` for its existing photos. The read-path fix covers both shapes. `test_discord_bot_photo_has_a_resolved_share_date` now asserts the stored shape stays `{raw, source}`. After the change: `tests.backend.test_atlas`, `sources.test_discord`, `sources.test_api`, `imports.test_engine`, `imports.test_adapters` pass, and the full backend suite was rerun (result below).
+- Full backend after the review change: Ran 532 tests in 353.075s, OK (12 skipped).

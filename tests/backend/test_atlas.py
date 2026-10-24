@@ -111,9 +111,8 @@ class AtlasTests(unittest.TestCase):
         card = self._discord_card()
         self.assertEqual(card['photos'][0]['provenance'][0]['sharedAt'], dict(
             local='2024-01-02T10:00:02+00:00', raw='2024-01-02T10:00:02+00:00', precision='second', ambiguous=False))
-        self.assertEqual(self._discord_origin()[1]['shared_at_assertion'], {'raw': '2024-01-02T10:00:02+00:00', 'local': '2024-01-02T10:00:02+00:00',
-                                  'utc': '2024-01-02T10:00:02+00:00', 'offset': '+0000', 'precision': 'second',
-                                  'source': 'discord_message', 'inferred': False})
+        # The stored assertion is part of the origin fingerprint; reshaping it would turn a re-sync into IDENTITY_CONFLICT.
+        self.assertEqual(self._discord_origin()[1]['shared_at_assertion'], {'raw': '2024-01-02T10:00:02+00:00', 'source': 'discord_message'})
 
     def test_discord_photo_imported_before_resolution_still_shows_its_share_date(self):
         self._discord_card()
