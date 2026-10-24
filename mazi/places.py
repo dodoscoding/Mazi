@@ -93,7 +93,12 @@ def lookup(text):
     # An unrecognised middle part (often a country name) narrows nothing rather than hiding every match.
     if region:
         matches = [city for city in matches if fold(city.region) == region] or matches
+        # A full label names the city itself, not another city whose alternative name matches.
+        matches = [city for city in matches if fold(city.name) == fold(parts[0])] or matches
     matches.sort(key=lambda city: (-city.population, city.id))
+    # Natural Earth lists a few cities twice a few kilometres apart; the same name, region and country is one place.
+    seen = set()
+    matches = [city for city in matches if (key := (city.name, city.region, city.country)) not in seen and not seen.add(key)]
     if not matches:
         return {'status': 'missing'}
     if len(matches) == 1 or matches[0].population >= 10 * max(matches[1].population, 1):

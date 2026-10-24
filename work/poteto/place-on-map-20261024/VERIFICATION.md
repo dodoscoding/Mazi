@@ -63,3 +63,7 @@ The first phone drive found a real layout defect. The closed pill covered the ye
 - The 458-memory scale. The tray renders every unplaced memory with lazy thumbnails. Its scrolling and render cost at 458 rows were not measured.
 - Archive export. `places.json` in the export still lists only `shared_places` contribution locations, not Review cities. This is recorded in D21.
 - Keyboard-only and screen-reader passes over the tray were not run. Controls are native buttons, inputs and a labelled form with a `role="status"` region.
+
+## Review change
+
+The independent review found that nine stored labels did not read back as their city. Two causes in `mazi/places.lookup`: Natural Earth lists a few cities twice a few kilometres apart (Adapazarı, Jingmen City, Bandar Lampung), which made typing "Adapazarı" permanently ambiguous with two identical choices; and "Guanajuato, Guanajuato, MX" also matched "Guanajuato City" through its alternative name. Lookup now treats the same name, region and country as one place, and a full label prefers the exact city name. `tests/backend/test_places.py` checks every one of the 7,342 labels reads back as its city.
