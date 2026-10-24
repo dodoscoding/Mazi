@@ -65,7 +65,7 @@ def serving(fixture):
 def photo(asset, title='Untitled photograph'):
     return dict(id='photo-' + asset, kind='photo', shortTitle=title, title=title,
                 date='Date not recorded', year=None, approximate=True, by='Your circle',
-                description='A photograph from your shared archive.', source='archive',
+                description='A photograph from your shared archive.', source='manual',
                 photos=[dict(src='/api/review/rendition/' + asset, alt=title, caption=title)],
                 messages=[], place=None, people=dict(shared=['Alice'], conversation=[]),
                 dateBasis='undated')
@@ -135,7 +135,7 @@ class AtlasProjectionTests(unittest.TestCase):
                     self.assertEqual(len(rows), count)
                     for index, row in enumerate(rows[previous:], previous):
                         payload = json.loads(row['payload'])
-                        payload['source'] = ('manual', 'whatsapp', '')[index % 3]
+                        payload['source_type'] = ('manual', 'whatsapp', '')[index % 3]
                         payload['context'] = [
                             dict(text=f'Occurrence {index:03d}', sender=dict(label='Participant'),
                                  shared_at=(0, None, False, 12.5, '12:00')[index % 5]),

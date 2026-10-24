@@ -1,5 +1,9 @@
 import { chronologyDate } from "../memory/chronology";
-import { sourceSharedLine, provenanceOf } from "../memory/provenance";
+import {
+  sourceSenders,
+  sourceSharedLine,
+  provenanceOf,
+} from "../memory/provenance";
 import type { Memory, Photo, Place } from "../memories";
 
 let regions: Intl.DisplayNames | undefined;
@@ -35,6 +39,12 @@ export function sharedLine(memory: Memory) {
       ? `${provenanceOf(memory).length ? "Added" : "Shared"} by ${listNames(memory.people.shared)}`
       : "")
   );
+}
+
+/** Who shared a memory, as its card says: chat senders, else the members who added it. */
+export function sharersOf(memory: Memory) {
+  const senders = sourceSenders(memory);
+  return senders.length ? senders : memory.people.shared;
 }
 
 export function initials(name: string) {

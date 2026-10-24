@@ -37,6 +37,10 @@ const searchPage = {
   items: [photograph],
   total: 1,
   next_offset: null,
+  facets: {
+    sources: [{ value: "apple", count: 1 }],
+    shared_by: [{ value: "Ana", count: 1 }],
+  },
   mode: "keyword",
   unindexed: 0,
 };
@@ -74,8 +78,14 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
         : searchPage;
     }),
   );
-  const { $, root } = feature;
+  const { $, root, window } = feature;
   await until(() => $("#results h3"), "initial photograph");
+  root.querySelector("#source-filter button[data-source=apple]").click();
+  await until(() => requests.length === 2, "source applied at once");
+  $("#shared-by").value = "Ana";
+  $("#shared-by").dispatchEvent(new window.Event("change", { bubbles: true }));
+  await until(() => requests.length === 3, "Shared by applied at once");
+  await until(() => $("#results h3"), "filtered photograph");
   const filters = {
     query: "lake bicycle",
     person: "synthetic-person",
@@ -84,7 +94,6 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     object: "bicycle",
     start: "2024-01-01",
     end: "2024-12-31",
-    source: "apple",
   };
   for (const [id, value] of Object.entries(filters)) $("#" + id).value = value;
   $("#mode").value = "semantic";
@@ -96,7 +105,7 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
   assert.equal($("#mode").value, "semantic");
   assert.deepEqual(
     requests.map((request) => request.mode),
-    ["keyword", "semantic"],
+    ["keyword", "keyword", "keyword", "semantic"],
   );
   assert.match($("#search-recovery").textContent, /10,000 visible photographs/);
   assert.match($("#search-recovery").textContent, /No partial results/);
@@ -128,11 +137,17 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     start: "2024-01-01",
     end: "2024-12-31",
     source: "apple",
+    shared_by: "Ana",
     similar: "",
     offset: "0",
   });
   for (const [id, value] of Object.entries(filters))
     assert.equal($("#" + id).value, value);
+  assert.equal($("#shared-by").value, "Ana");
+  assert.equal(
+    $("#source-filter button[aria-pressed=true]").dataset.source,
+    "apple",
+  );
 });
 
 test("keyword metadata-budget exhaustion hides stale totals and keeps filters for retry", async (t) => {

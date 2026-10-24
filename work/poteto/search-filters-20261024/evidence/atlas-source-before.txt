@@ -1,0 +1,32 @@
+...F...F.............
+======================================================================
+FAIL: test_cards_report_the_import_source_of_their_photographs (tests.backend.test_atlas.AtlasTests.test_cards_report_the_import_source_of_their_photographs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/filters/tests/backend/test_atlas.py", line 83, in test_cards_report_the_import_source_of_their_photographs
+    self.assertEqual({card['title']: card['source'] for card in cards}, {'Red': 'apple', 'Blue': 'apple'})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'Blue': 'archive', 'Red': 'archive'} != {'Red': 'apple', 'Blue': 'apple'}
+- {'Blue': 'archive', 'Red': 'archive'}
+?            ^^^^^             ^^^^^
+
++ {'Blue': 'apple', 'Red': 'apple'}
+?            ^^^             ^^^
+
+
+======================================================================
+FAIL: test_discord_photo_shows_its_sender_and_neighbouring_messages (tests.backend.test_atlas.AtlasTests.test_discord_photo_shows_its_sender_and_neighbouring_messages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/filters/tests/backend/test_atlas.py", line 78, in test_discord_photo_shows_its_sender_and_neighbouring_messages
+    self.assertEqual(card['source'], 'discord')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'archive' != 'discord'
+- archive
++ discord
+
+
+----------------------------------------------------------------------
+Ran 21 tests in 2.089s
+
+FAILED (failures=2)
