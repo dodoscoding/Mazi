@@ -90,13 +90,13 @@ def atlas_view(store, user, group):
             ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
                          and date_parts is not None and 1 <= int(date_parts[1]) <= 12
                          and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
-            evidence = dict(sender=sender, source=origin.get('source') or 'archive', sharedAt=dict(
+            evidence = dict(sender=sender, source=origin.get('source_type') or 'archive', sharedAt=dict(
                 local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
                 precision=assertion.get('precision') or 'unknown',
                 ambiguous=bool(ambiguous)))
             evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
             for detail, asset_position in targets:
-                detail['sources'].add(origin.get('source') or 'archive')
+                detail['sources'].add(evidence['source'])
                 if sender or raw is not None or assertion.get('local'):
                     detail['provenance'][asset_position].setdefault(evidence_key, evidence)
                 if row['display_name'] is not None:
