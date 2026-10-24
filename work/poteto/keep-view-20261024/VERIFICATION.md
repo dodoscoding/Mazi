@@ -1,6 +1,6 @@
 # Keep the view in the background: verification
 
-Branch `fix/keep-view-on-background`, cut from origin/main 548ba3f. Field findings: groups A, E and F of `work/poteto/field-bugs-20261023/FINDINGS.md`. Decision: [D23](../../../docs/DECISIONS.md#keep-the-view-in-the-background-24-october-2026). Measured on 24 October 2026 on macOS with Node 24.15.0 and the synthetic `tests.browser.memories_server` archive. Every repro and browser result below uses synthetic data.
+Branch `fix/keep-view-on-background`, cut from origin/main 548ba3f. Field findings: groups A, E and F of `work/poteto/field-bugs-20261023/FINDINGS.md`. Decision: [D24](../../../docs/DECISIONS.md#keep-the-view-in-the-background-24-october-2026). Measured on 24 October 2026 on macOS with Node 24.15.0 and the synthetic `tests.browser.memories_server` archive. Every repro and browser result below uses synthetic data.
 
 ## What changed
 
