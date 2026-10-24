@@ -436,7 +436,7 @@ class ReviewStore(ImportStore):
                                    *[str(c.get("text") or "") for p in records for c in p.get("context", [])]])
             if query.casefold() not in searchable.casefold():
                 continue
-            yield {"id": asset, "title": title, "date": day, "place": place or None,
+            yield {"id": asset, "title": title, "date": day, "dates": sorted(dates), "place": place or None,
                    "date_basis": "reviewed correction" if annotation["capture_date"] else
                                  "conflicting source evidence" if len(dates) > 1 else
                                  "source capture evidence" if day else "undated",

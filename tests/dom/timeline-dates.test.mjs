@@ -43,9 +43,17 @@ const memory = (id, title, photos) => ({
 });
 
 async function timeline(t, memories) {
+  const saved = [];
+  let root;
+  // Registered before the harness so React unmounts while its window exists.
+  t.after(async () => {
+    if (root) await act(async () => root.unmount());
+    for (const [name, descriptor] of saved)
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+  });
   const harness = await atlasHarness(t);
   const { window } = harness;
-  const saved = [];
   for (const [name, value] of Object.entries({
     matchMedia: window.matchMedia.bind(window),
     requestAnimationFrame: window.requestAnimationFrame.bind(window),
@@ -64,7 +72,7 @@ async function timeline(t, memories) {
   );
   const host = window.document.createElement("div");
   window.document.body.append(host);
-  const root = createRoot(host);
+  root = createRoot(host);
   await act(async () =>
     root.render(
       createElement(Timeline, {
@@ -74,12 +82,6 @@ async function timeline(t, memories) {
       }),
     ),
   );
-  t.after(async () => {
-    await act(async () => root.unmount());
-    for (const [name, descriptor] of saved)
-      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
-      else delete globalThis[name];
-  });
   return host;
 }
 

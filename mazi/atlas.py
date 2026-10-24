@@ -47,13 +47,11 @@ def atlas_view(store, user, group):
 
         def card(identifier, title, assets, kind):
             records = [items[asset] for asset in assets]
-            dates = sorted({item['date'] for item in records if item['date']})
-            complete_dates = len([item for item in records if item['date']]) == len(records)
+            # Undated photos do not blank the others; conflicting evidence widens the range.
+            dates = sorted({day for item in records for day in item['dates']})
             date_label = 'Date not recorded'
             if dates:
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
-                if not complete_dates:
-                    date_label += ' · some dates unknown'
             photos = [dict(src='/api/review/rendition/' + item['id'],
                            alt=item['title'] or 'Archive photograph',
                            caption=item['title'] or 'Untitled photograph') for item in records]
@@ -64,8 +62,8 @@ def atlas_view(store, user, group):
             for position, asset in enumerate(assets):
                 consumers.setdefault(asset, []).append((detail, position))
             return dict(id=identifier, kind=kind, shortTitle=title, title=title,
-                        date=date_label, year=int(dates[0][:4]) if dates and complete_dates else None,
-                        approximate=not complete_dates, by='Your circle',
+                        date=date_label, year=int(dates[0][:4]) if dates else None,
+                        approximate=not all(item['date'] for item in records), by='Your circle',
                         description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
                         source='', photos=photos, messages=[],
                         place=None, people=dict(shared=[], conversation=[]),
