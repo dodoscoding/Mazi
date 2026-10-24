@@ -1,0 +1,44 @@
+[
+  {
+    "name": "desktop",
+    "title": {
+      "x": 48,
+      "y": 521,
+      "width": 792,
+      "height": 58.796875
+    },
+    "notes": {
+      "x": 48,
+      "y": 726.484375,
+      "width": 742.546875,
+      "height": 42
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1024
+    },
+    "notesEntryCount": 0,
+    "focus": "H1"
+  },
+  {
+    "name": "phone",
+    "title": {
+      "x": 20,
+      "y": -259,
+      "width": 372,
+      "height": 28
+    },
+    "notes": {
+      "x": 20,
+      "y": -104.75,
+      "width": 372,
+      "height": 37
+    },
+    "viewport": {
+      "width": 412,
+      "height": 839
+    },
+    "notesEntryCount": 0,
+    "focus": "H1"
+  }
+]
