@@ -53,11 +53,11 @@ export default function App() {
   const openLink = useRef<HTMLAnchorElement>(null);
   const previousPath = useRef(route.path);
   const homeScroll = useRef(0);
-  const navigateTo = (url: string, animate = false) => {
+  const navigateTo = (url: string, animate = false, replace = false) => {
     if (route.path === "/") homeScroll.current = window.scrollY;
-    navigate(url, animate);
+    navigate(url, animate, replace);
   };
-  function link(url: string, animate = false) {
+  function link(url: string, animate = false, replace = false) {
     return (event: MouseEvent<HTMLAnchorElement>) => {
       if (
         event.button !== 0 ||
@@ -68,7 +68,7 @@ export default function App() {
       )
         return;
       event.preventDefault();
-      navigateTo(url, animate);
+      navigateTo(url, animate, replace);
     };
   }
   useLayoutEffect(() => {
