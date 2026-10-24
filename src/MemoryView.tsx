@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from "react";
-import type { RefObject } from "react";
+import type { MouseEvent, RefObject } from "react";
 import {
   provenanceOf,
   shareDate,
@@ -26,7 +26,7 @@ import { Glyph } from "./memory/glyphs";
 import type { GlyphName } from "./memory/glyphs";
 import { Viewer } from "./memory/Viewer";
 import type { LinkFor } from "./useRoute";
-import { useReducedMotion } from "./useRoute";
+import { canGoBack, useReducedMotion } from "./useRoute";
 import { Arrow } from "./ui/icons";
 import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
@@ -95,12 +95,27 @@ export function MemoryView({
         )
       )
         return;
-      navigate(backUrl, true);
+      if (canGoBack()) history.back();
+      else navigate(backUrl, true);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [backUrl, navigate]);
 
+  // Back returns to the in-app page the memory was opened from.
+  const back = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!canGoBack()) return link(backUrl, true)(event);
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    history.back();
+  };
   const go = (index: number) =>
     navigate(`/memory/${memory.id}?photo=${index}`, false, true);
   const momentLink = (
@@ -112,7 +127,7 @@ export function MemoryView({
       <a
         className="round-link"
         href={`#/memory/${item.id}`}
-        onClick={link(`/memory/${item.id}`)}
+        onClick={link(`/memory/${item.id}`, false, true)}
         aria-label={`${label}: ${item.title}, ${displayDate(item)}`}
       >
         <Glyph name={glyph} size={14} />
@@ -127,11 +142,7 @@ export function MemoryView({
     <article className="memory-detail">
       <div className="detail-bar">
         <div className="detail-bar-start">
-          <a
-            className="back-pill"
-            href={`#${backUrl}`}
-            onClick={link(backUrl, true)}
-          >
+          <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
             <span className="back-label">Back to atlas</span>
             <kbd aria-hidden="true">Esc</kbd>
@@ -442,7 +453,7 @@ function RelatedMemories({
           <li key={item.id}>
             <a
               href={`#/memory/${item.id}`}
-              onClick={link(`/memory/${item.id}`)}
+              onClick={link(`/memory/${item.id}`, false, true)}
             >
               {item.photos[0] && (
                 <img src={item.photos[0].src} alt="" loading="lazy" />

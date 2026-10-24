@@ -135,7 +135,7 @@ test("leaving Atlas aborts and ignores late data; returning fetches again", asyn
   assert.equal(h.current.memories[0].id, "fresh");
 });
 
-test("feature routes retain group access denial and pagehide cleanup", async (t) => {
+test("a reload that is denied clears the circle and reports lost access", async (t) => {
   let denied = false;
   let accessLost = 0;
   const h = await harness(t, async () =>
@@ -145,12 +145,14 @@ test("feature routes retain group access denial and pagehide cleanup", async (t)
   );
   h.window.addEventListener("mazi:access-lost", () => accessLost++);
   await h.render("/imports");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pagehide")));
-  assert.deepEqual(h.current.groups, []);
+  assert.deepEqual(h.current.groups, groups);
   denied = true;
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:session")),
+  );
   assert.equal(accessLost, 1);
   assert.equal(h.current.status, "signed-out");
+  assert.deepEqual(h.current.groups, []);
   assert.deepEqual(h.current.memories, []);
   assert.equal(h.window.sessionStorage.getItem("mazi.group"), null);
 });
@@ -168,7 +170,7 @@ test("without an authenticated profile no archive requests are made", async (t) 
   assert.deepEqual(calls, []);
 });
 
-test("superseded visibility loads abort and pagehide cancels private work", async (t) => {
+test("superseded loads abort and lost access cancels private work", async (t) => {
   const pending = deferred();
   const signals = [];
   let calls = 0;
@@ -180,12 +182,92 @@ test("superseded visibility loads abort and pagehide cancels private work", asyn
     );
   });
   await h.render("/");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:session")),
+  );
   assert.equal(signals[0].aborted, true);
   assert.equal(h.current.memories[0].id, "fresh");
   await act(async () => pending.resolve(Response.json(groups)));
   assert.equal(h.current.memories[0].id, "fresh");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pagehide")));
-  assert.equal(signals.at(-1).aborted, true);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:access-lost")),
+  );
   assert.deepEqual(h.current.memories, []);
+  assert.deepEqual(h.current.groups, []);
+});
+
+test("backgrounding keeps the loaded atlas and makes no requests", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+    );
+  });
+  await h.render("/");
+  const before = calls.length;
+  for (const hidden of [true, false]) {
+    await act(async () => {
+      Object.defineProperty(h.window.document, "hidden", {
+        value: hidden,
+        configurable: true,
+      });
+      h.window.document.dispatchEvent(new h.window.Event("visibilitychange"));
+    });
+    assert.equal(h.current.status, "ready");
+    assert.equal(h.current.memories[0].id, "photo");
+  }
+  for (const type of ["pagehide", "pageshow"]) {
+    await act(async () => h.window.dispatchEvent(new h.window.Event(type)));
+    assert.equal(h.current.memories[0].id, "photo");
+  }
+  assert.equal(calls.length, before);
+});
+
+test("moving between Atlas and feature pages keeps the loaded atlas", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+    );
+  });
+  await h.render("/");
+  const seen = [];
+  for (const path of ["/imports", "/", "/review", "/timeline"]) {
+    await h.render(path);
+    seen.push(h.current.status, h.current.memories[0]?.id);
+  }
+  assert.deepEqual(seen, [
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+  ]);
+  assert.deepEqual(calls, ["/api/groups", "/api/atlas?group=circle"]);
+});
+
+test("choosing another circle sticks and loads that circle", async (t) => {
+  const circles = [...groups, { id: "other", name: "Other", role: "member" }];
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    if (path === "/api/groups") return Response.json(circles);
+    const group = new URL(path, "http://localhost").searchParams.get("group");
+    return Response.json({ memories: [{ id: `${group}-photo` }] });
+  });
+  await h.render("/");
+  assert.equal(h.current.group, "circle");
+  await act(async () => h.current.chooseGroup("other"));
+  assert.equal(h.current.group, "other");
+  assert.equal(h.current.memories[0].id, "other-photo");
+  assert.equal(h.window.sessionStorage.getItem("mazi.group"), "other");
+  await h.render("/imports");
+  await h.render("/");
+  assert.equal(h.current.group, "other");
+  assert.equal(calls.at(-1), "/api/atlas?group=other");
 });

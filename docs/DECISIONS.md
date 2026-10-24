@@ -110,6 +110,10 @@ The pins live in `shared_places`, so Places, Discovery, Answers and export read 
 
 Accepted gaps: Discord times are UTC, so a photo shared shortly after local midnight east of UTC shows the previous day. Order settlement sees only the timestamps the archive retained, not every line of the original export.
 
+## Keep the view in the background, 24 October 2026
+
+**D24: Backgrounding keeps the view.** On 23 October 2026 the owner asked that backgrounding the app on a phone must not reload it. Hiding the tab used to clear the signed-in view as a privacy measure, so returning showed "Opening Mazi…", refetched the session, circles and Atlas, and rebuilt the globe. Now the view and its in-memory data stay while the tab is hidden. When the tab is shown again, or restored from the back-forward cache, the session is revalidated in the background and the current screen stays. A 401 or 403, a different person or circle, or logout still clears it; a network failure or busy server does not. Authorized data is not written to browser storage or kept across sessions. Accepted costs: a hidden page shows what it showed until the tab returns, a shared device's screen stays visible until access is rechecked, and the request-driven drain ([D20](#vercel-production-runtime-22-october-2026)) keeps its idle call from any hidden page. [Verification](../work/poteto/keep-view-20261024/VERIFICATION.md) records the evidence.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
@@ -186,7 +190,7 @@ A full TypeScript backend port was considered and rejected for this change becau
 
 ## Import continuity and worker ownership, 22 October 2026
 
-The owner requested fixes for background interruption, repeated ZIP reads, and slow-work lease failure, followed by verification and merge. Imports and Circle retain their mounted lifecycle while the document is hidden. The session gate keeps the ready import route mounted during foreground session validation. Navigation, page closure, group or session changes, and denied access still end the route's work. Other feature routes retain background privacy cleanup. Browser suspension and computer sleep remain outside the continuation guarantee.
+The owner requested fixes for background interruption, repeated ZIP reads, and slow-work lease failure, followed by verification and merge. Imports and Circle retain their mounted lifecycle while the document is hidden. The session gate keeps the ready import route mounted during foreground session validation. Navigation, page closure, group or session changes, and denied access still end the route's work. Other feature routes retain background privacy cleanup; D24 later replaced that cleanup with background revalidation. Browser suspension and computer sleep remain outside the continuation guarantee.
 
 The import worker reuses one validated ZIP for the current run, bounded by the existing 128 MiB archive limit. A new run replaces that copy. Completion, detected cancellation or access loss, fatal archive errors, and store shutdown release it. No durable cache or storage-format migration is introduced. Hosted upload receipts still require a successful byte readback before acknowledgment; the transport no longer repeats that verification for a new object.
 

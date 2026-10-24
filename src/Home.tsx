@@ -33,7 +33,11 @@ const REDUCED_FADE = 300;
 
 /** Route changes the Atlas makes itself; App's router listens for popstate. */
 function go(url: string, replace = false) {
-  history[replace ? "replaceState" : "pushState"]({}, "", `#${url}`);
+  history[replace ? "replaceState" : "pushState"](
+    replace ? history.state : {},
+    "",
+    `#${url}`,
+  );
   dispatchEvent(new PopStateEvent("popstate"));
 }
 
@@ -863,7 +867,7 @@ function AtlasHome({
           phone={compact}
           onClose={closePortal}
           onStep={stepPortal}
-          onOpen={link(`/memory/${portalMemory.id}`, true)}
+          onOpen={link(`/memory/${portalMemory.id}`, true, true)}
           hasPrevious={portalIndex > 0}
           hasNext={portalIndex >= 0 && portalIndex < memories.length - 1}
         />

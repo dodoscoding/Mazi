@@ -37,7 +37,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.getByRole("button", { name: "Select The last ferry" }).click();
   await openFullMemory(page);
-  await page.goBack();
+  // The portal entry is replaced by the memory, so one Back reaches the atlas.
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "The Atlas of Us" }),
