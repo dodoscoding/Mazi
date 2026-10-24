@@ -89,6 +89,16 @@ Hobby has no always-on process and allows one cron a day. The worker therefore b
 
 The pins live in `shared_places`, so Places, Discovery, Answers and export read them unchanged. The hosted archive needs the `place_removals` migration before the deploy and a backfill afterwards ([Deployment](DEPLOYMENT.md#map-places-rollout)). Accepted gaps: places more than 100 km from any listed city get no pin; another contributor's GPS copy of the same photograph still pins until that contributor removes it; removing one contribution's pin leaves the same contributor's other contributions of that photograph pinned; the Apple Photos companion sends no location.
 
+## Search filters, 24 October 2026
+
+**D22: Filter Search by source and by who shared.** The owner asked to filter by who published a photograph and to tell WhatsApp and Discord photographs apart on the Search page. Engineering decided on 24 October 2026:
+
+- Source and Shared by are visible filters that apply at once to photographs, memories, chats and places. Their choices come only from the photographs the viewer can currently see.
+- "Who published" is the chat sender recorded by the source, otherwise the importing member's display name. It is the name a card's "Shared by" line already shows, so the filter reveals nothing new. It stays separate from the tagged Person filter, as D19 requires.
+- Search keeps its query and filters in the page URL so Back restores them. A search phrase or member name can therefore remain in that browser's history; the fragment is never sent to the server.
+
+[Contracts](CONTRACTS.md#search-and-ai-boundary) record the request and response fields; [verification](../work/poteto/search-filters-20261024/VERIFICATION.md) records the evidence. Accepted gaps: a memory mixing chat and manual photographs is filtered by its chat senders only; tagged person records drop out of People while a filter is set; Person and search mode are not restored from the URL.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
