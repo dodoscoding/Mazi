@@ -41,7 +41,11 @@ export function mount(root, lifecycle) {
   $(".disc-refine").open = urlFields
     .slice(1)
     .some(([key]) => restored.get(key));
+  let disposed = false;
+  lifecycle.onDispose(() => (disposed = true));
   function rememberSearch() {
+    // A search finishing after navigation must not rewrite the next page's URL.
+    if (disposed) return;
     const params = new URLSearchParams();
     for (const [key, id] of urlFields)
       if ($(id).value) params.set(key, $(id).value);
