@@ -75,6 +75,12 @@ class AtlasTests(unittest.TestCase):
             {'name': 'mehmet', 'time': '2024-01-02T10:00:02+00:00', 'text': 'Look at this'}])
         self.assertEqual(card['title'], 'Photo shared by mehmet')
         self.assertEqual(card['people']['conversation'], ['Ayşe', 'mehmet'])
+        self.assertEqual(card['source'], 'discord')
+        self.assertEqual(card['photos'][0]['provenance'][0]['source'], 'discord')
+
+    def test_cards_report_the_import_source_of_their_photographs(self):
+        cards = atlas_view(self.store, self.ben, self.group)['memories']
+        self.assertEqual({card['title']: card['source'] for card in cards}, {'Red': 'apple', 'Blue': 'apple'})
 
     def test_hidden_photo_suppresses_event_title_and_membership_denies(self):
         self.store.review_event(self.alice, self.group, self.assets, 'Private event title', 'accept')
@@ -224,7 +230,7 @@ class AtlasTests(unittest.TestCase):
     def _source_evidence(self, origin, sender, shared_at, *, ambiguous=False):
         row = self.store.db.execute('SELECT payload FROM archive_origins WHERE id=?', (origin,)).fetchone()
         payload = json.loads(row['payload'])
-        payload.update(source='whatsapp', sender={'label': sender}, shared_at_assertion=shared_at,
+        payload.update(source_type='whatsapp', sender={'label': sender}, shared_at_assertion=shared_at,
                        capture_assertions=[], warnings=['AMBIGUOUS_DATE'] if ambiguous else [])
         with self.store.transaction():
             self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), origin))
