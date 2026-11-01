@@ -37,6 +37,7 @@ Members can complete small-memory import, review, and browsing workflows entirel
 - Current primary navigation includes Home, Timeline and Search. D25 requests a simpler Home and clearer destinations; the proposed navigation is documented in the investigation and is not implemented yet.
 - My Imports is an easy-to-reach supporting workspace; group settings are a supporting route.
 - Map, People, and Memory AI enter navigation only when their features ship. Their detailed scope remains in the roadmap.
+- Parallel You, a proposed alternative-life simulator ([D26](docs/DECISIONS.md#parallel-you-experiment-1-november-2026)), is fiction kept apart from the archive. It never reads memories and never appears among them. It is not implemented.
 - Imported content is shared automatically with every active group member as each item becomes available through ingestion. There is no human review or Publish action before group visibility.
 - The group is the single content audience. Private staging, selected-recipient sharing, and independent component audience controls are deferred.
 - Members must sign in and belong to the group. Group sharing does not mean anonymous internet access or public object storage.

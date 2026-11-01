@@ -10,6 +10,12 @@ On 1 November 2026 the owner selected a private group experience with shared mem
 
 These increments reuse M3 correction, M4 places, M5 People/filtering and M7 stories without declaring those milestones accepted. Native social reactions, comments/activity and future events extend the existing archive scope and need explicit domain and acceptance contracts before implementation. The original M0-M7 program and release gates below remain intact; there is no new production or scheduling commitment in this investigation.
 
+## Plan Parallel You beside the archive
+
+On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, under [D26](DECISIONS.md#parallel-you-experiment-1-november-2026). [The plan](PARALLEL_YOU.md) proposes six slices, PY-S1 to PY-S6, of about 13 working days for one developer: the story core and fixture screens first, then a flagged story endpoint, live generation, the game layer, and a story evaluation before release. Its acceptance IDs, PY-A1 to PY-A12, are local to Parallel You.
+
+Parallel You sits outside the M0-M7 program. It does not change those gates and adds no production or scheduling commitment.
+
 ## Use the planning assumptions
 
 Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.

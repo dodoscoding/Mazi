@@ -8,6 +8,8 @@ Everyone in the circle uses a shared entry code. Imported content becomes availa
 
 The next product direction is a private social space with shared memories, comments, reactions and events. The [improvement investigation](docs/PRODUCT_EVOLUTION_INVESTIGATION.md) groups the six requested changes by difficulty and distinguishes existing features from proposed work.
 
+Parallel You, a proposed AI alternative-life simulator for circle members, is planned beside the archive. [The Parallel You plan](docs/PARALLEL_YOU.md) keeps its fiction apart from real memories. None of it is implemented yet.
+
 ## What you can do
 
 - Import photographs and supported conversation archives from ZIP files.

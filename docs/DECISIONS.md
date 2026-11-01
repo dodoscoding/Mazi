@@ -131,6 +131,14 @@ This changes the intended emphasis of D13's rediscovery-first purpose and D15's 
 
 [The feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) rates all six requests and proposes a shared navigation structure, explicit date-basis filtering, independent content/provenance labels and small social increments. Those mechanisms remain proposals. New comments, reactions and future events need domain, ownership, deletion and test contracts before implementation; the existing event notebook can be reused for recollections. No recognition, external AI processing, provider change, paid provisioning or deployment is authorized by this documentation update.
 
+## Parallel You experiment, 1 November 2026
+
+**D26: Plan Parallel You beside the archive.** On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, as an addition to Mazi, and chose the hybrid direction with a stronger game side. The [preserved blueprint](source/PARALLEL_YOU_BLUEPRINT.md) proposed a separate Next.js app with browser-only storage and no accounts.
+
+[The Parallel You plan](PARALLEL_YOU.md) recommends a members-only space inside the Mazi website, built on this repository's stack, that reads nothing from the archive and labels every screen as fiction. Stories a member generates for themselves are fiction, not archive data. If the owner accepts browser storage for them, D24's rule that authorized data is never written to browser storage still applies to everything else. Placement, model, spend limits, storage, names, look and the script budget line are open choices listed in the plan.
+
+This record authorizes no model provider, API key, paid provisioning, archive input to a model, migration or deployment. Enabling live generation needs the owner's provider decision with recorded retention and training terms, as [PRIVACY](PRIVACY.md) requires. Existing application behavior, M0-M7 acceptance and the B, M and T traceability series are unchanged.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
@@ -145,6 +153,7 @@ Implementation boundary, 6 October 2026: the requested Phase 2 import engine is 
 | Account departure and group closure | D06 departure withdrawal and PRIVACY application retention targets accepted; group closure details pending. | M1 lifecycle implementation | Implement accepted departure policy; settle group closure before release. |
 | Nonmember/minor identity handling | No recognition until policy is accepted. | M5 recognition | Keep recognition disabled. |
 | Model provider and processing location | No provider selected. | M5 | Deterministic archive features remain available. |
+| Parallel You provider and spend | No provider selected; [the plan](PARALLEL_YOU.md) proposes `claude-opus-5-5` at low effort with member and circle limits. | Turning on PY-S3's feature flag | Parallel You runs on fixture stories only; live generation stays off. |
 | Export compatibility | Conditional on representative source fixtures. | M2 fixture gate and each adapter release | Reduce advertised support rather than infer missing content. |
 | Capsule author access and edits | Local continuation: immutable after seal; no author read bypass; author can delete. | Production M7 capsule review | Local rules below; production T15 remains open. |
 
