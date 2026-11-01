@@ -8,12 +8,13 @@
 
 **Tech stack:** Vite, React 19, TypeScript, plain CSS on `src/styles/tokens.css`, SVG; Python 3.12, the `anthropic` SDK with Pydantic models; `node --test`, `unittest`, Playwright, axe.
 
-The product decisions, contracts and acceptance IDs (PY-A1 to PY-A12) live in [docs/PARALLEL_YOU.md](../../../docs/PARALLEL_YOU.md). This plan assumes the recommended options there: members-only inside Mazi, browser storage, roles instead of names, Mazi's night look. If the owner picks differently, revise the affected slice before starting it.
+The product decisions, contracts and acceptance IDs (PY-A1 to PY-A12) live in [docs/PARALLEL_YOU.md](../../../docs/PARALLEL_YOU.md). Placement is decided: members-only inside Mazi. This plan also assumes the recommended options for the open choices: browser storage, roles instead of names, Mazi's night look. If the owner picks differently, revise the affected slice before starting it.
 
 ## Owner decisions, 1 November 2026
 
 - Add Parallel You as an addition to Mazi.
 - Hybrid direction C with the game side slightly stronger.
+- Members-only inside Mazi, behind the shared-code session, not a separate public app.
 - Plans go into a new pull request first. Everything else is open; see the decisions list in the plan document.
 
 ## Stack

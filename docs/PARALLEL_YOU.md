@@ -6,7 +6,7 @@ This document reconciles the blueprint with the repository and proposes a plan. 
 
 ## Summary
 
-- **What ships first:** a members-only Parallel You space inside the Mazi website, loaded only when opened. A member writes a "What if...", reads chapters, picks among three choices and then two, and explores branches on a 2D map. Depth stops at three decisions; the chapter after the third decision is an ending.
+- **What ships first:** a members-only Parallel You space inside the Mazi website, loaded only when opened. The owner chose this placement on 1 November 2026. A member writes a "What if...", reads chapters, picks among three choices and then two, and explores branches on a 2D map. Depth stops at three decisions; the chapter after the third decision is an ending.
 - **What changes from the blueprint:** the product and data model stay. The stack follows this repository instead of Next.js: the existing Vite and React app, a Python story endpoint behind the shared-code session, a hand-drawn SVG map instead of React Flow, and no Tailwind, Zustand, Zod or Motion dependency.
 - **What it never touches:** v0.1 reads nothing from the archive. Fiction never enters memories, Atlas, Timeline, Search, Ask, notebooks or exports, and every Parallel You screen says it is fiction.
 - **Delivery:** six slices, PY-S1 to PY-S6, about 13 working days for one developer. The first two slices need no AI and no owner decision. Live generation (PY-S3 onward) waits for the owner decisions listed at the end.
@@ -47,11 +47,11 @@ A later bridge, such as starting a "What if" from a real shared memory, would se
 
 | Option | What it means | For | Against |
 | --- | --- | --- | --- |
-| 1. Members-only route in Mazi (recommended) | `src/parallel/` loaded with `import()` from a branch in `App.tsx`; `mazi/parallel/` adds `/api/parallel/*` to the handler chain | Existing session, CSP, tokens, tests and deploy. The paid endpoint is never public. Fits D25's private social space. | Must stay inside the script budget. The model call must not hold the bridge's request lock. Only circle members can play. |
+| 1. Members-only route in Mazi (chosen) | `src/parallel/` loaded with `import()` from a branch in `App.tsx`; `mazi/parallel/` adds `/api/parallel/*` to the handler chain | Existing session, CSP, tokens, tests and deploy. The paid endpoint is never public. Fits D25's private social space. | Must stay inside the script budget. The model call must not hold the bridge's request lock. Only circle members can play. |
 | 2. Second HTML entry in the same project | `parallel/index.html` as another Vite input, served beside Mazi | Mazi's entry bundle is untouched; could be public. | Changes Vite input, static serving in `mazi/server.py`, rewrites and budget checks. A public paid endpoint needs its own limiter. |
 | 3. Separate app, ideally its own Vercel project | Own folder, build and TypeScript function | Blueprint stack usable as written; no effect on Mazi. | Duplicate tooling and CI, no Mazi session, and a public paid endpoint that needs IP rate limits, a daily cap store and abuse handling. |
 
-Choose option 3 only if the owner wants a public, shareable product. Then add one Vercel WAF rate-limit rule (Hobby allows one), a daily cap in a small store such as Upstash, and a hard monthly spend limit at the provider. Vercel Hobby is for non-commercial use only.
+On 1 November 2026 the owner chose option 1. Option 3 remains the path if a public, shareable product is wanted later. It would add one Vercel WAF rate-limit rule (Hobby allows one), a daily cap in a small store such as Upstash, and a hard monthly spend limit at the provider. Vercel Hobby is for non-commercial use only.
 
 ## Product design
 
@@ -256,7 +256,12 @@ These IDs are local to Parallel You. They do not extend Mazi's B01-B30, M0-M7 or
 
 ## Owner decisions
 
-1. **Placement:** members-only inside Mazi (recommended) or a separate public app.
+Decided:
+
+1. **Placement:** members-only inside Mazi, chosen on 1 November 2026.
+
+Open:
+
 2. **Provider and model:** Anthropic Claude with `claude-opus-5-5` at low effort (recommended), or a cheaper model. Record the provider's retention and training terms before enabling.
 3. **Spend:** member limit (30 chapters a day proposed), circle limit (150 a day proposed) and a monthly provider limit.
 4. **Storage:** browser-only per member (recommended for v0.1), or server storage now.
