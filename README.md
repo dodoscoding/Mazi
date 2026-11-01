@@ -6,6 +6,8 @@ Mazi is a private memory archive for one small circle of friends. Bring your pho
 
 Everyone in the circle uses a shared entry code. Imported content becomes available to the signed-in circle automatically; archive review lets you correct it later.
 
+The next product direction is a private social space with shared memories, comments, reactions and events. The [improvement investigation](docs/PRODUCT_EVOLUTION_INVESTIGATION.md) groups the six requested changes by difficulty and distinguishes existing features from proposed work.
+
 ## What you can do
 
 - Import photographs and supported conversation archives from ZIP files.

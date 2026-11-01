@@ -22,7 +22,9 @@ On 14 October 2026 the owner approved shared-code entry for the local app. Frien
 
 ## Product Purpose
 
-Help friends rediscover their shared history and find specific memories across fragmented photos, videos, and source conversations. Rediscovery is the main reason to return; search stays easy to reach. A memory connects its media with available context and source evidence.
+The owner selected a private social space for the existing friend group on 1 November 2026: shared memories, comments, reactions and events. Shared history should support ongoing interaction and give friends a reason to return. [D25](docs/DECISIONS.md#private-social-space-direction-1-november-2026) revises the earlier rediscovery-first emphasis; [the investigation](docs/PRODUCT_EVOLUTION_INVESTIGATION.md) separates existing capabilities from proposed implementation.
+
+The current application helps friends rediscover shared history and find memories across fragmented photos and source conversations. A memory connects its media with available context and source evidence; event notes support member recollections. A general social feed, native reactions and future-event attendance are proposed additions.
 
 Success means friends enjoy exploring and can understand and use the archive on their phones and computers. The initial experiment is a polished Home-to-memory journey through photos and context, using synthetic content, tried by 2-3 friends. Observe discoverability, clarity of controls, enjoyment, and willingness to return. The owner reported positive feedback on 5 October 2026. Unaided completion observations and exact device evidence have not been supplied.
 
@@ -32,7 +34,7 @@ Members can complete small-memory import, review, and browsing workflows entirel
 
 ## Capabilities and Constraints
 
-- Initial primary navigation: Home, Timeline, Search. Home supports rediscovery across any date.
+- Current primary navigation includes Home, Timeline and Search. D25 requests a simpler Home and clearer destinations; the proposed navigation is documented in the investigation and is not implemented yet.
 - My Imports is an easy-to-reach supporting workspace; group settings are a supporting route.
 - Map, People, and Memory AI enter navigation only when their features ship. Their detailed scope remains in the roadmap.
 - Imported content is shared automatically with every active group member as each item becomes available through ingestion. There is no human review or Publish action before group visibility.
