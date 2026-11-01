@@ -8,6 +8,8 @@ Everyone in the circle uses a shared entry code. Imported content becomes availa
 
 The next product direction is a private social space with shared memories, comments, reactions and events. The [improvement investigation](docs/PRODUCT_EVOLUTION_INVESTIGATION.md) groups the six requested changes by difficulty and distinguishes existing features from proposed work.
 
+The first clarity increment uses **Home**, **Keşfet** and **Grubumuz** on phones and computers, with a separate **Ekle** action. Home presents memories and their notes. Keşfet names the existing exploration tools, including Atlas, People, stories, recaps and capsules. Grubumuz exposes group controls and management links. [D26](docs/DECISIONS.md#interface-clarity-1-november-2026) records compatibility; [verification](work/poteto/interface-clarity/VERIFICATION.md) records synthetic evidence and limits.
+
 ## What you can do
 
 - Import photographs and supported conversation archives from ZIP files.

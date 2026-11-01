@@ -10,6 +10,8 @@ On 1 November 2026 the owner selected a private group experience with shared mem
 
 These increments reuse M3 correction, M4 places, M5 People/filtering and M7 stories without declaring those milestones accepted. Native social reactions, comments/activity and future events extend the existing archive scope and need explicit domain and acceptance contracts before implementation. The original M0-M7 program and release gates below remain intact; there is no new production or scheduling commitment in this investigation.
 
+The owner requested the clarity increment first under [D26](DECISIONS.md#interface-clarity-1-november-2026). It separates Home from Atlas, shares Home/Keşfet/Grubumuz navigation across screen sizes and gives existing capabilities named destinations. [Clarity verification](../work/poteto/interface-clarity/VERIFICATION.md) distinguishes local implementation from production and physical-device acceptance. Metadata semantics, content labels and social domains remain separate increments.
+
 ## Use the planning assumptions
 
 Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.

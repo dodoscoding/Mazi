@@ -1,6 +1,6 @@
 # Mazi product specification
 
-The confirmed product direction is recorded in [PRODUCT.md](../PRODUCT.md) and [D13-D15](DECISIONS.md), dated 3 October 2026. Remaining implementation and release details are proposals. This specification reconciles the preserved [original brief](source/PRODUCT_BRIEF.md) with those decisions; no feature exists yet.
+The confirmed product direction is recorded in [PRODUCT.md](../PRODUCT.md), D13-D15 and the later [D25-D26 decisions](DECISIONS.md). Remaining release details are proposals. This specification reconciles the preserved [original brief](source/PRODUCT_BRIEF.md) with those decisions. Local implementation evidence does not establish production acceptance.
 
 ## Product purpose
 
@@ -20,7 +20,7 @@ The core unit is a memory supported by media and historical evidence. An album a
 
 ## Release boundaries
 
-The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is an internal pilot. M2 is a closed beta. Initial navigation is Home, Timeline, Search; later destinations remain roadmap proposals and appear only when shipped. The current product is a website.
+The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is an internal pilot. M2 is a closed beta. D26 replaces D13's initial navigation with Home, Keşfet and Grubumuz. Only implemented capabilities receive feature links. The current product is a website.
 
 | Capability | First production release | Later delivery |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Keyword search covers group titles, user captions, and imported source text. It 
 
 ## Primary journeys
 
-The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shared-code-entry-decision-14-october-2026) instead of the production-planning invitation journey below. Friends enter a shared code and unique visible name. Existing names resume immediately. New profiles see the introduction once, returning sessions open the Atlas, and About retains the introduction. Existing application pages remain unchanged in scope.
+The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shared-code-entry-decision-14-october-2026) instead of the production-planning invitation journey below. Friends enter a shared code and unique visible name. Existing names resume immediately. New profiles see the introduction once, returning sessions open Home, and About retains the introduction. D26 reorganizes access to the existing application pages.
 
 1. A group creator signs in, creates a private group, and sends a single-use invitation through their chosen channel. The recipient accepts before expiry. An expired or revoked invitation grants nothing.
 2. A contributor selects files or an archive and sees the inventory, formats, size, and processing choices. Transfer and background progress survive interruption. Successful items remain reviewable if other items fail.
@@ -59,7 +59,9 @@ The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shar
 | People | Confirmed visible associations, shared memories, and places. No popularity scores or competitive rankings. | M5. |
 | Memory AI | Answers from authorized evidence with citations and uncertainty. | M6. |
 
-Unavailable areas are omitted from the shipped navigation. My Imports and group settings are supporting routes. My Imports remains easy to reach without becoming a primary destination. Home, Timeline, Search is the initial ordering.
+The table describes capabilities and their original milestone scope. D26 groups their entry points under Home, Keşfet and Grubumuz on both screen sizes. Home has one featured memory, event-note access and a bounded archive selection. It does not mount the Atlas or fabricate recent social activity. Keşfet provides descriptive links to the implemented workspaces, including focused entries to People, stories, annual recap and capsules. Grubumuz exposes membership, import history, sources, corrections and help. Ekle opens imports independently of the three primary links. Unavailable social capabilities are omitted.
+
+Atlas has the canonical `/atlas` route. Existing root selection/portal links and feature URLs remain supported. The [navigation contract](CONTRACTS.md#interface-navigation) owns URL, focus and lifecycle compatibility.
 
 ## Product rules
 

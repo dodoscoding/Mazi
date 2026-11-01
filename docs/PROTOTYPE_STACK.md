@@ -12,7 +12,8 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/App.tsx`, `src/Atlas.tsx` | Shared navigation, Atlas selection, memory detail, timeline and renderer recovery. |
+| `src/App.tsx`, `src/navigation.ts`, `src/Shell.tsx` | Route dispatch, one navigation table, three primary destinations and shared contribution/account controls. |
+| `src/Home.tsx`, `src/Explore.tsx`, `src/Atlas.tsx` | Memory landing, capability directory, group links, and the separate Atlas selection/portal/renderer experience under D26. |
 | `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
 | `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
 | `mazi/persistence.py`, `mazi/storage.py` | Backend selection, compatible rows/binding, schema-scoped transaction locks, verified private bytes and deletion receipts. |

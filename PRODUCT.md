@@ -34,9 +34,9 @@ Members can complete small-memory import, review, and browsing workflows entirel
 
 ## Capabilities and Constraints
 
-- Current primary navigation includes Home, Timeline and Search. D25 requests a simpler Home and clearer destinations; the proposed navigation is documented in the investigation and is not implemented yet.
-- My Imports is an easy-to-reach supporting workspace; group settings are a supporting route.
-- Map, People, and Memory AI enter navigation only when their features ship. Their detailed scope remains in the roadmap.
+- [D26](docs/DECISIONS.md#interface-clarity-1-november-2026) sets three primary destinations on desktop and phone: Home, Keşfet and Grubumuz. Home shows one featured memory and a short archive selection. Atlas is an explicit exploration view.
+- Keşfet names the existing search, map, timeline, People, story, recap, capsule, question and correction workspaces. Named section links reach embedded controls directly. Unimplemented social features do not appear as empty dashboard panels.
+- Ekle remains visible outside the primary navigation and opens imports. Grubumuz exposes membership, sources, import history and help. Existing workspace URLs remain supported.
 - Imported content is shared automatically with every active group member as each item becomes available through ingestion. There is no human review or Publish action before group visibility.
 - The group is the single content audience. Private staging, selected-recipient sharing, and independent component audience controls are deferred.
 - Members must sign in and belong to the group. Group sharing does not mean anonymous internet access or public object storage.

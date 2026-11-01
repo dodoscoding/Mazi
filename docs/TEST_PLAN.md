@@ -36,6 +36,14 @@ Use Alice, Ben, and Cara as active members of the same group, an active administ
 
 [D17](DECISIONS.md#shared-code-entry-decision-14-october-2026) replaces invitation entry for the local Atlas app. Extend T01 with wrong-code denial, atomic normalized-name creation, immediate existing-name resumption on another browser, session persistence/expiry/logout, current configured-group membership, and stable legacy user ownership. Preserve the production invitation scenarios separately. Test introduction completion once per profile across browser changes and About revisits. Signed-out direct routes, hash routes, and sample mode must show only entry. Run desktop and phone checks against temporary synthetic archives. Accepted code-holder impersonation is a product constraint, not a failed check.
 
+## Local interface clarity acceptance
+
+[D26](DECISIONS.md#interface-clarity-1-november-2026) extends the local T08 journey. On desktop and phone, verify exactly Home, Keşfet and Grubumuz in one visible main navigation, with Ekle outside it. Home has a featured memory, direct event notes and at most three other archive memories; it has no Atlas control stack or unsupported activity claims. Cover populated, empty, loading and retry states.
+
+Follow named links to Search, Atlas/map, Timeline, People, stories, annual recap, capsules, questions, corrections, imports, sources, membership and help. Stories, recap, capsules and People must focus their actual controls rather than the top of a long gallery. Check current parent indication, keyboard focus, 320px overflow, touch targets, reduced motion and settled-page accessibility.
+
+Exercise canonical `/atlas` and legacy root selection/portal links, direct memory/photo/notebook refresh, Back/Forward and return focus. Reuse background-retention, access-loss and group-switching contracts. Run direct `/places` Discord callback tests with the new shell. Record exact commands, environments and captures in [the clarity verification](../work/poteto/interface-clarity/VERIFICATION.md). Synthetic browser evidence does not satisfy physical-device or production milestone gates.
+
 ## First design experiment
 
 D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
