@@ -32,6 +32,8 @@ export function mount(root, lifecycle) {
       ? location.hash.split("?").slice(1).join("?")
       : location.search,
   );
+  const peopleEntry = restored.get("section") === "people";
+  let entryFocused = false;
   const filters = {
     source: restored.get("source") || "",
     sharedBy: restored.get("by") || "",
@@ -47,6 +49,7 @@ export function mount(root, lifecycle) {
     // A search finishing after navigation must not rewrite the next page's URL.
     if (disposed) return;
     const params = new URLSearchParams();
+    if (peopleEntry) params.set("section", "people");
     for (const [key, id] of urlFields)
       if ($(id).value) params.set(key, $(id).value);
     if (filters.source) params.set("source", filters.source);
@@ -761,6 +764,17 @@ export function mount(root, lifecycle) {
       return;
     }
     await refresh();
+    if (
+      peopleEntry &&
+      !entryFocused &&
+      contextReady &&
+      !root.hidden &&
+      lifecycle.mountKind !== "refresh"
+    ) {
+      entryFocused = true;
+      $("#people-heading").focus({ preventScroll: true });
+      $("#people-heading").scrollIntoView({ block: "start" });
+    }
   });
 
   $("#build-index").onclick = () =>

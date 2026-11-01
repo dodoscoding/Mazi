@@ -6,7 +6,9 @@ import { Entry, Introduction } from "./Entry";
 import { FeaturePage } from "./features";
 import { createDiscordReturn } from "./features/discordReturn";
 import { isFeaturePath } from "./featureRoutes";
-import { ArchiveStatus, Home } from "./Home";
+import { ArchiveStatus, Atlas } from "./Atlas";
+import { Home } from "./Home";
+import { Explore } from "./Explore";
 import { usePlacedMemories } from "./atlas/PlaceMemories";
 import { MemoryNotFound, MemoryView } from "./MemoryView";
 import { Shell } from "./Shell";
@@ -56,9 +58,27 @@ export default function App() {
   const heading = useRef<HTMLHeadingElement>(null);
   const openLink = useRef<HTMLAnchorElement>(null);
   const previousPath = useRef(route.path);
-  const homeScroll = useRef(0);
-  const navigateTo = (url: string, animate = false, replace = false) => {
-    if (route.path === "/") homeScroll.current = window.scrollY;
+  const browsingReturn = useRef<{
+    path: string;
+    scroll: number;
+    openerId: string;
+  } | null>(null);
+  const navigateTo = (
+    url: string,
+    animate = false,
+    replace = false,
+    openerId = "",
+  ) => {
+    if (
+      (route.path === "/" || route.path === "/atlas") &&
+      url.startsWith("/memory/")
+    )
+      browsingReturn.current = {
+        path: route.path,
+        scroll: window.scrollY,
+        openerId,
+      };
+    else if (!url.startsWith("/memory/")) browsingReturn.current = null;
     navigate(url, animate, replace);
   };
   function link(url: string, animate = false, replace = false) {
@@ -72,23 +92,26 @@ export default function App() {
       )
         return;
       event.preventDefault();
-      navigateTo(url, animate, replace);
+      navigateTo(url, animate, replace, event.currentTarget.id);
     };
   }
   useLayoutEffect(() => {
     const oldPath = previousPath.current;
     previousPath.current = route.path;
-    if (route.path === "/" && oldPath.startsWith("/memory/")) {
-      window.scrollTo(0, homeScroll.current);
-      openLink.current?.focus({ preventScroll: true });
-    } else if (route.path !== "/") {
+    const saved = browsingReturn.current;
+    if (saved && saved.path === route.path && oldPath.startsWith("/memory/")) {
+      window.scrollTo(0, saved.scroll);
+      const opener =
+        document.getElementById(saved.openerId) || openLink.current;
+      opener?.focus({ preventScroll: true });
+    } else {
       window.scrollTo(0, 0);
       heading.current?.focus({ preventScroll: true });
     }
   }, [route.path, memory?.id]);
   const chooseMemory = (id: string) =>
-    navigate(`/?selected=${id}`, false, true);
-  const backUrl = `/?selected=${memory?.id || selected?.id || ""}`;
+    navigate(`/atlas?selected=${id}`, false, true);
+  const backUrl = "/";
   let content: ReactNode;
   if (route.path === "/introduction")
     content = <Introduction onContinue={() => navigate("/")} />;
@@ -109,6 +132,19 @@ export default function App() {
         }}
       />
     );
+  else if (route.path === "/explore")
+    content = <Explore link={link} heading={heading} />;
+  else if (route.path === "/")
+    content = (
+      <Home
+        archive={archive}
+        memories={memories}
+        demo={demo}
+        link={link}
+        heading={heading}
+        openLink={openLink}
+      />
+    );
   else if (isFeaturePath(route.path, demo))
     content = (
       <FeaturePage
@@ -119,9 +155,9 @@ export default function App() {
     );
   else if (archive.status !== "ready")
     content = <ArchiveStatus archive={archive} heading={heading} />;
-  else if (route.path === "/")
+  else if (route.path === "/atlas")
     content = (
-      <Home
+      <Atlas
         archive={archive}
         memories={memories}
         selected={selected}

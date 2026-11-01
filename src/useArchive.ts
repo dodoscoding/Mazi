@@ -86,6 +86,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     };
   }, [demo, groupId, version]);
   const loadAtlas =
+    path !== "/explore" &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&
     !!state.group &&

@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { mkdirSync } from "node:fs";
 
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
@@ -18,7 +17,7 @@ async function skipIntro(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
 }
 
-async function openAtlas(page: Page, url = "/?demo=1") {
+async function openAtlas(page: Page, url = "/?demo=1#/atlas") {
   await page.goto(url);
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
@@ -162,7 +161,7 @@ test("scene=off shows the flat map with the same selection", async ({
 
 test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
   // The intro runs on a clock from mount, so look for it before waiting on the globe.
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   const skip = page.getByRole("button", { name: "Skip intro" });
   await expect(skip).toBeVisible();
   await page.keyboard.press("Escape");
@@ -176,11 +175,13 @@ test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
 test("leaving the atlas during the intro counts as seeing it", async ({
   page,
 }) => {
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   const home = page.locator(".atlas-home");
   await expect(home).toHaveAttribute("data-phase", "intro");
-  await page.goto("/?demo=1#/memory/lake-days");
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.evaluate(() => {
+    location.hash = "#/memory/lake-days";
+  });
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(home).toBeVisible();
   // A replayed intro would end in "done"; a returning visit opens in "return".
   await expect(home).toHaveAttribute("data-phase", "return");
@@ -190,7 +191,7 @@ test("reduced motion holds the title briefly instead of the cinematic intro", as
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   await expect(page.getByRole("button", { name: "Skip intro" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Skip intro" })).toHaveCount(
     0,
@@ -342,7 +343,7 @@ test("reduced motion keeps the still year card in the Timeline", async ({
 
 test("sharing-only same-year memories replay independently with explicit date basis", async ({
   page,
-}) => {
+}, testInfo) => {
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.clock.install();
@@ -391,9 +392,8 @@ test("sharing-only same-year memories replay independently with explicit date ba
   await expect(page.locator(".readout-summary")).toContainText("Shared on");
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await page.getByRole("button", { name: "Flat map", exact: true }).click();
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/sharing-chronology-${isPhone(page) ? "phone" : "desktop"}.png`,
+    path: testInfo.outputPath("sharing-chronology.png"),
   });
   const replay = page.getByRole("button", { name: "Replay", exact: true });
   await expect(replay).toBeEnabled();

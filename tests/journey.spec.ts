@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 test("select, open, explore photos and context; Back restores selection and focus", async ({
   page,
 }) => {
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   await page.getByRole("button", { name: "Select Lake days" }).click();
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
@@ -32,7 +32,7 @@ test("select, open, explore photos and context; Back restores selection and focu
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(page.getByRole("link", { name: "Open memory" })).toBeFocused();
   await expect(
     page.getByRole("button", { name: "Select The last ferry" }),
@@ -49,7 +49,7 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
   await page.getByRole("button", { name: "Next photo" }).click();
   await page.getByRole("button", { name: "Next photo" }).click();
   await expect(page.getByRole("button", { name: "Next photo" })).toBeDisabled();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
@@ -58,9 +58,9 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
   await expect(
     page.getByRole("heading", { name: "Memory not found" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "The Atlas of Us" }),
+    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
   ).toBeVisible();
 });
 
@@ -68,12 +68,12 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Select Lake days" }).click();
     await page.getByRole("button", { name: "Select The last ferry" }).click();
     await openFullMemory(page);
-    await page.getByRole("link", { name: "Back to atlas" }).click();
+    await page.getByRole("link", { name: "Back", exact: true }).click();
   }
   expect(
     await page.evaluate(
@@ -91,12 +91,17 @@ test("failed images are recoverable and renderer failure preserves the journey",
   page,
 }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
-  await page.goto("/?demo=1&scene=off#/memory/last-ferry");
-  await expect(page.getByText("This photo could not load.")).toBeVisible();
+  await page.goto("/?demo=1&scene=off#/atlas");
+  await openFullMemory(page);
+  await expect(
+    page
+      .locator(".memory-detail")
+      .getByText("This photo could not load.", { exact: true }),
+  ).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
   await expect(page.locator(".photo-frame img")).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(page.getByText("The atlas is in flat view.")).toBeVisible();
   await page.getByRole("button", { name: "Select Lake days" }).click();
   await openFullMemory(page);
@@ -113,5 +118,7 @@ test("retrying the Home photograph stays on Home", async ({ page }) => {
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
   await expect(page).not.toHaveURL(/memory\/last-ferry/);
-  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
+  await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
+    /is-loaded/,
+  );
 });

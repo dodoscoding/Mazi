@@ -12,6 +12,7 @@ export function Photo({
   continuity?: boolean;
   eager?: boolean;
   openMemory?: {
+    id?: string;
     href: string;
     label: string;
     onClick: MouseEventHandler<HTMLAnchorElement>;
@@ -78,6 +79,7 @@ export function Photo({
           )}
           {openMemory ? (
             <a
+              id={openMemory.id}
               className="feature-photo-link"
               href={openMemory.href}
               aria-label={openMemory.label}

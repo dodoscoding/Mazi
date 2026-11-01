@@ -4,6 +4,26 @@ import "./memories.css";
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
+  const entrySection = new URLSearchParams(lifecycle.search).get("section");
+  const entryHeading = new Map([
+    ["stories", "stories-heading"],
+    ["recap", "recap-heading"],
+    ["capsules", "capsules-heading"],
+  ]).get(entrySection);
+  let entryFocused = false;
+  function focusEntry() {
+    if (
+      !entryHeading ||
+      entryFocused ||
+      root.hidden ||
+      lifecycle.mountKind === "refresh"
+    )
+      return;
+    entryFocused = true;
+    const heading = $(entryHeading);
+    heading.focus({ preventScroll: true });
+    heading.scrollIntoView({ block: "start" });
+  }
   let group = "",
     generation = 0;
   function node(tag, text) {
@@ -292,6 +312,7 @@ export function mount(root, lifecycle) {
       group = lifecycle.selectGroup($("groups"));
       $("groups").closest("label").hidden = $("groups").options.length < 2;
       grid.load(group);
+      if (group) focusEntry();
       await refresh();
     } catch (error) {
       $("notice").textContent = error.message + ". Sign in from Imports.";
