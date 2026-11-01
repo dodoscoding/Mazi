@@ -11,7 +11,7 @@ Implement requests 1, 3 and 5 from D25 after merging documentation PR #109. Keep
 - [x] 5. Verify on the matching surface. Final [desktop/phone/browser receipts](VERIFICATION.md) include UI, history, notebook and Discord paths.
 - [x] 6. Rebase into small, ordered commits. Stack follow-ups. `276fd91` exposes the contract, `1802104` implements it, `c08b1c6` adds boundary coverage. No rebase needed; fetched main still equals the recorded base.
 - [x] 7. If the design is contested, `interrogate` before shipping. skip: both parent and independent judge selected A; no unresolved design dispute.
-- [ ] 8. Run **Opening a PR**.
+- [x] 8. Run **Opening a PR**. [Implementation PR #111](https://github.com/dodoscoding/Mazi/pull/111) is open and ready for review.
 
 ## Throughput checkpoint
 
@@ -36,7 +36,7 @@ Implement requests 1, 3 and 5 from D25 after merging documentation PR #109. Keep
 - [x] Existing route URLs, selected memory/photo/notebook links, demo, browser history, background state and Discord callback behavior remain valid.
 - [x] Keyboard, small-screen overflow, touch targets, reduced motion and relevant access controls are verified with synthetic data.
 - [x] Update canonical product/design/decision contracts and record exact verification evidence.
-- [ ] Create a ready implementation PR. Do not merge the implementation PR without a further request.
+- [x] Create a ready implementation PR. [PR #111](https://github.com/dodoscoding/Mazi/pull/111) is open, not a draft. The implementation PR remains unmerged.
 
 ## Independent review
 

@@ -2,7 +2,7 @@
 
 Completed on 1 November 2026 against source/test head `c08b1c627921745429098c6fb5d8a0b291be9277`, based on merged investigation revision `665902b4a6aba9a71539888568a7e9ca95d87b27`. [D26](../../../docs/DECISIONS.md#interface-clarity-1-november-2026) defines scope. [The plan](PLAN.md) tracks acceptance and [the rationale](DESIGN_RATIONALE.md) records the chosen directory design.
 
-The commits are `276fd91` for the failing navigation contract, `1802104` for implementation and migrated journeys, and `c08b1c6` for focused feature/route regressions. The final documentation commit adds contracts and evidence without changing application source.
+The commits are `276fd91` for the failing navigation contract, `1802104` for implementation and migrated journeys, and `c08b1c6` for focused feature/route regressions. Documentation commits add contracts and evidence without changing application source. [Implementation PR #111](https://github.com/dodoscoding/Mazi/pull/111) is open for review; only the preceding investigation PR #109 was merged in this task.
 
 ## Result
 
