@@ -16,7 +16,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   await page.getByRole("button", { name: "Select Lake days" }).focus();
   await page.keyboard.press("Space");
   await expect(
@@ -33,7 +33,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeFocused();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.getByRole("button", { name: "Select The last ferry" }).click();
   await openFullMemory(page);
@@ -61,7 +61,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
 test("actual WebGL context loss retains selection and allows retry", async ({
   page,
 }) => {
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
   await page.getByRole("button", { name: "Select Lake days" }).click();
   const canvas = page.locator("canvas");

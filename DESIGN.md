@@ -243,9 +243,13 @@ Display sizes are tokens: `display-xl` 72px, `display-l` 48px, `display-m` 32px 
 
 ## Layout
 
-The desktop shell has a 72px header with 40px side padding. It holds the wordmark, the primary navigation and the Archive tools menu on the left. On the right it holds the circle name, the theme toggle, the sound toggle and the avatar. The Atlas fills the page under it. A places index sits on the left, the globe in the middle and the selected memory on the right, with the year scrubber below. Page gutters are 48px, then 32px below 1150px, 24px below 800px and 20px below 600px.
+Under [D26](docs/DECISIONS.md#interface-clarity-1-november-2026), the desktop shell has Home, Keşfet and Grubumuz beside the wordmark. Search, Ekle and account controls stay visible in the header. The account menu contains help, introduction replay, sound, group selection and sign-out. It also contains the sample exit when applicable. Page gutters are 48px, then 32px below 1150px, 24px below 800px and 20px below 600px.
 
-At 800px the wide-only links move into the Archive tools menu. Below 600px the header is 64px and keeps the wordmark (plus the leave link in sample mode). A 64px tab bar, plus the safe-area inset, holds Home, Timeline, Search, Imports and More. More opens a bottom sheet with the theme and sound toggles, the archive tools and sign-out. Touch targets are 44px, and 48px for primary phone actions.
+Below 600px the header is 64px. A 64px bottom navigation, plus the safe-area inset, uses the same three labels. Ekle stays in the header rather than becoming another tab. Touch targets are 44px, and 48px for primary phone actions.
+
+Home uses a large photograph beside a title, available metadata and memory/note actions, then at most three smaller archive memories. It stacks on phones. Keşfet is a directory of named destinations with short descriptions and ordinary links. Grubumuz exposes management links beside the existing group workspace. New entry-page copy is Turkish; existing workspace copy remains English.
+
+Atlas is a separate view at `/atlas`. Its places index, globe, selected memory and year scrubber retain their existing layout. Home does not mount that control stack. Focused section links reveal People, stories, annual recaps and capsules without changing their underlying workspaces.
 
 ## Elevation & Depth
 
@@ -269,7 +273,7 @@ Durations: `instant` 120ms, `quick` 200ms, `base` 320ms, `slow` 600ms, `camera` 
 | --- | --- |
 | Hover and press feedback | 120ms ease-out on colour, background, border and shadow |
 | Screen change in the shell | Rises 8px and fades over 320ms, `arrive` |
-| Archive tools menu | Drops 6px and fades over 200ms, `arrive` |
+| Account menu | Drops 6px and fades over 200ms, `arrive` |
 | Bottom sheet | Rises over 320ms (`reveal`), falls over 240ms (`exit`) |
 | Toast | Rises 12px over 320ms (`arrive`), leaves over 200ms (`exit`) |
 | Theme switch | 600ms colour tween, `arrive` |
@@ -294,15 +298,15 @@ The shared primitives live in `src/ui/`.
 
 - **Button.** Four variants. `primary` is the warm pill: `accent-terminator` fill, `on-accent` text, 48px high, 15px Geist 600, with a soft warm glow on hover. `secondary` is a 44px `bg-raised` pill with a `line` outline. `ghost` is text only. `danger` is an `error` outline, used for sign-out. Disabled buttons drop to `bg-raised` and `text-muted`.
 - **IconButton.** A 44px circle with a `line` outline and a 16px icon in `text-secondary`. It turns `text-primary` on hover. In the header it sits on `overlay-hud`.
-- **Theme toggle.** In headers, an IconButton named "Switch to day" or "Switch to night". In the phone More sheet, a secondary pill labelled "Day" or "Night".
-- **Sound toggle.** Named "Sound", with `aria-pressed` carrying the state. In the desktop header it is an IconButton next to the theme toggle, with a tooltip that reads "Sound off" or "Sound on". On Entry and in the phone More sheet it is a pill with that label visible. When on, it turns `accent-atmosphere`.
-- **Menu.** The Archive tools popover: 290px wide, 6px padding, `surface` with `shadow-float`. Rows are 44px high. The current page reads in `accent-node`.
+- **Theme.** The current app keeps the night palette. The earlier day toggle is no longer exposed in the shell.
+- **Sound toggle.** Named "Sound", with `aria-pressed` carrying the state. Entry and the account menu use a pill labelled "Sound off" or "Sound on". When on, it turns `accent-atmosphere`.
+- **Menu.** Account controls use the existing popover, `surface` and `shadow-float`. Rows remain keyboard operable with focus returned to the trigger on Escape. Archive capabilities use the visible Keşfet directory and group links.
 - **Sheet.** A bottom sheet with a scrim and a drag handle. It traps focus and closes on Escape, a scrim tap or a downward drag. Focus then returns to the opener.
 - **Toast.** Bottom centre, above the phone tab bar, up to 440px wide, with a status icon in `success` or `error`.
 - **Field.** 56px high on `bg-deep` (`surface` by day), with a `text-muted` border, a 6px radius and a HUD label above it.
 - **HUD label.** Geist Mono 11px, uppercase, 0.16em tracking, `text-secondary`. It labels data and places over the globe and fields; it never sits above a heading as a kicker.
 - **Memory meta.** 13px `text-secondary` with tabular numerals; items are joined by a muted middle dot.
-- **Navigation.** Header links are 14px Geist 500 in `text-secondary`. The current page turns `text-primary` with a 1.5px `accent-node` underline.
+- **Navigation.** Header links are 14px Geist 500 in `text-secondary`. The current section turns `text-primary` with a 1.5px `accent-node` underline. Desktop and phone derive the active parent from the same navigation table. Memory detail belongs to Keşfet; imports and help belong to Grubumuz.
 
 ### Sound
 

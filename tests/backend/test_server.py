@@ -63,6 +63,12 @@ class AppServerTests(unittest.TestCase):
         self.assertEqual(status, 503)
         self.assertIn('npm run build', json.loads(body)['error'])
 
+    def test_explore_direct_link_serves_application(self):
+        status, headers, body = self.request('/explore')
+        self.assertEqual(status, 200)
+        self.assertEqual(body, b'<html>Atlas</html>')
+        self.assertEqual(headers['Cache-Control'], 'no-store')
+
     def test_assets_and_traversal_never_fall_back_to_html(self):
         self.assertEqual(self.request('/assets/app.js')[0], 200)
         self.assertEqual(self.request('/land.geojson')[0], 200)

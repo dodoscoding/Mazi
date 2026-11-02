@@ -14,6 +14,8 @@ test("every signed-out route is gated and named profiles resume across browsers"
     "/imports",
     "/review",
     "/timeline",
+    "/atlas",
+    "/explore",
     "/places",
     "/discover",
     "/ask",
@@ -25,7 +27,9 @@ test("every signed-out route is gated and named profiles resume across browsers"
     await expect(page.getByLabel("Shared code")).toBeVisible();
     await expect(page.getByRole("navigation")).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
-    await expect(page.locator(".featured, .feature-page")).toHaveCount(0);
+    await expect(
+      page.locator(".featured, .home-featured, .feature-page"),
+    ).toHaveCount(0);
   }
   await page.screenshot({
     path: `work/poteto/shared-code-entry/screenshots/login-${info.project.name}.png`,
@@ -139,7 +143,7 @@ test("session checks stay neutral and introduction failures remain retryable", a
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
   release();
   await expect(
-    page.getByRole("heading", { name: "The Atlas of Us" }),
+    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
   ).toBeVisible();
   await expect(page).toHaveURL(/#\/$/);
 });
@@ -207,7 +211,7 @@ test("an old Atlas denial cannot clear a newer authorized load", async ({
     });
     delivered();
   });
-  await page.goto("/");
+  await page.goto("/#/atlas");
   await held;
   await page.evaluate(() => window.dispatchEvent(new Event("mazi:group")));
   await expect(

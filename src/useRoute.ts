@@ -27,7 +27,11 @@ export function readRoute() {
   ).split("?");
   const params = new URLSearchParams(query);
   return {
-    path: path === "/atlas" ? "/" : path || "/",
+    path:
+      path === "/" &&
+      (params.has("selected") || params.get("view") === "portal")
+        ? "/atlas"
+        : path || "/",
     search: query ? `?${query}` : "",
     selected: params.get("selected") || "last-ferry",
     notebook: params.get("notebook") === "1",

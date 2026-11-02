@@ -85,3 +85,23 @@ test("a plain hash link from a feature page counts as an in-app entry", async (t
   assert.equal(h.route.path, "/memory/a");
   assert.equal(h.canGoBack(), true);
 });
+
+test("Home and Atlas have separate canonical routes", async (t) => {
+  const home = await harness(t, "http://localhost/?demo=1#/");
+  assert.equal(home.route.path, "/");
+  await home.navigate("/atlas?selected=lake-days&view=portal");
+  assert.equal(home.route.path, "/atlas");
+  assert.equal(home.route.selected, "lake-days");
+  assert.equal(home.route.search, "?selected=lake-days&view=portal");
+});
+
+test("legacy root selection links retain their Atlas state", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/?demo=1#/?selected=lake-days&view=portal",
+  );
+  assert.equal(h.route.path, "/atlas");
+  assert.equal(h.route.selected, "lake-days");
+  assert.equal(h.route.search, "?selected=lake-days&view=portal");
+  assert.equal(h.canGoBack(), false);
+});

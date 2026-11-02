@@ -658,3 +658,31 @@ test("event notes are discoverable before the photograph viewer", async ({
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`/memory/${event.id}$`));
 });
+
+test("Home exposes event notes without opening the Atlas or photograph viewer", async ({
+  page,
+}) => {
+  const { event } = await enter(page);
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories: [event] } }),
+  );
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".atlas-stage, .photo-viewer")).toHaveCount(0);
+  const notes = page
+    .locator(".home-featured")
+    .getByRole("link", { name: "Notları aç", exact: true });
+  await expect(notes).toHaveAttribute(
+    "href",
+    `#/memory/${event.id}?notebook=1`,
+  );
+  await notes.click();
+  await expect(page.locator("#notebook-heading")).toBeFocused();
+  await expect(page.locator("#notebook-heading")).toBeInViewport();
+  await expect(page.locator(".photo-viewer")).toHaveCount(0);
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await expect(page.locator(".home-featured")).toContainText(event.title);
+  await expect(page.locator(".atlas-stage")).toHaveCount(0);
+});

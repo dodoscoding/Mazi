@@ -105,6 +105,18 @@ Counters reconcile discovered items into pending, active, ready, missing, unsupp
 
 Jobs use import_item_id, stage, input version, and algorithm version as their idempotency identity. Leases include expiry and ownership. A completion transaction accepts output only from the current lease and consent version. Retry cannot repeat side effects after a completed stage. Exponential backoff and capped attempts lead to a reviewable failure.
 
+## Interface navigation
+
+[D26](DECISIONS.md#interface-clarity-1-november-2026) defines one navigation table for the desktop and phone primary links. Exactly Home, Keşfet and Grubumuz appear in that order. Ekle remains a separate visible link to `/imports`. A route derives its parent section without a second stored navigation state. Archive detail belongs to Keşfet even when opened from Home.
+
+Bare `/` renders the Home landing. `/explore` renders the capability directory and `/atlas` renders the existing globe/flat-map experience. Root URLs with explicit `selected` or `view=portal` parameters retain their Atlas meaning without adding a history entry. Existing `/timeline`, `/search`, `/discover`, `/places`, `/ask`, `/answer-evidence`, `/review`, `/imports`, `/circle`, `/about`, `/introduction` and `/memory/:id` entries remain valid. Photo and notebook parameters retain their meaning. Outer sample-mode and Discord OAuth parameters are not consumed by section navigation.
+
+`/memories?section=stories`, `section=recap` and `section=capsules` reach their actual named sections. `/discover?section=people` reaches the existing People controls. These links do not infer identity from sender names, enable optional processing, or unlock capsule content. A section focuses its heading once on intentional entry; polling and background revalidation do not steal focus. Unknown section values use the workspace default.
+
+Home reads the existing authorized archive projection and shows at most one featured memory plus three other memories. Archive ordering is not an activity timestamp. Cards retain available date/place evidence and distinguish event notes from photographs. Empty groups expose contribution or group setup. Loading, retry and denial use the existing archive/session lifecycle without cached private fallback data.
+
+Browser Back returns to the originating browsing page, with usable scroll and focus. Direct memory loads have an explicit fallback. Atlas selection, portal navigation, keyboard controls, manual places and optional sound use the Atlas route consistently. D24 background retention and current-access clearing remain unchanged. This increment adds no API, schema, audience or processing-consent contract.
+
 ## Search and AI boundary
 
 Search takes an authenticated member, one group, filters, a bounded page size, and a stable cursor. It returns authorized results, accessible evidence identifiers, date uncertainty, and a continuation cursor. Counts and facets use the same authorization filter as results.

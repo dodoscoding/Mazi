@@ -4,6 +4,7 @@ const port = Number(process.env.MAZI_UNIFIED_PORT || 8017);
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "clarity-workspaces.spec.ts",
     "unified.spec.ts",
     "entry.spec.ts",
     "features-redesign.spec.ts",

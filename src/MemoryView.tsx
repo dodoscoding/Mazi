@@ -64,6 +64,7 @@ export function MemoryView({
   navigate: Navigate;
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
+  const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
   const reduced = useReducedMotion();
   const notebookHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -156,7 +157,7 @@ export function MemoryView({
         <div className="detail-bar-start">
           <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
-            <span className="back-label">Back to atlas</span>
+            <span className="back-label">Back</span>
             <kbd aria-hidden="true">Esc</kbd>
           </a>
           <p className="hud-label crumb">
@@ -203,8 +204,8 @@ export function MemoryView({
         {memory.place && (
           <a
             className="round-link globe-link"
-            href={`#${backUrl}`}
-            onClick={link(backUrl, true)}
+            href={`#${atlasUrl}`}
+            onClick={link(atlasUrl, true)}
             aria-label="Show on the globe"
           >
             <Glyph name="globe" size={18} />
@@ -296,8 +297,8 @@ export function MemoryView({
                 {memory.place ? (
                   <a
                     className="text-link globe-text-link"
-                    href={`#${backUrl}`}
-                    onClick={link(backUrl, true)}
+                    href={`#${atlasUrl}`}
+                    onClick={link(atlasUrl, true)}
                   >
                     Show on the globe
                   </a>
@@ -535,7 +536,7 @@ export function MemoryNotFound({
       </p>
       <div className="not-found-actions">
         <a className="primary-action" href="#/" onClick={link("/")}>
-          Back to atlas <Arrow />
+          Back <Arrow />
         </a>
         <a
           className="button button--ghost"

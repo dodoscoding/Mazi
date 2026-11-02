@@ -6,6 +6,7 @@ const firefoxLaunchOptions = process.env.MAZI_FIREFOX_EXECUTABLE
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "interface-clarity.spec.ts",
     "journey.spec.ts",
     "resilience.spec.ts",
     "evidence.spec.ts",

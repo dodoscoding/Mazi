@@ -131,6 +131,16 @@ This changes the intended emphasis of D13's rediscovery-first purpose and D15's 
 
 [The feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) rates all six requests and proposes a shared navigation structure, explicit date-basis filtering, independent content/provenance labels and small social increments. Those mechanisms remain proposals. New comments, reactions and future events need domain, ownership, deletion and test contracts before implementation; the existing event notebook can be reused for recollections. No recognition, external AI processing, provider change, paid provisioning or deployment is authorized by this documentation update.
 
+## Interface clarity, 1 November 2026
+
+**D26: Home, Keşfet and Grubumuz.** The owner requested merging the investigation and implementing its clarity group first. These are the same three primary labels on desktop and phone. Ekle is a separate visible contribution action. Home shows one featured memory and a short archive selection with available metadata and event-note links. It does not claim an activity feed or recent contributions without authoring timestamps.
+
+Engineering selected a dedicated `/explore` directory over permanent secondary navigation around every workspace. Named links explain Search, Atlas, Timeline, People, stories, annual recaps, capsules and correction tools. Existing `/discover` keeps its rediscovery workspace. Grubumuz retains membership controls and exposes imports, sources and help. New entry-page copy is Turkish; existing workspace copy remains English in this increment.
+
+Atlas moves to `/atlas` with its map, Replay, date controls and place correction intact. Legacy root links carrying `selected` or `view=portal` still resolve to Atlas. Existing memory/photo/notebook URLs, browser history, sample mode and `/places` Discord callbacks remain compatible. Section queries reach the actual People, stories, recap and capsule controls. Memory detail belongs to Keşfet; browser history determines its contextual return.
+
+This changes navigation and presentation, not storage, access, metadata semantics or processing consent. D24 background retention remains applicable. Comments, reactions, events and content classifiers remain later increments. [Implementation evidence](../work/poteto/interface-clarity/VERIFICATION.md) records synthetic checks and remaining limits; it does not close production milestones or authorize a new deployment.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.

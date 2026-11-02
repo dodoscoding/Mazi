@@ -378,8 +378,11 @@ test("related memories put the same place first and open that memory", async ({
   await expect(
     page.getByRole("heading", { name: "Morning swim below the old port" }),
   ).toBeFocused();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
-  await expect(page).toHaveURL(/selected=naxos-morning/);
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
+  ).toBeVisible();
 });
 
 for (const backAction of ["pill", "Escape"]) {
@@ -407,9 +410,7 @@ for (const backAction of ["pill", "Escape"]) {
     await expect(page.locator("#notebook-heading")).toBeFocused();
     await expect(page.locator("#notebook-heading")).toBeInViewport();
     if (backAction === "pill")
-      await page
-        .getByRole("link", { name: "Back to atlas", exact: true })
-        .click();
+      await page.getByRole("link", { name: "Back", exact: true }).click();
     else await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/#\/\?selected=harbour-night$/);
     await expect(page.locator(".featured")).toContainText(
@@ -480,12 +481,13 @@ test("earlier and later follow the dates, with approximate memories in place", a
   await expect(nav.getByRole("link", { name: /^Later memory/ })).toHaveCount(0);
 });
 
-test("Escape goes back to the atlas with the memory selected", async ({
-  page,
-}) => {
+test("Escape from a direct memory returns to Home", async ({ page }) => {
   await open(page, "/memory/city-spring");
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/#\/\?selected=city-spring$/);
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
+  ).toBeVisible();
 });
 
 test("a broken photo URL shows the retry state", async ({ page }) => {
@@ -666,7 +668,7 @@ test("source sharing is visible on cards, portal and detail without a capture da
   );
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#/atlas");
   await expect(page.locator(".featured")).toContainText("Photo shared by Ana");
   await expect(page.locator(".featured")).toContainText(
     "Shared by Ana and Ben",
@@ -796,9 +798,8 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   };
   await page.waitForTimeout(1200);
   await verify(".portal-window img");
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/portal-portrait-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("portal-portrait.png"),
   });
   await page
     .locator(".portal-layer")
@@ -810,7 +811,7 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   await verify(".viewer-track img");
   await page.waitForTimeout(700);
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/viewer-portrait-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("viewer-portrait.png"),
   });
   await page.getByRole("button", { name: "Next photo", exact: true }).click();
   await expect(page.locator(".viewer-track img")).toHaveAttribute(
@@ -818,12 +819,11 @@ test("opened photographs preserve portrait and panoramic edges", async ({
     "Synthetic panorama edges",
   );
   await verify(".viewer-track img");
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/transition-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("transition.png"),
   });
   await page.waitForTimeout(700);
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/uncropped-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("uncropped.png"),
   });
 });

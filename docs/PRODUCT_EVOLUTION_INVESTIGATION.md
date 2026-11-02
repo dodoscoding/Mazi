@@ -2,6 +2,8 @@
 
 Investigated on 1 November 2026 against `origin/main` at `3e79ad79b7feb48bea99e8397a992f182d1e17a5` (PR #108). This document answers the owner's six improvement requests and the follow-up choice: a private group with shared memories, comments, reactions and events. SS means screenshots. [D25](DECISIONS.md#private-social-space-direction-1-november-2026) records the confirmed direction; the implementations below are proposals, not delivered behavior or release acceptance.
 
+Follow-up: the owner requested the clarity increment first. [D26](DECISIONS.md#interface-clarity-1-november-2026) and [its verification](../work/poteto/interface-clarity/VERIFICATION.md) record that implementation separately. The audit below preserves the investigated baseline; metadata, classification and social-domain proposals remain future work.
+
 ## Recommended groups and difficulty
 
 Difficulty includes implementation, integration and relevant verification in the existing React/Python app: 1 is a local presentation change; 2 changes several UI surfaces; 3 crosses UI, API or metadata semantics; 4 adds a domain and lifecycle rules; 5 adds substantial model or live spatial infrastructure. Scores are engineering judgments, not measured delivery times. Dependencies matter more than adding the scores.
@@ -23,7 +25,7 @@ The audit used current source, existing synthetic screenshots and focused execut
 
 | Finding | Evidence | Consequence |
 | --- | --- | --- |
-| Home combines a globe/flat-map toggle, places index, featured memory, memory list, Replay, year scrubber and unplaced tray. | [Home](../src/Home.tsx), [Atlas model](../src/atlas/model.ts), PR #108 [desktop](../work/poteto/notebook-discovery/after-home-desktop.png) and [phone](../work/poteto/notebook-discovery/after-home-phone.png) captures. | Simplification is mostly hierarchy and navigation work; it does not require rebuilding the archive. |
+| Audited Home combines a globe/flat-map toggle, places index, featured memory, memory list, Replay, year scrubber and unplaced tray. | The audited implementation is now retained as [Atlas](../src/Atlas.tsx); [Atlas model](../src/atlas/model.ts), PR #108 [desktop](../work/poteto/notebook-discovery/after-home-desktop.png) and [phone](../work/poteto/notebook-discovery/after-home-phone.png) captures. | Simplification is mostly hierarchy and navigation work; it does not require rebuilding the archive. |
 | Desktop has five main links plus Archive tools; phone has four tabs plus More. | [Shell](../src/Shell.tsx), [feature routes](../src/features/index.tsx). | Equivalent tasks have different entry points. The number and naming of destinations explain part of the reported confusion. |
 | Search and Discover share a template but expose different modes and loading behavior. | [Discovery mount](../src/features/discovery/mount.js), [template](../src/features/discovery/template.html). | Consolidation should preserve deliberate deferred loading rather than load the entire archive on every visit. |
 | Source and Shared by filters already exist. Confirmed Person filtering is separate; Person and search mode are not restored from the URL. | [D22](DECISIONS.md#search-filters-24-october-2026), [verification](../work/poteto/search-filters-20261024/VERIFICATION.md). | Extend these controls and restore all chosen filters. A sender name does not establish who appears in a picture. |

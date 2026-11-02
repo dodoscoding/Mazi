@@ -47,6 +47,7 @@ export function FeaturePage({
     const feature = featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
+    let mounted = false;
     let lifecycle: ReturnType<typeof createLifecycle> | undefined;
     let observer: MutationObserver | undefined;
     const mount = () => {
@@ -63,7 +64,9 @@ export function FeaturePage({
         query ? `?${query}` : "",
         mount,
         returned,
+        mounted ? "refresh" : "entry",
       );
+      mounted = true;
       const rewriteLinks = () =>
         root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const href = link.getAttribute("href")!;
