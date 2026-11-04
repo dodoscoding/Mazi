@@ -298,7 +298,7 @@ Search accepts `people_present`, `screenshot` and `ai` as comma-separated closed
 
 `photo_facets.denominator` is the count of all currently visible photographs before query or selected filters, with `denominator_basis` explicitly recording that meaning. Per-dimension counts use that same full-visible denominator; the filtered total is separate. Person names/counters exclude suppressed associations and departed accounts/actors. Existing source/sharer full-visible counters remain unchanged under D24. Hiding a memory hides its children from both predicates and counters; withdrawn or denied targets never contribute. Queries use the existing shared photo evidence and retain legacy omitted capture-basis date bookmarks.
 
-Both reads retain the existing 10,000-photo and metadata byte/time/origin budgets. Capacity exhaustion raises the existing error and never returns truncated IDs, fake totals or a partial page. Compact label and approved-person facts are grouped over the bounded authorized ID set, not loaded with one API call per photograph. No new persistence schema, automatic inference or vector fingerprint change is introduced.
+Keyword Search and Gallery matching retain the existing metadata byte/time/origin budgets and exact readable pages beyond 10,000 photographs; the existing 10,000-photo cap applies to semantic related-search mode. Capacity exhaustion raises the existing error and never returns truncated IDs, fake totals or a partial page. Compact label and approved-person facts are grouped in internal batches of at most 10,000 authorized IDs, not loaded with one API call per photograph. No new persistence schema, automatic inference or vector fingerprint change is introduced.
 
 ## Shared photo filter controls
 

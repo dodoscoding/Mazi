@@ -160,6 +160,18 @@ class KeywordScalingTests(unittest.TestCase):
             page = self.store.search(self.ben, self.group, offset=10**9)
             self.assertEqual((page['items'], page['total'], page['next_offset']), ([], total, None))
 
+    def test_filter_facts_cross_internal_batches_without_limiting_keyword_or_gallery(self):
+        from mazi.social import labels
+        self.seed_projection(10001)
+        labels.set_labels(self.store, self.alice, self.group, 'last-filter-label',
+                          [dict(asset='capacity-10000', changes={'screenshot': 'yes'}, expected={'screenshot': 0})])
+        page = self.store.search(self.ben, self.group, screenshot='yes')
+        self.assertEqual(([item['assetId'] for item in page['items']], page['total'], page['next_offset']),
+                         (['capacity-10000'], 1, None))
+        matches = self.store.photo_matches(self.ben, self.group, screenshot='yes')
+        self.assertEqual((matches['asset_ids'], matches['total'], matches['photo_facets']['denominator']),
+                         (['capacity-10000'], 1, 10001))
+
     def test_visibility_reference_people_and_derivative_cleanup(self):
         self.seed_details()
         other_group = self.store.create_group(self.alice, 'Another circle')

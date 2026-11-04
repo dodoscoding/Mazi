@@ -34,14 +34,12 @@ class PhotoFilter:
         self.place, self.country, self.start, self.end, self.date_basis, self.uncertain = place, country, start, end, date_basis, uncertain
         self.facts, self.people, self.names = {}, {}, {}
         visible = store._correction_visible_ids(user, group)
-        if len(visible) > 10000:
-            from mazi.capacity import CapacityExceeded
-            raise CapacityExceeded('Photo filters support up to 10,000 visible photographs')
         photos = [dict(assetId=asset) for asset in visible]
         store._attach_photo_labels(group, photos)
         self.facts = {photo['assetId']: photo.get('labels', {}) for photo in photos}
-        if visible:
-            for row in store.db.execute(_people_query(visible, 'DISTINCT t.asset,p.id,p.name'), (group, *visible)):
+        for offset in range(0, len(photos), 10000):
+            page = [photo['assetId'] for photo in photos[offset:offset + 10000]]
+            for row in store.db.execute(_people_query(page, 'DISTINCT t.asset,p.id,p.name'), (group, *page)):
                 self.people.setdefault(row['asset'], set()).add(row['id'])
                 self.names[row['id']] = row['name']
                 self.facts[row['asset']]['people_present'] = 'yes'
