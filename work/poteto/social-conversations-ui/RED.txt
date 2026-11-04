@@ -1,0 +1,10 @@
+1:43:59 PM [vite] (ssr) Error when evaluating SSR module /src/social/ConversationPanel.tsx: Failed to load url /src/social/ConversationPanel.tsx (resolved id: /src/social/ConversationPanel.tsx). Does the file exist?
+      at loadAndTransform (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/node_modules/vite/dist/node/chunks/node.js:19977:31)
+✖ selected photo conversation batches only its visible page reactions and escapes plain text (25.80375ms)
+1:43:59 PM [vite] (ssr) Error when evaluating SSR module /src/social/ConversationPanel.tsx: Failed to load url /src/social/ConversationPanel.tsx (resolved id: /src/social/ConversationPanel.tsx). Does the file exist?
+      at loadAndTransform (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/node_modules/vite/dist/node/chunks/node.js:19977:31)
+✖ session loss clears conversation text, counts and private draft (13.985542ms)
+
+Interrupted while running:
+
+⚠ tests/dom/conversations.test.mjs (tests/dom/conversations.test.mjs:1:1)

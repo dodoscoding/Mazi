@@ -1,0 +1,30 @@
+✔ selected photo conversation batches only its visible page reactions and escapes plain text (94.85875ms)
+✔ session loss clears conversation text, counts and private draft (36.492959ms)
+✔ a lost write keeps its text and retries the identical command (54.225ms)
+▶ late reads and writes cannot restore comments after group or access loss
+  ✔ late read (19.919625ms)
+  ✔ late write (30.75625ms)
+✔ late reads and writes cannot restore comments after group or access loss (50.946875ms)
+✔ a stale edit reloads current text without replacing its private draft (33.769833ms)
+✔ denied reaction batches discard a previously visible comment and every reaction (22.179709ms)
+✔ failed page loads offer an exact-cursor retry without leaking the previous projection (20.791ms)
+✔ Discord return completes once across the React effect lifecycle (267.031625ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (62.250917ms)
+✔ a memory opened from inside the app can go back, across photo changes (29.526375ms)
+✔ a plain hash link from a feature page counts as an in-app entry (22.090875ms)
+✔ Home and Atlas have separate canonical routes (25.855583ms)
+✔ legacy root selection links retain their Atlas state (23.815583ms)
+✔ /people replaces the legacy entry without adding history (14.889875ms)
+✔ /#/people replaces the legacy entry without adding history (13.372167ms)
+✔ /settings replaces the legacy entry without adding history (15.102792ms)
+✔ /#/settings replaces the legacy entry without adding history (12.716292ms)
+✔ aliases reached inside the app preserve the previous destination (14.684958ms)
+✔ a People alias preserves search and sample parameters but owns its section (12.679916ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 537.673542

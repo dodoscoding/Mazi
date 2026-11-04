@@ -198,7 +198,7 @@ The organizer can edit, cancel or delete. Cancellation disables attendance contr
 
 ## Photo and approved-memory comments API
 
-The C1 comments backend implements flat conversations separately from notebook recollections. The first targets are `{kind: "photo", id: archive_assets.id}` and `{kind: "memory", id: review_events.id}`. A member may write multiple comments on either target. Grouping a photo into an approved memory does not move or duplicate the photo's conversation. The reaction backend is specified below. The conversation UI remains a separate delivery slice.
+The C1 comments backend implements flat conversations separately from notebook recollections. The first targets are `{kind: "photo", id: archive_assets.id}` and `{kind: "memory", id: review_events.id}`. A member may write multiple comments on either target. Grouping a photo into an approved memory does not move or duplicate the photo's conversation. The reaction backend is specified below. The lazy conversation interface is specified below.
 
 `GET /api/social/comments` accepts `group`, `kind`, `target`, a limit from 1 to 50 and an opaque cursor. It returns `items`, the currently visible `total` and `next_cursor`. Ordering uses the immutable server creation timestamp and stable comment ID. Active authors and deletion tombstones are filtered in SQL before the limit. Equal timestamps and invisible rows cannot create duplicate pages or skip an eligible row. Each item contains its target, current author ID/name, plain text, creation/update timestamps, revision and whether the reader may edit it.
 
@@ -230,7 +230,15 @@ SQLite and hosted storage enforce one member/emoji per target with partial uniqu
 
 Reaction cascade deletion retains only reaction, group and member IDs plus deletion time. These text-free tombstones exclude a restored stale reaction even after a member rejoins. An older request receipt cannot re-enable it. A fresh member action may create a new reaction identity. Hosted runtime access to the ledger is read/insert only. Restoring a historical snapshot still requires current-ledger reconciliation before serving traffic; the ledger is deletion metadata, not retained content.
 
-Archive export adds `reactions.json` only for the member's active reactions on currently visible targets. It contains the member's own target, emoji and timestamps, without other reactors or counts. The same projection participates in ZIP assembly and final admission fingerprints. Imported chat reaction evidence remains unchanged. Reaction UI and social Home remain separate delivery slices.
+Archive export adds `reactions.json` only for the member's active reactions on currently visible targets. It contains the member's own target, emoji and timestamps, without other reactors or counts. The same projection participates in ZIP assembly and final admission fingerprints. Imported chat reaction evidence remains unchanged. The reaction controls share the conversation interface below. Social Home remains a separate delivery slice.
+
+## Conversation interface
+
+The detail route accepts `discussion=photo` for the selected permanent photo asset and `discussion=memory` for the accepted memory. Scope actions are separate from `notebook=1`; native comments never become notebook notes or imported source excerpts. The selected photo's asset ID, current group and profile key the lazy panel. Viewer selection preserves the discussion query and replaces the target, disposing the previous private draft and pending command. Sample mode never mounts the real conversation controls.
+
+Each visible page contains at most 20 flat comments, with current author labels and immutable server creation time. A single reaction batch reads the archive target plus that page's comment targets (at most 21), without per-comment HTTP requests. Pagination replaces the visible page. Four emoji toggles expose exact confirmed counts, pressed state and bounded expandable current member names. A write specifies desired on/off state; pending or uncertain commands block conflicting controls while retaining keyboard focus. Comment text renders as plain text through React escaping.
+
+A single draft and an exact uncertain write command exist only in component memory. Retrying a lost response uses the same body and request key. Stale edits offer current comments without discarding the draft and use the loaded current revision only when the author retries. Deletion requires inline confirmation, removes the displayed comment and reaction state while pending, then refreshes counts. Group/session/access loss aborts requests, clears private text and commands and rejects late results. A denied page or reaction batch clears the entire projection; source withdrawal is rechecked on page visibility/return and on every server operation. There are no sockets, notifications or private social caches.
 
 ## Selected-photo metadata corrections
 

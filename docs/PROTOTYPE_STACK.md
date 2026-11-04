@@ -24,7 +24,7 @@ The loopback `AppServer` accepts connections on separate threads so an idle brow
 | `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
 | `mazi/discovery/`, `mazi/answers/` | People, hiding, consent, search and evidence-based answers. |
 | `mazi/memories/` | Recaps, stories, revisions, capsules, subevents, slideshows, video and notices. |
-| `src/social/` | Lazy React plan list, detail, timezone-aware forms and attendance. |
+| `src/social/` | Lazy React plans and attendance plus selected-target conversations, bounded reaction batches and tab-memory retryable drafts. |
 | `tests/backend/`, `tests/browser/`, `tests/unified.spec.ts` | Domain regression contracts, fixture servers and integrated app journeys. |
 
 `src/useEntry.ts` owns loading, signed-out, onboarding, ready and connection-error states. `src/Entry.tsx` renders login and the reusable introduction. The entry gate precedes every route, including samples. Shared-mode inherited HTTP authorization requires a mapped profile and current configured-circle membership; other circle IDs and legacy entry endpoints are denied. The additive profile/policy tables preserve existing user UUIDs, ownership and credentials. Introduction completion persists per profile; browser sessions expire after 30 days.
