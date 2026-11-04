@@ -38,7 +38,9 @@ test("About states the privacy promises and replays the introduction", async ({
     "Optional AI stays off",
   ])
     await expect(promises).toContainText(promise);
-  await expect(main).toContainText("There is no feed, no public profile");
+  await expect(main).toContainText(
+    "There is no public feed or public profile.",
+  );
   await main.getByRole("link", { name: "Replay introduction" }).click();
   await expect(page).toHaveURL(/#\/introduction/);
   await page.getByRole("button", { name: "Open the Atlas" }).click();

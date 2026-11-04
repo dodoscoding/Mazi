@@ -138,8 +138,8 @@ export function About({
         <p className="about-lede">
           Mazi means “together”. It gathers the photographs and conversations a
           circle already has, places each memory where and when it happened, and
-          helps the circle find its way back through them. There is no feed, no
-          public profile and nothing to like.
+          helps the circle find its way back through them. There is no public
+          feed or public profile.
         </p>
         <h2>Our promises</h2>
         <ol className="about-promises">
