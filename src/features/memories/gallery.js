@@ -37,6 +37,7 @@ export function createGallery(root, lifecycle, api) {
   let galleryGroup = "",
     selecting = false,
     selection = new Set(),
+    editorGeneration = 0,
     disposeEditor;
   const tools = document.createElement("section");
   tools.className = "mem-label-tools";
@@ -54,6 +55,12 @@ export function createGallery(root, lifecycle, api) {
   const editor = document.createElement("div");
   tools.append(choose, count, edit, cancel, editor);
   $("grid").before(tools);
+  function closeEditor() {
+    editorGeneration++;
+    disposeEditor?.();
+    disposeEditor = undefined;
+    editor.replaceChildren();
+  }
   function selectionState() {
     count.textContent = `${selection.size} fotoğraf seçildi · En fazla 50`;
     edit.disabled = !selection.size;
@@ -67,31 +74,28 @@ export function createGallery(root, lifecycle, api) {
   choose.onclick = () => {
     selecting = !selecting;
     if (!selecting) selection.clear();
-    disposeEditor?.();
-    editor.replaceChildren();
+    closeEditor();
     selectionState();
     update();
   };
   cancel.onclick = () => {
     selection.clear();
-    disposeEditor?.();
-    editor.replaceChildren();
+    closeEditor();
     selectionState();
   };
   edit.onclick = async () => {
     const current = run,
+      generation = ++editorGeneration,
       assets = [...selection];
     const { mountLabelEditor } = await import("../../memory/labelEditor");
-    if (current !== run || !assets.length) return;
+    if (current !== run || generation !== editorGeneration || !assets.length)
+      return;
     disposeEditor?.();
     disposeEditor = mountLabelEditor(editor, {
       group: galleryGroup,
       assets,
       fetch: lifecycle.fetch,
-      onClose: () => {
-        disposeEditor?.();
-        editor.replaceChildren();
-      },
+      onClose: closeEditor,
       onSaved: () => {
         void load(galleryGroup);
         window.dispatchEvent(new Event("mazi:archive-changed"));
@@ -102,7 +106,7 @@ export function createGallery(root, lifecycle, api) {
   selectionState();
   lifecycle.onDispose(() => {
     run++;
-    disposeEditor?.();
+    closeEditor();
     selection.clear();
   });
 
@@ -267,8 +271,7 @@ export function createGallery(root, lifecycle, api) {
     checkbox.onchange = () => {
       if (checkbox.checked && selection.size < 50) selection.add(photo.assetId);
       else selection.delete(photo.assetId);
-      disposeEditor?.();
-      editor.replaceChildren();
+      closeEditor();
       selectionState();
     };
     label.append(
@@ -502,8 +505,7 @@ export function createGallery(root, lifecycle, api) {
   async function load(group) {
     const current = ++run;
     galleryGroup = group;
-    disposeEditor?.();
-    editor.replaceChildren();
+    closeEditor();
     selection.clear();
     selecting = false;
     selectionState();
