@@ -84,7 +84,10 @@ export default function App() {
     openerId = "",
   ) => {
     if (
-      (route.path === "/" || route.path === "/atlas") &&
+      (route.path === "/" ||
+        route.path === "/atlas" ||
+        (route.path === "/circle" &&
+          new URLSearchParams(route.search).get("section") === "activity")) &&
       url.startsWith("/memory/")
     )
       browsingReturn.current = {
@@ -176,6 +179,11 @@ export default function App() {
                 "Grubumuz"
               }
               activity={route.path === "/circle"}
+              restore={
+                browsingReturn.current?.path === route.path
+                  ? browsingReturn.current
+                  : undefined
+              }
               link={link}
               heading={heading}
             />

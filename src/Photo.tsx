@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler } from "react";
 import type { Photo as PhotoData } from "./memories";
 import { Glyph } from "./memory/glyphs";
+import "./styles/photo.css";
 export function Photo({
   photo,
   continuity = false,

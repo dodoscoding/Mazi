@@ -73,7 +73,9 @@ export default function SocialHome({
   activity,
   link,
   heading,
+  restore,
 }: {
+  restore?: { openerId: string; scroll: number };
   group: string;
   circle: string;
   activity: boolean;
@@ -151,11 +153,22 @@ export default function SocialHome({
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [activity]);
+  useEffect(() => {
+    if (state.kind !== "ready" || !restore) return;
+    const opener = document.getElementById(restore.openerId);
+    window.scrollTo(0, opener ? restore.scroll : 0);
+    (opener || heading.current)?.focus({ preventScroll: true });
+  }, [state.kind, restore?.openerId]);
+  const changePage = (next = "") => {
+    heading.current?.focus({ preventScroll: true });
+    void load(next);
+  };
   const rows = (items: Activity[]) => (
     <ol className="social-activity">
       {items.map((item) => (
         <li key={item.id}>
           <a
+            id={`activity-${item.id}`}
             href={`#${activityLink(item, group)}`}
             onClick={link(activityLink(item, group))}
           >
@@ -202,7 +215,7 @@ export default function SocialHome({
               .join(" · ")}
           </p>
           <h2>
-            <a href={`#${href}`} onClick={link(href)}>
+            <a id="home-featured-title" href={`#${href}`} onClick={link(href)}>
               {memory.title}
             </a>
           </h2>
@@ -378,7 +391,7 @@ export default function SocialHome({
                   {cursor && (
                     <button
                       className="button button--secondary"
-                      onClick={() => void load()}
+                      onClick={() => changePage()}
                     >
                       İlk haberler
                     </button>
@@ -386,7 +399,7 @@ export default function SocialHome({
                   {state.page.next_cursor && (
                     <button
                       className="button button--secondary"
-                      onClick={() => void load(state.page.next_cursor!)}
+                      onClick={() => changePage(state.page.next_cursor!)}
                     >
                       Sonraki haberler
                     </button>

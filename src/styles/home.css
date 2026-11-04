@@ -1912,3 +1912,29 @@
     animation: hud-return 250ms linear both !important;
   }
 }
+
+.featured h2 a,
+.dossier-title h2 a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+.featured h2 a:hover,
+.dossier-title h2 a:hover {
+  color: var(--accent-node);
+}
+.notes-link,
+.detail-notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.notes-link:hover,
+.detail-notes-link:hover {
+  color: var(--accent-node);
+}
