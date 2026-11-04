@@ -147,7 +147,7 @@ class AtlasTests(unittest.TestCase):
         self.assertEqual(atlas_view(self.store, self.ben, self.group)['memories'], [])
 
     def _origin(self, asset):
-        return self.store.db.execute('SELECT id FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()[0]
+        return self.store.db.execute('SELECT id FROM archive_origins WHERE asset_id=? AND owner_id=? ORDER BY id', (asset, self.alice)).fetchone()[0]
 
     def _memory(self):
         self.store.review_event(self.alice, self.group, self.assets, 'Island week', 'accept')

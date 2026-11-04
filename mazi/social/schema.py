@@ -136,3 +136,12 @@ CREATE TRIGGER IF NOT EXISTS photo_label_suppression_delete_epoch AFTER DELETE O
  INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=OLD.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
 END;
 '''
+
+HOME_SCHEMA = '''
+CREATE INDEX IF NOT EXISTS social_comments_activity ON social_comments(group_id,updated_at,id);
+CREATE INDEX IF NOT EXISTS social_reactions_activity ON social_reactions(group_id,updated_at,id) WHERE active=1;
+CREATE INDEX IF NOT EXISTS social_plans_activity ON social_plans(group_id,updated_at,id);
+CREATE INDEX IF NOT EXISTS social_plans_upcoming ON social_plans(group_id,status,starts_at,id);
+CREATE INDEX IF NOT EXISTS archive_origins_selected ON archive_origins(asset_id,id);
+CREATE INDEX IF NOT EXISTS archive_origins_run_page ON archive_origins(group_id,run_id,id);
+'''

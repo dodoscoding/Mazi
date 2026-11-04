@@ -1,0 +1,50 @@
+{
+  "archive_only": [
+    {
+      "seconds": 0.855,
+      "sql_calls": 22,
+      "bytes": 1090
+    },
+    {
+      "seconds": 0.688,
+      "sql_calls": 22,
+      "bytes": 1090
+    }
+  ],
+  "active_conversation": [
+    {
+      "seconds": 0.789,
+      "sql_calls": 21,
+      "bytes": 1675
+    },
+    {
+      "seconds": 0.687,
+      "sql_calls": 21,
+      "bytes": 1675
+    }
+  ],
+  "upcoming_plan": [
+    {
+      "seconds": 0.467,
+      "sql_calls": 10,
+      "bytes": 2523
+    },
+    {
+      "seconds": 0.29,
+      "sql_calls": 10,
+      "bytes": 2523
+    }
+  ],
+  "selected_photo": [
+    {
+      "seconds": 0.6,
+      "sql_calls": 12,
+      "bytes": 935
+    },
+    {
+      "seconds": 1.036,
+      "sql_calls": 12,
+      "bytes": 935
+    }
+  ]
+}

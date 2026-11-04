@@ -133,3 +133,9 @@ Depicted people come only from existing confirmed associations. Source sharers, 
 A current member with photo access may correct a declaration. Reads, all-or-nothing bulk writes, request retries and export check current group/source/hide visibility. Member departure clears declarations still authored by that member, preserves the revision ledger and does not erase another member's later correction. A stale row cannot override a newer retained revision after rejoining. The version ledger retains only photo/group/dimension IDs and versions, without prior declaration values or actor history. Reconcile current ledgers before restored data is served; synthetic stale-row tests do not establish historical full-backup recovery acceptance.
 
 The archive export contains only the member's own current-version, currently visible declarations. It excludes other actors' label contributions and suppressed person names. SQLite and hosted behavior, UI acceptance and operational recovery are distinct evidence gates.
+
+## Social summary reads
+
+Social Home and activity use current group membership, active authors and source-domain visibility. Hidden or withdrawn targets cannot retain text, thumbnails or counts through the summary. Approved-memory discussions require every original child; photo discussions remain attached to the permanent asset. Departed and deletion-tombstoned contributions are excluded before display. The feed is computed from source records and retains no copied activity content.
+
+Home's compact photo preview omits chat text and per-source provenance lists while retaining real date/place evidence. Explicit detail reads use the same authorized Atlas projector for only the requested asset set. Private image requests still check access when bytes are read. These APIs add no public profile, notification service or export permission. Browser adoption, group-switch clearing and physical-device validation remain separate acceptance evidence.

@@ -6,7 +6,8 @@ from mazi.http_origin import validate_origin
 from mazi.identity.core import Conflict, Denied
 from mazi.memories.server import handler_for as memory_handler
 from mazi.persistence import ArchiveBusy
-from . import conversations, labels, reactions, social
+from mazi.capacity import CapacityExceeded
+from . import conversations, home, labels, reactions, social
 
 
 def handler_for(store):
@@ -18,6 +19,10 @@ def handler_for(store):
             try:
                 query = {key: values[0] for key, values in parse_qs(parts.query).items()}
                 user = self.user()
+                if parts.path == '/api/social/home':
+                    return self.json(200, home.home_view(store, user, query['group']))
+                if parts.path == '/api/social/activity':
+                    return self.json(200, home.activity(store, user, query['group'], limit=int(query.get('limit', '20')), cursor=query.get('cursor')))
                 if parts.path == '/api/social/labels':
                     return self.json(200, labels.read_labels(store, user, query['group'], json.loads(query['assets'])))
                 if parts.path == '/api/social/reactions/batch':
@@ -33,6 +38,8 @@ def handler_for(store):
                 if parts.path == '/api/social/plan':
                     return self.json(200, social.get_plan(store, user, query['group'], query['plan']))
                 return self.json(404, {'error': 'Not found'})
+            except CapacityExceeded as exc:
+                return self.json(400, {'code': 'capacity_exceeded', 'error': str(exc)})
             except ArchiveBusy:
                 return self.json(503, {'error': 'Archive is busy; retry shortly'})
             except Denied as exc:
