@@ -157,6 +157,8 @@ def atlas_view(store, user, group):
             result['place'] = _place(ordered_places) if ordered_places else None
             result['people'] = dict(shared=sorted(detail['shared']), conversation=sorted(
                 {message['name'] for message in result['messages']} - {'Source participant'}))
+        from mazi.social.labels import attach_summaries
+        attach_summaries(store, group, [photo for card in cards for photo in card['photos']])
         cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
         return {'memories': cards}
 

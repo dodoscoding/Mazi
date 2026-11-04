@@ -685,6 +685,8 @@ class DiscoveryStore(SourceStore):
                                   score=1.0, basis='keyword / filters', people=[], assetId=doc['id'], evidence=doc['evidence']))
             total += 1
         self._hydrate_people(user, group, items)
+        from mazi.social.labels import attach_summaries
+        attach_summaries(self, group, items)
         return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
                     facets=facets(source_counts, sharer_counts),
                     mode='keyword / filters', model=None, unindexed=0, message=self.encoder.message)
@@ -803,6 +805,8 @@ class DiscoveryStore(SourceStore):
             page = result[offset:offset + limit]
             if large:
                 self._hydrate_people(user, group, page)
+            from mazi.social.labels import attach_summaries
+            attach_summaries(self, group, page)
             return dict(items=page, total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
                         facets=facets(source_counts, sharer_counts),
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)

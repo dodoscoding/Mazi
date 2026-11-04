@@ -158,3 +158,33 @@ def export_labels(store, user, group, fingerprint, archive=None):
     first = next(rows, None)
     if first is not None:
         fingerprint.json_member('labels.json', ExportArray(itertools.chain((first,), rows)), archive, ensure_ascii=False)
+
+
+def summaries(store, group, assets):
+    """Compact facts for the caller's already-authorized photo projection."""
+    assets = list(dict.fromkeys(assets))
+    result = {}
+    for offset in range(0, len(assets), 256):
+        batch = assets[offset:offset + 256]
+        slots = ','.join('?' for _ in batch)
+        for row in store.db.execute(
+            'SELECT l.asset_id,l.dimension,l.value FROM photo_labels l '
+            'JOIN photo_label_versions v ON v.group_id=l.group_id AND v.asset_id=l.asset_id AND v.dimension=l.dimension AND v.revision=l.revision '
+            'JOIN members m ON m.group_id=l.group_id AND m.user_id=l.actor_id '
+            'WHERE l.group_id=? AND l.asset_id IN (' + slots + ") AND l.value<>'unknown'", (group, *batch)):
+            result.setdefault(row['asset_id'], {})[row['dimension']] = row['value']
+        for row in store.db.execute(
+            'SELECT DISTINCT t.asset FROM discovery_tags t JOIN discovery_people p ON p.id=t.person '
+            'JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor '
+            'WHERE p.group_id=? AND t.asset IN (' + slots + ') '
+            'AND (p.account IS NULL OR EXISTS(SELECT 1 FROM members subject WHERE subject.group_id=p.group_id AND subject.user_id=p.account)) '
+            'AND NOT EXISTS(SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)', (group, *batch)):
+            result.setdefault(row['asset'], {})['people_present'] = 'yes'
+    return result
+
+
+def attach_summaries(store, group, photos):
+    facts = summaries(store, group, [photo['assetId'] for photo in photos])
+    for photo in photos:
+        if photo['assetId'] in facts:
+            photo['labels'] = facts[photo['assetId']]
