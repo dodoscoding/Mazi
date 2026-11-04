@@ -34,9 +34,9 @@ test("People, combined retrieval, hiding and consent work without recognition", 
     "Group processing on",
   );
   await page.getByLabel("Allow local related-search processing").check();
-  await expect(page.locator("#notice")).toHaveText("Changes saved.");
+  await expect(page.locator("#notice")).toHaveText("Değişiklikler kaydedildi.");
   await page.getByLabel("Arama türü").selectOption("semantic");
-  await page.getByLabel("Search", { exact: true }).fill("bike");
+  await page.getByLabel("Ara", { exact: true }).fill("bike");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#results")).toContainText(
@@ -51,7 +51,7 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   await expect(page.locator("#results article")).toHaveCount(1);
   await page.getByLabel("Allow local related-search processing").uncheck();
   await expect(page.locator("#results article")).toHaveCount(0);
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
+  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await page.getByLabel("Person’s name").fill("<img src=x onerror=alert(1)>");
@@ -62,7 +62,7 @@ test("People, combined retrieval, hiding and consent work without recognition", 
     "<img src=x onerror=alert(1)>",
   );
   await expect(page.locator("#people img")).toHaveCount(0);
-  await page.getByLabel("Search", { exact: true }).fill("");
+  await page.getByLabel("Ara", { exact: true }).fill("");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(3);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -177,9 +177,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
       },
     });
   });
-  await page
-    .getByLabel("Search", { exact: true })
-    .fill("scaling-keyword-fixture");
+  await page.getByLabel("Ara", { exact: true }).fill("scaling-keyword-fixture");
   await page.getByLabel("Arama türü").selectOption("semantic");
   await page.getByText("Yer, kişi, tarih ve etiketle daralt").click();
   await page.locator("#person").selectOption({ label: "Ben" });

@@ -34,7 +34,7 @@ test("learned model indexes locally and keeps keyword fallback", async ({
     await page.getByLabel("Allow local related-search processing").check();
     await expect(page.locator("#build-index")).toBeVisible();
     await page
-      .getByLabel("Search", { exact: true })
+      .getByLabel("Ara", { exact: true })
       .fill("people relaxing on a wooden dock beside a mountain lake");
     await page.getByLabel("Arama türü").selectOption("keyword");
     await page.getByRole("button", { name: "Arşivde ara" }).click();
@@ -45,7 +45,7 @@ test("learned model indexes locally and keeps keyword fallback", async ({
       "need indexing",
     );
     await page
-      .getByRole("button", { name: "Build local search index" })
+      .getByRole("button", { name: "Yerel arama dizini oluştur" })
       .click();
     await expect(page.locator("#index-progress")).toContainText("0 remaining");
     await expect(page.locator("#count")).toContainText("Local CLIP");
@@ -60,7 +60,7 @@ test("learned model indexes locally and keeps keyword fallback", async ({
     });
     await page.getByLabel("Allow local related-search processing").uncheck();
     await expect(page.locator("#results article")).toHaveCount(0);
-    await page.getByLabel("Search", { exact: true }).fill("photo-0.jpg");
+    await page.getByLabel("Ara", { exact: true }).fill("photo-0.jpg");
     await page.getByRole("button", { name: "Arşivde ara" }).click();
     await expect(page.locator("#results article")).toHaveCount(1);
     await expect(page.locator("#results article").first()).toContainText(

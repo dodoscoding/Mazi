@@ -130,7 +130,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(page.locator("#notifications")).toBeEmpty();
   await navigate(page, "Search", "search");
   await expect(page.locator("#results article")).toHaveCount(initialCount);
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
+  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await navigate(page, "Ask your archive", "ask");
