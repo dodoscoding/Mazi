@@ -53,6 +53,6 @@ These captures contain synthetic profiles and were inspected after capture.
 
 D17 exposes one configured circle. The browser fixture changes that configured circle through a test-only control to verify same-browser replacement, draft clearing and old-link denial. Real old-group read and attendance endpoints return 403. This is not a new production group-switch API.
 
-The app writes no private plan text or draft to localStorage or sessionStorage. No production API, schema, hosted environment or personal archive changed in this interface slice. The test-only controls live in `tests/browser/social_server.py` and are excluded from deployment.
+The app writes no private plan text or draft to localStorage or sessionStorage. No production API, schema, hosted environment or personal archive changed in this interface slice. The test-only controls live in `tests/browser/social_server.py` and are excluded from deployment. That fixture forces the local backend and a temporary archive regardless of inherited hosted settings.
 
 `npm run test:app` now runs the existing integrated archive fixture and the separate empty social fixture in sequence. The coordinator owns the final complete regression run, independent review, PR publication, merge and deployment. The five-friend findability study and physical-phone pilot remain open. Phone evidence uses Chromium emulation and does not establish production milestone acceptance.

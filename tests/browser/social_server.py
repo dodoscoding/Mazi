@@ -7,6 +7,8 @@ from mazi.memories.memories import MemoryStore
 from mazi.server import AppServer, handler_for
 from .shared_fixture import configure_shared
 
+os.environ['MAZI_BACKEND'] = 'local'
+
 with tempfile.TemporaryDirectory(prefix='mazi-social-browser-') as root:
     store = MemoryStore(root)
     alice = store.register('alice@example.test', 'correct horse battery')
