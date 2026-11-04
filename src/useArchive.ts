@@ -91,6 +91,8 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     };
   }, [demo, groupId, version]);
   const loadAtlas =
+    path !== "/" &&
+    !path.startsWith("/memory/") &&
     path !== "/explore" &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&

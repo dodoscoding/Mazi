@@ -304,7 +304,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
     deliveredLogout = resolve;
   });
   let intercepted = false;
-  await page.route("**/api/atlas?*", async (route) => {
+  await page.route("**/api/social/home?*", async (route) => {
     if (intercepted) return route.continue();
     intercepted = true;
     const response = await route.fetch();

@@ -179,7 +179,7 @@ test("leaving the atlas during the intro counts as seeing it", async ({
   await page.evaluate(() => {
     location.hash = "#/memory/lake-days";
   });
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(home).toBeVisible();
   // A replayed intro would end in "done"; a returning visit opens in "return".
   await expect(home).toHaveAttribute("data-phase", "return");

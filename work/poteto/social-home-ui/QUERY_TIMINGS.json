@@ -1,0 +1,57 @@
+[
+  {
+    "path": "/api/social/home",
+    "ms": 0.616,
+    "queries": 15
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 0.498,
+    "queries": 14
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 0.96,
+    "queries": 14
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 0.517,
+    "queries": 14
+  },
+  {
+    "path": "/api/atlas/memory",
+    "ms": 1.877,
+    "queries": 21
+  },
+  {
+    "path": "/api/atlas/memory",
+    "ms": 0.617,
+    "queries": 21
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 0.462,
+    "queries": 18
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 1.002,
+    "queries": 31
+  },
+  {
+    "path": "/api/social/home",
+    "ms": 0.748,
+    "queries": 31
+  },
+  {
+    "path": "/api/atlas/memory",
+    "ms": 0.541,
+    "queries": 21
+  },
+  {
+    "path": "/api/atlas/memory",
+    "ms": 1.149,
+    "queries": 22
+  }
+]

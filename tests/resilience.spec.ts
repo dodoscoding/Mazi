@@ -33,7 +33,7 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeFocused();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page
     .getByRole("button", { name: "The last ferry anısını seç" })

@@ -1,3 +1,4 @@
+import { mockArchive } from "./helpers/archive";
 import { test, expect } from "@playwright/test";
 
 async function enter(page: import("@playwright/test").Page, name = "Ben") {
@@ -387,6 +388,12 @@ test("event title links open notes alongside imported excerpts and use event IDs
       },
     }),
   );
+  await mockArchive(
+    page,
+    memories.map((memory: { id: string }) =>
+      memory.id === event.id ? event : memory,
+    ),
+  );
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.goto(`/#/?selected=${event.id}`);
   const title = page.locator("#featured-title a");
@@ -404,7 +411,7 @@ test("event title links open notes alongside imported excerpts and use event IDs
   await expect(page.locator("#notebook-heading")).toBeFocused();
   await expect(page.locator("#notebook-heading")).toBeInViewport();
   await expect(page.locator(".conversation")).toContainText(
-    "Imported excerpts",
+    "aktarılmış alıntılar",
   );
   await page.goto("/#/memories");
   const galleryTitle = page
@@ -457,9 +464,7 @@ test("standalone photographs and sample mode never load private recollections", 
     requests++;
     return route.fulfill({ json: notebook(event.id) });
   });
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories: [{ ...event, kind: "photo" }] } }),
-  );
+  await mockArchive(page, [{ ...event, kind: "photo" }]);
   await page.goto(`/#/memory/${event.id}`);
   await expect(page.locator(".memory-detail h1")).toHaveText(event.title);
   await expect(page.locator(".event-notebook")).toHaveCount(0);
@@ -641,7 +646,7 @@ test("event notes are discoverable before the photograph viewer", async ({
 }) => {
   const { event } = await enter(page);
   await page.goto(`/#/memory/${event.id}`);
-  const jump = page.getByRole("link", { name: "View notes", exact: true });
+  const jump = page.getByRole("link", { name: "Notları aç", exact: true });
   await expect(jump).toBeInViewport();
   await jump.click();
   const notes = page.getByRole("heading", {
@@ -663,9 +668,7 @@ test("Home exposes event notes without opening the Atlas or photograph viewer", 
   page,
 }) => {
   const { event } = await enter(page);
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories: [event] } }),
-  );
+  await mockArchive(page, [event]);
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
@@ -682,7 +685,7 @@ test("Home exposes event notes without opening the Atlas or photograph viewer", 
   await expect(page.locator("#notebook-heading")).toBeFocused();
   await expect(page.locator("#notebook-heading")).toBeInViewport();
   await expect(page.locator(".photo-viewer")).toHaveCount(0);
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(page.locator(".home-featured")).toContainText(event.title);
   await expect(page.locator(".atlas-stage")).toHaveCount(0);
 });

@@ -1,0 +1,24 @@
+[WebServer] (node:14585) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 6 tests using 1 worker
+
+(node:14600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (10.0s)
+
+  ✓  2 [desktop] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (5.6s)
+  ✓  3 [desktop] › tests/unified.spec.ts:338:1 › access loss clears private drafts and supporting records (2.4s)
+(node:14694) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (9.8s)
+
+  ✓  5 [phone] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (5.6s)
+  ✓  6 [phone] › tests/unified.spec.ts:338:1 › access loss clears private drafts and supporting records (2.4s)
+
+  6 passed (37.2s)
