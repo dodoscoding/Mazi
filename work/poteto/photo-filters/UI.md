@@ -16,7 +16,7 @@ Shared controls use current server facts for OR within a dimension and AND acros
 ## Verification
 
 - Root independently reviewed the API and ran 65 backend tests; see the separate [backend boundary](BACKEND.md). No backend behavior was changed in this UI slice.
-- Focused DOM suites cover photo filters, Gallery limits/stale lazy imports, label-editor receipts/conflicts, Search date/source/startup/capacity, mobile view/order and A1 gallery/Viewer evidence.
+- Focused DOM suites: **54 passed**, covering photo filters, Gallery limits/stale lazy imports, label-editor receipts/conflicts, Search date/source/startup/capacity, mobile view/order and A1 gallery/Viewer evidence.
 - `MAZI_TEST_PORT=5300 MAZI_UNIFIED_PORT=8160 npx playwright test --config playwright.unified.config.ts -g 'same-photo filters survive|photo label editing|date bases find'`: **6 passed** (desktop and 320 px phone for F2; adjacent A1/A2/F1 journeys preserve their existing viewports). Real synthetic API fixtures verify zero sibling matches, one correct match after chip removal, original `photo=2` links, reload/view restoration and hiding the target on refresh. A2 legacy-date and explicit sharing/chronology behavior stays green.
 - Build/typecheck/lint/docs and full branch whitespace are checked for handoff. No dependencies, schema migration, push or deployment.
 
