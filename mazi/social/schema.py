@@ -83,3 +83,56 @@ CREATE TRIGGER IF NOT EXISTS social_reaction_deleted BEFORE DELETE ON social_rea
  ON CONFLICT(reaction_id) DO NOTHING;
 END;
 '''
+
+LABEL_SCHEMA = '''
+CREATE TABLE IF NOT EXISTS photo_label_versions (
+ group_id TEXT NOT NULL, asset_id TEXT NOT NULL, dimension TEXT NOT NULL CHECK(dimension IN ('people_present','screenshot','ai')),
+ revision INTEGER NOT NULL CHECK(revision>0), PRIMARY KEY(group_id,asset_id,dimension),
+ FOREIGN KEY(group_id,asset_id) REFERENCES archive_assets(group_id,id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS photo_labels (
+ group_id TEXT NOT NULL, asset_id TEXT NOT NULL, dimension TEXT NOT NULL,
+ value TEXT NOT NULL, method TEXT CHECK(method='member' OR method IS NULL), actor_id TEXT,
+ revision INTEGER NOT NULL CHECK(revision>0), updated_at REAL NOT NULL,
+ PRIMARY KEY(group_id,asset_id,dimension),
+ CHECK((dimension IN ('people_present','screenshot') AND value IN ('yes','no','unknown')) OR
+       (dimension='ai' AND value IN ('generated','edited','none-declared','unknown'))),
+ FOREIGN KEY(group_id,asset_id,dimension) REFERENCES photo_label_versions(group_id,asset_id,dimension) ON DELETE CASCADE,
+ FOREIGN KEY(group_id,actor_id) REFERENCES members(group_id,user_id)
+);
+CREATE INDEX IF NOT EXISTS photo_labels_actor ON photo_labels(group_id,actor_id,asset_id,dimension);
+CREATE TRIGGER IF NOT EXISTS photo_label_version_monotonic BEFORE UPDATE ON photo_label_versions WHEN NEW.revision<OLD.revision BEGIN
+ SELECT RAISE(ABORT,'Label revision cannot go backwards');
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_departure BEFORE DELETE ON members BEGIN
+ UPDATE photo_label_versions SET revision=revision+1 WHERE group_id=OLD.group_id AND EXISTS
+ (SELECT 1 FROM photo_labels l WHERE l.group_id=photo_label_versions.group_id AND l.asset_id=photo_label_versions.asset_id AND l.dimension=photo_label_versions.dimension AND l.actor_id=OLD.user_id);
+ UPDATE photo_labels SET value='unknown',method=NULL,actor_id=NULL,
+ revision=(SELECT v.revision FROM photo_label_versions v WHERE v.group_id=photo_labels.group_id AND v.asset_id=photo_labels.asset_id AND v.dimension=photo_labels.dimension),
+ updated_at=CAST(strftime('%s','now') AS REAL) WHERE group_id=OLD.group_id AND actor_id=OLD.user_id;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_insert_epoch AFTER INSERT ON photo_labels BEGIN
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_update_epoch AFTER UPDATE ON photo_labels BEGIN
+ INSERT INTO discovery_generations VALUES(NEW.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_delete_epoch AFTER DELETE ON photo_labels BEGIN
+ INSERT INTO discovery_generations VALUES(OLD.group_id,1) ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_tag_insert_epoch AFTER INSERT ON discovery_tags BEGIN
+ INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=NEW.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_tag_update_epoch AFTER UPDATE ON discovery_tags BEGIN
+ INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=NEW.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_tag_delete_epoch AFTER DELETE ON discovery_tags BEGIN
+ INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=OLD.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_suppression_insert_epoch AFTER INSERT ON discovery_suppressions BEGIN
+ INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=NEW.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS photo_label_suppression_delete_epoch AFTER DELETE ON discovery_suppressions BEGIN
+ INSERT INTO discovery_generations SELECT group_id,1 FROM discovery_people WHERE id=OLD.person ON CONFLICT(group_id) DO UPDATE SET revision=discovery_generations.revision+1;
+END;
+'''

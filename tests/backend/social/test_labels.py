@@ -1,4 +1,8 @@
 import io
+import hashlib
+import concurrent.futures
+import threading
+from PIL import Image
 import json
 import sqlite3
 import zipfile
@@ -6,6 +10,7 @@ from unittest.mock import patch
 
 from mazi.atlas import atlas_view
 from mazi.identity.core import Conflict, Denied, Store
+from mazi.memories.memories import MemoryStore
 from mazi.social import labels
 from tests.backend.social.test_comments import CommentsFixture
 
@@ -180,3 +185,50 @@ class LabelsTests(CommentsFixture):
         with self.assertRaises(sqlite3.IntegrityError):
             with self.store.transaction():
                 self.store.db.execute('UPDATE photo_labels SET group_id=?', (other,))
+
+    def test_fifty_real_photos_can_be_updated_atomically_and_reordered_replay_is_safe(self):
+        source = self.store.create_source(self.alice, self.group, 'apple', 'Boundary',
+            {'start': '2020-01-01', 'end': '2030-01-01', 'albums': [], 'types': ['image']})
+        self.store.set_source(self.alice, source, True, 'authorized')
+        assets = list(self.assets)
+        for number in range(48):
+            output = io.BytesIO()
+            Image.new('RGB', (8, 8), (number, 0, 0)).save(output, 'PNG')
+            data = output.getvalue()
+            resource = self.store.begin_resource(self.alice, source,
+                dict(item=str(number), component='photo', version='original', filename=f'{number}.png', date='2020-01-02', kind='image', albums=[]),
+                len(data), hashlib.sha256(data).hexdigest())
+            self.store.resource_chunk(self.alice, resource['id'], 0, data)
+            self.store.finish_resource(self.alice, resource['id'])
+            while self.store.work_once():
+                pass
+            assets.append(self.store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0])
+        self.assertEqual(len(set(assets)), 50)
+        items = [dict(asset=asset, changes={'screenshot': 'yes'}, expected={'screenshot': 0}) for asset in assets]
+        result = labels.set_labels(self.store, self.alice, self.group, 'fifty', items)
+        self.assertEqual(len(result['items']), 50)
+        self.assertTrue(all(row['labels']['screenshot']['revision'] == 1 for row in result['items']))
+        again = labels.set_labels(self.store, self.alice, self.group, 'fifty', list(reversed(items)))
+        self.assertEqual([row['assetId'] for row in again['items']], list(reversed(assets)))
+        self.assertTrue(all(row['labels']['screenshot']['revision'] == 1 for row in again['items']))
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('UPDATE photo_label_versions SET revision=0')
+
+    def test_two_editors_with_same_expected_version_have_one_winner(self):
+        barrier = threading.Barrier(2)
+        def write(user):
+            store = MemoryStore(self.temp.name)
+            try:
+                barrier.wait()
+                try:
+                    labels.set_labels(store, user, self.group, 'edit', [dict(asset=self.assets[0], changes={'ai': 'edited'}, expected={'ai': 0})])
+                    return 'saved'
+                except Conflict:
+                    return 'conflict'
+            finally:
+                store.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(write, (self.alice, self.ben)))
+        self.assertEqual(sorted(results), ['conflict', 'saved'])
+        self.assertEqual(self.read()[0]['labels']['ai']['revision'], 1)
