@@ -32,6 +32,10 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
   useEffect(() => {
+    window.addEventListener("mazi:archive-changed", refresh);
+    return () => window.removeEventListener("mazi:archive-changed", refresh);
+  }, [refresh]);
+  useEffect(() => {
     if (!groupId) {
       setState(empty);
       return;

@@ -288,3 +288,28 @@ test("choosing another circle sticks and loads that circle", async (t) => {
   assert.equal(h.current.group, "other");
   assert.equal(calls.at(-1), "/api/atlas?group=other");
 });
+
+test("a saved photo correction rereads authoritative Atlas facts", async (t) => {
+  let reads = 0;
+  const h = await harness(t, async (path) =>
+    Response.json(
+      path === "/api/groups"
+        ? groups
+        : {
+            memories: [
+              {
+                ...archivePhoto("photo"),
+                title: ++reads === 1 ? "Before" : "Corrected",
+              },
+            ],
+          },
+    ),
+  );
+  await h.render("/memory/photo");
+  assert.equal(h.current.memories[0].title, "Before");
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.memories[0].title, "Corrected");
+  assert.equal(reads, 2);
+});

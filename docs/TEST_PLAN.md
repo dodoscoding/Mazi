@@ -136,6 +136,9 @@ Remove a reactor through the identity store and verify cascade tombstones. Rejoi
 
 Verify partial-index uniqueness and composite group foreign keys, hosted double-precision timestamps, private RLS/grants and target-index query plans. Export only the member's active visible reactions and reject a desired-state change between ZIP assembly and final admission. Hosted tests use only the isolated `_test` schema and synthetic private bucket. UI reaction controls, drafts, browser journeys and physical-phone acceptance remain separate gates.
 
+## Local selected-photo correction regression
+
+A2 write uses synthetic archives: `tests/backend/test_photo_corrections.py` verifies selected-child patches, unchanged sibling/title/anniversary fields, stale annotation/origin snapshots, field allowlists, hidden/cross-group access, HTTP origin checking, reviewed/free-text/cleared export projections. `tests/dom/photo-correction.test.mjs` verifies conflict draft retention and cancellation of late responses. The unified `selected child corrections` desktop/phone scenario edits date and place, changes the selected child and clears the review while checking sibling annotations. Evidence is recorded under `work/poteto/photo-corrections-ui/`; this is local regression evidence, not physical-device or friend-study acceptance.
 ## F1 photo declarations backend regression contracts
 
 The manual declarations backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_labels.py), [HTTP tests](../tests/backend/social/test_labels_http.py) and [isolated hosted tests](../tests/backend/social/test_labels_postgres.py).
