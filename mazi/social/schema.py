@@ -57,3 +57,29 @@ CREATE TRIGGER IF NOT EXISTS social_comment_deleted BEFORE DELETE ON social_comm
  ON CONFLICT(comment_id) DO NOTHING;
 END;
 '''
+
+REACTION_SCHEMA = '''
+CREATE TABLE IF NOT EXISTS social_reactions (
+ id TEXT PRIMARY KEY, group_id TEXT NOT NULL, photo_id TEXT, memory_id TEXT, comment_id TEXT,
+ member_id TEXT NOT NULL, emoji TEXT NOT NULL CHECK(emoji IN ('👍','❤️','😂','🎉')),
+ active INTEGER NOT NULL CHECK(active IN (0,1)), created_at REAL NOT NULL, updated_at REAL NOT NULL,
+ CHECK((photo_id IS NOT NULL AND memory_id IS NULL AND comment_id IS NULL) OR
+       (photo_id IS NULL AND memory_id IS NOT NULL AND comment_id IS NULL) OR
+       (photo_id IS NULL AND memory_id IS NULL AND comment_id IS NOT NULL)),
+ FOREIGN KEY(group_id,member_id) REFERENCES members(group_id,user_id) ON DELETE CASCADE,
+ FOREIGN KEY(group_id,photo_id) REFERENCES archive_assets(group_id,id) ON DELETE CASCADE,
+ FOREIGN KEY(group_id,memory_id) REFERENCES review_events(group_id,id) ON DELETE CASCADE,
+ FOREIGN KEY(group_id,comment_id) REFERENCES social_comments(group_id,id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS social_reactions_photo_member ON social_reactions(group_id,photo_id,member_id,emoji) WHERE photo_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS social_reactions_memory_member ON social_reactions(group_id,memory_id,member_id,emoji) WHERE memory_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS social_reactions_comment_member ON social_reactions(group_id,comment_id,member_id,emoji) WHERE comment_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS social_reactions_member ON social_reactions(group_id,member_id,id);
+CREATE TABLE IF NOT EXISTS social_reaction_deletions (
+ reaction_id TEXT PRIMARY KEY, group_id TEXT NOT NULL, member_id TEXT NOT NULL, deleted_at REAL NOT NULL
+);
+CREATE TRIGGER IF NOT EXISTS social_reaction_deleted BEFORE DELETE ON social_reactions BEGIN
+ INSERT INTO social_reaction_deletions VALUES(OLD.id,OLD.group_id,OLD.member_id,CAST(strftime('%s','now') AS REAL))
+ ON CONFLICT(reaction_id) DO NOTHING;
+END;
+'''

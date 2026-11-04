@@ -161,3 +161,26 @@ class ReactionsTests(CommentsFixture):
             results = list(pool.map(write, range(2)))
         self.assertEqual([value['total'] for value in results], [1, 1])
         self.assertEqual(self.store.db.execute('SELECT count(*) FROM social_reactions').fetchone()[0], 1)
+
+    def test_batch_is_bounded_atomic_and_matches_single_target_aggregates(self):
+        comment = self.create()
+        targets = [self.target(), dict(kind='comment', id=comment['id'])]
+        self.set_reaction()
+        self.set_reaction(key='comment', target=targets[1], emoji='❤️')
+        result = reactions.batch_reactions(self.store, self.alice, self.group, targets)
+        self.assertEqual(result['items'], [reactions.reactions(self.store, self.alice, self.group, target) for target in targets])
+        for invalid in ([], [self.target()] * 51, [self.target(), self.target()]):
+            with self.assertRaises(ValueError):
+                reactions.batch_reactions(self.store, self.alice, self.group, invalid)
+        self.store.hide(self.ben, self.assets[1], True)
+        with self.assertRaises(Denied):
+            reactions.batch_reactions(self.store, self.ben, self.group, [self.target(), self.target(1)])
+
+    def test_member_names_are_capped_while_count_remains_exact(self):
+        for number in range(51):
+            user = self.store.register(f'reactor{number}@example.test', 'synthetic password')
+            self.store.accept(user, self.store.invite(self.alice, self.group))
+            self.set_reaction(user=user, key='react')
+        result = reactions.reactions(self.store, self.alice, self.group, self.target())
+        row = self.item(result)
+        self.assertEqual((row['count'], len(row['members']), row['members_truncated']), (51, 50, True))

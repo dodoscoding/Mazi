@@ -6,7 +6,7 @@ from mazi.http_origin import validate_origin
 from mazi.identity.core import Conflict, Denied
 from mazi.memories.server import handler_for as memory_handler
 from mazi.persistence import ArchiveBusy
-from . import conversations, social
+from . import conversations, reactions, social
 
 
 def handler_for(store):
@@ -18,6 +18,10 @@ def handler_for(store):
             try:
                 query = {key: values[0] for key, values in parse_qs(parts.query).items()}
                 user = self.user()
+                if parts.path == '/api/social/reactions/batch':
+                    return self.json(200, reactions.batch_reactions(store, user, query['group'], json.loads(query['targets'])))
+                if parts.path == '/api/social/reactions':
+                    return self.json(200, reactions.reactions(store, user, query['group'], dict(kind=query['kind'], id=query['target'])))
                 if parts.path == '/api/social/comments':
                     return self.json(200, conversations.comments(store, user, query['group'], dict(kind=query['kind'], id=query['target']),
                         limit=int(query.get('limit', '20')), cursor=query.get('cursor')))
@@ -49,6 +53,8 @@ def handler_for(store):
                 if not isinstance(body, dict) or not isinstance(body.get('group'), str) or not 0 < len(body['group']) <= 200:
                     raise ValueError('Invalid group')
                 user, group = self.user(), body['group']
+                if path == '/api/social/reactions/set':
+                    return self.json(200, reactions.set_reaction(store, user, group, body['request_key'], body['target'], body['emoji'], body['active']))
                 if path == '/api/social/comments/create':
                     return self.json(200, conversations.create_comment(store, user, group, body['request_key'], body['target'], body['text']))
                 if path == '/api/social/comments/update':
