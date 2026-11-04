@@ -58,6 +58,17 @@ class SocialHomeTests(CommentsFixture):
         self.assertLessEqual(len(result['activity']['items']), 3)
         self.assertTrue(all(row['target'] != featured['target'] for row in result['activity']['items']))
 
+    def test_fallback_photo_excludes_its_reactions_without_hiding_other_targets(self):
+        initial = home.home_view(self.store, self.ben, self.group)
+        selected = initial['featured']['memory']['photos'][0]['assetId']
+        other = next(asset for asset in self.assets if asset != selected)
+        for index, asset in enumerate((selected, other)):
+            reactions.set_reaction(self.store, self.ben, self.group, 'fallback-' + str(index),
+                                   dict(kind='photo', id=asset), '👍', True)
+        result = home.home_view(self.store, self.ben, self.group)
+        self.assertEqual(result['featured']['memory']['id'], initial['featured']['memory']['id'])
+        self.assertEqual([row['target'] for row in result['activity']['items']], [dict(kind='photo', id=other)])
+
     def test_same_second_keyset_pages_do_not_duplicate_or_skip_existing_actions(self):
         with patch.object(conversations.time, 'time', return_value=2000000000):
             created = [self.create(key=str(index)) for index in range(5)]
@@ -158,6 +169,34 @@ class SocialHomeTests(CommentsFixture):
         self.assertEqual(result['photos'][0]['provenance'][0]['sharedAt']['local'], '2024-05-04T21:00:00')
         self.assertEqual(self.store.photo_correction(self.ben, self.group, asset)['snapshot'], before)
 
+    def test_selected_and_legacy_context_share_elapsed_time_budget(self):
+        test_atlas.AtlasTests._whatsapp_shares(self,
+            '04/05/2024, 21:00 - Ana: a.jpg (file attached)\n23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        card = next(card for card in atlas.atlas_view(self.store, self.ben, self.group)['memories']
+            if card['photos'][0].get('provenance', [{}])[0].get('sharedAt', {}).get('raw') == '04/05/2024, 21:00')
+        ticks = iter([0, .6, 1.2, 1.8, 2.4, 3, 3, 3, 3])
+        with patch('time.perf_counter', side_effect=lambda: next(ticks, 3)):
+            with self.assertRaises(CapacityExceeded):
+                atlas.memory_view(self.store, self.ben, self.group, card['id'])
+
+    def test_selected_and_legacy_context_share_byte_and_origin_budgets(self):
+        test_atlas.AtlasTests._whatsapp_shares(self,
+            '04/05/2024, 21:00 - Ana: a.jpg (file attached)\n23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        card = next(card for card in atlas.atlas_view(self.store, self.ben, self.group)['memories']
+            if card['photos'][0].get('provenance', [{}])[0].get('sharedAt', {}).get('raw') == '04/05/2024, 21:00')
+        asset = card['photos'][0]['assetId']
+        selected = self.store.db.execute('SELECT sum(length(CAST(payload AS BLOB))) FROM archive_origins WHERE asset_id=? AND withdrawn=0', (asset,)).fetchone()[0]
+        load_context = atlas.SharingContext._load
+
+        def reject_context_parsing(context, run):
+            with patch('mazi.archive.photo_context.json.loads', side_effect=AssertionError('Over-budget context must not be parsed')):
+                return load_context(context, run)
+
+        for constant, limit in [('SELECTED_REQUEST_BYTES', selected), ('SELECTED_REQUEST_ORIGINS', 1)]:
+            with self.subTest(constant=constant), patch.object(atlas, constant, limit), patch.object(atlas.SharingContext, '_load', reject_context_parsing):
+                with self.assertRaises(CapacityExceeded):
+                    atlas.memory_view(self.store, self.ben, self.group, card['id'])
+
     def test_selected_photo_rejects_oversized_metadata_before_projecting_it(self):
         origin = self._origin(self.assets[0])
         row = self.store.db.execute('SELECT payload FROM archive_origins WHERE id=?', (origin,)).fetchone()
@@ -190,8 +229,9 @@ class SocialHomeTests(CommentsFixture):
         with patch.object(atlas, 'atlas_view', side_effect=AssertionError('Full Atlas forbidden')), patch.object(self.store, '_timeline_items', side_effect=AssertionError('Full timeline forbidden')):
             selected = atlas.memory_view(self.store, self.ben, self.group, event)['memory']
         self.assertEqual(selected, expected)
-        self.assertEqual(selected['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))
-        self.assertNotIn('labels', selected['photos'][1])
+        photos = {photo['assetId']: photo for photo in selected['photos']}
+        self.assertEqual(photos[self.assets[0]]['labels'], dict(screenshot='yes', ai='edited'))
+        self.assertNotIn('labels', photos[self.assets[1]])
         self.create()
         summary = home.home_view(self.store, self.ben, self.group)
         self.assertEqual(summary['featured']['preview']['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))

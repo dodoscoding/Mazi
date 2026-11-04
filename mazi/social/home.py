@@ -244,4 +244,5 @@ def home_view(store, user, group):
                 memory = _fallback(store, user, group)
                 if memory:
                     featured = dict(kind='memory', memory=memory)
+                    exclude = ('photo', memory['photos'][0]['assetId'])
         return dict(featured=featured, activity=_activity(store, user, group, 3, exclude=exclude), server_time=social._iso(now), can_plan=True)
