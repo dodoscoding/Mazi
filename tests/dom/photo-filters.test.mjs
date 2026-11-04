@@ -180,3 +180,111 @@ test("pending and failed Gallery matches clear stale thumbnails and totals while
   );
   assert.equal(current.querySelector('input[value="yes"]').checked, true);
 });
+
+function changePresentation(root, action) {
+  if (action === "view")
+    root.querySelector('#grid-view [data-view="all"]').click();
+  else if (action === "order") root.querySelector("#grid-order").click();
+  else
+    [...root.querySelectorAll("button")]
+      .find((button) => button.textContent === "Fotoğraf seç")
+      .click();
+}
+
+for (const action of ["view", "order", "selection"]) {
+  for (const status of [400, 503]) {
+    test(`Gallery keeps failed authority after ${action} changes (HTTP ${status}) and retries the filter`, async (t) => {
+      const reads = [];
+      const ids = photoEvidenceMemory.photos.map((photo) => photo.assetId);
+      let calls = 0;
+      const { root } = await mountFeature(t, "memories", (path) => {
+        if (path === "/api/groups") return [group];
+        if (path.startsWith("/api/atlas"))
+          return { memories: [photoEvidenceMemory] };
+        if (path.startsWith("/api/discovery/matches")) {
+          reads.push(new URL(path, "http://localhost"));
+          if (++calls === 1) return photoMatches(ids);
+          if (calls === 2)
+            return Object.assign(Error("Synthetic unavailable read"), {
+              status,
+              ...(status === 400 ? { code: "capacity_exceeded" } : {}),
+            });
+          return {
+            ...photoMatches([ids[1]]),
+            photo_facets: {
+              ...photoMatches(ids).photo_facets,
+              screenshot: [
+                { value: "yes", count: 1 },
+                { value: "unknown", count: 1 },
+              ],
+            },
+          };
+        }
+        return [];
+      });
+      await until(
+        () => root.querySelectorAll(".mem-tile").length === 2,
+        "initial authority",
+      );
+      const screenshot = [
+        ...root.querySelectorAll(".photo-filters fieldset"),
+      ].find(
+        (field) =>
+          field.querySelector("legend").textContent === "Ekran görüntüsü",
+      );
+      screenshot.querySelector('input[value="yes"]').click();
+      await until(
+        () => root.querySelector("#grid button"),
+        "failed read recovery",
+      );
+      const retry = root.querySelector("#grid button");
+      const error = root.querySelector("#grid").textContent;
+      changePresentation(root, action);
+      assert.equal(
+        root.querySelector("#grid-summary").textContent,
+        "Eşleşmeler yüklenemedi.",
+      );
+      assert.equal(root.querySelector("#grid button"), retry);
+      assert.equal(root.querySelector("#grid").textContent, error);
+      assert.equal(root.querySelectorAll(".mem-empty").length, 0);
+      assert.equal(reads.length, 2);
+      retry.click();
+      await until(
+        () => root.querySelectorAll(".mem-tile").length === 1,
+        "successful authoritative retry",
+      );
+      assert.equal(reads[2].searchParams.get("screenshot"), "yes");
+      assert.equal(
+        root.querySelector("#grid-summary").textContent,
+        "1 eşleşen fotoğraf · 2 görünür fotoğraf",
+      );
+      assert.equal(
+        root.querySelector(".mem-tile").getAttribute("href"),
+        `#/memory/${photoEvidenceMemory.id}?photo=1`,
+      );
+    });
+  }
+
+  test(`Gallery keeps an initial archive failure after ${action} changes`, async (t) => {
+    const { root } = await mountFeature(t, "memories", (path) => {
+      if (path === "/api/groups") return [group];
+      if (path.startsWith("/api/atlas"))
+        return Object.assign(Error("Synthetic archive unavailable"), {
+          status: 503,
+        });
+      return [];
+    });
+    await until(() => root.querySelector("#grid button"), "archive retry");
+    const before = root.querySelector("#grid").textContent;
+    changePresentation(root, action);
+    assert.equal(root.querySelector("#grid").textContent, before);
+    assert.equal(
+      root.querySelector("#grid button").textContent,
+      "Yeniden dene",
+    );
+    assert.doesNotMatch(
+      root.querySelector("#grid-summary").textContent,
+      /[0-9]/,
+    );
+  });
+}
