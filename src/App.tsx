@@ -10,14 +10,11 @@ import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
-import { FeaturePage } from "./features";
 import { createDiscordReturn } from "./features/discordReturn";
 import { isFeaturePath } from "./featureRoutes";
 import { ArchiveStatus, Atlas } from "./Atlas";
-import { Home } from "./Home";
 import { Explore } from "./Explore";
 import { usePlacedMemories } from "./atlas/PlaceMemories";
-import { MemoryNotFound, MemoryView } from "./MemoryView";
 import { Shell } from "./Shell";
 import { SoundController } from "./sound/SoundController";
 import { useArchive } from "./useArchive";
@@ -25,6 +22,14 @@ import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
 import { useWorkDrain } from "./useWorkDrain";
 
+const FeaturePage = lazy(() =>
+  import("./features").then(({ FeaturePage }) => ({ default: FeaturePage })),
+);
+const Home = lazy(() =>
+  import("./Home").then(({ Home }) => ({ default: Home })),
+);
+const SocialHome = lazy(() => import("./social/SocialHome"));
+const SelectedMemory = lazy(() => import("./memory/SelectedMemory"));
 const Plans = lazy(() => import("./social/Plans"));
 
 export default function App() {
@@ -61,7 +66,6 @@ export default function App() {
   );
   const memoryById = (id: string) => memories.find((item) => item.id === id);
   const memoryId = route.path.startsWith("/memory/") ? route.path.slice(8) : "";
-  const memory = memoryById(memoryId);
   const selected = memoryById(route.selected) || memories[0];
   const [query, setQuery] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
@@ -117,7 +121,7 @@ export default function App() {
       window.scrollTo(0, 0);
       heading.current?.focus({ preventScroll: true });
     }
-  }, [route.path, memory?.id]);
+  }, [route.path]);
   const chooseMemory = (id: string) =>
     navigate(`/atlas?selected=${id}`, false, true);
   const backUrl = "/";
@@ -143,17 +147,40 @@ export default function App() {
     );
   else if (route.path === "/explore")
     content = <Explore link={link} heading={heading} />;
-  else if (route.path === "/")
-    content = (
-      <Home
-        archive={archive}
-        memories={memories}
-        demo={demo}
-        link={link}
-        heading={heading}
-        openLink={openLink}
-      />
-    );
+  else if (
+    route.path === "/" ||
+    (route.path === "/circle" &&
+      new URLSearchParams(route.search).get("section") === "activity")
+  )
+    content =
+      archive.status !== "ready" ? (
+        <ArchiveStatus archive={archive} heading={heading} />
+      ) : (
+        <Suspense fallback={<p role="status">Ana sayfa açılıyor…</p>}>
+          {demo ? (
+            <Home
+              archive={archive}
+              memories={memories}
+              demo
+              link={link}
+              heading={heading}
+              openLink={openLink}
+            />
+          ) : (
+            <SocialHome
+              key={`${profile?.user_id}:${archive.group}:${route.path}`}
+              group={archive.group}
+              circle={
+                archive.groups.find(({ id }) => id === archive.group)?.name ||
+                "Grubumuz"
+              }
+              activity={route.path === "/circle"}
+              link={link}
+              heading={heading}
+            />
+          )}
+        </Suspense>
+      );
   else if (
     route.path === "/circle" &&
     new URLSearchParams(route.search).get("section") === "plans"
@@ -174,11 +201,13 @@ export default function App() {
       );
   else if (isFeaturePath(route.path, demo))
     content = (
-      <FeaturePage
-        key={route.path}
-        path={route.path + route.search}
-        discordReturn={discordReturn.current}
-      />
+      <Suspense fallback={<p role="status">Sayfa açılıyor…</p>}>
+        <FeaturePage
+          key={route.path}
+          path={route.path + route.search}
+          discordReturn={discordReturn.current}
+        />
+      </Suspense>
     );
   else if (archive.status !== "ready")
     content = <ArchiveStatus archive={archive} heading={heading} />;
@@ -197,28 +226,26 @@ export default function App() {
         openLink={openLink}
       />
     );
-  else if (memory)
+  else if (memoryId)
     content = (
-      <MemoryView
-        memory={memory}
-        group={archive.group}
-        notebook={route.notebook}
-        sessionKey={profile?.user_id}
-        discussion={
-          new URLSearchParams(route.search).get("discussion") === "photo"
-            ? "photo"
-            : new URLSearchParams(route.search).get("discussion") === "memory"
-              ? "memory"
-              : undefined
-        }
-        memories={memories}
-        photo={route.photo}
-        demo={demo}
-        backUrl={backUrl}
-        link={link}
-        navigate={navigate}
-        heading={heading}
-      />
+      <Suspense fallback={<p role="status">Anı açılıyor…</p>}>
+        <SelectedMemory
+          key={`${profile?.user_id}:${archive.group}:${memoryId}`}
+          id={memoryId}
+          memory={demo ? memoryById(memoryId) : undefined}
+          group={archive.group}
+          demo={demo}
+          sessionKey={profile?.user_id}
+          search={route.search}
+          notebook={route.notebook}
+          photo={route.photo}
+          memories={memories}
+          backUrl={backUrl}
+          link={link}
+          navigate={navigate}
+          heading={heading}
+        />
+      </Suspense>
     );
   else if (route.path === "/timeline" || route.path === "/search")
     content = (
@@ -232,7 +259,17 @@ export default function App() {
         heading={heading}
       />
     );
-  else content = <MemoryNotFound link={link} heading={heading} />;
+  else
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Sayfa bulunamadı
+        </h1>
+        <a href="#/" onClick={link("/")}>
+          Ana sayfaya dön
+        </a>
+      </section>
+    );
   let screen: ReactNode;
   if (entry.state.status === "onboarding")
     screen = (
@@ -251,7 +288,7 @@ export default function App() {
   else if (entry.state.status === "loading")
     screen = (
       <main className="entry-page">
-        <p role="status">Opening Mazi…</p>
+        <p role="status">Mazi açılıyor…</p>
       </main>
     );
   else if (entry.state.status !== "ready") screen = <Entry entry={entry} />;
