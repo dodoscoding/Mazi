@@ -34,6 +34,7 @@ export type Photo = {
   provenance?: PhotoProvenance[];
   assetId?: string;
   evidence?: PhotoEvidence;
+  labels?: import("./memory/labels").PhotoLabels;
 };
 export type Place = {
   name: string;

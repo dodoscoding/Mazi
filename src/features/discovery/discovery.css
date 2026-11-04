@@ -859,3 +859,11 @@
   white-space: normal;
   text-align: left;
 }
+
+.photo-label-badge {
+  display: inline-block;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}

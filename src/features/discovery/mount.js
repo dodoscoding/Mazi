@@ -1,3 +1,4 @@
+import { labelBadges } from "../../memory/labels";
 import {
   promptSkeleton,
   renderFilters,
@@ -33,6 +34,17 @@ export function mount(root, lifecycle) {
       ? location.hash.split("?").slice(1).join("?")
       : location.search,
   );
+  let personTarget = restored.get("person") || "";
+  const linkedPerson = document.createElement("button");
+  linkedPerson.type = "button";
+  linkedPerson.textContent = "Onaylı kişi filtresini kaldır";
+  linkedPerson.hidden = !personTarget;
+  linkedPerson.onclick = () => {
+    personTarget = "";
+    linkedPerson.hidden = true;
+    run(() => search());
+  };
+  $("#search-form").append(linkedPerson);
   const peopleEntry = restored.get("section") === "people";
   let entryFocused = false;
   const filters = {
@@ -61,6 +73,7 @@ export function mount(root, lifecycle) {
     // A search finishing after navigation must not rewrite the next page's URL.
     if (disposed) return;
     const params = new URLSearchParams();
+    if (personTarget) params.set("person", personTarget);
     if (peopleEntry) params.set("section", "people");
     for (const [key, id] of urlFields)
       if ($(id).value) params.set(key, $(id).value);
@@ -373,7 +386,7 @@ export function mount(root, lifecycle) {
       group,
       query: $("#query").value,
       mode: $("#mode").value,
-      person: $("#person").value,
+      person: personTarget || $("#person").value,
       place: $("#place").value,
       country: $("#country").value,
       object_query: $("#object").value,
@@ -438,6 +451,8 @@ export function mount(root, lifecycle) {
           class: "disc-original",
         }),
       );
+      for (const text of labelBadges(item.labels))
+        card.append(node("span", text, { class: "photo-label-badge" }));
       for (const person of item.people) {
         const line = node("p", person.name, { class: "disc-person" });
         if (person.is_me || person.can_remove)
@@ -738,6 +753,8 @@ export function mount(root, lifecycle) {
       $("#mode").value = "keyword";
       similar = "";
       filters.source = filters.sharedBy = "";
+      personTarget = "";
+      linkedPerson.hidden = true;
       await refresh();
     });
   $("#person-form").onsubmit = (event) => {
