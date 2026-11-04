@@ -172,8 +172,14 @@ test("the tray opens, asks which Victoria, and pins every photo of the chosen me
         row.textContent,
       ]),
     [
-      ["/api/review/rendition/a", "Lake weekendJun 2024 · 2 photos"],
-      ["/api/review/rendition/c", "Photo shared by AnaJun 2024 · 1 photo"],
+      [
+        "/api/review/rendition/a",
+        "Lake weekendJun 2024 · No place recorded · 2 photos",
+      ],
+      [
+        "/api/review/rendition/c",
+        "Photo shared by AnaJun 2024 · No place recorded · 1 photo",
+      ],
     ],
   );
 
@@ -318,4 +324,41 @@ test("a placed memory can be cleared, and placed memories update at once then fr
     "the server's Atlas replaces the local pin",
   );
   assert.equal(h.requests.at(-1).url, "/api/atlas?group=circle-1");
+});
+
+test("a saved whole-memory place updates each child's evidence before a failed reread", async (t) => {
+  const { photoEvidenceMemory } = await import("../helpers/photo-evidence.ts");
+  const source = [structuredClone(photoEvidenceMemory)];
+  const h = await harness(t, async () => {
+    throw Error("Synthetic reread failure");
+  });
+  let api;
+  function Probe() {
+    api = h.module.usePlacedMemories(source, "circle-1");
+    return null;
+  }
+  await h.render(createElement(Probe));
+  await act(async () => api.placed(source[0].id, KYRENIA));
+  assert.deepEqual(
+    api.memories[0].photos.map((photo) => photo.evidence.place.text),
+    ["Kyrenia, CY", "Kyrenia, CY"],
+  );
+  assert.deepEqual(
+    api.memories[0].photos.map((photo) => photo.evidence.place.pin),
+    [KYRENIA, KYRENIA],
+  );
+  assert.equal(source[0].photos[1].evidence.place.status, "unknown");
+  await act(async () =>
+    api.placed(source[0].id, {
+      name: "Springfield",
+      region: "Illinois",
+      country: "US",
+      latitude: 39.82,
+      longitude: -89.65,
+    }),
+  );
+  assert.deepEqual(
+    api.memories[0].photos.map((photo) => photo.evidence.place.text),
+    ["Springfield, Illinois, US", "Springfield, Illinois, US"],
+  );
 });

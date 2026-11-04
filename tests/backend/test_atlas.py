@@ -375,3 +375,79 @@ class AtlasTests(unittest.TestCase):
             self.store.db.execute('UPDATE archive_origins SET withdrawn=0 WHERE id=?', (ben_origin,))
         self.store.remove_member(self.alice, self.group, self.ben)
         self.assertEqual([item['sender'] for item in self._red_card()['photos'][0]['provenance']], ['Ana'])
+
+    def test_photo_evidence_has_stable_identity_and_reviewed_capture_and_place(self):
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='İstanbul')
+        before = [tuple(row) for row in self.store.db.execute('SELECT id,payload FROM archive_origins ORDER BY id')]
+        photo = self._red_card()['photos'][0]
+        self.assertEqual(photo['assetId'], self.assets[0])
+        self.assertEqual(photo['evidence']['capture'], dict(basis='capture', status='exact', days=['2020-01-02'],
+                                                         start='2020-01-02', through='2020-01-02', timezone=None))
+        self.assertEqual(photo['evidence']['chronology'], photo['evidence']['capture'])
+        self.assertEqual(photo['evidence']['place']['text'], 'Istanbul, TR')
+        self.assertEqual(photo['evidence']['place']['status'], 'known')
+        self.assertEqual(before, [tuple(row) for row in self.store.db.execute('SELECT id,payload FROM archive_origins ORDER BY id')])
+
+    def test_photo_evidence_uses_discord_share_day_and_never_upload_time(self):
+        photo = self._discord_card()['photos'][0]
+        self.assertEqual(photo['evidence']['capture']['status'], 'unknown')
+        self.assertEqual(photo['evidence']['chronology'], dict(basis='shared', status='exact', days=['2024-01-02'],
+                                                            start='2024-01-02', through='2024-01-02', timezone='UTC'))
+        self.assertEqual(photo['evidence']['place'], dict(status='unknown', text=None, pin=None))
+        self._forget_reviewed_date(self.assets[1])
+        blue = next(card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['id'] == 'photo-' + self.assets[1])
+        self.assertEqual(blue['photos'][0]['evidence']['chronology']['status'], 'unknown')
+
+    def test_photo_evidence_keeps_capture_conflicts_and_each_childs_own_place(self):
+        self._forget_reviewed_date(self.assets[1], ['2021-01-02T23:30:00-03:00', '2021-03-04T00:30:00+03:00'])
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='İstanbul')
+        photos = {photo['assetId']: photo for photo in self._memory()['photos']}
+        self.assertEqual(photos[self.assets[1]]['evidence']['chronology']['status'], 'conflict')
+        self.assertEqual(photos[self.assets[1]]['evidence']['capture']['days'], ['2021-01-02', '2021-03-04'])
+        self.assertEqual(photos[self.assets[1]]['evidence']['place']['status'], 'unknown')
+        self.assertEqual(photos[self.assets[0]]['evidence']['place']['status'], 'known')
+
+    def test_unmapped_reviewed_place_is_visible_without_borrowing_a_source_pin(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.1, 25.4, None)
+        evidence = self._red_card()['photos'][0]['evidence']
+        self.assertEqual(evidence['place'], dict(status='unmapped', text='Harbour', pin=None))
+
+    def test_photo_evidence_different_reviewed_cities_remain_on_their_own_children(self):
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='Istanbul, TR')
+        self.store.correct_asset(self.alice, self.assets[1], title='Blue', capture_date='2021-01-02', place='Paris, FR')
+        memory = self._memory()
+        self.assertIsNone(memory['place'])
+        places = {photo['assetId']: photo['evidence']['place']['text'] for photo in memory['photos']}
+        self.assertEqual(places, {self.assets[0]: 'Istanbul, TR', self.assets[1]: 'Paris, FR'})
+
+    def test_photo_evidence_distinguishes_unresolved_chat_days(self):
+        self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                              '05/04/2024, 10:00 - Ana: b.jpg (file attached)')
+        photos = [photo for card in atlas_view(self.store, self.ben, self.group)['memories']
+                  for photo in card['photos'] if photo['assetId'] not in self.assets]
+        self.assertTrue(photos)
+        self.assertTrue(all(photo['evidence']['chronology']['status'] == 'ambiguous' for photo in photos))
+        self.assertTrue(all(photo['evidence']['capture']['status'] == 'unknown' for photo in photos))
+
+    def test_photo_evidence_preserves_same_name_city_regions_and_source_centroids(self):
+        from mazi.places import lookup
+        from mazi.archive.photo_metadata import place_evidence
+        massachusetts = lookup('Springfield, Massachusetts, US')['city']
+        illinois = lookup('Springfield, Illinois, US')['city']
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='Springfield, Massachusetts, US')
+        self.store.correct_asset(self.alice, self.assets[1], title='Blue', capture_date='2021-01-02', place='Springfield, Illinois, US')
+        photos = {photo['assetId']: photo for photo in self._memory()['photos']}
+        self.assertEqual(photos[self.assets[0]]['evidence']['place']['text'], 'Springfield, Massachusetts, US')
+        self.assertEqual(photos[self.assets[1]]['evidence']['place']['text'], 'Springfield, Illinois, US')
+        for city in (massachusetts, illinois):
+            source = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+            resolved = place_evidence('', [source])
+            self.assertEqual(resolved['status'], 'known')
+            self.assertEqual((resolved['pin']['latitude'], resolved['pin']['longitude']), (city.latitude, city.longitude))
+            self.assertEqual(resolved['text'], f'Springfield, {city.region}, US')
+        conflict = place_evidence('', [dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude) for city in (massachusetts, illinois)])
+        self.assertEqual(conflict, dict(status='conflict', text=None, pin=None))
+        self.assertEqual(place_evidence('', [dict(city='Springfield', country='US', latitude=40, longitude=-80)])['status'], 'unmapped')
+        from mazi.atlas import place_memory
+        saved = place_memory(self.store, self.alice, self.group, 'photo-' + self.assets[0], 'Springfield, Illinois, US')
+        self.assertEqual(saved['pin']['region'], 'Illinois')

@@ -71,6 +71,15 @@ def photo(asset, title='Untitled photograph'):
                 dateBasis='undated')
 
 
+def legacy_body(body):
+    result = json.loads(body)
+    for card in result['memories']:
+        for photo in card['photos']:
+            photo.pop('assetId')
+            photo.pop('evidence')
+    return json.dumps(result).encode()
+
+
 class AtlasProjectionTests(unittest.TestCase):
     def setUp(self):
         self.fixture = test_capacity.ArchiveCapacityTests()
@@ -84,7 +93,7 @@ class AtlasProjectionTests(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertEqual(headers['Cache-Control'], 'no-store')
         self.assertEqual(int(headers['Content-Length']), len(body))
-        self.assertEqual(body, json.dumps({'memories': cards}).encode())
+        self.assertEqual(legacy_body(body), json.dumps({'memories': cards}).encode())
 
     def test_1001_imported_photos_keep_exact_http_body_with_constant_query_budget(self):
         imported(self.fixture, 1001)
@@ -414,7 +423,7 @@ class AtlasConcurrencyTests(unittest.TestCase):
                             expected['messages'] = [dict(name='Ben', time='', text='Ben context')]
                             expected['people'] = dict(shared=['Ben'], conversation=['Ben'])
                             expected['place'] = dict(name='Utrecht', country='NL', latitude=52.0, longitude=5.0)
-                            self.assertEqual(after[2], json.dumps({'memories': [expected]}).encode())
+                            self.assertEqual(legacy_body(after[2]), json.dumps({'memories': [expected]}).encode())
                         elif mutation == 'hide':
                             self.assertEqual([card['id'] for card in cards], ['photo-' + assets[2], 'photo-' + assets[1]])
                         elif mutation == 'hide_event':

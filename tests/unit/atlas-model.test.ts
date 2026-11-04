@@ -164,3 +164,66 @@ test("scrubbing to a year selects that year's first memory in API order", () => 
   assert.equal(placeIdOf(archive[0]), "GR:Naxos");
   assert.equal(placeIdOf(archive[6]), null);
 });
+
+test("canonical same-name cities stay distinct in grouped evidence and Atlas nodes", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { photoEvidenceMemory } = await import("../helpers/photo-evidence.ts");
+  const { evidencePin, evidencePlaceLabel } =
+    await import("../../src/memory/evidence.ts");
+  const gazetteer = JSON.parse(
+    readFileSync(
+      new URL("../../mazi/sources/cities.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const regions = ["Massachusetts", "Illinois"];
+  const pins: Place[] = regions.map((region) => {
+    const row = gazetteer.places
+      .map((values: unknown[]) =>
+        Object.fromEntries(
+          gazetteer.fields.map((field: string, index: number) => [
+            field,
+            values[index],
+          ]),
+        ),
+      )
+      .find(
+        (city: Record<string, unknown>) =>
+          city.name === "Springfield" &&
+          city.country === "US" &&
+          city.region === region,
+      );
+    return {
+      name: row.name,
+      country: row.country,
+      latitude: row.latitude,
+      longitude: row.longitude,
+    };
+  });
+  const grouped = structuredClone(photoEvidenceMemory);
+  grouped.photos.forEach((photo, index) => {
+    photo.evidence!.place = {
+      status: "known",
+      text: "Springfield, US",
+      pin: pins[index],
+    };
+  });
+  assert.equal(evidencePlaceLabel(grouped), "Birden fazla yer");
+  assert.equal(evidencePin(grouped), null);
+  const cards = grouped.photos.map((photo, index) => ({
+    ...grouped,
+    id: `springfield-${index}`,
+    photos: [photo],
+  }));
+  assert.notEqual(placeIdOf(cards[0]), placeIdOf(cards[1]));
+  const atlas = buildAtlas(cards);
+  assert.equal(atlas.places.length, 2);
+  assert.deepEqual(
+    atlas.places.map((place) => [place.latitude, place.longitude]),
+    [
+      [42.12, -72.58],
+      [39.82, -89.65],
+    ],
+  );
+  assert.equal(buildAtlas([grouped]).unplaced.length, 1);
+});

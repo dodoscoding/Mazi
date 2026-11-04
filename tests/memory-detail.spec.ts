@@ -827,3 +827,77 @@ test("opened photographs preserve portrait and panoramic edges", async ({
     path: testInfo.outputPath("uncropped.png"),
   });
 });
+
+test("photo facts stay visible and follow the selected photo across archive views", async ({
+  page,
+}, testInfo) => {
+  const { photoEvidenceMemory } = await import("./helpers/photo-evidence");
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories: [photoEvidenceMemory] } }),
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(
+    page.locator(".home-featured .memory-meta").first(),
+  ).toContainText("Çekim ve paylaşım tarihleri");
+  await expect(
+    page.locator(".home-featured .memory-meta").first(),
+  ).toContainText("Bazı yerler bilinmiyor");
+  await page.goto("/#/memories");
+  await expect(page.locator(".mem-photo-facts")).toHaveCount(2);
+  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+    "2 Oca 2020 · Çekildi",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+    "Istanbul, TR",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
+    "2 Oca 2024 · Paylaşıldı · UTC",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
+    "Yer bilinmiyor",
+  );
+  await page.locator('[data-view="all"]').click();
+  await expect(page.locator(".mem-photo-facts").nth(1)).not.toContainText(
+    "Istanbul",
+  );
+  const directory = "work/poteto/photo-evidence/screenshots";
+  mkdirSync(directory, { recursive: true });
+  await settled(page);
+  await page.locator(".mem-layout").screenshot({
+    path: `${directory}/${testInfo.project.name}-gallery.png`,
+  });
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer-caption-meta").first()).toHaveText(
+    "2 Oca 2020 · Çekildi",
+  );
+  await page.getByRole("button", { name: "Next photo" }).click();
+  await expect(page.locator(".viewer-caption-meta").first()).toContainText(
+    "2 Oca 2024 · Paylaşıldı · UTC",
+  );
+  await expect(page.locator(".viewer-caption-meta").last()).toHaveText(
+    "Yer bilinmiyor",
+  );
+  await settled(page);
+  await page.locator(".viewer").screenshot({
+    path: `${directory}/${testInfo.project.name}-viewer.png`,
+  });
+  await page.goto("/#/timeline");
+  await expect(page.locator(".tl-date")).toContainText(
+    "Çekim ve paylaşım tarihleri",
+  );
+  await expect(page.locator(".tl-meta")).toContainText(
+    "Bazı yerler bilinmiyor",
+  );
+  await page.goto("/#/atlas");
+  await expect(page.locator(".place-tray-toggle")).toBeVisible();
+  await page.locator(".place-tray-toggle").click();
+  await expect(page.locator(".place-tray-meta")).toContainText(
+    "Bazı yerler bilinmiyor",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});

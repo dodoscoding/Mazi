@@ -1,5 +1,6 @@
 import { chronologyDate } from "../memory/chronology";
 import type { Memory } from "../memories";
+import { evidenceChronology, evidencePlaceLabel } from "../memory/evidence";
 
 let regions: Intl.DisplayNames | undefined;
 
@@ -44,6 +45,8 @@ function formatMonth(date: Date) {
 
 /** The archive's date label made readable: ISO days become "Sun 14 Aug 2023". */
 export function longDate(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.label;
   if (memory.year === null) return chronologyDate(memory).label;
   const [label, note] = memory.date.split(" · ");
   const days = label.split(" to ").map((part) => parse(part));
@@ -58,6 +61,8 @@ export function longDate(memory: Memory) {
 
 /** A short month label for index rows, "Aug 2023" or "About Aug 2023". */
 export function shortDate(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.label;
   const first = parse(memory.date.split(" · ")[0].split(" to ")[0]);
   if (memory.year === null) return chronologyDate(memory).label;
   const text = first ? formatMonth(first) : memory.date.split(" · ")[0];
@@ -65,6 +70,8 @@ export function shortDate(memory: Memory) {
 }
 
 export function placeLabel(memory: Memory) {
+  const evidence = evidencePlaceLabel(memory);
+  if (evidence) return evidence;
   return memory.place
     ? `${memory.place.name}, ${countryName(memory.place.country)}`
     : "No place recorded";

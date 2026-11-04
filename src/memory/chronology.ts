@@ -1,4 +1,5 @@
 import type { Memory } from "../memories";
+import { evidenceChronology } from "./evidence.ts";
 
 export type ChronologyDate =
   | {
@@ -28,6 +29,8 @@ function readable(day: string) {
   ).format(new Date(`${day}T00:00:00Z`));
 }
 export function chronologyDate(memory: Memory): ChronologyDate {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence;
   if (memory.year !== null) {
     const day = calendarDay(memory.date.split(" · ")[0].split(" to ")[0]);
     return {

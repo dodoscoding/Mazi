@@ -9,6 +9,9 @@ import {
   sourceLabel,
   yearsLabel,
 } from "../../browse/model";
+import { photoDateLabel, photoPlaceLabel } from "../../memory/evidence";
+import { placeLine } from "../../memory/facts";
+import { chronologyDate } from "../../memory/chronology";
 
 const closeIcon =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -164,7 +167,13 @@ export function createGallery(root, lifecycle, api) {
     image.loading = "lazy";
     image.decoding = "async";
     link.append(image);
-    if (memory.approximate) {
+    const facts = node("span", undefined, "mem-photo-facts");
+    facts.append(
+      node("span", photoDateLabel(photo, memory)),
+      node("span", photoPlaceLabel(photo, memory)),
+    );
+    link.append(facts);
+    if (!photo.evidence && memory.approximate) {
       const badge = node("span", "About", "mem-about");
       badge.setAttribute("aria-hidden", "true");
       link.append(badge);
@@ -231,6 +240,7 @@ export function createGallery(root, lifecycle, api) {
           "span",
           [
             dateLabel(memory),
+            placeLine(memory),
             plural(memory.photos.length, "photo"),
             sharedLine(memory),
           ]
@@ -264,7 +274,12 @@ export function createGallery(root, lifecycle, api) {
     );
     const shown = sorted(applyFilters(memories, filters));
     const years = [
-      ...new Set(shown.flatMap((memory) => (memory.year ? [memory.year] : []))),
+      ...new Set(
+        shown.flatMap((memory) => {
+          const year = chronologyDate(memory).year;
+          return year ? [year] : [];
+        }),
+      ),
     ];
     $("grid-summary").textContent = memories.length
       ? [
