@@ -40,6 +40,7 @@ export function createGallery(root, lifecycle, api) {
       ? location.hash.split("?").slice(1).join("?")
       : location.search);
   const entry = new URLSearchParams(searchText);
+  const invalidFilters = new Map();
   for (const [key, parameter] of [
     ["years", "years"],
     ["places", "places"],
@@ -47,13 +48,24 @@ export function createGallery(root, lifecycle, api) {
     ["people", "by"],
   ]) {
     const raw = entry.get(parameter) || "";
-    const values = raw.startsWith("[")
-      ? JSON.parse(raw)
-      : key === "people"
-        ? raw
-          ? [raw]
-          : []
-        : raw.split(",").filter(Boolean);
+    let values;
+    try {
+      values = raw.startsWith("[")
+        ? JSON.parse(raw)
+        : key === "people"
+          ? raw
+            ? [raw]
+            : []
+          : raw.split(",").filter(Boolean);
+      if (
+        !Array.isArray(values) ||
+        values.some((value) => typeof value !== "string")
+      )
+        throw Error();
+    } catch {
+      invalidFilters.set(key, raw);
+      values = [raw];
+    }
     filters[key] = new Set(key === "years" ? values.map(Number) : values);
   }
   filters.uncertain = entry.get("uncertain") === "true";
@@ -123,9 +135,11 @@ export function createGallery(root, lifecycle, api) {
       if (filters[key].size)
         params.set(
           parameter,
-          key === "years" || key === "sources"
-            ? [...filters[key]].join(",")
-            : JSON.stringify([...filters[key]]),
+          invalidFilters.has(key) && filters[key].has(invalidFilters.get(key))
+            ? invalidFilters.get(key)
+            : key === "years" || key === "sources"
+              ? [...filters[key]].join(",")
+              : JSON.stringify([...filters[key]]),
         );
     if (filters.uncertain) params.set("uncertain", "true");
     for (const input of searchForm.querySelectorAll("input,select"))

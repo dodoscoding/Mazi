@@ -56,6 +56,7 @@ export function mount(root, lifecycle) {
       linkedPerson.hidden = !personTarget;
       run(() => search());
     },
+    true,
   );
   const resetFilters = document.createElement("button");
   resetFilters.type = "button";
@@ -439,7 +440,7 @@ export function mount(root, lifecycle) {
       $("#index-progress").textContent =
         `${result.unindexed} eligible photographs need indexing; these use words and filters until the index is built.`;
     $("#count").textContent =
-      `${result.total} fotoğraf · ${$("#mode").value === "semantic" ? "İlişkili arama" : "Sözcükler ve filtreler"}`;
+      `${result.total} fotoğraf · ${result.mode === "keyword / filters" || result.mode === "keyword" ? "Sözcükler ve filtreler" : "İlişkili arama"}`;
     photoFilters.update(result.photo_facets);
     photoTotal = result.total;
     completedQuery = $("#query").value;

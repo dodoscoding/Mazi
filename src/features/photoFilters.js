@@ -18,13 +18,37 @@ const choices = {
   ],
   person: ["Fotoğraftaki kişi", {}],
 };
-export function createPhotoFilters(host, search, changed) {
+export function createPhotoFilters(host, search, changed, archive = false) {
+  const fieldsAvailable = archive
+    ? {
+        ...choices,
+        years: ["Yıl", {}],
+        places: ["Yer", {}],
+        uncertain: ["Tarih belirsizliği", { true: "Yalnız belirsiz tarihler" }],
+      }
+    : choices;
   const restored = new URLSearchParams(search);
+  const invalid = new Map();
+  function restore(key) {
+    const raw = restored.get(key) || "";
+    if (key !== "places" || !raw.startsWith("["))
+      return new Set(raw.split(",").filter(Boolean));
+    try {
+      const values = JSON.parse(raw);
+      if (
+        !Array.isArray(values) ||
+        !values.length ||
+        values.some((value) => typeof value !== "string")
+      )
+        throw Error();
+      return new Set(values);
+    } catch {
+      invalid.set(key, raw);
+      return new Set([raw]);
+    }
+  }
   const state = Object.fromEntries(
-    Object.keys(choices).map((key) => [
-      key,
-      new Set((restored.get(key) || "").split(",").filter(Boolean)),
-    ]),
+    Object.keys(fieldsAvailable).map((key) => [key, restore(key)]),
   );
   const panel = document.createElement("section");
   panel.className = "photo-filters";
@@ -43,20 +67,19 @@ export function createPhotoFilters(host, search, changed) {
         : `Sayaçların paydası: görünür ${facets.denominator} fotoğrafın tamamı. Filtrelenmiş toplam ayrıca gösterilir.`;
     chips.replaceChildren();
     fields.replaceChildren();
-    for (const [key, [title, names]] of Object.entries(choices)) {
+    for (const [key, [title, names]] of Object.entries(fieldsAvailable)) {
       const field = document.createElement("fieldset"),
         legend = document.createElement("legend");
       legend.textContent = title;
       field.append(legend);
-      const options =
-        key === "person"
-          ? facets.person || []
-          : Object.keys(names).map((value) => ({
-              value,
-              count:
-                (facets[key] || []).find((item) => item.value === value)
-                  ?.count || 0,
-            }));
+      const options = ["person", "years", "places"].includes(key)
+        ? facets[key] || []
+        : Object.keys(names).map((value) => ({
+            value,
+            count:
+              (facets[key] || []).find((item) => item.value === value)?.count ||
+              0,
+          }));
       for (const option of options) {
         const label = document.createElement("label"),
           input = document.createElement("input");
@@ -73,7 +96,7 @@ export function createPhotoFilters(host, search, changed) {
         };
         label.append(
           input,
-          ` ${option.name || names[option.value]} (${option.count})`,
+          ` ${option.name || names[option.value] || option.value} (${option.count})`,
         );
         field.append(label);
       }
@@ -81,7 +104,7 @@ export function createPhotoFilters(host, search, changed) {
       for (const value of state[key]) {
         const chip = document.createElement("button");
         chip.type = "button";
-        chip.textContent = `${title}: ${names[value] || options.find((item) => item.value === value)?.name || (key === "person" ? "Onaylı kişi" : "Geçersiz seçim")} ×`;
+        chip.textContent = `${title}: ${names[value] || options.find((item) => item.value === value)?.name || (["years", "places"].includes(key) && !invalid.has(key) ? value : key === "person" ? "Onaylı kişi" : "Geçersiz seçim")} ×`;
         chip.onclick = () => {
           state[key].delete(value);
           render();
@@ -100,7 +123,14 @@ export function createPhotoFilters(host, search, changed) {
     apply(params) {
       for (const [key, values] of Object.entries(state))
         values.size
-          ? params.set(key, [...values].sort().join(","))
+          ? params.set(
+              key,
+              invalid.has(key) && values.has(invalid.get(key))
+                ? invalid.get(key)
+                : key === "places"
+                  ? JSON.stringify([...values].sort())
+                  : [...values].sort().join(","),
+            )
           : params.delete(key);
       return params;
     },
