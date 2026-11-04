@@ -333,7 +333,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
     page.getByRole("button", { name: `${title} anısını seç`, exact: true }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Hesap" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "More" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ekle" })).toHaveCount(0);
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });
 
