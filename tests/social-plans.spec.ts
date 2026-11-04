@@ -125,6 +125,7 @@ test("an empty circle plans on desktop and joins from an independent phone sessi
     ).toBeVisible();
     expect(requests).toEqual([]);
     expect((await state(page)).photos).toBe(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: "work/poteto/social-plans-ui/plan-desktop.png",
       fullPage: true,
@@ -139,6 +140,8 @@ test("an empty circle plans on desktop and joins from an independent phone sessi
     expect(
       (await new AxeBuilder({ page: other }).analyze()).violations,
     ).toEqual([]);
+    await other.getByRole("heading", { name: "Planlar", exact: true }).focus();
+    await other.evaluate(() => window.scrollTo(0, 0));
     await other.screenshot({
       path: "work/poteto/social-plans-ui/plan-phone.png",
       fullPage: true,
@@ -258,12 +261,15 @@ test("local time gaps are rejected and repeated hours require an explicit offset
     ),
   ).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  if (info.project.name === "phone")
+  if (info.project.name === "phone") {
+    await page.getByRole("heading", { name: "Planlar", exact: true }).focus();
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: "work/poteto/social-plans-ui/create-phone.png",
       fullPage: true,
       scale: "css",
     });
+  }
   await page
     .getByRole("button", { name: "Buluşmayı oluştur", exact: true })
     .click();
@@ -412,6 +418,11 @@ test("the contribution menu and plan form work with the keyboard at 320 pixels",
   const add = page.getByRole("button", { name: "Ekle", exact: true });
   await add.focus();
   await page.keyboard.press("ArrowDown");
+  const menuBounds = await page
+    .locator(".add-menu .menu-popover")
+    .boundingBox();
+  expect(menuBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(320);
   await expect(
     page
       .getByRole("navigation", { name: "Ekle seçenekleri" })
