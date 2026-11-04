@@ -50,6 +50,12 @@ A1 extends the synthetic T08 reading journey. A reviewed photo shows its capture
 
 Run `tests/backend/test_atlas.py`, `test_atlas_place.py`, `test_atlas_projection.py` and `archive/test_chronology.py`; the chronology unit and photo-evidence DOM contracts; and the photo-facts case in `tests/memory-detail.spec.ts` on desktop and phone. Exact legacy-projection assertions remove only the two additive photo fields before their byte comparison. Dedicated assertions cover the new evidence values. The projection query-count and memory budgets remain enforced. [A1 evidence](../work/poteto/photo-evidence/VERIFICATION.md) records revisions, commands and synthetic screenshots. Physical-phone and five-friend discovery acceptance remain separate from these synthetic checks.
 
+## Local Search date-basis acceptance
+
+A2-read extends T08 with a sharing-only Discord photo. A legacy dated bookmark returns no capture match, while explicit sharing and chronology return the photo on its displayed sharing day. Cover both endpoints of the range, UTC/local midnight, any later sharing origin, conflicting capture days without invented gap matches, and ambiguous WhatsApp day order resolved only by permitted evidence in the same import/conversation. Repeat keyword and related modes and the streamed path above 1,000 photos. Keep byte, time and origin-count failures atomic. Hidden-memory children and unavailable origins cannot enter results or facets.
+
+The Search DOM contracts verify the fresh chronology default, old bookmark behavior, explicit basis changes, pagination, URL restore and per-photo text without an Atlas request. The unified browser contract imports a synthetic Discord ZIP through the real API and checks desktop/phone UI filtering and refresh. [A2 evidence](../work/poteto/photo-search-corrections/VERIFICATION.md) records commands and synthetic captures. Selected-photo correction writes and reviewed-place export acceptance belong to the following A2-write delivery.
+
 ## First design experiment
 
 D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
