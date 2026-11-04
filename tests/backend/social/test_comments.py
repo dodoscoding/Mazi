@@ -1,8 +1,11 @@
 import concurrent.futures
 import io
+import hashlib
 import json
 import sqlite3
 import threading
+import tempfile
+from pathlib import Path
 import unittest
 import zipfile
 from unittest.mock import patch
@@ -10,11 +13,11 @@ from unittest.mock import patch
 from mazi.identity.core import Conflict, Denied, Store
 from mazi.memories.memories import MemoryStore
 from mazi.social import conversations
-from tests.backend.test_atlas import AtlasTests
+from tests.backend import test_atlas
 
 
 class CommentsFixture(unittest.TestCase):
-    setUp, tearDown, _origin = AtlasTests.setUp, AtlasTests.tearDown, AtlasTests._origin
+    setUp, tearDown, _origin = test_atlas.AtlasTests.setUp, test_atlas.AtlasTests.tearDown, test_atlas.AtlasTests._origin
 
     def target(self, asset=0):
         return dict(kind='photo', id=self.assets[asset])
@@ -35,7 +38,7 @@ class CommentsTests(CommentsFixture):
         self.assertEqual(first['target'], self.target())
         self.assertTrue(first['editable'])
         self.assertEqual(first['revision'], 1)
-        self.assertEqual(self.store.event_notebook(self.ben, self.group, event)['story'], None)
+        self.assertEqual(self.store.event_notebook(self.ben, self.group, event)['sections'], [])
 
     def test_create_retry_payload_conflict_delete_and_stale_restore_never_resurrect(self):
         first = self.create()
@@ -184,3 +187,54 @@ class CommentsTests(CommentsFixture):
         for target in ({'kind': 'plan', 'id': 'x'}, {'kind': 'photo', 'id': self.assets[0], 'group': 'x'}):
             with self.assertRaises(ValueError):
                 self.create(key='invalid-target', target=target)
+
+    def test_latest_database_snapshot_retains_deletion_ledger(self):
+        first = self.create()
+        stale = tuple(self.store.db.execute('SELECT * FROM social_comments WHERE id=?', (first['id'],)).fetchone())
+        conversations.delete_comment(self.store, self.alice, self.group, first['id'], 1, 'delete')
+        with tempfile.TemporaryDirectory() as restored:
+            snapshot = sqlite3.connect(Path(restored) / 'mazi.sqlite3')
+            self.store.db.backup(snapshot)
+            snapshot.close()
+            copy = MemoryStore(restored)
+            try:
+                with copy.transaction():
+                    copy.db.execute('INSERT INTO social_comments VALUES(?,?,?,?,?,?,?,?,?)', stale)
+                self.assertEqual(conversations.comments(copy, self.ben, self.group, self.target())['items'], [])
+                self.assertEqual(conversations.create_comment(copy, self.alice, self.group, 'first', self.target(), 'First thought'), dict(id=first['id'], deleted=True))
+                self.assertEqual(copy.db.execute('SELECT count(*) FROM social_comment_deletions WHERE comment_id=?', (first['id'],)).fetchone()[0], 1)
+            finally:
+                copy.close()
+
+    def test_independent_eligible_source_keeps_photo_conversation_after_one_owner_withdraws(self):
+        first = self.create()
+        original_origin = self._origin(self.assets[0])
+        data = self.store.asset_bytes(self.alice, self.assets[0], original=True)
+        source = self.store.create_source(self.ben, self.group, 'apple', 'Independent copy',
+            {'start': '2020-01-01', 'end': '2030-01-01', 'albums': [], 'types': ['image']})
+        self.store.set_source(self.ben, source, True, 'authorized')
+        resource = self.store.begin_resource(self.ben, source,
+            {'item': 'independent', 'component': 'photo', 'version': 'original', 'filename': 'red.jpg', 'date': '2020-01-02', 'kind': 'image', 'albums': []},
+            len(data), hashlib.sha256(data).hexdigest())
+        self.store.resource_chunk(self.ben, resource['id'], 0, data)
+        self.store.finish_resource(self.ben, resource['id'])
+        while self.store.work_once():
+            pass
+        self.store.delete_origin(self.alice, original_origin)
+        self.assertEqual(conversations.comments(self.store, self.alice, self.group, self.target())['items'][0]['id'], first['id'])
+        self.store.remove_member(self.alice, self.group, self.ben)
+        with self.assertRaises(Denied):
+            conversations.comments(self.store, self.alice, self.group, self.target())
+
+    def test_memory_target_database_group_fk_rejects_author_with_membership_in_both_groups(self):
+        other = self.store.create_group(self.outsider, 'Elsewhere')
+        self.store.accept(self.alice, self.store.invite(self.outsider, other))
+        event = self.store.review_event(self.alice, self.group, self.assets, 'Two winters', 'accept')
+        first = self.create(target=dict(kind='memory', id=event))
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('UPDATE social_comments SET group_id=? WHERE id=?', (other, first['id']))
+        photo = self.create(key='photo')
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('UPDATE social_comments SET group_id=? WHERE id=?', (other, photo['id']))
