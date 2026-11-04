@@ -186,8 +186,14 @@ class SocialHomeTests(CommentsFixture):
             if card['photos'][0].get('provenance', [{}])[0].get('sharedAt', {}).get('raw') == '04/05/2024, 21:00')
         asset = card['photos'][0]['assetId']
         selected = self.store.db.execute('SELECT sum(length(CAST(payload AS BLOB))) FROM archive_origins WHERE asset_id=? AND withdrawn=0', (asset,)).fetchone()[0]
+        load_context = atlas.SharingContext._load
+
+        def reject_context_parsing(context, run):
+            with patch('mazi.archive.photo_context.json.loads', side_effect=AssertionError('Over-budget context must not be parsed')):
+                return load_context(context, run)
+
         for constant, limit in [('SELECTED_REQUEST_BYTES', selected), ('SELECTED_REQUEST_ORIGINS', 1)]:
-            with self.subTest(constant=constant), patch.object(atlas, constant, limit, create=True):
+            with self.subTest(constant=constant), patch.object(atlas, constant, limit), patch.object(atlas.SharingContext, '_load', reject_context_parsing):
                 with self.assertRaises(CapacityExceeded):
                     atlas.memory_view(self.store, self.ben, self.group, card['id'])
 
