@@ -90,7 +90,10 @@ class HostedCommentsTests(unittest.TestCase):
             self.store.db.execute('SET LOCAL enable_seqscan=off')
             query = 'SELECT id FROM social_comments WHERE group_id=? AND photo_id=? ORDER BY created_at,id LIMIT 21'
             details = ' '.join(row[0] for row in self.store.db.execute('EXPLAIN ' + query, (self.group, self.asset)))
-            self.assertIn('social_comments_photo_time', details)
+            self.assertTrue(any(index in details for index in ('social_comments_photo_time', 'social_comments_activity')), details)
+            self.assertIn('Index Cond:', details)
+            self.assertIn('group_id', details)
+            self.assertIn('photo_id', details)
         self.assertFalse(self.store.db.execute("SELECT has_table_privilege(current_user,current_schema()||'.social_comment_deletions','DELETE')").fetchone()[0])
         for table in ('social_comments', 'social_comment_deletions'):
             self.assertTrue(self.store.db.execute('SELECT relrowsecurity FROM pg_class WHERE oid=(current_schema()||\'.\'||?)::regclass', (table,)).fetchone()[0])

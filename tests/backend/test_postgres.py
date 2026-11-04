@@ -189,9 +189,9 @@ class PostgresContracts(unittest.TestCase):
         with self.store.db:
             self.store.db.execute('INSERT INTO import_runs(id,owner_id,group_id,source,namespace,manifest,options,size,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
                 (self.fixture, self.user, self.group, 'manual', 'synthetic', self.fixture, '{}', 1, 'COMPLETED', 0))
-            self.store.db.execute('INSERT INTO archive_assets VALUES(?,?,?,?,?,?,?,?,?)',
+            self.store.db.execute('INSERT INTO archive_assets(id,group_id,sha256,original_key,preview_key,mime,size,width,height) VALUES(?,?,?,?,?,?,?,?,?)',
                 (self.fixture, self.group, self.fixture, 'synthetic', 'synthetic', 'image/jpeg', 1, 8, 8))
-            self.store.db.execute('INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)',
+            self.store.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,0)',
                 (self.fixture, self.fixture, self.group, self.user, self.fixture, self.fixture, self.fixture, '{}'))
         reader = MemoryStore(self.temp.name)
         writer = MemoryStore(self.temp.name)

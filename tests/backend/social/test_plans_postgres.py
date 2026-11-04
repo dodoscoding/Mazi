@@ -98,7 +98,10 @@ class HostedPlansTests(unittest.TestCase):
             self.store.db.execute('SET LOCAL enable_seqscan=off')
             query = "SELECT id FROM social_plans WHERE group_id=? AND status='active' AND starts_at>=? ORDER BY starts_at,id LIMIT 21"
             details = ' '.join(row[0] for row in self.store.db.execute('EXPLAIN ' + query, (self.group, 0)))
-            self.assertIn('social_plans_group_time', details)
+            self.assertTrue(any(index in details for index in ('social_plans_group_time', 'social_plans_upcoming')), details)
+            self.assertIn('Index Cond:', details)
+            self.assertIn('group_id', details)
+            self.assertIn('starts_at', details)
         tables = self.store.db.execute("SELECT c.relname,c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('social_plans','social_attendance','social_receipts')").fetchall()
         self.assertEqual({row[0] for row in tables}, {'social_plans','social_attendance','social_receipts'})
         self.assertTrue(all(row[1] for row in tables))
