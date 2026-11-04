@@ -201,8 +201,9 @@ class SocialHomeTests(CommentsFixture):
         with patch.object(atlas, 'atlas_view', side_effect=AssertionError('Full Atlas forbidden')), patch.object(self.store, '_timeline_items', side_effect=AssertionError('Full timeline forbidden')):
             selected = atlas.memory_view(self.store, self.ben, self.group, event)['memory']
         self.assertEqual(selected, expected)
-        self.assertEqual(selected['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))
-        self.assertNotIn('labels', selected['photos'][1])
+        photos = {photo['assetId']: photo for photo in selected['photos']}
+        self.assertEqual(photos[self.assets[0]]['labels'], dict(screenshot='yes', ai='edited'))
+        self.assertNotIn('labels', photos[self.assets[1]])
         self.create()
         summary = home.home_view(self.store, self.ben, self.group)
         self.assertEqual(summary['featured']['preview']['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))
