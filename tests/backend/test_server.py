@@ -6,6 +6,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from mazi.memories.memories import MemoryStore
 from mazi.server import APP_PATHS, AppServer, handler_for
@@ -137,6 +138,99 @@ class AppServerTests(unittest.TestCase):
             self.assertEqual(write.result(timeout=2)[0], 200)
         self.assertEqual(maximum_active, 1)
         self.assertTrue(write_entered.is_set())
+
+    def test_close_waits_for_active_dispatch_and_rejects_queued_dispatch(self):
+        read_entered = threading.Event()
+        post_parsed = threading.Event()
+        write_entered = threading.Event()
+        release_read = threading.Event()
+        release_post = threading.Event()
+        close_started = threading.Event()
+        close_returned = threading.Event()
+        groups_for = self.store.groups_for
+        complete_introduction = self.store.complete_introduction
+        parse_request = self.server.RequestHandlerClass.parse_request
+
+        def paused_read(user):
+            read_entered.set()
+            if not release_read.wait(5):
+                raise TimeoutError('Test did not release the active read')
+            return groups_for(user)
+
+        def paused_parse(handler):
+            result = parse_request(handler)
+            if result and handler.command == 'POST':
+                post_parsed.set()
+                if not release_post.wait(5):
+                    raise TimeoutError('Test did not release the parsed POST')
+            return result
+
+        def observed_write(token):
+            write_entered.set()
+            return complete_introduction(token)
+
+        def close():
+            close_started.set()
+            self.server.server_close()
+            close_returned.set()
+
+        self.store.groups_for = paused_read
+        self.store.complete_introduction = observed_write
+        self.server.RequestHandlerClass.parse_request = paused_parse
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as clients:
+            read = clients.submit(self.request, '/api/groups', token=self.token)
+            try:
+                self.assertTrue(read_entered.wait(2), 'Read did not enter the store')
+                write = clients.submit(self.request, '/api/introduction/complete', {}, self.token)
+                self.assertTrue(post_parsed.wait(2), 'POST was not parsed before shutdown')
+                self.server.shutdown()
+                self.thread.join()
+                closing = clients.submit(close)
+                self.assertTrue(close_started.wait(2), 'Server close did not start')
+                self.assertFalse(close_returned.wait(0.2), 'Server close passed an active store request')
+                release_read.set()
+                closing.result(timeout=2)
+                self.assertEqual(read.result(timeout=2)[0], 200)
+                self.store.close()
+                release_post.set()
+                self.assertEqual(write.result(timeout=2)[0], 503)
+                self.assertFalse(write_entered.is_set(), 'Queued POST reached the closed store')
+            finally:
+                release_read.set()
+                release_post.set()
+
+    def test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected(self):
+        accepted = threading.Event()
+        get_request = self.server.get_request
+
+        def observe_accept():
+            result = get_request()
+            accepted.set()
+            return result
+
+        self.server.get_request = observe_accept
+        idle = socket.create_connection(('127.0.0.1', self.server.server_port))
+        idle.settimeout(1)
+        try:
+            self.assertTrue(accepted.wait(2), 'Idle socket was not accepted')
+            self.server.shutdown()
+            self.thread.join()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as closer:
+                closer.submit(self.server.server_close).result(timeout=1)
+            self.store.close()
+            accessed = threading.Event()
+
+            class ClosedDatabase:
+                def execute(self, *_args):
+                    accessed.set()
+                    raise RuntimeError('Database is closed')
+
+            with patch.object(self.store, 'db', ClosedDatabase()):
+                idle.sendall(b'GET /health HTTP/1.0\r\n\r\n')
+                self.assertIn(b' 503 ', idle.recv(4096).split(b'\r\n', 1)[0])
+            self.assertFalse(accessed.is_set(), 'Late request reached the closed store')
+        finally:
+            idle.close()
 
     def test_all_app_routes_share_atlas_and_missing_build_is_actionable(self):
         for route in APP_PATHS:
