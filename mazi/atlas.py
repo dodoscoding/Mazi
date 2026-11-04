@@ -1,13 +1,13 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
-import re
 from datetime import datetime, timezone
 
 from mazi.identity.core import Denied
-from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
+from mazi.imports.adapters import date_orders, settle_date_order
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, label, lookup
-from mazi.archive.photo_metadata import place_evidence, resolve_photo
+from mazi.archive.photo_metadata import origin_timestamps, place_evidence, resolve_photo, sharing_provenance
+from mazi.archive.photo_context import hidden_event_assets as _hidden_event_assets
 
 SAME_PLACE_KM = 50
 
@@ -25,30 +25,8 @@ def _place(rows):
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
-def _shared_at(assertion, date_order):
-    """Resolve raw-only share evidence as imports do, with its export's settled date order."""
-    if assertion.get('local') or assertion.get('raw') is None:
-        return assertion
-    resolved = time_assertion(assertion['raw'], date_order)
-    return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
-
-
 def _export(row, origin):
     return row['run_id'], (origin.get('conversation') or {}).get('id')
-
-
-def _timestamps(origin):
-    return [(origin.get('shared_at_assertion') or {}).get('raw'),
-            *(message.get('shared_at') for message in origin.get('context', []))]
-
-def _hidden_event_assets(store, user, group):
-    """Photographs of memories this member hid; they must not return as loose photographs."""
-    hidden = set()
-    for row in store.db.execute(
-        'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
-    ):
-        hidden.update(json.loads(row[0]))
-    return hidden
 
 
 def atlas_view(store, user, group):
@@ -105,30 +83,22 @@ def atlas_view(store, user, group):
         # Two streamed passes keep large payloads from accumulating.
         proven = {}
         for row in store.db.execute(origins, (user, group)):
+            if row['asset_id'] not in items or row['asset_id'] in hidden_assets:
+                continue
             origin = json.loads(row['payload'])
-            proven.setdefault(_export(row, origin), set()).update(date_orders(_timestamps(origin)))
+            proven.setdefault(_export(row, origin), set()).update(date_orders(origin_timestamps(origin)))
         rows = store.db.execute(origins, (user, group))
         for origin_position, row in enumerate(rows):
             targets = consumers.get(row['asset_id'])
             if not targets:
                 continue
             origin = json.loads(row['payload'])
-            assertion = _shared_at(origin.get('shared_at_assertion') or {},
-                                   settle_date_order(proven[_export(row, origin)]))
-            sender = (origin.get('sender') or {}).get('label') or None
-            raw = assertion.get('raw')
-            date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
-            ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
-                         and date_parts is not None and 1 <= int(date_parts[1]) <= 12
-                         and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
-            evidence = dict(sender=sender, source=origin.get('source_type') or 'archive', sharedAt=dict(
-                local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
-                precision=assertion.get('precision') or 'unknown',
-                ambiguous=bool(ambiguous)))
+            evidence = sharing_provenance(origin, settle_date_order(proven[_export(row, origin)]))
+            sender, raw = evidence['sender'], evidence['sharedAt']['raw']
             evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
             for detail, asset_position in targets:
                 detail['sources'].add(evidence['source'])
-                if sender or raw is not None or assertion.get('local'):
+                if sender or raw is not None or evidence['sharedAt']['local']:
                     detail['provenance'][asset_position].setdefault(evidence_key, evidence)
                 if row['display_name'] is not None:
                     detail['shared'].add(row['display_name'])

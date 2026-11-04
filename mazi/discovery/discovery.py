@@ -4,6 +4,8 @@ SQLite write transactions serialize local retrieval with membership/consent
 mutations. Vectors are derivatives, never an authorization source.
 """
 from mazi.archive.export import ExportArray
+from mazi.archive.photo_context import SharingContext, hidden_event_assets
+from mazi.archive.photo_metadata import matches_dates, resolve_photo
 
 import hashlib
 from mazi.persistence import initialize_schema, insertion_order
@@ -141,6 +143,10 @@ class DiscoveryStore(SourceStore):
 
     def _places_query(self, user, group):
         clause, params = super()._places_query(user, group)
+        hidden = hidden_event_assets(self, user, group)
+        if hidden:
+            clause += ' AND o.asset_id NOT IN (' + ','.join('?' for _ in hidden) + ')'
+            params = (*params, *sorted(hidden))
         return clause + ' AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h."user"=? AND h.asset=o.asset_id)', (*params, user)
 
     def places(self, user, group, country='', city='', paths=False):
@@ -384,7 +390,7 @@ class DiscoveryStore(SourceStore):
             self.db.execute('DELETE FROM discovery_vectors WHERE asset IN (SELECT id FROM archive_assets WHERE group_id=?)', (group,))
             self._audit(user, 'retrieval.processing', group)
 
-    def _document(self, user, asset):
+    def _document(self, user, asset, context=None):
         row = self._asset(user, asset)
         origins = self.db.execute('SELECT o.*,sp.display_name AS owner_name FROM archive_origins o JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id LEFT JOIN shared_profiles sp ON sp.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0 ORDER BY o.id', (asset,)).fetchall()
         annotation = self.db.execute('SELECT * FROM review_annotations WHERE asset_id=?', (asset,)).fetchone()
@@ -397,7 +403,7 @@ class DiscoveryStore(SourceStore):
             places.update(source_places)
         day = next(iter(dates)) if len(dates) == 1 else None
         place = next(iter(places)) if len(places) == 1 else ''
-        shared = [dict(r) for r in self.db.execute('SELECT p.country,p.city FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))]
+        shared = [dict(r) for r in self.db.execute('SELECT p.country,p.city,p.latitude,p.longitude FROM shared_places p JOIN archive_origins o ON o.id=p.origin JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))]
         cities = sorted({p['city'] for p in shared} | ({place} if place else set()))
         content = ' '.join([title, *cities, *[str(p.get('original_filename') or '') for p in evidence], *[str(c.get('text') or '') for p in evidence for c in p.get('context', [])]])
         eligible = self._enabled(row['group_id'], '*') and all(self._enabled(row['group_id'], o['owner_id']) for o in origins)
@@ -405,8 +411,11 @@ class DiscoveryStore(SourceStore):
             eligible = eligible and self._enabled(row['group_id'], annotation['actor_id']) and bool(self.db.execute('SELECT 1 FROM members WHERE group_id=? AND user_id=?', (row['group_id'], annotation['actor_id'])).fetchone())
         fingerprint = hashlib.sha256(json.dumps([self.encoder.version, content, [(o['id'], o['payload']) for o in origins]], ensure_ascii=False).encode()).hexdigest()
         sources = {r[0] for r in self.db.execute('SELECT DISTINCT r.source FROM import_runs r JOIN archive_origins o ON o.run_id=r.id JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))}
+        context = context or SharingContext(self, user, row['group_id'], time.perf_counter(), DISCOVERY_SCAN_SECONDS, bounded=False)
+        provenance = [context.provenance(origin['run_id'], payload) for origin, payload in zip(origins, evidence)]
+        photo = resolve_photo(dates, provenance, annotation['place'] if annotation else '', shared)
         return dict(id=asset, title=title, date=day, place=place or '', content=content, eligible=bool(eligible), fingerprint=fingerprint, sources=sources,
-                    shared_by=sharers(evidence, (o['owner_name'] for o in origins)), cities=cities, countries={p['country'] for p in shared})
+                    shared_by=sharers(evidence, (o['owner_name'] for o in origins)), cities=cities, countries={p['country'] for p in shared}, evidence=photo)
 
     def _bounded_document(self, user, asset):
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
@@ -515,9 +524,20 @@ class DiscoveryStore(SourceStore):
     def _keyword_documents(self, user, group, person, started, processing=False, bounded_metadata=True):
         last_asset = last_origin = ''
         asset, records, shared, sources, owners, annotation = None, [], [], set(), set(), None
+        provenance = []
         asset_bytes = request_bytes = asset_origins = request_origins = 0
         fingerprints, eligible = [], True
         scan_seconds = DISCOVERY_SCAN_SECONDS if processing else KEYWORD_SCAN_SECONDS
+        def consume_context(size):
+            nonlocal request_bytes, request_origins
+            request_bytes += size
+            request_origins += 1
+            if bounded_metadata and request_bytes > KEYWORD_REQUEST_BYTES:
+                raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
+            if bounded_metadata and request_origins > 100000:
+                raise CapacityExceeded('Local discovery exceeded its metadata origin-count budget')
+        context = SharingContext(self, user, group, started, scan_seconds, bounded_metadata, consume_context)
+        hidden = hidden_event_assets(self, user, group)
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
         payload = f'CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END' if bounded_metadata else 'o.payload'
         person_match = '''EXISTS (
@@ -537,13 +557,13 @@ class DiscoveryStore(SourceStore):
                 places.update(source_places)
             day = next(iter(dates)) if len(dates) == 1 else None
             place = next(iter(places)) if len(places) == 1 else ''
-            cities = sorted({city for _, city in shared} | ({place} if place else set()))
+            cities = sorted({item['city'] for item in shared} | ({place} if place else set()))
             title = annotation['title'] or ''
             content = ' '.join([title, *cities, *[str(p.get('original_filename') or '') for p in records],
                                 *[str(c.get('text') or '') for p in records for c in p.get('context', [])]])
             result = dict(id=asset, title=title, date=day, place=place, content=content,
-                          sources=sources, shared_by=sharers(records, owners), cities=cities, countries={country for country, _ in shared},
-                          person_match=annotation['person_match'])
+                          sources=sources, shared_by=sharers(records, owners), cities=cities, countries={item['country'] for item in shared},
+                          person_match=annotation['person_match'], evidence=resolve_photo(dates, provenance, annotation['place'] or '', shared))
             if processing:
                 fingerprint = hashlib.sha256(json.dumps([self.encoder.version, content, fingerprints], ensure_ascii=False).encode()).hexdigest()
                 result.update(eligible=eligible, fingerprint=fingerprint)
@@ -554,7 +574,7 @@ class DiscoveryStore(SourceStore):
                 raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
             batch = self.db.execute(f'''SELECT a.id,o.id AS origin,{byte_length} AS payload_bytes,
                     {payload} AS payload,
-                    r.source,sp.display_name AS owner_name,n.title,n.capture_date,n.place,p.country,p.city,{person_match} AS person_match,
+                    o.run_id,r.source,sp.display_name AS owner_name,n.title,n.capture_date,n.place,p.country,p.city,p.latitude,p.longitude,{person_match} AS person_match,
                     (EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject='*' AND d.enabled<>0)
                     AND EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject=o.owner_id AND d.enabled<>0)
                     AND (n.asset_id IS NULL OR (EXISTS (SELECT 1 FROM discovery_processing d WHERE d.group_id=a.group_id AND d.subject=n.actor_id AND d.enabled<>0)
@@ -574,9 +594,12 @@ class DiscoveryStore(SourceStore):
             if not batch:
                 break
             for row in batch:
+                if row['id'] in hidden:
+                    continue
                 if asset is not None and asset != row['id']:
                     yield document()
                     records, shared, sources, owners, asset_bytes = [], [], set(), set(), 0
+                    provenance = []
                     fingerprints, eligible, asset_origins = [], True, 0
                 asset, annotation = row['id'], row
                 if bounded_metadata and row['payload_bytes'] > KEYWORD_ORIGIN_BYTES:
@@ -591,12 +614,14 @@ class DiscoveryStore(SourceStore):
                     raise CapacityExceeded('Words & filters metadata exceeds the 8 MiB per-photograph limit')
                 if bounded_metadata and request_bytes > KEYWORD_REQUEST_BYTES:
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
-                records.append(json.loads(row['payload']))
+                record = json.loads(row['payload'])
+                records.append(record)
+                provenance.append(context.provenance(row['run_id'], record))
                 if processing:
                     fingerprints.append((row['origin'], row['payload']))
                     eligible = eligible and bool(row['eligible'])
                 if row['country'] is not None:
-                    shared.append((row['country'], row['city']))
+                    shared.append({key: row[key] for key in ('country', 'city', 'latitude', 'longitude')})
                 sources.add(row['source'])
                 owners.add(row['owner_name'])
             last_asset, last_origin = batch[-1]['id'], batch[-1]['origin']
@@ -606,7 +631,7 @@ class DiscoveryStore(SourceStore):
         if bounded_metadata and time.perf_counter() - started > scan_seconds:
             raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
 
-    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, bounded_metadata=True, shared_by=''):
+    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, bounded_metadata=True, shared_by='', date_basis=''):
         self._member(user, group)
         if similar and not self.db.execute('''SELECT 1 FROM archive_assets a
                 WHERE a.id=? AND a.group_id=?
@@ -641,7 +666,7 @@ class DiscoveryStore(SourceStore):
                 continue
             if country and country.upper() not in doc['countries']:
                 continue
-            if source and source not in doc['sources'] or start and (not doc['date'] or doc['date'] < start) or end and (not doc['date'] or doc['date'] > end):
+            if source and source not in doc['sources'] or not matches_dates(doc['evidence'], date_basis, start, end, doc['date']):
                 continue
             if object_query and not objects <= model.terms(doc['content']):
                 continue
@@ -650,7 +675,7 @@ class DiscoveryStore(SourceStore):
             if offset <= total < offset + limit:
                 items.append(dict(id=doc['id'], title=doc['title'], date=doc['date'], place=doc['place'],
                                   sources=sorted(doc['sources']), shared_by=sorted(doc['shared_by']),
-                                  score=1.0, basis='keyword / filters', people=[]))
+                                  score=1.0, basis='keyword / filters', people=[], assetId=doc['id'], evidence=doc['evidence']))
             total += 1
         self._hydrate_people(user, group, items)
         return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
@@ -670,10 +695,10 @@ class DiscoveryStore(SourceStore):
                     ORDER BY p.name,p.id''' % ','.join('?' for _ in page), (group, *page)):
                 page[row['asset']]['people'].append(dict(id=row['id'], name=row['name'], is_me=row['account'] == user,
                                                        can_remove=row['actor'] == user or row['creator'] == user))
-    def search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, shared_by=''):
+    def search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, shared_by='', date_basis=''):
         for value in (query, person, place, country, object_query, start, end, source, similar, shared_by):
             text(value)
-        if mode not in ('keyword', 'semantic') or type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
+        if mode not in ('keyword', 'semantic') or date_basis not in ('', 'capture', 'shared', 'chronology') or type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError('Invalid search')
         for stamp in (start, end):
             if stamp and (len(stamp) != 10 or date.fromisoformat(stamp).isoformat() != stamp):
@@ -690,8 +715,9 @@ class DiscoveryStore(SourceStore):
                     LIMIT 1001''', (group, user)).fetchall()
                 return self._keyword_search(user, group, query, person, place, country, object_query,
                                             start, end, source, similar, offset, limit,
-                                            bounded_metadata=len(probe) > 1000, shared_by=shared_by)
-            visible = self._visible_ids(user, group)
+                                            bounded_metadata=len(probe) > 1000, shared_by=shared_by, date_basis=date_basis)
+            hidden = hidden_event_assets(self, user, group)
+            visible = [asset for asset in self._visible_ids(user, group) if asset not in hidden]
             large = len(visible) > 1000
             if len(visible) > DISCOVERY_ITEMS:
                 raise CapacityExceeded('Local related search supports up to 10,000 visible photographs')
@@ -725,8 +751,9 @@ class DiscoveryStore(SourceStore):
                     self.db.execute('DELETE FROM discovery_vectors WHERE asset=?', (row[0],))
             result = []
             source_counts, sharer_counts = Counter(), Counter()
+            context = SharingContext(self, user, group, started, DISCOVERY_SCAN_SECONDS, bounded=large)
             documents = (self._keyword_documents(user, group, person, started, processing=True) if large
-                         else (self._document(user, asset) for asset in visible))
+                         else (self._document(user, asset, context) for asset in visible))
             for doc in documents:
                 asset = doc['id']
                 if large and time.perf_counter() - started > DISCOVERY_SCAN_SECONDS:
@@ -741,7 +768,7 @@ class DiscoveryStore(SourceStore):
                     continue
                 if country and country.upper() not in doc['countries']:
                     continue
-                if source and source not in doc['sources'] or start and (not doc['date'] or doc['date'] < start) or end and (not doc['date'] or doc['date'] > end):
+                if source and source not in doc['sources'] or not matches_dates(doc['evidence'], date_basis, start, end, doc['date']):
                     continue
                 if object_query and not model.terms(object_query) <= model.terms(doc['content']):
                     continue  # Explicit text concepts, never inferred objects/faces.
@@ -763,7 +790,7 @@ class DiscoveryStore(SourceStore):
                 if score <= 0:
                     continue
                 result.append(dict(id=asset, title=doc['title'], date=doc['date'], place=doc['place'],
-                                   sources=sorted(doc['sources']), shared_by=sorted(doc['shared_by']), score=round(score, 5), basis=basis,
+                                   sources=sorted(doc['sources']), shared_by=sorted(doc['shared_by']), score=round(score, 5), basis=basis, assetId=asset, evidence=doc['evidence'],
                                    people=[] if large else [dict(id=p['id'], name=p['name'], is_me=p['is_me'], can_remove=bool(self.db.execute('SELECT 1 FROM discovery_tags t JOIN discovery_people p ON p.id=t.person WHERE t.person=? AND t.asset=? AND (t.actor=? OR p.creator=?)', (p['id'], asset, user, user)).fetchone())) for p in people if asset in p['assets']]))
             result.sort(key=lambda r: (-r['score'], r['id']))
             page = result[offset:offset + limit]
