@@ -163,19 +163,19 @@ test("buttons and arrow keys move between photos and keep ?photo=n", async ({
   await open(page, "/memory/harbour-night");
   await expect(counter(page)).toHaveText("1 / 3");
   await expect(
-    page.getByRole("button", { name: "Previous photo" }),
+    page.getByRole("button", { name: "Önceki fotoğraf" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/#\/memory\/harbour-night\?photo=1$/);
   await expect(page.locator(".viewer-caption-title")).toHaveText(
     "The ferry leaving",
   );
-  await page.getByRole("button", { name: "Previous photo" }).click();
+  await page.getByRole("button", { name: "Önceki fotoğraf" }).click();
   await expect(counter(page)).toHaveText("1 / 3");
   await expect(page).toHaveURL(/photo=0$/);
 
-  await page.getByRole("region", { name: "Memory photographs" }).focus();
+  await page.getByRole("region", { name: "Anının fotoğrafları" }).focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(counter(page)).toHaveText("3 / 3");
@@ -194,8 +194,8 @@ test("keyboard focus stays put at the ends and after Retry", async ({
   page,
 }) => {
   await open(page, "/memory/harbour-night");
-  const next = page.getByRole("button", { name: "Next photo" });
-  const previous = page.getByRole("button", { name: "Previous photo" });
+  const next = page.getByRole("button", { name: "Sonraki fotoğraf" });
+  const previous = page.getByRole("button", { name: "Önceki fotoğraf" });
   await next.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
@@ -225,11 +225,11 @@ test("the filmstrip chooses a photo on wider screens", async ({
   );
   await open(page, "/memory/harbour-night");
   await page
-    .getByRole("button", { name: "Photo 3: The table afterwards" })
+    .getByRole("button", { name: "Fotoğraf 3: The table afterwards" })
     .click();
   await expect(counter(page)).toHaveText("3 / 3");
   await expect(
-    page.getByRole("button", { name: "Photo 3: The table afterwards" }),
+    page.getByRole("button", { name: "Fotoğraf 3: The table afterwards" }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -394,7 +394,7 @@ for (const backAction of ["pill", "Escape"]) {
       sessionStorage.setItem("mazi.intro", "seen"),
     );
     await page.goto("/#/?selected=harbour-night");
-    await page.getByRole("link", { name: "Open memory", exact: true }).click();
+    await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
     await expect(page.locator(".dossier-title h2 a")).toHaveCSS(
       "text-decoration-line",
       "underline",
@@ -402,7 +402,7 @@ for (const backAction of ["pill", "Escape"]) {
     await expect(
       page
         .locator(".dossier")
-        .getByRole("link", { name: "View notes", exact: true }),
+        .getByRole("link", { name: "Notları aç", exact: true }),
     ).toBeVisible();
     await page.locator(".dossier-title h2 a").click();
     await expect(page).toHaveURL(/#\/memory\/harbour-night\?notebook=1$/);
@@ -677,10 +677,10 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".featured")).not.toContainText(
     "Date not recorded",
   );
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page.locator(".dossier")).toContainText("Shared by Ana and Ben");
   await expect(page.locator(".dossier")).toContainText(
-    "Added to archive by Uploader",
+    "Arşive ekleyen Uploader",
   );
   await expect(page.locator(".dossier")).toContainText(
     "04/05/2024, 21:00 · date order unclear",
@@ -688,7 +688,7 @@ test("source sharing is visible on cards, portal and detail without a capture da
 
   const openMemory = page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true });
+    .getByRole("link", { name: "Anıyı aç", exact: true });
   await openMemory.scrollIntoViewIfNeeded();
   if ((page.viewportSize()?.width || 1440) <= 600) {
     const action = await openMemory.boundingBox();
@@ -749,7 +749,7 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.goto("/#/?selected=harbour-night");
   await page
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .first()
     .click();
   const verify = async (selector: string) => {
@@ -803,7 +803,7 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   });
   await page
     .locator(".portal-layer")
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
   await expect(page.locator(".viewer-track .photo-frame")).toHaveClass(
     /is-loaded/,
@@ -813,7 +813,9 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   await page.screenshot({
     path: testInfo.outputPath("viewer-portrait.png"),
   });
-  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
   await expect(page.locator(".viewer-track img")).toHaveAttribute(
     "alt",
     "Synthetic panorama edges",
@@ -871,7 +873,7 @@ test("photo facts stay visible and follow the selected photo across archive view
   await expect(page.locator(".viewer-caption-meta").first()).toHaveText(
     "2 Oca 2020 · Çekildi",
   );
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.locator(".viewer-caption-meta").first()).toContainText(
     "2 Oca 2024 · Paylaşıldı · UTC",
   );

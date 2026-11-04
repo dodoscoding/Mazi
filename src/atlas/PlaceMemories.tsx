@@ -33,14 +33,10 @@ async function placeMemory(group: string, memory: string, place: string) {
   if (response.status === 401 || response.status === 403) {
     if (response.status === 401)
       window.dispatchEvent(new Event("mazi:access-lost"));
-    throw Error(
-      "This memory is no longer available to you. Refresh to check access.",
-    );
+    throw Error("Bu anıya erişilemiyor. Erişimini kontrol etmek için yenile.");
   }
   if (!response.ok)
-    throw Error(
-      "The place couldn't be saved. Check your connection and retry.",
-    );
+    throw Error("Yer kaydedilemedi. Bağlantını kontrol edip yeniden dene.");
   return (await response.json()) as PlaceResult;
 }
 
@@ -146,16 +142,15 @@ export function PlaceForm({
       setText("");
       toast.show({
         message: result.place
-          ? `${memory.shortTitle} is pinned in ${result.place}.`
-          : `Place cleared from ${memory.shortTitle}.`,
+          ? `${memory.shortTitle}: ${result.place} olarak işaretlendi.`
+          : `${memory.shortTitle}: yer temizlendi.`,
         tone: "success",
       });
       onPlaced(memory.id, result.pin);
     } catch (error) {
       setOutcome({
         kind: "error",
-        message:
-          error instanceof Error ? error.message : "The place wasn't saved.",
+        message: error instanceof Error ? error.message : "Yer kaydedilemedi.",
       });
     }
   };
@@ -168,7 +163,7 @@ export function PlaceForm({
     <form className="place-form" onSubmit={submit} aria-busy={saving}>
       <p>Tüm anı · {memory.photos.length} fotoğrafın yeri değişir.</p>
       <label className="visually-hidden" htmlFor={id}>
-        City for {memory.shortTitle}
+        {memory.shortTitle} için şehir
       </label>
       <div className="place-field">
         <input
@@ -178,7 +173,7 @@ export function PlaceForm({
           enterKeyHint="done"
           autoComplete="off"
           spellCheck={false}
-          placeholder="Type a city, e.g. Girne"
+          placeholder="Bir şehir yaz, ör. Girne"
           maxLength={200}
           value={text}
           aria-invalid={outcome.kind === "missing" || undefined}
@@ -190,13 +185,13 @@ export function PlaceForm({
           className="button button--primary"
           disabled={saving || !text.trim()}
         >
-          {saving ? "Placing…" : "Place"}
+          {saving ? "Kaydediliyor…" : "Yer ekle"}
         </button>
       </div>
       <div id={`${id}-status`} className="place-status" role="status">
         {outcome.kind === "ambiguous" && (
           <>
-            <p>Several places have that name. Which one?</p>
+            <p>Bu adda birden fazla yer var. Hangisi?</p>
             <ul className="place-candidates">
               {outcome.candidates.map((candidate) => (
                 <li key={candidate}>
@@ -217,8 +212,8 @@ export function PlaceForm({
         )}
         {outcome.kind === "missing" && (
           <p className="is-error">
-            “{outcome.text}” isn't on the map. Check the spelling or add the
-            country, e.g. “Victoria, CA”.
+            “{outcome.text}” haritada bulunamadı. Yazımı kontrol et veya ülke
+            kodunu ekle, ör. “Victoria, CA”.
           </p>
         )}
         {outcome.kind === "error" && (
@@ -232,7 +227,7 @@ export function PlaceForm({
           disabled={saving}
           onClick={() => void save("")}
         >
-          Clear {memory.place.name}
+          {memory.place.name} yerini temizle
         </button>
       )}
     </form>
@@ -271,7 +266,7 @@ export function UnplacedTray({
     <section
       className="place-tray"
       data-open={open || undefined}
-      aria-label="Unplaced memories"
+      aria-label="Yeri bilinmeyen anılar"
     >
       <button
         ref={toggle}
@@ -282,13 +277,13 @@ export function UnplacedTray({
         onClick={() => setOpen((value) => !value)}
       >
         <Icon name="pin" size={16} />
-        <span className="place-tray-title">Unplaced memories</span>
+        <span className="place-tray-title">Yeri bilinmeyen anılar</span>
         <span className="place-tray-count">{memories.length}</span>
         <Icon name={open ? "chevron-down" : "chevron-right"} size={14} />
       </button>
       <div className="place-tray-body" id={listId} hidden={!open}>
         <p className="place-tray-hint">
-          Name a city and every photo in the memory is pinned there.
+          Bir şehir seçtiğinde anıdaki bütün fotoğrafların yeri değişir.
         </p>
         <ul className="place-tray-list">
           {memories.map((memory) => {
@@ -311,7 +306,7 @@ export function UnplacedTray({
                       {[
                         shortDate(memory),
                         placeLabel(memory),
-                        plural(memory.photos.length, "photo"),
+                        plural(memory.photos.length, "fotoğraf", "fotoğraf"),
                       ]
                         .filter(Boolean)
                         .join(" · ")}

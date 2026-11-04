@@ -76,7 +76,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   expect(await page.locator(".photo-frame img").getAttribute("src")).toContain(
     "/api/",
   );
-  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await navigate(page, "Memories", "memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
@@ -102,7 +104,9 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await currentStory
     .getByRole("button", { name: "Show slideshow", exact: true })
     .click();
-  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
   await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
   for (const [label, filename] of [
     ["Download video (AVI)", "mazi-memory.avi"],
