@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync } from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   const response = await page.request.post("/api/entry", {
@@ -174,4 +177,102 @@ test("source management has its own section, focus and parent destination", asyn
   await expect(
     page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
   ).not.toBeFocused();
+});
+
+test("date bases find an imported sharing-only photo while old bookmarks retain capture", async ({
+  page,
+}, info) => {
+  const profile = await (await page.request.get("/api/session")).json();
+  const filename = `a2-sharing-${info.project.name}.jpg`;
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(11,9),(220,35,160)).save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr(sys.argv[1],p.getvalue()); z.writestr('messages/c1/messages.csv','ID,Timestamp,Contents,Attachments\\n987,2024-02-03T00:30:00+00:00,Synthetic sharing-only photo,'+sys.argv[1]+'\\n'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    filename,
+  ]);
+  const started = await page.request.post("/api/imports/start", {
+    data: {
+      group: profile.group_id,
+      source: "discord",
+      namespace: `a2-read-${info.project.name}`,
+      size: fixture.length,
+      sha256: createHash("sha256").update(fixture).digest("hex"),
+      options: {},
+    },
+  });
+  expect(started.ok()).toBe(true);
+  const { id } = await started.json();
+  try {
+    expect(
+      (
+        await page.request.post("/api/imports/chunk", {
+          data: { id, offset: 0, data: fixture.toString("base64") },
+        })
+      ).ok(),
+    ).toBe(true);
+    expect(
+      (await page.request.post("/api/imports/finish", { data: { id } })).ok(),
+    ).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (await (await page.request.get(`/api/imports/${id}`)).json()).state,
+      )
+      .toBe("INVENTORIED");
+    expect(
+      (await page.request.post("/api/imports/confirm", { data: { id } })).ok(),
+    ).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (await (await page.request.get(`/api/imports/${id}`)).json()).state,
+      )
+      .toBe("COMPLETED");
+    await page.goto(
+      `/#/search?q=${filename}&from=2024-02-03&through=2024-02-03`,
+    );
+    await expect(page.locator("#count")).toContainText("0 photographs");
+    await expect(page.locator("#date-basis")).toHaveValue("");
+    await page.locator("#date-basis").selectOption("shared");
+    await page
+      .getByRole("button", { name: "Search archive", exact: true })
+      .click();
+    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
+    await expect(page.locator("#results .disc-photo")).toContainText(
+      "3 Şub 2024 · Paylaşıldı · UTC",
+    );
+    await expect(page.locator("#results .disc-photo")).toContainText(
+      "Yer bilinmiyor",
+    );
+    await expect(page).toHaveURL(/date_basis=shared/);
+    await page.locator("#date-basis").selectOption("chronology");
+    await page
+      .getByRole("button", { name: "Search archive", exact: true })
+      .click();
+    await expect(page.locator("#count")).toContainText("1 photographs");
+    await page.reload();
+    await expect(page.locator("#date-basis")).toHaveValue("chronology");
+    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every((animation) => animation.playState !== "running"),
+    );
+    const directory = "work/poteto/photo-search-corrections/screenshots";
+    mkdirSync(directory, { recursive: true });
+    await page.locator("#results .disc-photo").screenshot({
+      path: `${directory}/${info.project.name}-sharing-result.png`,
+    });
+    await page
+      .locator(".disc-refine")
+      .screenshot({ path: `${directory}/${info.project.name}-date-basis.png` });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    expect(
+      (await page.request.post("/api/imports/withdraw", { data: { id } })).ok(),
+    ).toBe(true);
+  }
 });

@@ -8,6 +8,7 @@ import {
   suggestions,
 } from "./views";
 import "./discovery.css";
+import { photoDateLabel, photoPlaceLabel } from "../../memory/evidence";
 
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
@@ -39,6 +40,17 @@ export function mount(root, lifecycle) {
     sharedBy: restored.get("by") || "",
   };
   for (const [key, id] of urlFields) $(id).value = restored.get(key) || "";
+  const legacyDates =
+    !restored.has("date_basis") &&
+    (restored.has("from") || restored.has("through"));
+  if (legacyDates) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Çekim tarihi (eski bağlantı)";
+    $("#date-basis").append(option);
+  }
+  $("#date-basis").value =
+    restored.get("date_basis") || (legacyDates ? "" : "chronology");
   $("#clear-query").hidden = !$("#query").value;
   $(".disc-refine").open = urlFields
     .slice(1)
@@ -52,6 +64,8 @@ export function mount(root, lifecycle) {
     if (peopleEntry) params.set("section", "people");
     for (const [key, id] of urlFields)
       if ($(id).value) params.set(key, $(id).value);
+    if (($("#start").value || $("#end").value) && $("#date-basis").value)
+      params.set("date_basis", $("#date-basis").value);
     if (filters.source) params.set("source", filters.source);
     if (filters.sharedBy) params.set("by", filters.sharedBy);
     const query = params.toString();
@@ -365,6 +379,7 @@ export function mount(root, lifecycle) {
       object_query: $("#object").value,
       start: $("#start").value,
       end: $("#end").value,
+      date_basis: $("#date-basis").value,
       source: filters.source,
       shared_by: filters.sharedBy,
       similar,
@@ -380,7 +395,15 @@ export function mount(root, lifecycle) {
     photoTotal = result.total;
     completedQuery = $("#query").value;
     renderFilters(root, result.facets, filters);
-    counts = renderGroups(root, atlas, completedQuery, people, filters);
+    const dated = Boolean($("#start").value || $("#end").value);
+    $("#date-scope").hidden = !dated;
+    counts = renderGroups(
+      root,
+      dated ? [] : atlas,
+      completedQuery,
+      dated ? [] : people,
+      filters,
+    );
     renderTypes(result.total);
     $("#more").hidden = next === null;
     $("#clear-similar").hidden = !similar;
@@ -403,7 +426,9 @@ export function mount(root, lifecycle) {
         node("h3", item.title || "Untitled photograph"),
         node(
           "p",
-          [item.date || "Undated", item.place].filter(Boolean).join(" · "),
+          item.evidence
+            ? [photoDateLabel(item), photoPlaceLabel(item)].join(" · ")
+            : [item.date || "Undated", item.place].filter(Boolean).join(" · "),
         ),
         node("p", sharedByLine(item), { class: "disc-shared" }),
         node("a", "Open original", {
@@ -612,7 +637,14 @@ export function mount(root, lifecycle) {
       button.disabled = false;
     });
     if (photoTotal !== null) {
-      counts = renderGroups(root, atlas, completedQuery, people, filters);
+      const dated = Boolean($("#start").value || $("#end").value);
+      counts = renderGroups(
+        root,
+        dated ? [] : atlas,
+        completedQuery,
+        dated ? [] : people,
+        filters,
+      );
       renderTypes(photoTotal);
     }
   }
