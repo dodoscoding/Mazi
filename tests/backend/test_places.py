@@ -7,7 +7,9 @@ ISTANBUL_EXIF = {'1': 'N', '2': '(41.0, 0.0, 51.84)', '3': 'E', '4': '(28.0, 58.
 
 class GpsTests(unittest.TestCase):
     def test_pil_rational_strings_become_signed_degrees(self):
-        self.assertEqual(gps_degrees(ISTANBUL_EXIF), (41.0144, 28.975))
+        latitude, longitude = gps_degrees(ISTANBUL_EXIF)
+        self.assertAlmostEqual(latitude, 41.0144, places=10)
+        self.assertAlmostEqual(longitude, 28.975, places=10)
         latitude, longitude = gps_degrees({'1': 'S', '2': '(33.0, 52.0, 4.0)', '3': 'W\x00', '4': '(151.0, 12.0, 36.0)'})
         self.assertAlmostEqual(latitude, -33.867778, places=6)
         self.assertAlmostEqual(longitude, -151.21, places=6)
