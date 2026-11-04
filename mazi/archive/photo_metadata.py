@@ -1,6 +1,9 @@
 """Photo facts resolved from evidence already admitted by the archive reader."""
 from datetime import datetime
 from functools import lru_cache
+import re
+
+from mazi.imports.adapters import time_assertion
 
 from mazi.places import cities, fold, label, lookup
 
@@ -68,8 +71,13 @@ def place_evidence(reviewed, places):
 def resolve_photo(dates, provenance, reviewed_place, places):
     capture = date_evidence(dates, basis='capture')
     shared = []
+    seen = set()
     for item in provenance:
         assertion = item['sharedAt']
+        key = (item['sender'], item['source'], *assertion.values())
+        if key in seen or not (item['sender'] or assertion['raw'] is not None or assertion['local']):
+            continue
+        seen.add(key)
         local = assertion['local']
         utc = item['source'] == 'discord' and bool(local) and local.endswith(('+00:00', 'Z'))
         shared.append(date_evidence(
@@ -80,3 +88,38 @@ def resolve_photo(dates, provenance, reviewed_place, places):
         status='ambiguous' if any(item['status'] == 'ambiguous' for item in shared) else 'unknown')
     return dict(capture=capture, shared=shared, chronology=chronology,
                 place=place_evidence(reviewed_place, places))
+
+
+def origin_timestamps(origin):
+    return [(origin.get('shared_at_assertion') or {}).get('raw'),
+            *(message.get('shared_at') for message in origin.get('context', []))]
+
+
+def sharing_provenance(origin, date_order=None):
+    assertion = origin.get('shared_at_assertion') or {}
+    if not assertion.get('local') and assertion.get('raw') is not None:
+        resolved = time_assertion(assertion['raw'], date_order)
+        assertion = {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
+    raw = assertion.get('raw')
+    parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
+    ambiguous = (not assertion.get('local') and parts is not None and
+                 1 <= int(parts[1]) <= 12 and 1 <= int(parts[2]) <= 12 and int(parts[1]) != int(parts[2]))
+    return dict(sender=(origin.get('sender') or {}).get('label') or None,
+                source=origin.get('source_type') or 'archive', sharedAt=dict(
+                    local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
+                    precision=assertion.get('precision') or 'unknown', ambiguous=bool(ambiguous)))
+
+
+def matches_dates(evidence, basis, start, through, legacy=None):
+    if not start and not through:
+        return True
+    if not basis:
+        return bool(legacy and (not start or legacy >= start) and (not through or legacy <= through))
+    dates = evidence['shared'] if basis == 'shared' else [evidence[basis if basis == 'capture' else 'chronology']]
+    for item in dates:
+        if item['status'] in ('range', 'approximate'):
+            if item['start'] and (not through or item['start'] <= through) and (not start or item['through'] >= start):
+                return True
+        elif any((not start or day >= start) and (not through or day <= through) for day in item['days']):
+            return True
+    return False

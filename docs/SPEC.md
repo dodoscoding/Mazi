@@ -140,3 +140,23 @@ Every source section has a planning home and a delivery milestone. These rows re
 The P1 backend of the [social-space implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) lets current group members create a future or past meeting without uploading a photo. The organizer controls its title, local start and optional end, IANA timezone, place, description, cancellation and optional visible approved-memory link. Members set or clear one attendance response each. Upcoming results use server time and exclude cancelled or started plans.
 
 The backend includes bounded list/detail reads, transactional retry protection, revision conflicts, membership cleanup and authored-contribution export in SQLite and the hosted PostgreSQL schema. [The API contract](CONTRACTS.md#group-plans-and-attendance-api) defines the wire behavior. The P1 interface exposes Planlar from Grubumuz and Buluşma planla from the separate Ekle menu. Its lazy-loaded list, detail and forms work without fetching Atlas. Members can create, edit, cancel or delete their own plans and set or clear attendance. Repeated local hours require an explicit UTC offset. Social Home remains a separate implementation slice. Backend completion does not imply the five-friend findability gate or a physical-phone pilot has passed.
+
+The backend includes bounded list/detail reads, transactional retry protection, revision conflicts, membership cleanup and authored-contribution export in SQLite and the hosted PostgreSQL schema. [The API contract](CONTRACTS.md#group-plans-and-attendance-api) defines the wire behavior. Circle/Add entry points, browser forms and social Home remain pending implementation in their own slices. Backend completion does not imply the five-friend findability gate or a physical-phone pilot has passed.
+
+## Native conversations backend
+
+The C1 comments backend gives each permanent photo and fully visible approved memory its own flat conversation. A member may write separate messages, edit their own message with version checks or remove it. Creation time belongs to the server and remains unchanged when text is edited. Lists page by creation time and stable identity. Current target visibility, active authors, request replay and deletion tombstones apply consistently to text, totals and authored export.
+
+[The comment API](CONTRACTS.md#photo-and-approved-memory-comments-api) is implemented for SQLite and hosted PostgreSQL. [The privacy policy](PRIVACY.md#native-conversation-contributions) distinguishes current-ledger restoration checks from a full stale-backup recovery guarantee. Notebook recollections remain unchanged. Browser conversation and reaction controls, draft handling and social Home remain pending delivery slices.
+
+## Native reactions backend
+
+The C1 backend lets a current member set or remove a reaction from the closed set `👍`, `❤️`, `😂`, `🎉` on a visible permanent photo, approved memory or native comment. It returns current counts, the member's own state and bounded current member-name lists. Desired-state writes and retained request receipts prevent duplicate taps and delayed retries from changing a later choice.
+
+[The reaction API](CONTRACTS.md#native-reactions-api) includes a bounded, fully authorized batch read for conversation pages. SQLite and hosted storage enforce uniqueness, group relationships, departure cleanup and comment-delete cascades. Reaction tombstones suppress stale rows while the current deletion ledger is retained. Authored export participates in the existing final admission checks. Notebook recollections and imported source reactions remain unchanged. Browser reaction controls and social Home remain pending delivery slices.
+
+## Manual photo declarations backend
+
+The F1 backend adds independent human-presence, screenshot and AI-use declarations to permanent photo IDs. Old data defaults to unknown. It separates effective presence derived from permitted confirmed people from a member's own declaration, version and attribution. It does not infer labels from source names, image size or automatic recognition.
+
+[The bounded labels API](CONTRACTS.md#photo-declarations-api) supports current reads and all-or-nothing corrections of at most 50 photographs. Each changed dimension requires its expected revision. Clear and departure cleanup advance retained versions, request replay cannot restore older values, and authored export participates in the existing final admission check. SQLite and hosted schemas enforce group relationships and update discovery generations. Atlas payloads and Search predicates are not changed by this backend slice. Label badges/editors and combined filters remain frontend/F2 delivery work.

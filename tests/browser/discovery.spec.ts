@@ -186,8 +186,8 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
   await page.getByLabel("Country code").fill("NL");
   await page.getByLabel("Object or concept in text").fill("bicycle");
-  await page.getByLabel("From", { exact: true }).fill("2024-01-01");
-  await page.getByLabel("Through", { exact: true }).fill("2024-12-31");
+  await page.getByLabel("Başlangıç", { exact: true }).fill("2024-01-01");
+  await page.getByLabel("Bitiş", { exact: true }).fill("2024-12-31");
   await page.getByRole("button", { name: "Search archive" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(

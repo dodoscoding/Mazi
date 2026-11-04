@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync } from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   const response = await page.request.post("/api/entry", {
@@ -174,4 +177,190 @@ test("source management has its own section, focus and parent destination", asyn
   await expect(
     page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
   ).not.toBeFocused();
+});
+
+test("date bases find an imported sharing-only photo while old bookmarks retain capture", async ({
+  page,
+}, info) => {
+  const profile = await (await page.request.get("/api/session")).json();
+  const filename = `a2-sharing-${info.project.name}.jpg`;
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(11,9),(220,35,160)).save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr(sys.argv[1],p.getvalue()); z.writestr('messages/c1/messages.csv','ID,Timestamp,Contents,Attachments\\n987,2024-02-03T00:30:00+00:00,Synthetic sharing-only photo,'+sys.argv[1]+'\\n'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    filename,
+  ]);
+  const started = await page.request.post("/api/imports/start", {
+    data: {
+      group: profile.group_id,
+      source: "discord",
+      namespace: `a2-read-${info.project.name}`,
+      size: fixture.length,
+      sha256: createHash("sha256").update(fixture).digest("hex"),
+      options: {},
+    },
+  });
+  expect(started.ok()).toBe(true);
+  const { id } = await started.json();
+  try {
+    expect(
+      (
+        await page.request.post("/api/imports/chunk", {
+          data: { id, offset: 0, data: fixture.toString("base64") },
+        })
+      ).ok(),
+    ).toBe(true);
+    expect(
+      (await page.request.post("/api/imports/finish", { data: { id } })).ok(),
+    ).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (await (await page.request.get(`/api/imports/${id}`)).json()).state,
+      )
+      .toBe("INVENTORIED");
+    expect(
+      (await page.request.post("/api/imports/confirm", { data: { id } })).ok(),
+    ).toBe(true);
+    await expect
+      .poll(
+        async () =>
+          (await (await page.request.get(`/api/imports/${id}`)).json()).state,
+      )
+      .toBe("COMPLETED");
+    await page.goto(
+      `/#/search?q=${filename}&from=2024-02-03&through=2024-02-03`,
+    );
+    await expect(page.locator("#count")).toContainText("0 photographs");
+    await expect(page.locator("#date-basis")).toHaveValue("");
+    await page.locator("#date-basis").selectOption("shared");
+    await page
+      .getByRole("button", { name: "Search archive", exact: true })
+      .click();
+    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
+    await expect(page.locator("#results .disc-photo")).toContainText(
+      "3 Şub 2024 · Paylaşıldı · UTC",
+    );
+    await expect(page.locator("#results .disc-photo")).toContainText(
+      "Yer bilinmiyor",
+    );
+    await expect(page).toHaveURL(/date_basis=shared/);
+    await page.locator("#date-basis").selectOption("chronology");
+    await page
+      .getByRole("button", { name: "Search archive", exact: true })
+      .click();
+    await expect(page.locator("#count")).toContainText("1 photographs");
+    await page.reload();
+    await expect(page.locator("#date-basis")).toHaveValue("chronology");
+    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every((animation) => animation.playState !== "running"),
+    );
+    const directory = "work/poteto/photo-search-corrections/screenshots";
+    mkdirSync(directory, { recursive: true });
+    await page.locator("#results .disc-photo").screenshot({
+      path: `${directory}/${info.project.name}-sharing-result.png`,
+    });
+    await page
+      .locator(".disc-refine")
+      .screenshot({ path: `${directory}/${info.project.name}-date-basis.png` });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    expect(
+      (await page.request.post("/api/imports/withdraw", { data: { id } })).ok(),
+    ).toBe(true);
+  }
+});
+
+test("selected child corrections refresh facts and leave its sibling untouched", async ({
+  page,
+}, info) => {
+  const profile = await (await page.request.get("/api/session")).json();
+  const group = profile.group_id;
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${group}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { photos: unknown[] }) => item.photos.length > 1,
+  );
+  expect(memory).toBeTruthy();
+  const asset = memory.photos[0].assetId;
+  const sibling = memory.photos[1].assetId;
+  const read = async (id: string) =>
+    (
+      await page.request.get(`/api/atlas/photo?group=${group}&asset=${id}`)
+    ).json();
+  const before = await read(asset);
+  const siblingBefore = await read(sibling);
+  try {
+    await page.goto(`/#/memory/${memory.id}?photo=0`);
+    await page
+      .getByRole("button", { name: "Yeri değiştir", exact: true })
+      .click();
+    const editor = page.getByRole("form", { name: "Seçili fotoğrafı düzelt" });
+    await expect(editor.getByLabel("Yer", { exact: true })).toHaveValue(
+      before.annotation.place,
+    );
+    await editor
+      .getByLabel("Yer", { exact: true })
+      .fill("Synthetic garden beside the lake");
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "Synthetic garden beside the lake",
+    );
+    expect((await read(sibling)).annotation).toEqual(siblingBefore.annotation);
+    await page
+      .getByRole("button", { name: "Tarihi düzelt", exact: true })
+      .click();
+    await editor.getByLabel("Çekim tarihi", { exact: true }).fill("2023-05-06");
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "6 May 2023",
+    );
+    const directory = "work/poteto/photo-corrections-ui";
+    mkdirSync(directory, { recursive: true });
+    await page.locator(".detail-body").screenshot({
+      path: `${directory}/${info.project.name}-selected-photo.png`,
+    });
+    await page.goto(`/#/memory/${memory.id}?photo=1`);
+    await expect(page.locator(".viewer-caption-text")).not.toContainText(
+      "Synthetic garden",
+    );
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "2 Oca 2024",
+    );
+    expect((await read(sibling)).annotation).toEqual(siblingBefore.annotation);
+    await page.goto(`/#/memory/${memory.id}?photo=0`);
+    await page
+      .getByRole("button", { name: "Yeri değiştir", exact: true })
+      .click();
+    await expect(editor.getByLabel("Yer", { exact: true })).toHaveValue(
+      "Synthetic garden beside the lake",
+    );
+    await editor.getByRole("button", { name: "Temizle", exact: true }).click();
+    await expect
+      .poll(async () => (await read(asset)).annotation.place)
+      .toBe("");
+    await expect(page.locator(".viewer-caption-text")).not.toContainText(
+      "Synthetic garden",
+    );
+  } finally {
+    const current = await read(asset);
+    await page.request.post("/api/atlas/photo", {
+      data: {
+        group,
+        asset,
+        expected_snapshot: current.snapshot,
+        changes: {
+          capture_date: before.annotation.capture_date,
+          place: before.annotation.place,
+        },
+      },
+    });
+  }
 });

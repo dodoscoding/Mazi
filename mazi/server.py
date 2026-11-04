@@ -11,7 +11,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from .identity.core import Denied
+from .identity.core import Conflict, Denied
 from .memories.memories import MemoryStore
 from .social.server import handler_for as social_handler
 from .sources.server import worker
@@ -86,7 +86,42 @@ def handler_for(store, dist=None, drain=None):
             except (KeyError, ValueError, TypeError):
                 return self.json(400, {'error': 'Invalid request'})
 
+        def photo(self, write=False):
+            try:
+                if write:
+                    validate_origin(self.headers.get('Origin'), self.headers.get('Host', ''))
+                    if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
+                        raise ValueError('JSON required')
+                    length = int(self.headers.get('Content-Length', '0'))
+                    if not 0 < length <= 4096:
+                        raise ValueError('Invalid request size')
+                    body = json.loads(self.rfile.read(length))
+                    if not isinstance(body, dict):
+                        raise ValueError('Expected object')
+                    result = store.patch_photo(self.user(), body['group'], body['asset'], body['changes'], body['expected_snapshot'])
+                else:
+                    query = parse_qs(urlsplit(self.path).query)
+                    result = store.photo_correction(self.user(), query['group'][0], query['asset'][0])
+                    if 'place' in query:
+                        from .places import lookup, label
+                        place = query['place'][0]
+                        if len(place) > 200:
+                            raise ValueError('Invalid place')
+                        match = lookup(place)
+                        result['candidates'] = [label(city) for city in match.get('candidates', [])]
+                return self.json(200, result)
+            except Conflict as exc:
+                return self.json(409, {'error': str(exc)})
+            except ArchiveBusy:
+                return self.json(503, {'error': 'Archive is busy; retry shortly'})
+            except Denied as exc:
+                return self.json(403, {'error': str(exc)})
+            except (KeyError, ValueError, TypeError, IndexError):
+                return self.json(400, {'error': 'Invalid correction; an anniversary requires its approved date'})
+
         def do_POST(self):
+            if urlsplit(self.path).path == '/api/atlas/photo':
+                return self.photo(write=True)
             if urlsplit(self.path).path == '/api/atlas/place':
                 return self.place()
             if urlsplit(self.path).path != '/api/work':
@@ -109,6 +144,8 @@ def handler_for(store, dist=None, drain=None):
                 if not secret or not hmac.compare_digest(supplied.encode(), f'Bearer {secret}'.encode()):
                     return self.json(401, {'error': 'Unauthorized'})
                 return self.work()
+            if path == '/api/atlas/photo':
+                return self.photo()
             if path == '/api/atlas':
                 try:
                     from .atlas import atlas_view

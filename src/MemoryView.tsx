@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MouseEvent, RefObject } from "react";
 import {
   provenanceOf,
@@ -32,6 +39,8 @@ import { Arrow } from "./ui/icons";
 import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
 
+const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
+
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
 
 const sourceGlyph: Record<SourceKind, GlyphName> = {
@@ -64,6 +73,8 @@ export function MemoryView({
   navigate: Navigate;
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
+  const [editing, setEditing] = useState<"capture_date" | "place" | null>(null);
+  useEffect(() => setEditing(null), [group, memory.id, photo]);
   const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
   const reduced = useReducedMotion();
   const notebookHeading = useRef<HTMLHeadingElement>(null);
@@ -228,6 +239,40 @@ export function MemoryView({
           reduced={reduced}
           go={go}
         />
+        {!demo && memory.photos[photoIndex]?.assetId && (
+          <section
+            aria-label="Seçili fotoğraf bilgisi"
+            className="memory-tools photo-tools"
+          >
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("capture_date")}
+            >
+              Tarihi düzelt
+            </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("place")}
+            >
+              {memory.photos[photoIndex].evidence?.place.text
+                ? "Yeri değiştir"
+                : "Yer ekle"}
+            </button>
+            {editing && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoCorrection
+                  key={`${group}:${memory.photos[photoIndex].assetId}:${editing}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  field={editing}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
+          </section>
+        )}
         <div className="story-columns">
           <div className="story">
             <div className="story-chips">

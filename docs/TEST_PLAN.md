@@ -50,6 +50,12 @@ A1 extends the synthetic T08 reading journey. A reviewed photo shows its capture
 
 Run `tests/backend/test_atlas.py`, `test_atlas_place.py`, `test_atlas_projection.py` and `archive/test_chronology.py`; the chronology unit and photo-evidence DOM contracts; and the photo-facts case in `tests/memory-detail.spec.ts` on desktop and phone. Exact legacy-projection assertions remove only the two additive photo fields before their byte comparison. Dedicated assertions cover the new evidence values. The projection query-count and memory budgets remain enforced. [A1 evidence](../work/poteto/photo-evidence/VERIFICATION.md) records revisions, commands and synthetic screenshots. Physical-phone and five-friend discovery acceptance remain separate from these synthetic checks.
 
+## Local Search date-basis acceptance
+
+A2-read extends T08 with a sharing-only Discord photo. A legacy dated bookmark returns no capture match, while explicit sharing and chronology return the photo on its displayed sharing day. Cover both endpoints of the range, UTC/local midnight, any later sharing origin, conflicting capture days without invented gap matches, and ambiguous WhatsApp day order resolved only by permitted evidence in the same import/conversation. Repeat keyword and related modes and the streamed path above 1,000 photos. Keep byte, time and origin-count failures atomic. Hidden-memory children and unavailable origins cannot enter results or facets.
+
+The Search DOM contracts verify the fresh chronology default, old bookmark behavior, explicit basis changes, pagination, URL restore and per-photo text without an Atlas request. The unified browser contract imports a synthetic Discord ZIP through the real API and checks desktop/phone UI filtering and refresh. [A2 evidence](../work/poteto/photo-search-corrections/VERIFICATION.md) records commands and synthetic captures. Selected-photo correction writes and reviewed-place export acceptance belong to the following A2-write delivery.
+
 ## First design experiment
 
 D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.
@@ -118,3 +124,40 @@ Exercise nonexistent local time, repeated-time offset selection, organizer edit/
 The D17 runtime has one configured circle. A test-only fixture control changes that configured circle to exercise group replacement in the same browser; it is not a production switching API. Require the old detail link and real read/write endpoints to deny access, and clear the pending draft. [DOM contracts](../tests/dom/social-plans.test.mjs) additionally discard late read/write responses on access or profile change, keep pagination after a failed page and prove demo cannot read or write real plan data. Existing settings aliases and Discord returns remain covered by the navigation and OAuth contracts.
 
 `npm run test:app` runs both the existing integrated archive fixture and the separate social fixture in sequence. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records revisions, commands, screenshots and limits. These synthetic checks do not establish the five-friend or physical-phone acceptance gate.
+
+## C1 comments backend regression contracts
+
+The comments backend extends T01, T02, T06, T09, T11 and T14 with [domain tests](../tests/backend/social/test_comments.py), [HTTP tests](../tests/backend/social/test_comments_http.py) and [isolated hosted tests](../tests/backend/social/test_comments_postgres.py). Use permanent photo and approved-memory targets, multiple messages per author and separate conversations for a photo and its later grouping.
+
+Require author-only editing/removal, immutable creation time, stale-revision conflicts, exact retry identity and conflicting-key rejection. Page equal-timestamp comments with one row per page after membership and tombstone filtering. Hidden photos, overlapping hidden-event children, other groups and a withdrawn last source must deny list text, totals, writes, replay and authored export. An independent eligible source must preserve access after one withdrawal. Test composite target foreign keys with an author who belongs to both groups, so membership alone cannot explain the denial.
+
+Remove an author through the lower-level identity store and verify cascade cleanup and a text-free deletion ledger. Reinsert a stale row with the current ledger and require it to remain absent, including after rejoining. Copy a latest SQLite database snapshot and prove the deletion ledger survives that roundtrip. These checks do not model a complete backup from before deletion; current-ledger reconciliation remains required before restored data can serve traffic. Hosted tests use only an isolated `_test` schema and synthetic private bucket.
+
+Export only authored comments with current target access and reject metadata changes between ZIP assembly and admission. Exercise origin/session denial and plain-text JSON handling over the real HTTP adapter. The comments UI, retryable in-memory drafts, reactions, desktop/phone journey and physical pilot remain separate gates.
+
+## C1 reactions backend regression contracts
+
+The native reactions backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_reactions.py), [HTTP tests](../tests/backend/social/test_reactions_http.py) and [isolated hosted tests](../tests/backend/social/test_reactions_postgres.py).
+
+Enable the same emoji repeatedly, disable it and replay the older enable key. Require the current disabled aggregate without another write. Different content under the same key conflicts. Concurrent exact retries create one reaction. Test independent photo, approved-memory and native-comment targets. Reject notebook composite keys, unknown emoji and nonboolean desired states. Preserve imported chat evidence.
+
+Check current member names, exact counts and the fixed 50-name limit with 51 synthetic reactors. Batch reads accept at most 50 unique targets, match single-target aggregates and reject the whole read if any target is hidden or denied. Hidden photos, overlapping hidden-event children, withdrawn sources and other groups cannot expose counts or permit writes. SQL must filter active members and tombstones before aggregate projection.
+
+Remove a reactor through the identity store and verify cascade tombstones. Rejoin and reinsert a stale row while retaining the current ledger. Require it to remain absent and require an old receipt to leave it absent. A fresh action may create a new identity. Delete a native comment and verify reaction cascade; reintroducing both stale rows must still deny the target through the comment ledger. These checks require current deletion-ledger reconciliation and do not establish a future-deletion guarantee for an old full snapshot.
+
+Verify partial-index uniqueness and composite group foreign keys, hosted double-precision timestamps, private RLS/grants and target-index query plans. Export only the member's active visible reactions and reject a desired-state change between ZIP assembly and final admission. Hosted tests use only the isolated `_test` schema and synthetic private bucket. UI reaction controls, drafts, browser journeys and physical-phone acceptance remain separate gates.
+
+## Local selected-photo correction regression
+
+A2 write uses synthetic archives: `tests/backend/test_photo_corrections.py` verifies selected-child patches, unchanged sibling/title/anniversary fields, stale annotation/origin snapshots, field allowlists, hidden/cross-group access, HTTP origin checking, reviewed/free-text/cleared export projections. `tests/dom/photo-correction.test.mjs` verifies conflict draft retention and cancellation of late responses. The unified `selected child corrections` desktop/phone scenario edits date and place, changes the selected child and clears the review while checking sibling annotations. Evidence is recorded under `work/poteto/photo-corrections-ui/`; this is local regression evidence, not physical-device or friend-study acceptance.
+## F1 photo declarations backend regression contracts
+
+The manual declarations backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_labels.py), [HTTP tests](../tests/backend/social/test_labels_http.py) and [isolated hosted tests](../tests/backend/social/test_labels_postgres.py).
+
+Old photographs must read three unknown dimensions at version zero. Set independent screenshot/AI values, clear one dimension, preserve the other and reject stale expected revisions. Exact retry reads the current result without overwriting a newer clear. The same canonical bulk content may replay in another asset order. A changed payload under the same actor/group key conflicts. Run two simultaneous editors and require one successful write and one conflict.
+
+Use 50 real synthetic photo imports to prove the accepted batch limit, and reject 51, duplicates and mismatched expected fields. A mixed-access batch or stale sibling revision must leave every unaffected row unchanged. Hidden photos, hidden-event children, withdrawn sources and another group deny reads, writes and old receipt replay. No photo URL parsing supplies an identity.
+
+Confirmed person associations can derive presence but source sharers cannot. Test subject disassociation, retag prevention, suppressed name omission and the generic human-absence conflict for an existing approved tag. Removing a member through the identity store clears only that member's current declarations and advances retained versions. Reintroduce an old row after rejoining and require unknown/current revision; a fresh expected-version write may replace it. The database must reject revision rollback and cross-group actors/targets. Label, tag and suppression writes advance discovery generations.
+
+Export only authored current-version labels on currently visible photos, and reject a change between ZIP assembly and admission. Hosted tests use only an isolated `_test` schema/private synthetic bucket and verify double-precision timestamps, departure/revision parity, private RLS, runtime ledger grants and an actor index plan. Current-ledger stale-row checks do not replace historical full-backup reconciliation or production recovery acceptance. UI labels, bulk-selection controls, combined filters and physical-phone acceptance remain separate gates.

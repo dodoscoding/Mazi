@@ -158,9 +158,20 @@
               maxlength="200"
               placeholder="Bicycle"
           /></label>
-          <label>From<input id="start" type="date" /></label
-          ><label>Through<input id="end" type="date" /></label>
+          <label
+            >Tarih türü<select id="date-basis">
+              <option value="chronology">Gösterilen tarih</option>
+              <option value="capture">Çekim tarihi</option>
+              <option value="shared">Paylaşım tarihi</option>
+            </select></label
+          >
+          <label>Başlangıç<input id="start" type="date" /></label
+          ><label>Bitiş<input id="end" type="date" /></label>
         </div>
+        <p id="date-scope" hidden>
+          Tarih süzmesi fotoğrafları kapsar. Diğer sonuç türlerini görmek için
+          tarih aralığını temizle.
+        </p>
       </details>
       <div class="disc-index-tools">
         <button id="clear-similar" type="button" hidden>
