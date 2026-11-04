@@ -66,7 +66,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page.goto("/#/atlas");
   await shell(page);
   await page
-    .getByRole("button", { name: "Select Our summer", exact: true })
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
     .click();
   await openFullMemory(page);
   await expect(
@@ -330,7 +330,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
   await logoutDelivery;
   await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: `Select ${title}`, exact: true }),
+    page.getByRole("button", { name: `${title} anısını seç`, exact: true }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Hesap" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "More" })).toHaveCount(0);

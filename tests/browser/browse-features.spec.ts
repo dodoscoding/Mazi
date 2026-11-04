@@ -101,7 +101,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await expect(page.locator("#person")).toBeEnabled();
   await page.getByLabel("Ara", { exact: true }).fill("summer");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
-  const memories = page.getByRole("region", { name: "Anılar · 1" });
+  const memories = page.getByRole("region", { name: "Memories · 1" });
   await expect(memories).toBeVisible();
   const result = memories.getByRole("link", { name: /Our summer/ });
   await expect(result.locator("img").first()).toBeVisible();
