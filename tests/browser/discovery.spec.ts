@@ -237,7 +237,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
     "işleme sınırını aştığı",
   );
   await expect(page.locator("#search-recovery")).toContainText(
-    "Arama işleme sınırını aştığı için tam sonuç getirilemiyor.",
+    "Kısmi sonuç gösterilmez.",
   );
   await expect(
     page.getByRole("button", { name: "Sözcükler ve filtreleri kullan" }),

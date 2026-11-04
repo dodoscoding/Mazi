@@ -109,9 +109,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
     "aria-pressed",
     "true",
   );
-  await expect(
-    page.getByRole("link", { name: "Ask this" }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ask this" })).toBeVisible();
 
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara" }).click();

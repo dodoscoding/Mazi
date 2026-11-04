@@ -198,7 +198,7 @@ test("a denied Home read removes scoped content without ending a valid session",
       json: { error: "Access withdrawn" },
     }),
   );
-  await page.evaluate(() => window.dispatchEvent(new Event("mazi:archive")));
+  await page.evaluate(() => window.dispatchEvent(new Event("mazi:archive-changed")));
   await expect(
     page.getByText("Bu grup şu anda açılamıyor. Erişimin değişmiş olabilir.", {
       exact: true,
