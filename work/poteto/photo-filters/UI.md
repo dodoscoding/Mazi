@@ -2,7 +2,7 @@
 
 ## Scope and revision
 
-The reviewed authoritative API was merged separately as PR131/main `27b51d2`; this branch includes it through merge `43dbe7a`. UI commits start with `2177da8`/`3c6c706`, followed by URL/copy/recovery fixes. Current main's later H1 API/ordering/Atlas-copy work is not duplicated here. Parent owns the accepted H1 lazy-route merge and independent UI review.
+The reviewed authoritative API was merged separately as PR131/main `27b51d2`; this branch includes it through merge `43dbe7a`. UI commits start with `2177da8`/`3c6c706`, followed by URL/copy/recovery fixes. Final pre-review merge `638cbbe` incorporates main `2b4b09d` (reviewed H1 API, JSON projection, label boundary, export ordering and Turkish Atlas/Viewer/Timeline); root's shared translated selectors are preserved. That work is not reimplemented here. Parent owns the accepted H1 lazy-route merge and independent UI review.
 
 Shared controls use current server facts for OR within a dimension and AND across dimensions. Gallery renders only matched child IDs while preserving original photo indices. Search preserves mode, pagination filters and complete bookmarks. Both show an explicit full-visible counter denominator and a separate filtered total. Photo-only predicates exclude unsupported context types. Reset, empty, hidden-refresh and retry states retain honest scope; filenames never classify content. Existing F1 atomic-edit/lazy-selection cancellation behavior remains intact.
 
@@ -29,3 +29,5 @@ Current pre-H1 build: Globe **242.9/256 KiB**, entry **152.5/150 KiB (fails)**, 
 [Desktop Search](desktop-search-filtered.png), [phone Search](phone-search-filtered.png), [desktop Gallery](desktop-gallery-filtered.png), [phone Gallery](phone-gallery-filtered.png). The phone result was visually inspected; the synthetic matched child is retained and no sibling appears. The final combined run can refresh these shots after the lazy-route integration.
 
 Physical-phone and five-friend checks remain external gates. Hosted filter read behavior reuses existing schema/transactions; no hosted suite was rerun for the UI. Independent functional review may begin now; entry-budget acceptance must wait for the stated dependency.
+
+After that final main merge, build/typecheck succeeded and the focused Gallery/filter/evidence DOM rerun passed 11 tests. Exact budgets remain 152.5/150 entry (pending H1 lazy dependency), 408.5/420 total, 37.0/40 CSS and 242.9/256 Globe. Full branch whitespace passed.
