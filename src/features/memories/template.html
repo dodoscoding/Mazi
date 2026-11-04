@@ -14,29 +14,29 @@
     >
       <span class="mem-sheet-handle" aria-hidden="true"></span>
       <div class="mem-filters-head">
-        <h2 id="filters-title" class="mem-filters-title">Filters</h2>
+        <h2 id="filters-title" class="mem-filters-title">Filtreler</h2>
         <button id="filters-reset" type="button" class="mem-text-button">
-          Reset
+          Temizle
         </button>
       </div>
       <fieldset class="mem-fieldset">
-        <legend>Year</legend>
+        <legend>Yıl</legend>
         <div id="filter-years" class="mem-chips"></div>
       </fieldset>
       <fieldset id="place-filter" class="mem-fieldset">
-        <legend>Place</legend>
+        <legend>Yer</legend>
         <div id="filter-places" class="mem-checks"></div>
       </fieldset>
       <fieldset id="person-filter" class="mem-fieldset">
-        <legend>Person</legend>
+        <legend>Paylaşan</legend>
         <div id="filter-people" class="mem-chips mem-people"></div>
       </fieldset>
       <fieldset id="source-filter" class="mem-fieldset">
-        <legend>Source</legend>
+        <legend>Kaynak</legend>
         <div id="filter-sources" class="mem-checks"></div>
       </fieldset>
       <div class="mem-switch-row">
-        <span id="uncertain-label">Only uncertain dates</span>
+        <span id="uncertain-label">Yalnız belirsiz tarihler</span>
         <button
           id="filter-uncertain"
           type="button"
@@ -50,34 +50,34 @@
       </div>
       <div class="mem-sheet-foot">
         <button id="filters-apply" type="button" class="mem-apply">
-          Show photos
+          Fotoğrafları göster
         </button>
       </div>
     </aside>
     <div class="mem-main">
       <header class="mem-head">
         <div class="mem-heading">
-          <h1 class="mem-title">Memories</h1>
+          <h1 class="mem-title">Fotoğraflar</h1>
           <p id="grid-summary" class="mem-summary"></p>
         </div>
         <div class="mem-controls">
-          <label class="mem-group">Group<select id="groups"></select></label>
+          <label class="mem-group">Grup<select id="groups"></select></label>
           <div
             id="grid-view"
             class="br-segmented"
             role="group"
-            aria-label="View"
+            aria-label="Görünüm"
           >
             <button type="button" aria-pressed="true" data-view="moment">
-              By moment
+              Anılara göre
             </button>
             <button type="button" aria-pressed="false" data-view="all">
-              All photos
+              Tüm fotoğraflar
             </button>
           </div>
           <button id="grid-order" type="button" class="mem-pill">
-            <span class="visually-hidden">Order: </span
-            ><span id="grid-order-label">Newest first</span>
+            <span class="visually-hidden">Sıra: </span
+            ><span id="grid-order-label">Önce en yeni</span>
           </button>
           <button
             id="filters-open"
@@ -97,8 +97,8 @@
               aria-hidden="true"
             >
               <path d="M4 6h16M7 12h10M10 18h4" /></svg
-            ><span class="mem-wide-label">More filters</span
-            ><span class="mem-narrow-label">Filters</span
+            ><span class="mem-wide-label">Diğer filtreler</span
+            ><span class="mem-narrow-label">Filtreler</span
             ><span id="filters-count"></span>
           </button>
         </div>
@@ -107,13 +107,13 @@
         id="year-chips"
         class="mem-chips mem-year-row"
         role="group"
-        aria-label="Years"
+        aria-label="Yıllar"
       ></div>
       <div
         id="active-filters"
         class="mem-active"
         role="group"
-        aria-label="Active filters"
+        aria-label="Etkin filtreler"
       ></div>
       <div id="grid" class="mem-grid"></div>
     </div>

@@ -82,7 +82,7 @@ export function renderFilters(root, facets = noFacets, filters) {
     filters.sharedBy,
   );
   $("source-filter").replaceChildren(
-    ...[["", "All"], ...sources.map((code) => [code, sourceLabel(code)])].map(
+    ...[["", "Tümü"], ...sources.map((code) => [code, sourceLabel(code)])].map(
       ([code, label]) => {
         const button = node("button", label);
         button.type = "button";
@@ -94,7 +94,7 @@ export function renderFilters(root, facets = noFacets, filters) {
   );
   const select = $("shared-by");
   select.replaceChildren(
-    ...[["", "Anyone"], ...names.map((name) => [name, name])].map(
+    ...[["", "Herkes"], ...names.map((name) => [name, name])].map(
       ([value, label]) => {
         const option = node("option", label);
         option.value = value;
@@ -108,7 +108,7 @@ export function renderFilters(root, facets = noFacets, filters) {
 
 export function sharedByLine(item) {
   return [
-    item.shared_by?.length ? `Shared by ${item.shared_by.join(", ")}` : "",
+    item.shared_by?.length ? `Paylaşan: ${item.shared_by.join(", ")}` : "",
     (item.sources || []).map(sourceLabel).join(", "),
   ]
     .filter(Boolean)

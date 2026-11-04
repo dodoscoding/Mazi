@@ -1,3 +1,4 @@
+import { createPhotoFilters } from "../photoFilters";
 import { labelBadges } from "../../memory/labels";
 import {
   promptSkeleton,
@@ -41,10 +42,38 @@ export function mount(root, lifecycle) {
   linkedPerson.hidden = !personTarget;
   linkedPerson.onclick = () => {
     personTarget = "";
+    photoFilters.set("person", []);
     linkedPerson.hidden = true;
     run(() => search());
   };
   $("#search-form").append(linkedPerson);
+  const photoFilters = createPhotoFilters(
+    $(".disc-refine"),
+    restored.toString(),
+    () => {
+      personTarget =
+        photoFilters.apply(new URLSearchParams()).get("person") || "";
+      linkedPerson.hidden = !personTarget;
+      run(() => search());
+    },
+  );
+  const resetFilters = document.createElement("button");
+  resetFilters.type = "button";
+  resetFilters.textContent = "Filtreleri temizle";
+  resetFilters.onclick = () => {
+    photoFilters.reset(false);
+    personTarget = "";
+    linkedPerson.hidden = true;
+    filters.source = filters.sharedBy = "";
+    for (const id of ["#place", "#country", "#object", "#start", "#end"])
+      $(id).value = "";
+    $("#person").value = "";
+    $("#date-basis").value = "chronology";
+    $("#mode").value = "keyword";
+    similar = "";
+    run(() => search());
+  };
+  $(".disc-refine").append(resetFilters);
   const peopleEntry = restored.get("section") === "people";
   let entryFocused = false;
   const filters = {
@@ -67,6 +96,7 @@ export function mount(root, lifecycle) {
   $(".disc-refine").open = urlFields
     .slice(1)
     .some(([key]) => restored.get(key));
+  $("#mode").value = restored.get("mode") || "keyword";
   let disposed = false;
   lifecycle.onDispose(() => (disposed = true));
   function rememberSearch() {
@@ -81,6 +111,9 @@ export function mount(root, lifecycle) {
       params.set("date_basis", $("#date-basis").value);
     if (filters.source) params.set("source", filters.source);
     if (filters.sharedBy) params.set("by", filters.sharedBy);
+    photoFilters.apply(params);
+    if (personTarget) params.set("person", personTarget);
+    if ($("#mode").value !== "keyword") params.set("mode", $("#mode").value);
     const query = params.toString();
     const url = path + (query ? `?${query}` : "");
     window.history.replaceState(
@@ -95,8 +128,8 @@ export function mount(root, lifecycle) {
     resultType = "all",
     counts = null;
   if (view === "search") {
-    $("#discovery-title").textContent = "Search";
-    $("#search-title").textContent = "Search the archive";
+    $("#discovery-title").textContent = "Ara";
+    $("#search-title").textContent = "Arşivde ara";
     $("#prompts").hidden = true;
     $("#discover-sub").hidden = true;
   } else promptSkeleton(root);
@@ -137,7 +170,7 @@ export function mount(root, lifecycle) {
       $("#context-choice").hidden = false;
       $("#include-context").disabled = false;
       $("#context-status").textContent =
-        "Search photographs now. Include other categories and People when you need them.";
+        "Fotoğrafları arayın. İhtiyaç duyduğunuzda diğer sonuç türlerini ekleyin.";
       $("#person").disabled = true;
       $("#load-people").hidden = false;
       $("#load-people").disabled = false;
@@ -232,7 +265,7 @@ export function mount(root, lifecycle) {
       });
     return button;
   }
-  function options(id, entries, placeholder = "Choose a person") {
+  function options(id, entries, placeholder = "Kişi seçin") {
     const select = $(id),
       old = select.value;
     select.replaceChildren(
@@ -268,8 +301,7 @@ export function mount(root, lifecycle) {
   }
   function renderTypes(photos) {
     if (view === "search" && !contextReady) {
-      $("#result-total").textContent =
-        `${photos} ${photos === 1 ? "photograph" : "photographs"}`;
+      $("#result-total").textContent = `${photos} fotoğraf`;
       $("#result-types").hidden = true;
       $("#search-none").hidden = true;
       for (const id of [
@@ -287,12 +319,12 @@ export function mount(root, lifecycle) {
     const total =
       counts.memories + counts.chats + counts.places + counts.people + photos;
     const types = [
-      ["all", "All", total],
-      ["memories", "Memories", counts.memories],
-      ["photos", "Photographs", photos],
-      ["places", "Places", counts.places],
-      ["people", "People", counts.people],
-      ["chats", "Chats", counts.chats],
+      ["all", "Tümü", total],
+      ["memories", "Anılar", counts.memories],
+      ["photos", "Fotoğraflar", photos],
+      ["places", "Yerler", counts.places],
+      ["people", "Kişiler", counts.people],
+      ["chats", "Sohbetler", counts.chats],
     ];
     $("#result-types").replaceChildren(
       ...types.map(([type, label, count]) => {
@@ -307,14 +339,13 @@ export function mount(root, lifecycle) {
       }),
     );
     $("#result-types").hidden = !counts.term;
-    $("#result-total").textContent = counts.term
-      ? `${total} ${total === 1 ? "result" : "results"}`
-      : "";
+    $("#result-total").textContent = counts.term ? `${total} sonuç` : "";
     const none = Boolean(counts.term) && total === 0;
     $("#search-none").hidden = !none;
     $("#search-groups").hidden = none;
     if (none) {
-      $("#none-title").textContent = `Nothing for “${completedQuery.trim()}”`;
+      $("#none-title").textContent =
+        `“${completedQuery.trim()}” için sonuç yok`;
       $("#none-try").replaceChildren(
         ...suggestions(atlas).map((word) => {
           const button = node("button", word, {
@@ -346,7 +377,7 @@ export function mount(root, lifecycle) {
     $("#search-recovery").hidden = true;
     $("#results").replaceChildren();
     $("#more").hidden = true;
-    $("#count").textContent = "Searching…";
+    $("#count").textContent = "Aranıyor…";
     if (!offset) {
       $("#search-loading").replaceChildren(...skeletonRows());
       $("#search-loading").hidden = false;
@@ -360,7 +391,7 @@ export function mount(root, lifecycle) {
     } catch (error) {
       if (revision !== generation) return;
       next = null;
-      $("#count").textContent = "Search unavailable.";
+      $("#count").textContent = "Arama kullanılamıyor.";
       $("#result-total").textContent = "";
       $("#result-types").hidden = true;
       $("#search-groups").hidden = true;
@@ -370,8 +401,8 @@ export function mount(root, lifecycle) {
       );
       $("#search-recovery-message").textContent =
         mode === "semantic"
-          ? "Related search supports up to 10,000 visible photographs within metadata and processing limits. Try Words & filters for this search."
-          : "Complete results are unavailable because this search exceeded its metadata-work budget.";
+          ? "İlişkili arama, işleme sınırları içinde en fazla 10.000 görünür fotoğrafı destekler. Sözcükler ve filtreleri deneyin."
+          : "Arama işleme sınırını aştığı için tam sonuç getirilemiyor.";
       $("#use-keyword").hidden = mode !== "semantic";
       throw error;
     } finally {
@@ -398,17 +429,22 @@ export function mount(root, lifecycle) {
       similar,
       offset: String(offset),
     });
+    photoFilters.apply(query);
+    if (!query.get("person"))
+      query.set("person", personTarget || $("#person").value);
     const result = await api("/api/discovery/search?" + query);
     if (revision !== generation) return;
     next = result.next_offset;
     if (result.unindexed)
       $("#index-progress").textContent =
         `${result.unindexed} eligible photographs need indexing; these use words and filters until the index is built.`;
-    $("#count").textContent = `${result.total} photographs · ${result.mode}`;
+    $("#count").textContent =
+      `${result.total} fotoğraf · ${$("#mode").value === "semantic" ? "İlişkili arama" : "Sözcükler ve filtreler"}`;
+    photoFilters.update(result.photo_facets);
     photoTotal = result.total;
     completedQuery = $("#query").value;
     renderFilters(root, result.facets, filters);
-    const dated = Boolean($("#start").value || $("#end").value);
+    const dated = photoScope();
     $("#date-scope").hidden = !dated;
     counts = renderGroups(
       root,
@@ -424,7 +460,7 @@ export function mount(root, lifecycle) {
       "#nonmember-asset",
       result.items.map((item) => ({
         id: item.id,
-        name: item.title || "Untitled photograph",
+        name: item.title || "Başlıksız fotoğraf",
       })),
       "Choose a photograph",
     );
@@ -433,10 +469,10 @@ export function mount(root, lifecycle) {
       card.append(
         node("img", undefined, {
           src: "/api/archive/" + encodeURIComponent(item.id) + "/preview",
-          alt: item.title || "Archive photograph",
+          alt: item.title || "Arşiv fotoğrafı",
           loading: "lazy",
         }),
-        node("h3", item.title || "Untitled photograph"),
+        node("h3", item.title || "Başlıksız fotoğraf"),
         node(
           "p",
           item.evidence
@@ -444,7 +480,7 @@ export function mount(root, lifecycle) {
             : [item.date || "Undated", item.place].filter(Boolean).join(" · "),
         ),
         node("p", sharedByLine(item), { class: "disc-shared" }),
-        node("a", "Open original", {
+        node("a", "Aslını aç", {
           href: "/api/archive/" + encodeURIComponent(item.id) + "/original",
           target: "_blank",
           rel: "noopener",
@@ -473,7 +509,7 @@ export function mount(root, lifecycle) {
         "aria-label": "Person to tag",
       });
       select.append(
-        node("option", "Choose a person", { value: "" }),
+        node("option", "Kişi seçin", { value: "" }),
         ...people.map((p) => node("option", p.name, { value: p.id })),
       );
       select.disabled = view === "search" && !contextReady;
@@ -498,7 +534,7 @@ export function mount(root, lifecycle) {
       if ($("#mode").value === "semantic" && groupEnabled)
         card.append(
           action(
-            learned ? "Find similar photographs" : "Find similar colors",
+            learned ? "Benzer fotoğrafları bul" : "Benzer renkleri bul",
             async () => {
               similar = item.id;
               await search();
@@ -511,7 +547,7 @@ export function mount(root, lifecycle) {
       $("#results").append(
         node(
           "p",
-          "No matching photographs. Try fewer filters or a different word.",
+          "Eşleşen fotoğraf yok. Filtreleri azaltın veya başka bir sözcük deneyin.",
         ),
       );
   }
@@ -571,7 +607,7 @@ export function mount(root, lifecycle) {
     options(
       "#person",
       people.filter((p) => p.count),
-      "Anyone",
+      "Herkes",
     );
     options(
       "#identity-person",
@@ -597,7 +633,7 @@ export function mount(root, lifecycle) {
     for (const item of state.hidden)
       $("#hidden-items").append(
         action(
-          `Restore hidden photograph: ${item.title || "Untitled photograph"}`,
+          `Restore hidden photograph: ${item.title || "Başlıksız fotoğraf"}`,
           () => mutate("hide", { asset: item.id, enabled: false }),
         ),
       );
@@ -639,7 +675,7 @@ export function mount(root, lifecycle) {
     for (const select of root.querySelectorAll(".disc-tag select")) {
       const selected = select.value;
       select.replaceChildren(
-        node("option", "Choose a person", { value: "" }),
+        node("option", "Kişi seçin", { value: "" }),
         ...people.map((person) =>
           node("option", person.name, { value: person.id }),
         ),
@@ -652,7 +688,7 @@ export function mount(root, lifecycle) {
       button.disabled = false;
     });
     if (photoTotal !== null) {
-      const dated = Boolean($("#start").value || $("#end").value);
+      const dated = photoScope();
       counts = renderGroups(
         root,
         dated ? [] : atlas,
@@ -663,7 +699,26 @@ export function mount(root, lifecycle) {
       renderTypes(photoTotal);
     }
   }
+  function photoScope() {
+    return Boolean(
+      $("#start").value ||
+      $("#end").value ||
+      photoFilters.active() ||
+      personTarget ||
+      filters.source ||
+      filters.sharedBy ||
+      $("#place").value ||
+      $("#country").value ||
+      $("#object").value ||
+      $("#mode").value !== "keyword",
+    );
+  }
   async function loadContext() {
+    if (photoScope()) {
+      $("#context-status").textContent =
+        "Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır. Diğer sonuç türleri kapsam dışında.";
+      return;
+    }
     if (contextLoading || contextReady) return;
     contextWanted = true;
     contextLoading = true;
@@ -672,7 +727,7 @@ export function mount(root, lifecycle) {
     $("#include-context").disabled = true;
     $("#load-people").disabled = true;
     $("#context-status").textContent =
-      "Loading memories, chats, places and people…";
+      "Anılar, sohbetler, yerler ve kişiler yükleniyor…";
     try {
       await hydrateContext(revision, currentGroup);
       if (revision !== contextRevision || currentGroup !== group) return;
@@ -754,6 +809,7 @@ export function mount(root, lifecycle) {
       similar = "";
       filters.source = filters.sharedBy = "";
       personTarget = "";
+      photoFilters.reset(false);
       linkedPerson.hidden = true;
       await refresh();
     });
