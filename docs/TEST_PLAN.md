@@ -117,3 +117,15 @@ Require author-only editing/removal, immutable creation time, stale-revision con
 Remove an author through the lower-level identity store and verify cascade cleanup and a text-free deletion ledger. Reinsert a stale row with the current ledger and require it to remain absent, including after rejoining. Copy a latest SQLite database snapshot and prove the deletion ledger survives that roundtrip. These checks do not model a complete backup from before deletion; current-ledger reconciliation remains required before restored data can serve traffic. Hosted tests use only an isolated `_test` schema and synthetic private bucket.
 
 Export only authored comments with current target access and reject metadata changes between ZIP assembly and admission. Exercise origin/session denial and plain-text JSON handling over the real HTTP adapter. The comments UI, retryable in-memory drafts, reactions, desktop/phone journey and physical pilot remain separate gates.
+
+## C1 reactions backend regression contracts
+
+The native reactions backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_reactions.py), [HTTP tests](../tests/backend/social/test_reactions_http.py) and [isolated hosted tests](../tests/backend/social/test_reactions_postgres.py).
+
+Enable the same emoji repeatedly, disable it and replay the older enable key. Require the current disabled aggregate without another write. Different content under the same key conflicts. Concurrent exact retries create one reaction. Test independent photo, approved-memory and native-comment targets. Reject notebook composite keys, unknown emoji and nonboolean desired states. Preserve imported chat evidence.
+
+Check current member names, exact counts and the fixed 50-name limit with 51 synthetic reactors. Batch reads accept at most 50 unique targets, match single-target aggregates and reject the whole read if any target is hidden or denied. Hidden photos, overlapping hidden-event children, withdrawn sources and other groups cannot expose counts or permit writes. SQL must filter active members and tombstones before aggregate projection.
+
+Remove a reactor through the identity store and verify cascade tombstones. Rejoin and reinsert a stale row while retaining the current ledger. Require it to remain absent and require an old receipt to leave it absent. A fresh action may create a new identity. Delete a native comment and verify reaction cascade; reintroducing both stale rows must still deny the target through the comment ledger. These checks require current deletion-ledger reconciliation and do not establish a future-deletion guarantee for an old full snapshot.
+
+Verify partial-index uniqueness and composite group foreign keys, hosted double-precision timestamps, private RLS/grants and target-index query plans. Export only the member's active visible reactions and reject a desired-state change between ZIP assembly and final admission. Hosted tests use only the isolated `_test` schema and synthetic private bucket. UI reaction controls, drafts, browser journeys and physical-phone acceptance remain separate gates.
