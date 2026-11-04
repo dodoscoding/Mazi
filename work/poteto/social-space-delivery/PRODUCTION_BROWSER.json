@@ -1,0 +1,36 @@
+{
+  "time": "2026-11-04T15:39:16.792Z",
+  "base": "https://mazi-three.vercel.app",
+  "phase": "PRODUCTION",
+  "scope": "Anonymous application entry; platform authentication only for staged URL. No profiles or archive data written.",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "application_login_visible": true,
+      "private_shell_visible": false
+    },
+    {
+      "path": "/explore",
+      "status": 200,
+      "application_login_visible": true,
+      "private_shell_visible": false
+    },
+    {
+      "path": "/circle",
+      "status": 200,
+      "application_login_visible": true,
+      "private_shell_visible": false
+    },
+    {
+      "path": "/memory/release-probe?photo=1",
+      "status": 200,
+      "application_login_visible": true,
+      "private_shell_visible": false
+    }
+  ],
+  "phone_width": 320,
+  "page_errors": [],
+  "application_write_requests": [],
+  "result": "PASS"
+}

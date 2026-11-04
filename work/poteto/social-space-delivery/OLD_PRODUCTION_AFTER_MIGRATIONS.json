@@ -1,0 +1,9 @@
+{
+  "time": "2026-11-04T15:30:54.582174+00:00",
+  "deployment": "dpl_2YFAMpbmmpbdmmqFE2Aci6BWGemX",
+  "status": 200,
+  "health": {
+    "status": "ok"
+  },
+  "phase": "old production after additive migrations, before promotion"
+}
