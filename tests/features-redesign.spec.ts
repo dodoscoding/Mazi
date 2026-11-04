@@ -367,7 +367,13 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator('[data-photo-filter^="person:"]')).toBeEnabled();
+  const personFacets = page.locator('[data-photo-filter^="person:"]');
+  await expect(personFacets.first()).toBeVisible();
+  expect(
+    await personFacets.evaluateAll((inputs) =>
+      inputs.every((input) => !(input as HTMLInputElement).disabled),
+    ),
+  ).toBe(true);
   await expect(page.locator(".photo-filters")).toContainText(
     `Sayaçların paydası: görünür ${snapshot.total} fotoğrafın tamamı.`,
   );
