@@ -32,6 +32,7 @@ export function createGallery(root, lifecycle, api) {
     run = 0,
     opener = null;
   let matched = new Set(),
+    matching = false,
     matchRun = 0,
     facets = null;
   const searchText =
@@ -165,6 +166,12 @@ export function createGallery(root, lifecycle, api) {
     const generation = ++matchRun,
       current = run;
     closeEditor();
+    matching = true;
+    matched.clear();
+    loading();
+    $("grid-summary").textContent = "Eşleşmeler aranıyor…";
+    $("filters-apply").textContent = "Eşleşmeler aranıyor…";
+    update();
     const params = parameters();
     params.set("group", galleryGroup);
     if (params.has("q")) {
@@ -183,6 +190,7 @@ export function createGallery(root, lifecycle, api) {
     try {
       const result = await api("/api/discovery/matches?" + params);
       if (generation !== matchRun || current !== run) return;
+      matching = false;
       matched = new Set(result.asset_ids);
       facets = result;
       photoFilters.update(result.photo_facets);
@@ -191,9 +199,23 @@ export function createGallery(root, lifecycle, api) {
       update();
     } catch (error) {
       if (generation === matchRun && current === run) {
+        matching = false;
         matched.clear();
+        facets = null;
+        photoFilters.update({});
+        $("grid-summary").textContent = "Eşleşmeler yüklenemedi.";
+        $("filters-apply").textContent = "Filtreleri uygula";
+        const retry = node("button", "Yeniden dene", "br-chip");
+        retry.type = "button";
+        retry.onclick = () => void refreshMatches();
         $("grid").replaceChildren(
-          node("p", "Filtreler yüklenemedi: " + error.message),
+          node(
+            "p",
+            error.code === "capacity_exceeded"
+              ? "İşleme sınırı aşıldı. Kısmi sonuç gösterilmez; filtreleri gözden geçirin."
+              : "Filtreler yüklenemedi. Seçiminiz korundu; yeniden deneyin.",
+          ),
+          retry,
         );
       }
     }
@@ -414,7 +436,8 @@ export function createGallery(root, lifecycle, api) {
         return button;
       }),
     );
-    $("filters-count").textContent = labels.length ? ` · ${labels.length}` : "";
+    const count = labels.length + photoFilters.count();
+    $("filters-count").textContent = count ? ` · ${count}` : "";
   }
   function tile(memory, photo, index, position) {
     const link = node("a", undefined, "mem-tile");
@@ -561,6 +584,11 @@ export function createGallery(root, lifecycle, api) {
     $("grid-order-label").textContent = newest
       ? "Önce en yeni"
       : "Önce en eski";
+    renderActive();
+    if (matching) {
+      remember();
+      return;
+    }
     const shown = sorted(
       memories.filter((memory) =>
         memory.photos.some((photo) => matched.has(photo.assetId)),
@@ -570,7 +598,6 @@ export function createGallery(root, lifecycle, api) {
       `${facets?.total || 0} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
     $("filters-apply").textContent = `${facets?.total || 0} fotoğrafı göster`;
     remember();
-    renderActive();
     renderGrid(shown);
   }
   function loading() {

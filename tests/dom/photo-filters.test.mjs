@@ -175,5 +175,8 @@ test("pending and failed Gallery matches clear stale thumbnails and totals while
   await until(() => root.querySelector("#grid button"), "retry action");
   assert.doesNotMatch(root.querySelector("#grid-summary").textContent, /[0-9]/);
   assert.equal(root.querySelectorAll(".mem-tile").length, 0);
-  assert.equal(field.querySelector('input[value="yes"]').checked, true);
+  const current = [...root.querySelectorAll(".photo-filters fieldset")].find(
+    (node) => node.querySelector("legend").textContent === "Ekran görüntüsü",
+  );
+  assert.equal(current.querySelector('input[value="yes"]').checked, true);
 });

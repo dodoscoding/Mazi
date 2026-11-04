@@ -77,8 +77,10 @@ export function createPhotoFilters(host, search, changed, archive = false) {
         : Object.keys(names).map((value) => ({
             value,
             count:
-              (facets[key] || []).find((item) => item.value === value)?.count ||
-              0,
+              facets.denominator === undefined
+                ? null
+                : (facets[key] || []).find((item) => item.value === value)
+                    ?.count || 0,
           }));
       for (const option of options) {
         const label = document.createElement("label"),
@@ -96,7 +98,7 @@ export function createPhotoFilters(host, search, changed, archive = false) {
         };
         label.append(
           input,
-          ` ${option.name || names[option.value] || option.value} (${option.count})`,
+          ` ${option.name || names[option.value] || option.value} (${option.count ?? "—"})`,
         );
         field.append(label);
       }
@@ -137,6 +139,12 @@ export function createPhotoFilters(host, search, changed, archive = false) {
     update(value) {
       facets = value || {};
       render();
+    },
+    count() {
+      return Object.values(state).reduce(
+        (total, values) => total + values.size,
+        0,
+      );
     },
     active() {
       return Object.values(state).some((values) => values.size);

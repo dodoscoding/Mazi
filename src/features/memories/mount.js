@@ -46,6 +46,7 @@ export function mount(root, lifecycle) {
     if (!response.ok) {
       const error = Error(data.error || "Request failed");
       error.status = response.status;
+      error.code = data.code;
       throw error;
     }
     return data;
