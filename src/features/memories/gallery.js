@@ -589,7 +589,7 @@ export function createGallery(root, lifecycle, api) {
       ? "Önce en yeni"
       : "Önce en eski";
     renderActive();
-    if (matching) {
+    if (matching || !facets) {
       remember();
       return;
     }
