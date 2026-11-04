@@ -105,3 +105,11 @@
   border: 1px solid var(--line);
   border-radius: 10px;
 }
+.confirmed-comment {
+  margin-block: 16px;
+  padding: 12px;
+  border-inline-start: 2px solid var(--accent-terminator);
+}
+.confirmed-comment blockquote {
+  margin: 8px 0 0;
+}

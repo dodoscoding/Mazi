@@ -421,3 +421,121 @@ test("configured-circle replacement clears the draft and denies old-target reads
     ).status(),
   ).toBe(403);
 });
+
+for (const replay of [false, true])
+  test(`created comments beyond the current page are confirmed immediately${replay ? " after an exact replay" : ""}`, async ({
+    page,
+  }) => {
+    const fixture = await enter(page);
+    const asset = await selected(page, fixture);
+    for (let index = 0; index < 20; index++)
+      await create(
+        page,
+        fixture,
+        { kind: "photo", id: asset },
+        `Dolu sayfa ${index}`,
+      );
+    const batches: number[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.pathname === "/api/social/reactions/batch")
+        batches.push(JSON.parse(url.searchParams.get("targets")!).length);
+    });
+    await open(page, fixture);
+    await expect(page.locator(".native-comments article")).toHaveCount(20);
+    const sent: unknown[] = [];
+    let dropped = false;
+    if (replay)
+      await page.route("**/api/social/comments/create", async (route) => {
+        sent.push(route.request().postDataJSON());
+        if (!dropped) {
+          dropped = true;
+          await route.fetch();
+          await route.abort();
+        } else await route.continue();
+      });
+    const text = "Sayfanın ötesinde kaydedilen yeni söz";
+    await page.getByLabel("Yorum yaz", { exact: true }).fill(text);
+    await page
+      .getByRole("button", { name: "Yorumu paylaş", exact: true })
+      .click();
+    if (replay)
+      await page
+        .getByRole("button", { name: "Aynı işlemi yeniden dene", exact: true })
+        .click();
+    await expect(
+      page.getByRole("complementary", { name: "Kaydedilen yorum" }),
+    ).toContainText(text);
+    await expect(page.getByText(text, { exact: true })).toHaveCount(1);
+    await expect(page.locator(".native-comments article")).toHaveCount(20);
+    await expect(page.locator(".conversation-total")).toHaveText("21 yorum");
+    await expect(page.getByLabel("Yorum yaz", { exact: true })).toHaveValue("");
+    expect(batches).toEqual([21, 21]);
+    if (replay) {
+      expect(sent).toHaveLength(2);
+      expect(sent[0]).toEqual(sent[1]);
+    }
+    await page
+      .getByRole("button", { name: "Sonraki yorumlar", exact: true })
+      .click();
+    await expect(page.locator(".native-comments article")).toHaveCount(1);
+    await expect(page.locator(".confirmed-comment")).toHaveCount(0);
+    await expect(page.getByText(text, { exact: true })).toHaveCount(1);
+    expect(batches.at(-1)).toBe(2);
+  });
+
+for (const editing of [false, true])
+  test(`deleting a different saved comment preserves the unrelated ${editing ? "edit draft" : "composer"} through exact retry`, async ({
+    page,
+  }) => {
+    const fixture = await enter(page);
+    const asset = await selected(page, fixture);
+    await create(
+      page,
+      fixture,
+      { kind: "photo", id: asset },
+      "İlk kayıtlı yorum",
+    );
+    await create(
+      page,
+      fixture,
+      { kind: "photo", id: asset },
+      "Silinecek başka yorum",
+    );
+    await open(page, fixture);
+    if (editing)
+      await page
+        .locator(".native-comments article")
+        .first()
+        .getByRole("button", { name: "Düzenle", exact: true })
+        .click();
+    const label = editing ? "Yorumunu düzenle" : "Yorum yaz";
+    await page
+      .getByLabel(label, { exact: true })
+      .fill("Ayrı işlemde korunacak özel taslak");
+    const sent: unknown[] = [];
+    let dropped = false;
+    await page.route("**/api/social/comments/delete", async (route) => {
+      sent.push(route.request().postDataJSON());
+      if (!dropped) {
+        dropped = true;
+        await route.fetch();
+        await route.abort();
+      } else await route.continue();
+    });
+    await page
+      .locator(".native-comments article")
+      .last()
+      .getByRole("button", { name: "Sil", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Yorumu sil", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Aynı işlemi yeniden dene", exact: true })
+      .click();
+    await expect(page.locator(".native-comments article")).toHaveCount(1);
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue(
+      "Ayrı işlemde korunacak özel taslak",
+    );
+    expect(sent).toHaveLength(2);
+    expect(sent[0]).toEqual(sent[1]);
+  });

@@ -60,6 +60,7 @@ export default function ConversationPanel({
   const [conflict, setConflict] = useState(false);
   const [notice, setNotice] = useState("");
   const [confirm, setConfirm] = useState<Comment | null>(null);
+  const [confirmed, setConfirmed] = useState<Comment | null>(null);
   const [cursor, setCursor] = useState("");
   const controller = useRef(new AbortController());
   const generation = useRef(0);
@@ -77,6 +78,7 @@ export default function ConversationPanel({
     setEditor({ text: "", comment: null });
     setRetry(null);
     setConfirm(null);
+    setConfirmed(null);
     setPending(false);
     setConflict(false);
     setNotice("");
@@ -107,9 +109,10 @@ export default function ConversationPanel({
     }
     return false;
   }
-  async function load(next = "", retain = false) {
+  async function load(next = "", retain = false, saved?: Comment) {
     if (!alive()) return;
     const version = ++generation.current;
+    setConfirmed(saved || null);
     if (next !== pageCursor.current) focused.current = false;
     pageCursor.current = next;
     setCursor(next);
@@ -134,6 +137,9 @@ export default function ConversationPanel({
       );
       if (!alive() || version !== generation.current) return;
       setCursor(next);
+      setConfirmed(
+        saved && !page.items.some(({ id }) => id === saved.id) ? saved : null,
+      );
       setView({ kind: "ready", page, reactions: batch.items });
     } catch (error) {
       if (!alive() || version !== generation.current || denied(error)) return;
@@ -183,15 +189,30 @@ export default function ConversationPanel({
     setNotice("");
     generation.current++;
     try {
-      await request(`/api/social/${command.route}`, command.body);
+      const result = await request(
+        `/api/social/${command.route}`,
+        command.body,
+      );
       if (signal.aborted) return;
       setRetry(null);
-      setConflict(false);
       setConfirm(null);
-      if (command.route.startsWith("comments/"))
+      if (
+        command.route === "comments/create" ||
+        ((command.route === "comments/update" ||
+          command.route === "comments/delete") &&
+          editor.comment?.id === command.body.comment)
+      ) {
         setEditor({ text: "", comment: null });
+        setConflict(false);
+      }
       setNotice("Kaydedildi.");
-      await load(cursor, true);
+      await load(
+        cursor,
+        true,
+        command.route === "comments/create" && !result.deleted
+          ? result
+          : undefined,
+      );
     } catch (error) {
       if (signal.aborted || denied(error)) return;
       if (error instanceof ApiError && error.status === 409) {
@@ -423,6 +444,15 @@ export default function ConversationPanel({
                 )}
               </nav>
             </>
+          )}
+          {confirmed && (
+            <aside className="confirmed-comment" aria-label="Kaydedilen yorum">
+              <p>
+                <b>Son gönderdiğin yorum kaydedildi.</b> Bu yorum başka bir
+                sayfada.
+              </p>
+              <blockquote className="comment-text">{confirmed.text}</blockquote>
+            </aside>
           )}
           {notice && <p role="status">{notice}</p>}
           {retry && (
