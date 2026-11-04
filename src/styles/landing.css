@@ -54,12 +54,10 @@
   margin: 12px 0 16px;
   font: 400 var(--type-display-m) / 1.1 var(--font-display);
 }
-.home-featured h2 a,
-.home-memory h3 a {
+.home-featured h2 a {
   color: var(--text-primary);
 }
-.home-featured h2 a:hover,
-.home-memory h3 a:hover {
+.home-featured h2 a:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -79,54 +77,16 @@
   gap: 12px;
   margin-top: 24px;
 }
-.home-selection {
-  margin-top: 48px;
-}
+
 .landing-section-heading {
   margin-bottom: 20px;
 }
 .landing-section-heading h2,
-.home-contribute h2,
 .landing-status h2 {
   margin: 0;
   font: 400 var(--type-display-m) / 1.12 var(--font-display);
 }
-.home-memory-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-}
-.home-memory-photo {
-  display: block;
-}
-.home-memory-photo .photo-frame {
-  aspect-ratio: 16 / 10;
-}
-.home-memory h3 {
-  margin: 6px 0;
-  font: 400 24px / 1.15 var(--font-display);
-}
-.home-memory .memory-meta {
-  margin: 14px 0 0;
-}
-.home-contribute {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  margin-top: 48px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line-soft);
-}
-.home-contribute p {
-  color: var(--text-secondary);
-  max-width: 560px;
-  margin: 10px 0 0;
-  font-size: 15px;
-}
-.home-contribute .button {
-  flex-shrink: 0;
-}
+
 .landing-status {
   padding: 56px 24px;
   border: 1px solid var(--line-soft);
@@ -239,29 +199,7 @@
   .home-featured-body {
     padding: 22px;
   }
-  .home-memory-list {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .home-memory {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 16px;
-  }
-  .home-memory-photo .photo-frame {
-    aspect-ratio: 1;
-  }
-  .home-memory h3 {
-    font-size: 23px;
-  }
-  .home-memory .memory-meta {
-    margin: 0 0 6px;
-    font-size: 12px;
-  }
-  .home-contribute {
-    flex-direction: column;
-    align-items: start;
-  }
+
   .destination-grid {
     grid-template-columns: 1fr;
   }
@@ -293,5 +231,21 @@
 #recap-heading,
 #capsules-heading,
 #people-heading {
+  scroll-margin-top: 28px;
+}
+
+.destination-group + .destination-group {
+  margin-top: 36px;
+}
+.destination-group h2 {
+  margin: 0 0 8px;
+  font: 400 30px / 1.15 var(--font-display);
+}
+.destination-group p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+#group-settings-heading,
+#source-title {
   scroll-margin-top: 28px;
 }

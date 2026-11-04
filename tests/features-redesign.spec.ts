@@ -160,7 +160,7 @@ test("Our circle lists members without public or social counts", async ({
   await enter(page);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Our circle", level: 1 }),
+    page.getByRole("heading", { name: "Grubumuz", level: 1 }),
   ).toBeVisible();
   const members = page.getByRole("list", { name: "Members" });
   await expect(members.getByRole("listitem")).not.toHaveCount(0);

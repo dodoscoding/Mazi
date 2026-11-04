@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 import { flushSync } from "react-dom";
+import { routeAliases } from "./navigation";
 export type Route = ReturnType<typeof readRoute>;
 export type LinkFor = (
   url: string,
@@ -26,6 +27,16 @@ export function readRoute() {
       : location.pathname + location.search
   ).split("?");
   const params = new URLSearchParams(query);
+  const alias = routeAliases[path];
+  if (alias) {
+    const [target, defaults] = alias.split("?");
+    new URLSearchParams(defaults).forEach((value, key) =>
+      params.set(key, value),
+    );
+    const canonical = `${target}?${params}`;
+    history.replaceState(history.state, "", `#${canonical}`);
+    return readRoute();
+  }
   return {
     path:
       path === "/" &&

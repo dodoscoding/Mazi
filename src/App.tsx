@@ -223,7 +223,7 @@ export default function App() {
   else
     screen = (
       <Shell
-        path={route.path}
+        path={route.path + route.search}
         demo={demo}
         archive={archive}
         profileName={entry.state.profile.display_name}

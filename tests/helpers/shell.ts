@@ -13,7 +13,7 @@ const exploreNames: Record<string, string> = {
   Discover: "Yeniden keşfet",
   "Ask your archive": "Arşive sor",
   "Archive review": "Düzelt ve düzenle",
-  "Places & sources": "Yerler ve kaynaklar",
+  "Places & sources": "Yerler",
 };
 
 export async function followShellLink(page: Page, name: string) {
@@ -24,7 +24,7 @@ export async function followShellLink(page: Page, name: string) {
   if (name === "Home" || name === "Our circle") {
     await main
       .getByRole("link", {
-        name: name === "Home" ? "Home" : "Grubumuz",
+        name: name === "Home" ? "Ana sayfa" : "Grubumuz",
         exact: true,
       })
       .click();
@@ -44,7 +44,10 @@ export async function followShellLink(page: Page, name: string) {
     await openArchiveTools(page);
     await page
       .locator(".menu-popover")
-      .getByRole("link", { name, exact: true })
+      .getByRole("link", {
+        name: name === "About" ? "Yardım ve gizlilik" : "Tanıtımı izle",
+        exact: true,
+      })
       .click();
     return;
   }
@@ -59,6 +62,6 @@ export async function signOut(page: Page) {
   await openArchiveTools(page);
   await page
     .locator(".menu-popover")
-    .getByRole("button", { name: "Sign out", exact: true })
+    .getByRole("button", { name: "Çıkış yap", exact: true })
     .click();
 }

@@ -28,14 +28,15 @@ export function Shell({
   children: ReactNode;
 }) {
   const main = useRef<HTMLElement>(null);
-  const lastPath = useRef(path);
+  const routePath = path.split("?")[0];
+  const lastPath = useRef(routePath);
   useLayoutEffect(() => {
     const previous = lastPath.current;
-    lastPath.current = path;
+    lastPath.current = routePath;
     if (
-      previous === path ||
+      previous === routePath ||
       previous.startsWith("/memory/") ||
-      path.startsWith("/memory/") ||
+      routePath.startsWith("/memory/") ||
       typeof main.current?.animate !== "function"
     )
       return;
@@ -52,7 +53,7 @@ export function Shell({
         easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     );
-  }, [path]);
+  }, [routePath]);
   const section = sectionFor(path);
   const circle = demo
     ? "Sample Atlas"
@@ -72,7 +73,7 @@ export function Shell({
     <ToastProvider>
       <div
         className="shell"
-        data-section={path === "/" ? "home" : path.split("/")[1]}
+        data-section={routePath === "/" ? "home" : routePath.split("/")[1]}
       >
         <a
           className="skip-link"
@@ -82,7 +83,7 @@ export function Shell({
             document.getElementById("main-content")?.focus();
           }}
         >
-          Skip to content
+          İçeriğe geç
         </a>
         <header className="site-header">
           <div className="header-start">
@@ -90,7 +91,7 @@ export function Shell({
               className="wordmark"
               href="#/"
               onClick={link("/")}
-              aria-label="Mazi home"
+              aria-label="Mazi ana sayfa"
             >
               Mazi
             </a>
@@ -128,7 +129,7 @@ export function Shell({
                       close();
                     }}
                   >
-                    About
+                    Yardım ve gizlilik
                   </a>
                   <a
                     className="menu-item"
@@ -138,7 +139,7 @@ export function Shell({
                       close();
                     }}
                   >
-                    Replay introduction
+                    Tanıtımı izle
                   </a>
                   <SoundToggle
                     variant="pill"
@@ -146,9 +147,9 @@ export function Shell({
                   />
                   {!demo && archive.groups.length > 0 && (
                     <label className="circle-picker">
-                      Current circle
+                      Grubumuz
                       <select
-                        aria-label="Current circle"
+                        aria-label="Grup değiştir"
                         value={archive.group}
                         onChange={(event) =>
                           archive.chooseGroup(event.target.value)
@@ -164,7 +165,7 @@ export function Shell({
                   )}
                   {demo && (
                     <a className="menu-item" href="/">
-                      Leave sample Atlas
+                      Örnek arşivden çık
                     </a>
                   )}
                   <button
@@ -172,7 +173,7 @@ export function Shell({
                     className="menu-item menu-sign-out"
                     onClick={onSignOut}
                   >
-                    Sign out
+                    Çıkış yap
                   </button>
                 </nav>
               )}
