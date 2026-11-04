@@ -96,3 +96,11 @@ Phase 6 requires a separate, default-off Memory answer switch for the group, req
 Before launch, identify data regions, subprocessors, provider training/retention settings, consent text, support routes, nonmember requests, incident ownership, and any needed privacy/legal assessment. Keep sensitive production exports out of development fixtures. Do not claim regulatory compliance from the existence of RLS or encryption.
 
 Mandatory privacy scenarios are T01, T02, T05, T09, T11, T13, and T15 in the [test plan](TEST_PLAN.md), according to the enabled milestone. A feature stays disabled if its access and revocation scenarios fail.
+
+## Group plan contributions
+
+The P1 backend shares a member's plans and attendance only with current members of that group. The organizer edits, cancels or removes their own plan. A member controls their own attendance response. The response list uses current shared-profile names and never exposes account email addresses. Plans work with an empty archive and do not enable optional recognition or AI processing.
+
+An optional approved-memory link is rechecked on every plan read and export. A hidden or withdrawn child removes that link from the response. Independently authored plan text remains a group contribution. Removing the organizer's membership withdraws their plans and dependent responses. Removing an attendee's membership removes that member's responses. Cleanup runs at the membership database boundary and reads independently require current membership.
+
+When the member has authored plans or current attendance, the existing archive export includes those contributions in `social.json`, with final metadata admission checks. Empty exports preserve their previous file inventory. Other members' attendance lists are not copied into an organizer's exported plan. Durable retry receipts retain only actor and group IDs, request key, operation, payload hash, result ID and timestamp. They survive contribution removal so retrying an earlier command cannot restore it. The UI, physical-device pilot and production acceptance are not established by these backend contracts.

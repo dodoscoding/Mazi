@@ -91,3 +91,13 @@ Memory AI uses at least 100 answerable and 50 unanswerable/adversarial questions
 ## Release receipts
 
 Each milestone stores fixture inventories, automated results, real-flow screenshots or native recordings, performance samples, cost measurements, and review findings alongside its implementation work. Personal evidence stays in restricted storage with safe references in Git. All open exceptions name an owner, impact, and expiry. Access leaks, missing originals, and unaccounted import items cannot be waived as cosmetic defects.
+
+## P1 backend regression contracts
+
+The independent plans backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_plans.py), [HTTP tests](../tests/backend/social/test_plans_http.py) and [isolated hosted tests](../tests/backend/social/test_plans_postgres.py). Fixtures use two current members, an outsider and a separate group. No personal archive is required for plan creation or attendance.
+
+Verify request replay after a lost response, different-payload key conflict, stale plan revision, repeated desired attendance, clearing a response and replaying an older attendance command. Removing a plan or its organizer must make an earlier create retry return an explicit deleted result. Concurrent create retries produce one plan. Concurrent attendance and cancellation serialize. Exact UTC instants and fractional epoch timestamps must survive hosted storage without float32 truncation.
+
+Exercise nonexistent and repeated Copenhagen wall times, explicit offsets, invalid timezone and end-before-start. Page equal-start plans by stable ID without duplicates, and move the server clock past a start to exclude it from Upcoming. Read active participant names without account emails. Remove an organizer through the lower-level identity store and confirm plans and attendance disappear. An approved-memory link becomes absent after hiding or withdrawing a child without changing the remaining archive annotations.
+
+Export only the member's authored plans and attendance. Edit a plan between ZIP construction and admission and require a conflict. Hosted mutation tests require an isolated schema ending `_test`; never run them against the live archive. Verify RLS/grants and the group/time query index. These automated backend checks leave the desktop-create/phone-join journey, UI focus, five-friend task tour and physical-phone pilot for the frontend and final acceptance slices.
