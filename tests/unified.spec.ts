@@ -304,10 +304,17 @@ test("named profile imports and logout discard delayed private Atlas responses",
     deliveredLogout = resolve;
   });
   let intercepted = false;
+  let privatePreviewTitle = "";
   await page.route("**/api/social/home?*", async (route) => {
     if (intercepted) return route.continue();
     intercepted = true;
     const response = await route.fetch();
+    const payload = await response.json();
+    privatePreviewTitle =
+      payload.featured?.memory?.title ||
+      payload.featured?.preview?.title ||
+      payload.featured?.plan?.title;
+    expect(privatePreviewTitle).toBeTruthy();
     heldLogout();
     await logoutGate;
     await route.fulfill({ response }).catch(() => {});
@@ -341,6 +348,12 @@ test("named profile imports and logout discard delayed private Atlas responses",
   releaseLogout();
   await logoutDelivery;
   await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.locator(".home-featured, .home-plan, .activity-list"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(privatePreviewTitle, { exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: `${title} anısını seç`, exact: true }),
   ).toHaveCount(0);
