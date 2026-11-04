@@ -30,14 +30,18 @@ def _versions(store, group, assets):
         'SELECT asset_id,dimension,revision FROM photo_label_versions WHERE group_id=? AND asset_id IN (' + slots + ')', (group, *assets))}
 
 
-def _people(store, group, assets, *, include_suppressed=False):
+def _people_query(assets, columns, *, include_suppressed=False):
     slots = ','.join('?' for _ in assets)
-    query = ('SELECT t.asset,p.id,p.name,p.account FROM discovery_tags t JOIN discovery_people p ON p.id=t.person '
+    query = ('SELECT ' + columns + ' FROM discovery_tags t JOIN discovery_people p ON p.id=t.person '
              'JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor WHERE p.group_id=? AND t.asset IN (' + slots + ') '
              'AND (p.account IS NULL OR EXISTS(SELECT 1 FROM members subject WHERE subject.group_id=p.group_id AND subject.user_id=p.account))')
     if not include_suppressed:
         query += ' AND NOT EXISTS(SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)'
-    query += ' ORDER BY p.name,p.id'
+    return query
+
+
+def _people(store, group, assets, *, include_suppressed=False):
+    query = _people_query(assets, 't.asset,p.id,p.name,p.account', include_suppressed=include_suppressed) + ' ORDER BY p.name,p.id'
     people = {asset: [] for asset in assets}
     for row in store.db.execute(query, (group, *assets)):
         people[row['asset']].append(dict(id=row['id'], name=row['name'], verified=row['account'] is not None))
@@ -165,12 +169,7 @@ def summaries(store, group, assets):
         'JOIN members m ON m.group_id=l.group_id AND m.user_id=l.actor_id '
         'WHERE l.group_id=? AND l.asset_id IN (' + slots + ") AND l.value<>'unknown'", (group, *batch)):
         result.setdefault(row['asset_id'], {})[row['dimension']] = row['value']
-    for row in store.db.execute(
-        'SELECT DISTINCT t.asset FROM discovery_tags t JOIN discovery_people p ON p.id=t.person '
-        'JOIN members m ON m.group_id=p.group_id AND m.user_id=t.actor '
-        'WHERE p.group_id=? AND t.asset IN (' + slots + ') '
-        'AND (p.account IS NULL OR EXISTS(SELECT 1 FROM members subject WHERE subject.group_id=p.group_id AND subject.user_id=p.account)) '
-        'AND NOT EXISTS(SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)', (group, *batch)):
+    for row in store.db.execute(_people_query(batch, 'DISTINCT t.asset'), (group, *batch)):
         result.setdefault(row['asset'], {})['people_present'] = 'yes'
     return result
 

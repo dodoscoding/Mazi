@@ -22,11 +22,3 @@
 .photo-label-editor a {
   overflow-wrap: anywhere;
 }
-.photo-label-badge {
-  display: inline-block;
-  width: fit-content;
-  padding: 3px 8px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  font-size: 12px;
-}
