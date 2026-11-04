@@ -203,6 +203,14 @@ export default function App() {
         memory={memory}
         group={archive.group}
         notebook={route.notebook}
+        sessionKey={profile?.user_id}
+        discussion={
+          new URLSearchParams(route.search).get("discussion") === "photo"
+            ? "photo"
+            : new URLSearchParams(route.search).get("discussion") === "memory"
+              ? "memory"
+              : undefined
+        }
         memories={memories}
         photo={route.photo}
         demo={demo}

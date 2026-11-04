@@ -26,11 +26,11 @@ def handler_for(store):
                 user = self.user()
                 query = {key: values[0] for key, values in parse_qs(parts.query).items()}
                 group = query.pop('group', '')
-                if parts.path == '/api/discovery/search':
+                if parts.path in ('/api/discovery/search', '/api/discovery/matches'):
                     for field in ('offset', 'limit'):
                         if field in query:
                             query[field] = int(query[field])
-                    return self.json(200, store.search(user, group, **query))
+                    return self.json(200, (store.photo_matches if parts.path.endswith('/matches') else store.search)(user, group, **query))
                 if parts.path == '/api/discovery/state':
                     return self.json(200, dict(people=store.people(user, group, manage=True), memories=store.accepted_events(user, group), hidden_memories=store.hidden_events(user, group), hidden=store.hidden(user, group), suppressed=store.suppressed(user, group), identities=store.identity_requests(user, group), settings=store.settings(user, group)))
                 return self.json(404, {'error': 'Not found'})
