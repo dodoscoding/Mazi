@@ -9,6 +9,7 @@ import uuid
 from mazi.archive.export import ExportArray
 from mazi.identity.core import Conflict, Denied
 from . import social
+from .visibility import authorize_photos
 
 
 @dataclass(frozen=True)
@@ -35,16 +36,11 @@ def _stored_target(row):
 
 
 def authorize_target(store, user, group, target):
-    store._member(user, group)
     if target.kind == 'memory':
+        store._member(user, group)
         social._memory(store, user, group, target.id)
-        return
-    asset = store._asset(user, target.id)
-    if asset['group_id'] != group or store.db.execute('SELECT 1 FROM discovery_hidden WHERE "user"=? AND asset=?', (user, target.id)).fetchone():
-        raise Denied('Conversation unavailable')
-    hidden = store.db.execute('SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE e.group_id=? AND h."user"=?', (group, user))
-    if any(target.id in json.loads(row[0]) for row in hidden):
-        raise Denied('Conversation unavailable')
+    else:
+        authorize_photos(store, user, group, [target.id])
 
 
 VISIBLE = (' FROM social_comments c JOIN members m ON m.group_id=c.group_id AND m.user_id=c.author_id '

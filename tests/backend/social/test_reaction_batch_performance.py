@@ -1,5 +1,3 @@
-import unittest
-
 from mazi.identity.core import Denied
 from mazi.social import conversations, reactions
 from tests.backend.social.test_comments import CommentsFixture
@@ -32,8 +30,12 @@ class ReactionBatchQueryTests(CommentsFixture):
             reactions.batch_reactions(self.store, self.alice, self.group, targets)
         self.store.hide(self.alice, self.assets[0], False)
         comment = targets[-1]
-        row = self.store.db.execute('SELECT revision FROM social_comments WHERE id=?', (comment['id'],)).fetchone()
-        conversations.delete_comment(self.store, self.ben, self.group, comment['id'], row[0], 'delete')
+        row = self.store.db.execute('SELECT * FROM social_comments WHERE id=?', (comment['id'],)).fetchone()
+        conversations.delete_comment(self.store, self.ben, self.group, comment['id'], row['revision'], 'delete')
+        with self.assertRaises(Denied):
+            reactions.batch_reactions(self.store, self.alice, self.group, targets)
+        with self.store.transaction():
+            self.store.db.execute('INSERT INTO social_comments VALUES(?,?,?,?,?,?,?,?,?)', tuple(row))
         with self.assertRaises(Denied):
             reactions.batch_reactions(self.store, self.alice, self.group, targets)
         self.store.remove_member(self.alice, self.group, self.ben)

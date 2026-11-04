@@ -1,12 +1,12 @@
 """Versioned member declarations on currently visible photographs."""
 import itertools
-import json
 import time
 import uuid
 
 from mazi.archive.export import ExportArray
 from mazi.identity.core import Conflict, Denied
 from . import social
+from .visibility import authorize_photos
 
 DIMENSIONS = {
     'people_present': ('yes', 'no', 'unknown'),
@@ -22,18 +22,6 @@ def _assets(values):
     if len(set(assets)) != len(assets):
         raise ValueError('Choose unique photographs')
     return assets
-
-
-def _authorize(store, user, group, assets):
-    store._member(user, group)
-    slots = ','.join('?' for _ in assets)
-    query = ('SELECT a.id FROM archive_assets a WHERE a.group_id=? AND a.id IN (' + slots + ') '
-             'AND EXISTS(SELECT 1 FROM archive_origins o JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=a.id AND o.group_id=a.group_id AND o.withdrawn=0) '
-             'AND NOT EXISTS(SELECT 1 FROM discovery_hidden h WHERE h.asset=a.id AND h."user"=?)')
-    visible = {row[0] for row in store.db.execute(query, (group, *assets, user))}
-    hidden = store.db.execute('SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE e.group_id=? AND h."user"=?', (group, user))
-    if visible != set(assets) or any(visible.intersection(json.loads(row[0])) for row in hidden):
-        raise Denied('Photograph unavailable')
 
 
 def _versions(store, group, assets):
@@ -84,7 +72,7 @@ def _projection(store, group, assets):
 def read_labels(store, user, group, assets):
     assets = _assets(assets)
     with store.transaction():
-        _authorize(store, user, group, assets)
+        authorize_photos(store, user, group, assets)
         return dict(items=_projection(store, group, assets))
 
 
@@ -112,7 +100,7 @@ def set_labels(store, user, group, request_key, items):
     items = _items(items)
     assets = [item['asset'] for item in items]
     with store.transaction():
-        _authorize(store, user, group, assets)
+        authorize_photos(store, user, group, assets)
         payload = sorted(items, key=lambda item: item['asset'])
         key, digest, receipt = social._receipt(store, user, group, request_key, 'labels.set', payload)
         if receipt:
@@ -149,7 +137,7 @@ def export_labels(store, user, group, fingerprint, archive=None):
                  'JOIN photo_label_versions v ON v.group_id=l.group_id AND v.asset_id=l.asset_id AND v.dimension=l.dimension AND v.revision=l.revision WHERE l.group_id=? AND l.actor_id=?')
         for row in store._export_rows(query, (group, user), [('l.asset_id', 'asset_id', False), ('l.dimension', 'dimension', False)]):
             try:
-                _authorize(store, user, group, [row['asset_id']])
+                authorize_photos(store, user, group, [row['asset_id']])
             except Denied:
                 continue
             yield dict(assetId=row['asset_id'], dimension=row['dimension'], declared=row['value'], method=row['method'],
