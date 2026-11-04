@@ -133,3 +133,14 @@ test("aliases reached inside the app preserve the previous destination", async (
   });
   assert.equal(h.route.path, "/explore");
 });
+
+test("a People alias preserves search and sample parameters but owns its section", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/?demo=1#/people?q=ferry&source=discord&section=other",
+  );
+  assert.equal(h.route.path, "/discover");
+  assert.equal(h.route.search, "?q=ferry&source=discord&section=people");
+  assert.equal(h.window.location.search, "?demo=1");
+  assert.equal(h.window.history.length, 1);
+});
