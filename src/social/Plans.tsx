@@ -69,6 +69,7 @@ export default function Plans({
   const controller = useRef(new AbortController());
   const generation = useRef(0);
   const writing = useRef(false);
+  const editBaseline = useRef<Draft | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const active = () => !controller.current.signal.aborted;
   async function request(path: string, body?: object) {
@@ -96,6 +97,7 @@ export default function Plans({
     setPending(false);
     setReading(false);
     setContent({ kind: "denied" });
+    editBaseline.current = null;
     setDraft(null);
     setRetry(null);
     setConfirm(null);
@@ -191,6 +193,7 @@ export default function Plans({
       generation.current++;
       setReading(false);
       setRetry(null);
+      editBaseline.current = null;
       setDraft(null);
       if (value.deleted) {
         navigate(base, false, true);
@@ -245,11 +248,23 @@ export default function Plans({
       end_local: draft.end_local || null,
       end_offset: draft.end_local ? draft.end_offset || undefined : undefined,
     };
+    const patch = Object.fromEntries(
+      Object.entries(fields).filter(
+        ([key]) =>
+          draft[key as keyof Draft] !==
+          editBaseline.current?.[key as keyof Draft],
+      ),
+    );
+    if (plan && !Object.keys(patch).length) {
+      editBaseline.current = null;
+      setDraft(null);
+      return;
+    }
     if (plan)
       void command("plans/update", {
         plan: plan.id,
         revision: plan.revision,
-        patch: fields,
+        patch,
       });
     else void command("plans/create", fields);
   }
@@ -506,7 +521,10 @@ export default function Plans({
                         <button
                           className="button button--secondary"
                           disabled={blocked}
-                          onClick={() => setDraft(planDraft(plan))}
+                          onClick={() => {
+                            editBaseline.current = planDraft(plan);
+                            setDraft({ ...editBaseline.current });
+                          }}
                         >
                           Düzenle
                         </button>

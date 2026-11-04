@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
 import { act, createElement, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import { createServer } from "vite";
 import { Window } from "happy-dom";
 
@@ -48,6 +48,7 @@ async function mount(
   const module = await vite.ssrLoadModule(modulePath);
   const host = document.createElement("div");
   document.body.append(host);
+  const { createRoot } = await import("react-dom/client");
   const root = createRoot(host);
   t.after(async () => {
     await act(async () => root.unmount());
@@ -165,6 +166,18 @@ test("a deep link for another group is denied before reading", async (t) => {
   assert.equal(h.calls.length, 0);
 });
 
+async function fill(h, name, value) {
+  const input = h.host.querySelector(`[name="${name}"]`);
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(
+      h.window.HTMLInputElement.prototype,
+      "value",
+    ).set.call(input, value);
+    input.dispatchEvent(new h.window.Event("input", { bubbles: true }));
+    input.dispatchEvent(new h.window.Event("change", { bubbles: true }));
+  });
+}
+
 test("an uncertain save retains the draft and retries exactly the same command", async (t) => {
   let writes = 0;
   const h = await mount(
@@ -179,6 +192,7 @@ test("an uncertain save retains the draft and retries exactly the same command",
     },
   );
   await h.click(findButton(h, "Düzenle"));
+  await fill(h, "title", "Yeni başlık");
   await act(async () =>
     h.host
       .querySelector("form")
@@ -186,10 +200,7 @@ test("an uncertain save retains the draft and retries exactly the same command",
         new h.window.Event("submit", { bubbles: true, cancelable: true }),
       ),
   );
-  assert.equal(
-    h.host.querySelector('[name="title"]').value,
-    "Cumartesi birlikte",
-  );
+  assert.equal(h.host.querySelector('[name="title"]').value, "Yeni başlık");
   assert.match(h.host.textContent, /İşlemin sonucu doğrulanamadı/);
   await h.click(findButton(h, "Aynı işlemi yeniden dene"));
   const commands = h.calls
@@ -218,6 +229,7 @@ test("a stale edit can reload the current revision without replacing its draft",
     },
   );
   await h.click(findButton(h, "Düzenle"));
+  await fill(h, "title", "Yeni başlık");
   await act(async () =>
     h.host
       .querySelector("form")
@@ -226,10 +238,7 @@ test("a stale edit can reload the current revision without replacing its draft",
       ),
   );
   await h.click(findButton(h, "Güncel planı yükle"));
-  assert.equal(
-    h.host.querySelector('[name="title"]').value,
-    "Cumartesi birlikte",
-  );
+  assert.equal(h.host.querySelector('[name="title"]').value, "Yeni başlık");
   assert.match(h.host.textContent, /Yeni ortak başlık/);
   await h.dispatch("mazi:group");
   assert.equal(h.host.querySelector("form"), null);
@@ -294,6 +303,7 @@ test("profile changes clear a pending write draft and discard its late response"
       options.method === "POST" ? response : Response.json(plan),
   );
   await h.click(findButton(h, "Düzenle"));
+  await fill(h, "title", "Yeni başlık");
   await act(async () =>
     h.host
       .querySelector("form")
@@ -383,13 +393,74 @@ test("a denied write prevents an already-running read from restoring private con
   assert.doesNotMatch(h.host.textContent, /Cumartesi birlikte/);
 });
 
-test("unrelated edits preserve a hidden memory and visible links can be explicitly removed", async (t) => {
-  const h = await mount(t, "/src/social/Plans.tsx", "default",
+test("title edits preserve a hidden memory projection", async (t) => {
+  const h = await mount(
+    t,
+    "/src/social/Plans.tsx",
+    "default",
     { ...plansProps, search: "?section=plans&group=circle&plan=meeting" },
-    async (_path, options) => Response.json(plan));
+    async (_path, options) => Response.json(plan),
+  );
   await h.click(findButton(h, "Düzenle"));
-  await act(async () => h.host.querySelector("form").dispatchEvent(
-    new h.window.Event("submit", { bubbles: true, cancelable: true })));
-  const body = JSON.parse(h.calls.find(({ options }) => options.method === "POST").options.body);
-  assert.deepEqual(body.patch, {}, "an unchanged hidden projection must not unlink the stored memory");
+  await fill(h, "title", "Yeni başlık");
+  await act(async () =>
+    h.host
+      .querySelector("form")
+      .dispatchEvent(
+        new h.window.Event("submit", { bubbles: true, cancelable: true }),
+      ),
+  );
+  const body = JSON.parse(
+    h.calls.find(({ options }) => options.method === "POST").options.body,
+  );
+  assert.deepEqual(
+    body.patch,
+    { title: "Yeni başlık" },
+    "an unchanged hidden projection must not unlink the stored memory",
+  );
+});
+
+test("actual archive hide/edit/unhide preserves the link and a visible explicit unlink removes it", async (t) => {
+  async function patchFor(scope, memory, field, value) {
+    const h = await mount(
+      scope,
+      "/src/social/Plans.tsx",
+      "default",
+      { ...plansProps, search: "?section=plans&group=circle&plan=meeting" },
+      async () => Response.json({ ...plan, memory }),
+    );
+    await h.click(findButton(h, "Düzenle"));
+    await fill(h, field, value);
+    await act(async () =>
+      h.host
+        .querySelector("form")
+        .dispatchEvent(
+          new h.window.Event("submit", { bubbles: true, cancelable: true }),
+        ),
+    );
+    return JSON.parse(
+      h.calls.find(({ options }) => options.method === "POST").options.body,
+    ).patch;
+  }
+  let hidden, unlink;
+  await t.test("hidden projection title edit", async (scope) => {
+    hidden = await patchFor(scope, null, "title", "Yeni başlık");
+  });
+  await t.test("visible explicit unlink", async (scope) => {
+    unlink = await patchFor(
+      scope,
+      { id: "visible-memory", title: "Kış" },
+      "memory",
+      "",
+    );
+  });
+  assert.deepEqual(hidden, { title: "Yeni başlık" });
+  assert.deepEqual(unlink, { memory: null });
+  const result = spawnSync(
+    ".venv/bin/python",
+    ["-m", "tests.backend.social.plan_link_probe"],
+    { input: JSON.stringify({ hidden, unlink }), encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /hidden link preserved; visible unlink applied/);
 });

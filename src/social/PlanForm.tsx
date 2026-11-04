@@ -45,7 +45,7 @@ export function PlanForm({
       </p>
     ) : result.kind === "invalid" ? (
       <p className="plan-error" role="alert">
-        Geçerli bir tarih ve IANA saat dilimi seç.
+        Geçerli bir tarih ve saat dilimi seç.
       </p>
     ) : result.offsets.length > 1 ? (
       <label>
@@ -108,7 +108,7 @@ export function PlanForm({
           ))}
         </datalist>
         <p id="plan-zone-help" className="plan-hint">
-          Buluşmanın IANA saat dilimini seç. Tarih ve saat bu bölgeye göre
+          Buluşmanın saat dilimini seç. Tarih ve saat bu bölgeye göre
           kaydedilir.
         </p>
         <div className="plan-form-row">
@@ -166,8 +166,8 @@ export function PlanForm({
           />
         </label>
         <p id="plan-memory-help" className="plan-hint">
-          Görmeye yetkili olduğun onaylı bir anının bağlantısını veya kimliğini
-          ekleyebilirsin. Fotoğraf eklemek zorunlu değil.
+          Görmeye yetkili olduğun onaylı bir anının bağlantısını ekleyebilirsin.
+          Fotoğraf eklemek zorunlu değil.
         </p>
         <div className="plan-actions">
           <button
