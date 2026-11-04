@@ -770,3 +770,38 @@
     animation: fade-out 120ms linear forwards !important;
   }
 }
+
+.mem-label-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0;
+}
+.mem-label-tools > div {
+  flex-basis: 100%;
+}
+.mem-photo-cell {
+  min-width: 0;
+}
+.mem-photo-cell .mem-tile {
+  display: block;
+}
+.mem-photo-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 12px;
+}
+.mem-photo-select input {
+  width: 20px;
+  height: 20px;
+}
+
+.photo-label-badge {
+  display: inline-block;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}

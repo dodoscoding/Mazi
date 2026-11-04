@@ -1,3 +1,4 @@
+import { labelBadges } from "../../memory/labels";
 import {
   promptSkeleton,
   renderFilters,
@@ -438,6 +439,8 @@ export function mount(root, lifecycle) {
           class: "disc-original",
         }),
       );
+      for (const text of labelBadges(item.labels))
+        card.append(node("span", text, { class: "photo-label-badge" }));
       for (const person of item.people) {
         const line = node("p", person.name, { class: "disc-person" });
         if (person.is_me || person.can_remove)

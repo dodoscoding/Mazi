@@ -22,6 +22,8 @@ function item(assetId, revision = 0) {
 const json = (value, status = 200) =>
   new Response(JSON.stringify(value), { status });
 async function mounted(t, boundary) {
+  let dispose;
+  t.after(() => dispose?.());
   const h = await atlasHarness(t);
   const { mountLabelEditor } = await h.server.ssrLoadModule(
     "/src/memory/labelEditor.ts",
@@ -30,14 +32,13 @@ async function mounted(t, boundary) {
   document.body.append(host);
   let closed = 0,
     saved = 0;
-  const dispose = mountLabelEditor(host, {
+  dispose = mountLabelEditor(host, {
     group: "circle",
     assets: ["one", "two"],
     fetch: boundary,
     onClose: () => closed++,
     onSaved: () => saved++,
   });
-  t.after(dispose);
   await new Promise((resolve) => setTimeout(resolve, 0));
   return {
     host,
