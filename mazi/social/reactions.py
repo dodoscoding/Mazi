@@ -8,6 +8,7 @@ from collections import defaultdict
 from mazi.archive.export import ExportArray
 from mazi.identity.core import Denied
 from . import conversations, social
+from .visibility import authorize_photos
 
 EMOJIS = ('👍', '❤️', '😂', '🎉')
 COLUMNS = {'photo': 'photo_id', 'memory': 'memory_id', 'comment': 'comment_id'}
@@ -83,8 +84,21 @@ def batch_reactions(store, user, group, targets):
     if len(set(parsed)) != len(parsed):
         raise ValueError('Choose unique targets')
     with store.transaction():
-        for target in parsed:
-            authorize_target(store, user, group, target)
+        store._member(user, group)
+        archive_targets = {conversations.Target(target.kind, target.id) for target in parsed if target.kind != 'comment'}
+        comments = {target.id for target in parsed if target.kind == 'comment'}
+        if comments:
+            slots = ','.join('?' for _ in comments)
+            rows = store.db.execute('SELECT c.id,c.photo_id,c.memory_id' + conversations.VISIBLE + ' AND c.id IN (' + slots + ')', (group, *sorted(comments))).fetchall()
+            if {row['id'] for row in rows} != comments:
+                raise Denied('Comment unavailable')
+            archive_targets.update(conversations._stored_target(row) for row in rows)
+        photos = sorted(target.id for target in archive_targets if target.kind == 'photo')
+        if photos:
+            authorize_photos(store, user, group, photos)
+        for target in archive_targets:
+            if target.kind == 'memory':
+                social._memory(store, user, group, target.id)
         return dict(items=_views(store, user, group, parsed))
 
 

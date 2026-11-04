@@ -45,3 +45,11 @@ An owner-supplied WhatsApp export (57 MB, 10,676 messages, 306 JPEGs) ran throug
 The run found two defects, both now fixed. Times written as `21.07.45` left every message undated, and a truncated JPEG was retried as a storage failure. With no date order chosen, 3,132 of the 10,676 messages remain ambiguous; choosing day/month/year resolves all of them.
 
 At the measured rate, learned indexing of 10,000 distinct photographs would take about 13 minutes on this Mac. That is an extrapolation, not a measurement. Retrieval quality on real photographs is not measured: English keyword and related queries on this mostly non-English chat returned no keyword matches, related search ranked all 300 photos, and the English answer abstained. A labeled query set from the owner is needed to score quality.
+
+## Reaction-page authorization
+
+A synthetic hosted page with one visible photograph and 20 native comments required 127 SQL calls per reaction batch. Repeating the same fixture before and after batch authorization produced 127 to 7 calls. Two warm reads changed from 3.805 and 3.624 seconds to 0.208 and 0.234 seconds. These measurements include current permission checks and PostgreSQL transaction time, and exclude browser/Vercel HTTP overhead. They are not a production latency guarantee.
+
+The batch now loads eligible comment targets once, deduplicates their original photo/memory targets, and shares bounded photo authorization with the existing label and conversation readers. Every requested target remains mandatory. Hidden, withdrawn, departed-author and deletion-tombstoned targets still deny the whole batch. Memory authorization retains the current all-original-children policy.
+
+A query-count regression caps the 21-target fixture at 15 statements instead of using a flaky wall-clock threshold. The [measurement and verification](../work/poteto/reaction-batch-performance/VERIFICATION.md) includes guarded reproduction and raw samples. The performance correction changes no storage schema or audience rule.
