@@ -309,3 +309,38 @@ test("denied reaction batches discard a previously visible comment and every rea
   assert.equal(h.host.querySelector("[aria-pressed]"), null);
   assert.doesNotMatch(h.host.textContent, /Alice|Ben|onerror/);
 });
+
+test("failed page loads offer an exact-cursor retry without leaking the previous projection", async (t) => {
+  let failed = true;
+  const h = await mount(
+    t,
+    "/src/social/ConversationPanel.tsx",
+    "default",
+    props,
+    async (path) => {
+      if (path.startsWith("/api/social/comments?")) {
+        const cursor = new URL(path, "http://localhost").searchParams.get(
+          "cursor",
+        );
+        if (cursor && failed) return Response.json({}, { status: 503 });
+        return Response.json({
+          items: [comment],
+          total: 2,
+          next_cursor: cursor ? null : "next-boundary",
+        });
+      }
+      return boundary(path);
+    },
+  );
+  await h.click(button(h, "Sonraki yorumlar"));
+  assert.match(h.host.textContent, /Sohbet yüklenemedi/);
+  assert.equal(h.host.querySelector("[aria-pressed]"), null);
+  failed = false;
+  await h.click(button(h, "Yeniden dene"));
+  const reads = h.calls.filter(({ path }) =>
+    path.startsWith("/api/social/comments?"),
+  );
+  assert.equal(reads.at(-1).path, reads.at(-2).path);
+  assert.equal(button(h, "Sonraki yorumlar"), undefined);
+  assert.match(h.host.textContent, /Alice/);
+});
