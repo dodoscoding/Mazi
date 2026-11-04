@@ -139,7 +139,7 @@ test("session checks stay neutral and introduction failures remain retryable", a
     await route.continue();
   });
   await page.goto("/welcome");
-  await expect(page.getByRole("status")).toContainText("Opening Mazi");
+  await expect(page.getByRole("status")).toContainText("Mazi açılıyor");
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
   release();
   await expect(
@@ -151,7 +151,10 @@ test("session checks stay neutral and introduction failures remain retryable", a
 test("archive access denial clears the authenticated shell", async ({
   page,
 }) => {
-  for (const endpoint of ["**/api/groups", "**/api/atlas?*"]) {
+  for (const [endpoint, path] of [
+    ["**/api/groups", "/"],
+    ["**/api/atlas?*", "/#/atlas"],
+  ]) {
     expect(
       (
         await page.request.post("/api/entry", {
@@ -166,7 +169,7 @@ test("archive access denial clears the authenticated shell", async ({
         body: JSON.stringify({ error: "Access withdrawn" }),
       }),
     );
-    await page.goto("/");
+    await page.goto(path);
     await expect(page.getByLabel("Shared code")).toBeVisible();
     await expect(page.getByRole("navigation")).toHaveCount(0);
     await expect(page.getByRole("link", { name: /sample Atlas/i })).toHaveCount(
@@ -174,6 +177,40 @@ test("archive access denial clears the authenticated shell", async ({
     );
     await page.unroute(endpoint);
   }
+});
+
+test("a denied Home read removes scoped content without ending a valid session", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/");
+  await expect(page.locator(".home-featured")).toContainText("Our summer");
+  await page.route("**/api/social/home?*", (route) =>
+    route.fulfill({
+      status: 403,
+      json: { error: "Access withdrawn" },
+    }),
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event("mazi:archive")));
+  await expect(
+    page.getByText("Bu grup şu anda açılamıyor. Erişimin değişmiş olabilir.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".home-featured, .home-plan, .activity-list"),
+  ).toHaveCount(0);
+  await expect(page.getByText("Our summer", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toBeVisible();
+  expect((await page.request.get("/api/session")).ok()).toBe(true);
 });
 
 test("an old Atlas denial cannot clear a newer authorized load", async ({
@@ -215,7 +252,7 @@ test("an old Atlas denial cannot clear a newer authorized load", async ({
   await held;
   await page.evaluate(() => window.dispatchEvent(new Event("mazi:group")));
   await expect(
-    page.getByRole("button", { name: "Select Our summer", exact: true }),
+    page.getByRole("button", { name: "Our summer anısını seç", exact: true }),
   ).toBeVisible();
   release();
   await delivery;
@@ -223,7 +260,7 @@ test("an old Atlas denial cannot clear a newer authorized load", async ({
     page.getByRole("navigation", { name: "Main navigation" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Select Our summer", exact: true }),
+    page.getByRole("button", { name: "Our summer anısını seç", exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
 });
