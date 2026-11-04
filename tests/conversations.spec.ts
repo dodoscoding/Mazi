@@ -472,11 +472,9 @@ for (const replay of [false, true])
     await expect(page.getByLabel("Yorum yaz", { exact: true })).toHaveValue("");
     expect(batches).toEqual([21, 21]);
     if (replay && test.info().project.name === "phone")
-      await page
-        .locator(".confirmed-comment")
-        .screenshot({
-          path: "work/poteto/social-conversations-ui/confirmed-phone.png",
-        });
+      await page.locator(".confirmed-comment").screenshot({
+        path: "work/poteto/social-conversations-ui/confirmed-phone.png",
+      });
     if (replay) {
       expect(sent).toHaveLength(2);
       expect(sent[0]).toEqual(sent[1]);
