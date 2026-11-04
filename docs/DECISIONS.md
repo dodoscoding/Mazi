@@ -143,6 +143,14 @@ This changes navigation and presentation, not storage, access, metadata semantic
 
 On 4 November 2026, P1 extends Ekle into a menu with Fotoğraf veya arşiv and Buluşma planla. Grubumuz exposes Planlar. A plan detail link carries its group and stable plan ID, and rechecks the current circle. The route loads independently of Atlas so an empty group can arrange its first meeting. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records the two-profile desktop/phone journey and remaining acceptance limits.
 
+## Social feature bundle budget, 4 November 2026
+
+**D27: Keep the initial script limit and budget the optional social code.** The authorized social-space implementation adds plans, manual labels, conversations, filters and bounded Home reads. The combined plans and labels candidate measures 401.8 KiB gzip across scripts, exceeding the earlier 400 KiB total ceiling by 1.8 KiB. Its entry script is 149.1 KiB and its stylesheet is 36.9 KiB, both within their existing limits.
+
+Allocate 420 KiB gzip for total scripts in this increment. Keep entry JavaScript at 150 KiB, CSS at 40 KiB and the Globe chunk at 256 KiB. No new UI dependency is authorized by this decision. Load optional editors and social tools on use. Do not increase a primary limit to absorb feature growth. [Measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) records the candidate and commands.
+
+The final combined release must pass all bundle gates. H1 must also prove that initial Home requests neither Atlas nor a notebook per card. This is a delegated engineering budget decision, not evidence of hosted latency, physical-phone acceptance or a production milestone.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.

@@ -11,9 +11,11 @@ These budgets gate a release of the current app. The bundle budgets run in CI. T
 | Globe chunk        | 256 KiB        | 242.9 KiB                |
 | Entry script       | 150 KiB        | 135.8 KiB                |
 | Stylesheet         | 40 KiB         | 34.9 KiB                 |
-| All scripts        | 400 KiB        | 378.7 KiB                |
+| All scripts        | 420 KiB        | 378.7 KiB                |
 
-The ceilings sit just above the current build, so any growth is a visible choice. Lowering the Globe ceiling needs the code-splitting work that the build warning names.
+D27 allocates 20 KiB of additional total-script budget for the accepted social features. The entry script, stylesheet and Globe ceilings remain unchanged. The combined plans and labels build measured 401.8 KiB total, 149.1 KiB entry and 36.9 KiB CSS on 4 November 2026. The labels editor is still a pending feature PR at this measurement. [Decision and release gates](DECISIONS.md#social-feature-bundle-budget-4-november-2026) and [measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) record the scope. The final combined build must pass every ceiling before deployment.
+
+The ceilings make growth a visible choice. Lowering the Globe ceiling needs the code-splitting work that the build warning names.
 
 ## Hosted latency budgets
 
