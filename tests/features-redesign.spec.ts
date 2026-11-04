@@ -350,9 +350,11 @@ test("Search photographs stay usable while included categories load and retry", 
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText("1 photograph");
+  await expect(page.locator("#result-total")).toHaveText(
+    `1 / ${snapshot.total} fotoğraf`,
+  );
   const include = page.getByRole("button", {
-    name: "Include memories, chats, places and people",
+    name: "Anı, sohbet, yer ve kişileri dahil et",
   });
   await page.screenshot({
     path: info.outputPath("search-photographs-ready.png"),
@@ -367,7 +369,8 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#person")).toBeDisabled();
+  await expect(page.locator("#person")).toBeEnabled();
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
   await page
     .getByText("Yer, kişi, tarih ve etiketle daralt", { exact: true })
     .click();
@@ -375,7 +378,9 @@ test("Search photographs stay usable while included categories load and retry", 
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   release();
-  await expect(page.locator("#context-status")).toContainText("unavailable");
+  await expect(page.locator("#context-status")).toContainText(
+    "Diğer sonuç türleri yüklenemedi",
+  );
   await expect(include).toBeEnabled();
   await expect(page.locator("#results article")).toHaveCount(1);
   fail = false;
