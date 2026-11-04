@@ -21,7 +21,7 @@ test("three primary destinations and a quiet Home make the archive findable", as
     "Grubumuz",
   ]);
   await expect(
-    page.getByRole("link", { name: "Ekle", exact: true }).first(),
+    page.getByRole("button", { name: "Ekle", exact: true }).first(),
   ).toBeVisible();
   await expect(page.locator(".atlas-stage")).toHaveCount(0);
   await expect(
@@ -132,7 +132,7 @@ test("the three destinations and contribution action fit a narrow phone", async 
     ).toBe(true);
     const add = page
       .locator(".site-header")
-      .getByRole("link", { name: "Ekle", exact: true });
+      .getByRole("button", { name: "Ekle", exact: true });
     await expect(add).toBeVisible();
     const bounds = await add.boundingBox();
     expect(bounds!.height).toBeGreaterThanOrEqual(44);

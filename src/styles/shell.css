@@ -233,12 +233,7 @@
   gap: 8px;
   font-size: 14px;
 }
-.shell-add {
-  min-height: 44px;
-  padding: 0 18px;
-  font-size: 14px;
-  white-space: nowrap;
-}
+
 .account-menu .menu-button {
   padding: 0 14px;
 }
@@ -268,10 +263,7 @@
   .header-end {
     gap: 5px;
   }
-  .shell-add {
-    padding: 0 12px;
-    gap: 4px;
-  }
+
   .account-menu .menu-button {
     padding: 0 10px;
     gap: 4px;
@@ -286,4 +278,16 @@
   .account-menu .menu-popover {
     max-width: calc(100vw - 40px);
   }
+}
+
+.add-menu .menu-button {
+  min-height: 44px;
+  background: var(--accent-terminator);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+.add-menu .menu-popover {
+  left: auto;
+  right: 0;
+  max-width: calc(100vw - 32px);
 }
