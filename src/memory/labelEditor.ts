@@ -12,6 +12,7 @@ type Item = {
   people: { id: string; name: string }[];
   labels: Record<Dimension, Entry>;
 };
+let editorId = 0;
 const dimensions: Record<Dimension, [string, [string, string][]]> = {
   people_present: [
     "İnsan varlığı",
@@ -79,12 +80,15 @@ export function mountLabelEditor(
   const status = document.createElement("p");
   status.setAttribute("role", "status");
   const controls: HTMLSelectElement[] = [];
+  const id = ++editorId;
   form.append(title, facts);
   for (const dimension of Object.keys(dimensions) as Dimension[]) {
     const label = document.createElement("label");
     label.textContent = dimensions[dimension][0];
     const select = document.createElement("select");
     select.disabled = true;
+    select.id = `photo-label-${id}-${dimension}`;
+    label.htmlFor = select.id;
     select.append(
       option("Değiştirme", ""),
       ...dimensions[dimension][1].map(([key, text]) => option(text, key)),
@@ -95,8 +99,7 @@ export function mountLabelEditor(
       pending = null;
     };
     controls.push(select);
-    label.append(select);
-    form.append(label);
+    form.append(label, select);
   }
   const save = document.createElement("button");
   save.type = "submit";
