@@ -4,6 +4,7 @@ import type { Memory, Place } from "../memories";
 import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/icons";
 import { plural, shortDate, placeLabel } from "./format";
+import { evidencePin } from "../memory/evidence";
 import "../styles/place.css";
 
 /** POST /api/atlas/place; the server writes only for "matched" and "empty". */
@@ -66,14 +67,40 @@ export function usePlacedMemories(source: Memory[], group: string) {
             ? current.memories
             : source
           ).map((memory) =>
-            memory.id === id ? { ...memory, place: pin } : memory,
+            memory.id === id
+              ? {
+                  ...memory,
+                  place: pin,
+                  photos: memory.photos.map((photo) =>
+                    photo.evidence
+                      ? {
+                          ...photo,
+                          evidence: {
+                            ...photo.evidence,
+                            place: {
+                              status: "known",
+                              text: `${pin.name}, ${pin.country}`,
+                              pin,
+                            },
+                          },
+                        }
+                      : photo,
+                  ),
+                }
+              : memory,
           ),
         }));
       void fetch("/api/atlas?" + new URLSearchParams({ group }))
         .then((response) => (response.ok ? response.json() : null))
         .then((body: { memories: Memory[] } | null) => {
           if (body && request === latest.current)
-            setOverride({ source, memories: body.memories });
+            setOverride({
+              source,
+              memories: body.memories.map((memory) => ({
+                ...memory,
+                place: evidencePin(memory),
+              })),
+            });
         })
         .catch(() => {});
     },
