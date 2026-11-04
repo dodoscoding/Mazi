@@ -76,6 +76,9 @@ class ReviewStore(ImportStore):
         super().__init__(root)
         initialize_schema(self.db, SCHEMA)
 
+    def _attach_photo_labels(self, group, photos):
+        pass
+
     def _visible_ids(self, user, group):
         self._member(user, group)
         return [row[0] for row in self.db.execute(

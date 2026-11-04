@@ -1,3 +1,4 @@
+import { labelBadges } from "../../memory/labels";
 import {
   applyFilters,
   dateLabel,
@@ -32,6 +33,82 @@ export function createGallery(root, lifecycle, api) {
     newest = true,
     run = 0,
     opener = null;
+
+  let galleryGroup = "",
+    selecting = false,
+    selection = new Set(),
+    editorGeneration = 0,
+    disposeEditor;
+  const tools = document.createElement("section");
+  tools.className = "mem-label-tools";
+  tools.setAttribute("aria-label", "Fotoğraf seçimi");
+  const choose = document.createElement("button");
+  choose.textContent = "Fotoğraf seç";
+  choose.type = "button";
+  const count = document.createElement("span");
+  const edit = document.createElement("button");
+  edit.textContent = "Seçili etiketleri düzenle";
+  edit.type = "button";
+  const cancel = document.createElement("button");
+  cancel.textContent = "Seçimi temizle";
+  cancel.type = "button";
+  const editor = document.createElement("div");
+  tools.append(choose, count, edit, cancel, editor);
+  $("grid").before(tools);
+  function closeEditor() {
+    editorGeneration++;
+    disposeEditor?.();
+    disposeEditor = undefined;
+    editor.replaceChildren();
+  }
+  function selectionState() {
+    count.textContent = `${selection.size} fotoğraf seçildi · En fazla 50`;
+    edit.disabled = !selection.size;
+    edit.hidden = cancel.hidden = !selecting;
+    choose.setAttribute("aria-pressed", String(selecting));
+    root.querySelectorAll(".mem-photo-select input").forEach((input) => {
+      input.checked = selection.has(input.value);
+      input.disabled = !input.checked && selection.size === 50;
+    });
+  }
+  choose.onclick = () => {
+    selecting = !selecting;
+    if (!selecting) selection.clear();
+    closeEditor();
+    selectionState();
+    update();
+  };
+  cancel.onclick = () => {
+    selection.clear();
+    closeEditor();
+    selectionState();
+  };
+  edit.onclick = async () => {
+    const current = run,
+      generation = ++editorGeneration,
+      assets = [...selection];
+    const { mountLabelEditor } = await import("../../memory/labelEditor");
+    if (current !== run || generation !== editorGeneration || !assets.length)
+      return;
+    disposeEditor?.();
+    disposeEditor = mountLabelEditor(editor, {
+      group: galleryGroup,
+      assets,
+      fetch: lifecycle.fetch,
+      onClose: closeEditor,
+      onSaved: () => {
+        void load(galleryGroup);
+        window.dispatchEvent(new Event("mazi:archive-changed"));
+      },
+    });
+    editor.scrollIntoView({ block: "nearest" });
+  };
+  selectionState();
+  lifecycle.onDispose(() => {
+    run++;
+    closeEditor();
+    selection.clear();
+  });
 
   function node(tag, text, className) {
     const el = document.createElement(tag);
@@ -172,13 +249,37 @@ export function createGallery(root, lifecycle, api) {
       node("span", photoDateLabel(photo, memory)),
       node("span", photoPlaceLabel(photo, memory)),
     );
+    facts.append(
+      ...labelBadges(photo.labels).map((text) =>
+        node("span", text, "photo-label-badge"),
+      ),
+    );
     link.append(facts);
     if (!photo.evidence && memory.approximate) {
       const badge = node("span", "About", "mem-about");
       badge.setAttribute("aria-hidden", "true");
       link.append(badge);
     }
-    return link;
+    if (!selecting || !photo.assetId) return link;
+    const cell = node("div", undefined, "mem-photo-cell");
+    const label = node("label", undefined, "mem-photo-select");
+    const checkbox = node("input");
+    checkbox.type = "checkbox";
+    checkbox.value = photo.assetId;
+    checkbox.checked = selection.has(photo.assetId);
+    checkbox.disabled = !checkbox.checked && selection.size === 50;
+    checkbox.onchange = () => {
+      if (checkbox.checked && selection.size < 50) selection.add(photo.assetId);
+      else selection.delete(photo.assetId);
+      closeEditor();
+      selectionState();
+    };
+    label.append(
+      checkbox,
+      document.createTextNode(`Fotoğraf seç: ${photo.caption || memory.title}`),
+    );
+    cell.append(label, link);
+    return cell;
   }
   function emptyState() {
     const box = node("div", undefined, "mem-empty");
@@ -403,6 +504,11 @@ export function createGallery(root, lifecycle, api) {
 
   async function load(group) {
     const current = ++run;
+    galleryGroup = group;
+    closeEditor();
+    selection.clear();
+    selecting = false;
+    selectionState();
     memories = [];
     filters = emptyFilters();
     if (!group) return;
