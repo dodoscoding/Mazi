@@ -709,3 +709,71 @@ test("same-photo filters survive reload and keep original child links at narrow 
     });
   }
 });
+
+test("Gallery presentation controls retain failed matching authority until retry succeeds", async ({
+  page,
+}, info) => {
+  if (info.project.name === "phone")
+    await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/#/memories");
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
+  let failed = false;
+  await page.route("**/api/discovery/matches?**", (route) => {
+    if (failed) return route.continue();
+    failed = true;
+    return route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: "Synthetic capacity failure",
+        code: "capacity_exceeded",
+      }),
+    });
+  });
+  if (info.project.name === "phone")
+    await page.locator("#filters-open").click();
+  await page
+    .getByRole("group", { name: "Ekran görüntüsü", exact: true })
+    .getByRole("checkbox", { name: /^Evet/ })
+    .check();
+  await expect(page.locator("#grid-summary")).toHaveText(
+    "Eşleşmeler yüklenemedi.",
+  );
+  if (info.project.name === "phone")
+    await page.locator("#filters-apply").click();
+  for (const control of [
+    page.locator('[data-view="all"]'),
+    page.locator("#grid-order"),
+    page.getByRole("button", { name: "Fotoğraf seç", exact: true }),
+  ]) {
+    await control.click();
+    await expect(page.locator("#grid-summary")).toHaveText(
+      "Eşleşmeler yüklenemedi.",
+    );
+    await expect(
+      page
+        .locator("#grid")
+        .getByRole("button", { name: "Yeniden dene", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".mem-tile")).toHaveCount(0);
+    await expect(page.locator("#grid .mem-empty")).toHaveCount(0);
+  }
+  await page
+    .locator("#grid")
+    .getByRole("button", { name: "Yeniden dene", exact: true })
+    .click();
+  await expect(page.locator("#grid-summary")).toHaveText(
+    "0 eşleşen fotoğraf · 3 görünür fotoğraf",
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Bu filtrelerle eşleşen fotoğraf yok",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/screenshot=yes/);
+  await expect(page.locator('[data-view="all"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
