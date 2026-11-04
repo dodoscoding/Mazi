@@ -190,7 +190,8 @@ test("a denied Home read removes scoped content without ending a valid session",
     ).ok(),
   ).toBe(true);
   await page.goto("/");
-  await expect(page.locator(".home-featured")).toContainText("Our summer");
+  await expect(page.locator(".home-featured h2")).toBeVisible();
+  const privateTitle = await page.locator(".home-featured h2").innerText();
   await page.route("**/api/social/home?*", (route) =>
     route.fulfill({
       status: 403,
@@ -206,7 +207,7 @@ test("a denied Home read removes scoped content without ending a valid session",
   await expect(
     page.locator(".home-featured, .home-plan, .activity-list"),
   ).toHaveCount(0);
-  await expect(page.getByText("Our summer", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(privateTitle, { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("navigation", { name: "Main navigation" }),
   ).toBeVisible();

@@ -350,9 +350,7 @@ test("Search photographs stay usable while included categories load and retry", 
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText(
-    `1 / ${snapshot.total} fotoğraf`,
-  );
+  await expect(page.locator("#result-total")).toHaveText("1 fotoğraf");
   const include = page.getByRole("button", {
     name: "Anı, sohbet, yer ve kişileri dahil et",
   });
@@ -369,7 +367,10 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#person")).toBeEnabled();
+  await expect(page.locator('[data-photo-filter^="person:"]')).toBeEnabled();
+  await expect(page.locator(".photo-filters")).toContainText(
+    `Sayaçların paydası: görünür ${snapshot.total} fotoğrafın tamamı.`,
+  );
   await expect(page.locator(".disc-tag select")).toBeDisabled();
   await page
     .getByText("Yer, kişi, tarih ve etiketle daralt", { exact: true })
