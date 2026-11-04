@@ -411,11 +411,12 @@ class DiscoveryStore(SourceStore):
             eligible = eligible and self._enabled(row['group_id'], annotation['actor_id']) and bool(self.db.execute('SELECT 1 FROM members WHERE group_id=? AND user_id=?', (row['group_id'], annotation['actor_id'])).fetchone())
         fingerprint = hashlib.sha256(json.dumps([self.encoder.version, content, [(o['id'], o['payload']) for o in origins]], ensure_ascii=False).encode()).hexdigest()
         sources = {r[0] for r in self.db.execute('SELECT DISTINCT r.source FROM import_runs r JOIN archive_origins o ON o.run_id=r.id JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id WHERE o.asset_id=? AND o.withdrawn=0', (asset,))}
-        context = context or SharingContext(self, user, row['group_id'], time.perf_counter(), DISCOVERY_SCAN_SECONDS, bounded=False)
-        provenance = [context.provenance(origin['run_id'], payload) for origin, payload in zip(origins, evidence)]
-        photo = resolve_photo(dates, provenance, annotation['place'] if annotation else '', shared)
-        return dict(id=asset, title=title, date=day, place=place or '', content=content, eligible=bool(eligible), fingerprint=fingerprint, sources=sources,
-                    shared_by=sharers(evidence, (o['owner_name'] for o in origins)), cities=cities, countries={p['country'] for p in shared}, evidence=photo)
+        result = dict(id=asset, title=title, date=day, place=place or '', content=content, eligible=bool(eligible), fingerprint=fingerprint, sources=sources,
+                      shared_by=sharers(evidence, (o['owner_name'] for o in origins)), cities=cities, countries={p['country'] for p in shared})
+        if context is not None:
+            provenance = [context.provenance(origin['run_id'], payload) for origin, payload in zip(origins, evidence)]
+            result['evidence'] = resolve_photo(dates, provenance, annotation['place'] if annotation else '', shared)
+        return result
 
     def _bounded_document(self, user, asset):
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
@@ -476,7 +477,7 @@ class DiscoveryStore(SourceStore):
                 raise CapacityExceeded('Local index supports up to 10,000 visible photographs')
             if large:
                 candidates = []
-                for doc in self._keyword_documents(user, group, '', started, processing=True):
+                for doc in self._keyword_documents(user, group, '', started, processing=True, photo_evidence=False):
                     if len(candidates) < limit and doc['eligible'] and self._cached_vectors(doc) is None:
                         candidates.append(doc['id'])
                 ids = candidates
@@ -516,12 +517,12 @@ class DiscoveryStore(SourceStore):
             visible = self._visible_ids(user, group)
             if large and len(visible) > DISCOVERY_ITEMS:
                 raise CapacityExceeded('Local index supports up to 10,000 visible photographs')
-            documents = (self._keyword_documents(user, group, '', time.perf_counter(), processing=True) if large
+            documents = (self._keyword_documents(user, group, '', time.perf_counter(), processing=True, photo_evidence=False) if large
                          else (self._document(user, asset) for asset in visible))
             remaining = sum(doc['eligible'] and self._cached_vectors(doc) is None for doc in documents)
         return dict(indexed=indexed, discarded=discarded, remaining=remaining)
 
-    def _keyword_documents(self, user, group, person, started, processing=False, bounded_metadata=True):
+    def _keyword_documents(self, user, group, person, started, processing=False, bounded_metadata=True, photo_evidence=True):
         last_asset = last_origin = ''
         asset, records, shared, sources, owners, annotation = None, [], [], set(), set(), None
         provenance = []
@@ -536,7 +537,7 @@ class DiscoveryStore(SourceStore):
                 raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
             if bounded_metadata and request_origins > 100000:
                 raise CapacityExceeded('Local discovery exceeded its metadata origin-count budget')
-        context = SharingContext(self, user, group, started, scan_seconds, bounded_metadata, consume_context)
+        context = SharingContext(self, user, group, started, scan_seconds, bounded_metadata, consume_context) if photo_evidence else None
         hidden = hidden_event_assets(self, user, group)
         byte_length = 'octet_length(o.payload)' if getattr(self.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
         payload = f'CASE WHEN {byte_length}<=? THEN o.payload ELSE NULL END' if bounded_metadata else 'o.payload'
@@ -563,7 +564,9 @@ class DiscoveryStore(SourceStore):
                                 *[str(c.get('text') or '') for p in records for c in p.get('context', [])]])
             result = dict(id=asset, title=title, date=day, place=place, content=content,
                           sources=sources, shared_by=sharers(records, owners), cities=cities, countries={item['country'] for item in shared},
-                          person_match=annotation['person_match'], evidence=resolve_photo(dates, provenance, annotation['place'] or '', shared))
+                          person_match=annotation['person_match'])
+            if photo_evidence:
+                result['evidence'] = resolve_photo(dates, provenance, annotation['place'] or '', shared)
             if processing:
                 fingerprint = hashlib.sha256(json.dumps([self.encoder.version, content, fingerprints], ensure_ascii=False).encode()).hexdigest()
                 result.update(eligible=eligible, fingerprint=fingerprint)
@@ -616,7 +619,8 @@ class DiscoveryStore(SourceStore):
                     raise CapacityExceeded('Words & filters metadata exceeds the 64 MiB request limit')
                 record = json.loads(row['payload'])
                 records.append(record)
-                provenance.append(context.provenance(row['run_id'], record))
+                if context is not None:
+                    provenance.append(context.provenance(row['run_id'], record))
                 if processing:
                     fingerprints.append((row['origin'], row['payload']))
                     eligible = eligible and bool(row['eligible'])

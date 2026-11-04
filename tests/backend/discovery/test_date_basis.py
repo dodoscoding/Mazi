@@ -186,5 +186,30 @@ class DateBasisTests(unittest.TestCase):
                     self.store.search(self.alice, self.group, mode='semantic', similar='capacity-00000', date_basis='chronology')
         finally:
             self.store.db.row_factory = sqlite3.Row
-        self.assertEqual(oversized, [None])
+        self.assertTrue(oversized)
+        self.assertTrue(all(payload is None for payload in oversized))
         self.assertFalse(self.store.db.in_transaction)
+
+    def test_large_public_index_owns_only_vector_metadata_and_keeps_origin_guards(self):
+        from unittest.mock import patch
+        from mazi.capacity import CapacityExceeded
+        capacity_helpers.ArchiveCapacityTests.seed_projection(self, 1001)
+        self.set_evidence('capacity-00000', share='04/05/2024, 21:00')
+        self.store.processing(self.alice, self.group, True)
+        self.store.processing(self.alice, self.group, True, group_wide=True)
+        with self.store.transaction():
+            row = self.store.db.execute("SELECT id,payload FROM archive_origins WHERE asset_id='capacity-00001'").fetchone()
+            payload = json.loads(row['payload'])
+            payload['context'] = [dict(text='x' * 70000, shared_at='23/05/2024, 10:00')]
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+        with patch('mazi.archive.photo_context.SharingContext._load', side_effect=AssertionError('Vector indexing must not resolve sharing dates')):
+            with self.assertRaisesRegex(CapacityExceeded, 'per-origin'):
+                self.store.index_batch(self.alice, self.group, limit=1)
+            self.assertEqual(self.store.db.execute('SELECT count(*) FROM discovery_vectors').fetchone()[0], 0)
+            self.assertFalse(self.store.db.in_transaction)
+            with self.store.transaction():
+                payload['context'] = [dict(text='Synthetic day-order proof', shared_at='23/05/2024, 10:00')]
+                self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+            with patch.object(self.store, 'asset_bytes', return_value=b'synthetic'), patch.object(self.store.encoder, 'visual_vector', return_value=[1.0] * self.store.encoder.dimensions['visual']):
+                result = self.store.index_batch(self.alice, self.group, limit=1)
+            self.assertEqual(result['indexed'], 1)

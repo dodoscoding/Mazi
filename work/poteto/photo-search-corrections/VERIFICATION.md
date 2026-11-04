@@ -35,3 +35,11 @@ These captures show only synthetic fixture content. The phone result and date co
 ## Remaining A2 work
 
 Selected-photo correction writes, the optimistic-concurrency snapshot, detail actions and the reviewed-place export gap belong to the next A2-write PR. A2-read introduces no schema, writer or ownership change. Physical-phone and five-friend acceptance remain separate. The coordinator owns independent review, merge, final full-suite verification and deployment.
+
+## Vector projection review correction
+
+Independent review of `1e3eeb5` found that the new default `_document` sharing projection could read an oversized neighboring origin through a supposedly bounded similar-image reference or index read. Red commit `393128a` reproduces the unneeded cross-photo read and observes the actual 70 KiB neighboring payload being fetched.
+
+The correction removes sharing evidence from default vector documents and explicitly requests photo evidence only for user-facing Search reads. Both index streaming scans request vector metadata alone. Content, fingerprint, consent and generation checks retain their existing inputs. A public large-index regression forbids sharing-context resolution, checks atomic rejection of an oversized origin, and then verifies successful indexing with permitted small metadata. The public similar-image regression observes oversized payload projections and requires every fetched value to be null, allowing separate bounded scans without allowing the payload through.
+
+After this correction, 51 focused date/reference/index/10,000-photo parity/discovery/learned-model tests passed. Two additional keyword origin/request-boundary tests passed, including guard-before-fetch and rollback after earlier matches. Existing scaling fixtures emitted SQLite ResourceWarnings but no failures. Document checks and the complete branch whitespace check against `88830a7` passed. No UI code changed in this correction, so the previously recorded browser/DOM runs were not repeated for it.
