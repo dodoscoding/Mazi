@@ -144,3 +144,25 @@ Archive export uses a separate complete location projection for the authorized p
 Before admitting an archive download, the server compares the metadata and policy projection used to construct the ZIP against one current authorized projection under a metadata-only transaction. The comparison includes live origin and owner identities even when another contribution keeps the same photograph visible, retained resources, locations, annotations, People and personal discovery state. A changed projection returns a retryable conflict before ZIP delivery. Validation does not download original or resource bytes again. Successful final comparison is the admission point; changes committed afterward cannot retract bytes already admitted or sent. This is not a whole-export atomic snapshot.
 
 The browser archive download is prepared in a private temporary file before response headers. Its exact length is sent only after complete construction and policy admission. Interrupted delivery closes the connection, allowing the client to detect truncation; it does not append a JSON error to ZIP bytes. The temporary artifact is not a persistent download capability and is cleaned up when the request ends.
+
+## Group plans and attendance API
+
+The P1 backend implements the [social-space plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) with independent plans. A plan requires no archive photo. The UI and social Home remain separate delivery slices.
+
+`GET /api/social/plans` accepts `group`, `scope=upcoming|all`, `limit` from 1 to 50 and an opaque cursor. Results sort by UTC start and stable ID. Upcoming means active plans whose start has not passed the server clock. `GET /api/social/plan` reads one plan with current organizer and active-member attendance.
+
+Authenticated JSON writes use the following routes. Every write checks the request origin and current group membership inside its transaction.
+
+| Route | Fields beyond group and request_key | Contract |
+| --- | --- | --- |
+| `/api/social/plans/create` | title, start_local, timezone; optional start_offset, end_local, end_offset, place, description, memory | Creates one plan and preserves its stable ID on exact retry. |
+| `/api/social/plans/update` | plan, revision, patch | Organizer-only allowlisted patch. Omitted fields remain unchanged. |
+| `/api/social/plans/cancel` | plan, revision | Organizer-only cancellation closes attendance writes. |
+| `/api/social/plans/delete` | plan, revision | Organizer-only removal also removes attendance. |
+| `/api/social/attendance` | plan, state | Desired state is yes, maybe, no or null. Repeating a state does not increase its revision or count. |
+
+Plan local times use ISO calendar values without an offset and an IANA timezone. A nonexistent wall time is rejected. A repeated wall time requires a valid explicit `start_offset` or `end_offset`, such as `+01:00`. UTC instants and original local values are retained separately. An end must follow its start. A plan's optional approved-memory link is returned only while every original child remains visible to the reader. Linking never changes archive capture or sharing dates.
+
+Plan edits, cancellation and deletion require the expected positive integer revision and return HTTP 409 on stale state. Attendance and cancellation serialize in the same write boundary. Group-and-actor-scoped request receipts retain the operation, canonical payload hash and result ID. Exact replay reads the surviving result without another write. A newer attendance state is preserved when an older request is replayed. A removed result returns `{id, deleted: true}`. Reusing a key with different content conflicts. Receipts retain no comment text, plan description or member name.
+
+SQLite schema initialization and the hosted migration create the same plan, attendance and receipt relationships. PostgreSQL epoch columns use double precision. Membership-delete triggers withdraw the departed organizer's plans and dependent attendance, and remove the departed attendee's responses even when removal uses the identity store. Current-member joins also exclude departed actors on reads. The archive ZIP adds `social.json` when the exporting member has authored plans or current attendance. It contains only those contributions. It participates in both export assembly and final admission fingerprints.

@@ -134,3 +134,9 @@ Every source section has a planning home and a delivery milestone. These rows re
 | B28 Quality requirements | TEST_PLAN, ARCHITECTURE | All milestones |
 | B29 Engineering principle | CONTRACTS | M0 onward |
 | B30 Final product goal | ROADMAP, SPEC | M5 through M7 |
+
+## Independent group plans backend
+
+The P1 backend of the [social-space implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) lets current group members create a future or past meeting without uploading a photo. The organizer controls its title, local start and optional end, IANA timezone, place, description, cancellation and optional visible approved-memory link. Members set or clear one attendance response each. Upcoming results use server time and exclude cancelled or started plans.
+
+The backend includes bounded list/detail reads, transactional retry protection, revision conflicts, membership cleanup and authored-contribution export in SQLite and the hosted PostgreSQL schema. [The API contract](CONTRACTS.md#group-plans-and-attendance-api) defines the wire behavior. Circle/Add entry points, browser forms and social Home remain pending implementation in their own slices. Backend completion does not imply the five-friend findability gate or a physical-phone pilot has passed.
