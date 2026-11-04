@@ -21,18 +21,29 @@ class AppServer(ThreadingHTTPServer):
     request_queue_size = 128
 
     def __init__(self, server_address, handler, bind_and_activate=True):
-        dispatch_lock = threading.Lock()
+        self._dispatch_lock = threading.Lock()
+        self._closed = False
+        dispatch_lock = self._dispatch_lock
 
         class SerializedHandler(handler):
             def do_GET(self):
                 with dispatch_lock:
+                    if self.server._closed:
+                        return self.send_error(503, 'Server is closing')
                     return super().do_GET()
 
             def do_POST(self):
                 with dispatch_lock:
+                    if self.server._closed:
+                        return self.send_error(503, 'Server is closing')
                     return super().do_POST()
 
         super().__init__(server_address, SerializedHandler, bind_and_activate)
+
+    def server_close(self):
+        with self._dispatch_lock:
+            self._closed = True
+            super().server_close()
 
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
