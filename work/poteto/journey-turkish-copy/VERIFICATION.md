@@ -21,3 +21,5 @@ The 320-pixel visual audit exposed the fallback notice under the expanded phone 
 [320-pixel Atlas](phone-atlas.png), [summary](phone-summary.png), [timeline](phone-timeline.png), and [desktop timeline](desktop-timeline.png) use explicit sample mode, a force-local temporary archive and reduced motion. All screenshots were inspected; viewport overflow and expanded-notice disposal were asserted. These are emulated synthetic views, not physical-device or five-friend acceptance.
 
 Independent review and final combined F2/H1 regression remain with the delivery coordinator. No production mutation or deployment occurred in this slice.
+
+Independent review identified three stale expected strings in the legacy place-tray DOM contract. Test-only correction `e279efd` preserves every behavior assertion and matches the translated count and unknown-city message. Superseding independent review passes all 16 Atlas/timeline/photo/place DOM contracts, 17 desktop/phone interaction cases with one inapplicable skip, and nine recovery contracts. The original finding and recheck are retained in the delivery audit. Runtime remains `f588538`.
