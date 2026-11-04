@@ -143,6 +143,8 @@ This changes navigation and presentation, not storage, access, metadata semantic
 
 On 4 November 2026, P1 extends Ekle into a menu with Fotoğraf veya arşiv and Buluşma planla. Grubumuz exposes Planlar. A plan detail link carries its group and stable plan ID, and rechecks the current circle. The route loads independently of Atlas so an empty group can arrange its first meeting. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records the two-profile desktop/phone journey and remaining acceptance limits.
 
+On 4 November 2026, H1 replaces real Home's full-archive landing read with one bounded social summary. The feature order is upcoming plan, visible conversation, photo fallback and empty planning. Grubumuz exposes the activity route. Selected details use a dedicated authorized card read, including grouped permanent photo IDs. The existing sample Home stays local. Optional feature/detail code now loads on its route, with shared photo styles retained at their consumers and an explicit chunk-error reload. [H1 interface evidence](../work/poteto/social-home-ui/VERIFICATION.md) records network, latency, focus and two-session checks. This completes synthetic frontend adoption, not the physical-phone or five-friend acceptance gates.
+
 ## Social feature bundle budget, 4 November 2026
 
 **D27: Keep the initial script limit and budget the optional social code.** The authorized social-space implementation adds plans, manual labels, conversations, filters and bounded Home reads. The combined plans and labels candidate measures 401.8 KiB gzip across scripts, exceeding the earlier 400 KiB total ceiling by 1.8 KiB. Its entry script is 149.1 KiB and its stylesheet is 36.9 KiB, both within their existing limits.

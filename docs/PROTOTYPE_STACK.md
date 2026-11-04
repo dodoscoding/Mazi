@@ -15,8 +15,8 @@ The loopback `AppServer` accepts connections on separate threads so an idle brow
 | Directory | Responsibility |
 | --- | --- |
 | `src/App.tsx`, `src/navigation.ts`, `src/Shell.tsx` | Route dispatch, one navigation table, three primary destinations and shared contribution/account controls. |
-| `src/Home.tsx`, `src/Explore.tsx`, `src/Atlas.tsx` | Memory landing, capability directory, group links, and the separate Atlas selection/portal/renderer experience under D26. |
-| `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
+| `src/Home.tsx`, `src/Explore.tsx`, `src/Atlas.tsx` | Local sample landing, capability directory, group links, and the separate Atlas selection/portal/renderer experience under D26. |
+| `src/useArchive.ts`, `mazi/atlas.py` | Live authorized full Atlas only for Atlas/timeline consumers. Lazy `src/memory/SelectedMemory.tsx` owns current selected-detail reads, retries and private-state disposal. |
 | `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
 | `mazi/persistence.py`, `mazi/storage.py` | Backend selection, compatible rows/binding, schema-scoped transaction locks, verified private bytes and deletion receipts. |
 | `mazi/identity/` | Shared profiles, transactional circle/code setup, sessions and retained legacy domain contracts. |
@@ -24,7 +24,7 @@ The loopback `AppServer` accepts connections on separate threads so an idle brow
 | `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
 | `mazi/discovery/`, `mazi/answers/` | People, hiding, consent, search and evidence-based answers. |
 | `mazi/memories/` | Recaps, stories, revisions, capsules, subevents, slideshows, video and notices. |
-| `src/social/` | Lazy React plans and attendance plus selected-target conversations, bounded reaction batches and tab-memory retryable drafts. |
+| `src/social/` | Lazy React social Home, paged activity, plans/attendance and selected-target conversations, bounded reaction batches and tab-memory retryable drafts. |
 | `tests/backend/`, `tests/browser/`, `tests/unified.spec.ts` | Domain regression contracts, fixture servers and integrated app journeys. |
 
 `src/useEntry.ts` owns loading, signed-out, onboarding, ready and connection-error states. `src/Entry.tsx` renders login and the reusable introduction. The entry gate precedes every route, including samples. Shared-mode inherited HTTP authorization requires a mapped profile and current configured-circle membership; other circle IDs and legacy entry endpoints are denied. The additive profile/policy tables preserve existing user UUIDs, ownership and credentials. Introduction completion persists per profile; browser sessions expire after 30 days.
