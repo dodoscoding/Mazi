@@ -58,6 +58,17 @@ class SocialHomeTests(CommentsFixture):
         self.assertLessEqual(len(result['activity']['items']), 3)
         self.assertTrue(all(row['target'] != featured['target'] for row in result['activity']['items']))
 
+    def test_fallback_photo_excludes_its_reactions_without_hiding_other_targets(self):
+        initial = home.home_view(self.store, self.ben, self.group)
+        selected = initial['featured']['memory']['photos'][0]['assetId']
+        other = next(asset for asset in self.assets if asset != selected)
+        for index, asset in enumerate((selected, other)):
+            reactions.set_reaction(self.store, self.ben, self.group, 'fallback-' + str(index),
+                                   dict(kind='photo', id=asset), '👍', True)
+        result = home.home_view(self.store, self.ben, self.group)
+        self.assertEqual(result['featured']['memory']['id'], initial['featured']['memory']['id'])
+        self.assertEqual([row['target'] for row in result['activity']['items']], [dict(kind='photo', id=other)])
+
     def test_same_second_keyset_pages_do_not_duplicate_or_skip_existing_actions(self):
         with patch.object(conversations.time, 'time', return_value=2000000000):
             created = [self.create(key=str(index)) for index in range(5)]
