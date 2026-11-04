@@ -47,3 +47,20 @@ Selected event output matches the shared Atlas projector, including compact labe
 ## Remaining acceptance
 
 The backend APIs are verified independently of browser adoption. The coordinator still must integrate lazy Home/activity/selected-detail loaders, prove zero initial Atlas/notebook requests, check group/session clearing, run the full combined browser journey and deploy. Physical-device and five-friend findability gates remain human acceptance work. An explicit capacity error is retained if Home cannot establish its feature within the bounded candidate window. No UI screenshot or production milestone acceptance is claimed by this backend change.
+
+## Independent review corrections
+
+The initial independent review failed at `f5bb0f7` on fallback feature duplication and selected/context metadata budget composition. Root supplied the reaction-only regression and correction in `40588ef` / `e25e451`; both are retained here. Main `27b51d` was merged in `81199a3` without changing API shapes.
+
+The selected label test also had an unrelated ordering assumption: an accepted event preserves its asset order, which need not put the labelled fixture asset first. `4e21b65` asserts by permanent asset ID and retains exact selected/full-card equality and unknown-label omission.
+
+`fcfc464` exposed three failing assertions: legacy context could exceed the selected request's elapsed time, byte total and origin total. `12694e3` passes one started clock and one byte/origin consumer from the selected scan to `SharingContext`. Limits remain two seconds, 64 MiB and 65,536 origins. The extra context consumer rejects before parsing; a regression forbids context JSON parsing after exhausting the selected allowance. Context's existing per-origin and per-photo limits remain in force. No schema or response shape changed.
+
+Correction verification on the isolated synthetic environment:
+
+- `.venv/bin/python -m unittest tests.backend.social.test_home tests.backend.social.test_home_http tests.backend.social.test_label_summaries tests.backend.test_atlas tests.backend.test_atlas_projection`: 64 passed.
+- `.venv/bin/python -m unittest discover -s tests/backend/social -t .`: 105 tests passed, 16 hosted tests skipped.
+- Hosted `tests.backend.social.test_home_postgres` with explicit `mazi_social_20261104_test`, `mazi-social-test`, `MAZI_BACKEND=supabase` and `MAZI_TEST_POSTGRES=1`, loaded through `node --env-file=.env.supabase`: 3 passed. No production writes or DDL.
+- Focused pre-parse regression: passed. Document checker, Python compilation and full-branch whitespace checks passed.
+
+These corrections do not replace the independent re-review, frontend adoption or production acceptance gates.
