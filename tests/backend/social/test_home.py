@@ -6,7 +6,7 @@ from mazi import atlas
 from mazi.identity.core import Denied
 from mazi.capacity import CapacityExceeded
 from tests.backend import test_atlas
-from mazi.social import conversations, home, reactions, social
+from mazi.social import conversations, home, labels, reactions, social
 from tests.backend.social.test_comments import CommentsFixture
 from tests.backend.social.test_plans import PlansFixture
 
@@ -182,3 +182,16 @@ class SocialHomeTests(CommentsFixture):
             page = home.activity(self.store, self.alice, self.group, limit=1, cursor=page['next_cursor'])
         self.assertEqual([value.split(':')[0] for value in values], ['reaction', 'plan', 'comment'])
         self.assertEqual(len(set(values)), 3)
+
+    def test_selected_cards_and_home_previews_use_the_shared_compact_label_hook(self):
+        labels.set_labels(self.store, self.alice, self.group, 'label', [dict(asset=self.assets[0], changes={'screenshot': 'yes', 'ai': 'edited'}, expected={'screenshot': 0, 'ai': 0})])
+        event = self.store.review_event(self.alice, self.group, self.assets, 'Two winters', 'accept')
+        expected = atlas.atlas_view(self.store, self.ben, self.group)['memories'][0]
+        with patch.object(atlas, 'atlas_view', side_effect=AssertionError('Full Atlas forbidden')), patch.object(self.store, '_timeline_items', side_effect=AssertionError('Full timeline forbidden')):
+            selected = atlas.memory_view(self.store, self.ben, self.group, event)['memory']
+        self.assertEqual(selected, expected)
+        self.assertEqual(selected['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))
+        self.assertNotIn('labels', selected['photos'][1])
+        self.create()
+        summary = home.home_view(self.store, self.ben, self.group)
+        self.assertEqual(summary['featured']['preview']['photos'][0]['labels'], dict(screenshot='yes', ai='edited'))
