@@ -26,6 +26,7 @@ class PhotoCorrectionTests(unittest.TestCase):
         asset = self.assets[0]
         state = self.store.photo_correction(self.ben, self.group, asset)
         self.store.db.execute("UPDATE archive_origins SET fingerprint='changed' WHERE asset_id=?", (asset,))
+        self.store.db.commit()
         with self.assertRaises(Conflict):
             self.store.patch_photo(self.ben, self.group, asset, {'place': 'Paris'}, state['snapshot'])
         with self.assertRaises(Denied):
