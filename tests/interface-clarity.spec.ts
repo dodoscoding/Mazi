@@ -107,9 +107,7 @@ test("legacy portal links remain Atlas entries and globe links use the canonical
       .getByRole("navigation", { name: "Main navigation", exact: true })
       .getByRole("link", { name: "Keşfet", exact: true }),
   ).toHaveAttribute("aria-current", "page");
-  await page
-    .getByRole("link", { name: "Show on the globe", exact: true })
-    .click();
+  await page.getByRole("link", { name: "Kürede göster", exact: true }).click();
   await expect(page).toHaveURL(/#\/atlas\?selected=last-ferry$/);
   await expect(page.locator(".atlas-stage")).toHaveCount(1);
 });
@@ -178,7 +176,7 @@ test("Home distinguishes loading, retryable failure and an empty shared archive"
     release = resolve;
   });
   let requests = 0;
-  await page.route("**/api/atlas?*", async (route) => {
+  await page.route("**/api/social/home?*", async (route) => {
     requests++;
     if (requests === 1) {
       await firstResponse;
@@ -191,24 +189,35 @@ test("Home distinguishes loading, retryable failure and an empty shared archive"
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ memories: [] }),
+        body: JSON.stringify({
+          featured: null,
+          activity: { items: [], next_cursor: null },
+          server_time: new Date().toISOString(),
+          can_plan: true,
+        }),
       });
     }
   });
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(
-    page.getByText("Anılar yükleniyor…", { exact: true }),
+    page.getByText("Ana sayfa yükleniyor…", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "İlk anımızı ekleyelim", exact: true }),
+    page.getByRole("heading", {
+      name: "İlk buluşmamızı planlayalım",
+      exact: true,
+    }),
   ).toHaveCount(0);
   release();
   await expect(
-    page.getByRole("heading", { name: "Arşiv şu anda açılamadı", exact: true }),
+    page.getByRole("heading", { name: "Ana sayfa yüklenemedi", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Yeniden dene", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "İlk anımızı ekleyelim", exact: true }),
+    page.getByRole("heading", {
+      name: "İlk buluşmamızı planlayalım",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Fotoğraf veya arşiv ekle", exact: true }),

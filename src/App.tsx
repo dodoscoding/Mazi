@@ -169,6 +169,11 @@ export default function App() {
               link={link}
               heading={heading}
               openLink={openLink}
+              restore={
+                browsingReturn.current?.path === route.path
+                  ? browsingReturn.current
+                  : undefined
+              }
             />
           ) : (
             <SocialHome

@@ -210,6 +210,8 @@ test("photo-only Home fallback opens one selected photo and activity stays bound
   expect(new URL(page.url()).hash).toBe(href);
   await expect(page.locator(".memory-detail")).toBeVisible();
   expect(requests.filter((path) => path === "/api/atlas")).toEqual([]);
+  await page.locator(".back-pill").click();
+  await expect(selectedLink).toBeFocused();
   for (let index = 0; index < 22; index++)
     expect(
       (

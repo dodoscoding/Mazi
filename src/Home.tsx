@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { RefObject } from "react";
 import type { Memory } from "./memories";
 import { displayDate, placeLine } from "./memory/facts";
@@ -16,7 +17,9 @@ export function Home({
   link,
   heading,
   openLink,
+  restore,
 }: {
+  restore?: { openerId: string; scroll: number };
   archive: Archive;
   memories: Memory[];
   demo: boolean;
@@ -25,6 +28,11 @@ export function Home({
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
   const featured = memories[0];
+  useEffect(() => {
+    const opener = restore && document.getElementById(restore.openerId);
+    window.scrollTo(0, opener ? restore.scroll : 0);
+    (opener || heading.current)?.focus({ preventScroll: true });
+  }, [featured?.id]);
   const circle = demo
     ? "Sample Atlas"
     : archive.groups.find((group) => group.id === archive.group)?.name;

@@ -335,35 +335,35 @@ test("place, people and sources show evidence in plain words", async ({
   const people = page.getByRole("region", { name: "Kaynaklarda adı geçenler" });
   await expect(people).toContainText("Paylaşanlar");
   await expect(people).toContainText("Maya");
-  await expect(people).toContainText("In the conversation");
+  await expect(people).toContainText("Konuşmada adı geçenler");
   await expect(people).toContainText("Alex");
   await expect(page.locator("body")).not.toContainText(/were there|was there/i);
-  const sources = page.getByRole("region", { name: "Source evidence" });
+  const sources = page.getByRole("region", { name: "Kaynak bilgileri" });
   await expect(sources).toContainText("WhatsApp export");
   await expect(sources).toContainText("3 photos");
   await expect(sources).toContainText(
     "Dates: source capture evidence, undated",
   );
 
-  await page.getByRole("button", { name: "Show conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı göster" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Hide conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı gizle" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeHidden();
+  await expect(page.getByRole("link", { name: "Arşivi incele" })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Review this archive" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Write a shared story" }),
+    page.getByRole("link", { name: "Ortak bir hikâye yaz" }),
   ).toBeVisible();
 });
 
 test("related memories put the same place first and open that memory", async ({
   page,
 }) => {
+  await page.goto("/#/atlas");
+  await expect(page.locator(".featured")).toBeVisible();
   await open(page, "/memory/harbour-night");
   const related = page.getByRole("region", { name: "İlgili anılar" });
   const links = related.getByRole("link");
@@ -378,7 +378,7 @@ test("related memories put the same place first and open that memory", async ({
     page.getByRole("heading", { name: "Morning swim below the old port" }),
   ).toBeFocused();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
-  await expect(page).toHaveURL(/#\/$/);
+  await expect(page).toHaveURL(/#\/atlas$/);
   await expect(
     page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
   ).toBeVisible();
@@ -401,7 +401,7 @@ for (const backAction of ["pill", "Escape"]) {
     await expect(
       page
         .locator(".dossier")
-        .getByRole("link", { name: "Notları aç", exact: true }),
+        .getByRole("link", { name: "View notes", exact: true }),
     ).toBeVisible();
     await page.locator(".dossier-title h2 a").click();
     await expect(page).toHaveURL(/#\/memory\/harbour-night\?notebook=1$/);
@@ -466,7 +466,7 @@ test("earlier and later follow the dates, with approximate memories in place", a
     nav.getByRole("link", { name: /^Sonraki anı/ }),
   ).toHaveAccessibleName(/About in 2024/);
   await open(page, "/memory/about-2024");
-  await expect(nav).toContainText("Memory 3 of 4");
+  await expect(nav).toContainText("Anı 3 / 4");
   await expect(
     nav.getByRole("link", { name: /^Önceki anı/ }),
   ).toHaveAccessibleName(/Dated in 2023/);
@@ -492,7 +492,7 @@ test("a broken photo URL shows the retry state", async ({ page }) => {
   await expect(page.getByText("This photo could not load.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry photo" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Nerede" })).toContainText(
-    "No place recorded",
+    "Yer kaydedilmemiş",
   );
   await expect(page.locator(".date-chip")).toHaveText("Capture date unknown");
   const retried = page.waitForRequest("**/media/does-not-exist.webp*");
@@ -700,7 +700,7 @@ test("source sharing is visible on cards, portal and detail without a capture da
     "04/05/2024, 21:00 · date order unclear",
   );
   await expect(page.locator(".date-chip")).not.toContainText("About");
-  await expect(page.locator(".people")).toContainText("Added to archive by");
+  await expect(page.locator(".people")).toContainText("Arşive ekleyenler");
   await expect(page.locator(".people")).toContainText("Uploader");
   await page.screenshot({
     path: testInfo.outputPath("source-sharing.png"),
