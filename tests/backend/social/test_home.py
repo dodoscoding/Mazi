@@ -169,6 +169,28 @@ class SocialHomeTests(CommentsFixture):
         self.assertEqual(result['photos'][0]['provenance'][0]['sharedAt']['local'], '2024-05-04T21:00:00')
         self.assertEqual(self.store.photo_correction(self.ben, self.group, asset)['snapshot'], before)
 
+    def test_selected_and_legacy_context_share_elapsed_time_budget(self):
+        test_atlas.AtlasTests._whatsapp_shares(self,
+            '04/05/2024, 21:00 - Ana: a.jpg (file attached)\n23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        card = next(card for card in atlas.atlas_view(self.store, self.ben, self.group)['memories']
+            if card['photos'][0].get('provenance', [{}])[0].get('sharedAt', {}).get('raw') == '04/05/2024, 21:00')
+        ticks = iter([0, .6, 1.2, 1.8, 2.4, 3, 3, 3, 3])
+        with patch('time.perf_counter', side_effect=lambda: next(ticks, 3)):
+            with self.assertRaises(CapacityExceeded):
+                atlas.memory_view(self.store, self.ben, self.group, card['id'])
+
+    def test_selected_and_legacy_context_share_byte_and_origin_budgets(self):
+        test_atlas.AtlasTests._whatsapp_shares(self,
+            '04/05/2024, 21:00 - Ana: a.jpg (file attached)\n23/05/2024, 10:00 - Ana: b.jpg (file attached)')
+        card = next(card for card in atlas.atlas_view(self.store, self.ben, self.group)['memories']
+            if card['photos'][0].get('provenance', [{}])[0].get('sharedAt', {}).get('raw') == '04/05/2024, 21:00')
+        asset = card['photos'][0]['assetId']
+        selected = self.store.db.execute('SELECT sum(length(CAST(payload AS BLOB))) FROM archive_origins WHERE asset_id=? AND withdrawn=0', (asset,)).fetchone()[0]
+        for constant, limit in [('SELECTED_REQUEST_BYTES', selected), ('SELECTED_REQUEST_ORIGINS', 1)]:
+            with self.subTest(constant=constant), patch.object(atlas, constant, limit, create=True):
+                with self.assertRaises(CapacityExceeded):
+                    atlas.memory_view(self.store, self.ben, self.group, card['id'])
+
     def test_selected_photo_rejects_oversized_metadata_before_projecting_it(self):
         origin = self._origin(self.assets[0])
         row = self.store.db.execute('SELECT payload FROM archive_origins WHERE id=?', (origin,)).fetchone()
