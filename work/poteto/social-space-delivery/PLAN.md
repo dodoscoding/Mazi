@@ -7,7 +7,7 @@
 - [x] Phase B: Design the workflow.
 - [x] Phase C: Run the implementation loops for all eight runtime slices.
 - [x] Phase D: Keep the audit trail.
-- [ ] Phase E: Verify and hand back.
+- [x] Phase E: Verify and hand back.
 
 ## Acceptance predicate
 
@@ -33,13 +33,15 @@ PR #112 is merged. A1, A2, N1, F1, F2, P1, C1 and H1 are implemented in reviewed
 - [x] H1. Bounded social Home and activity. API #132 and UI #138 merged.
 - [x] Complete separate whole-change Standards and Spec reviews at runtime `1a0234a`.
 - [x] Complete local whole-product regression and record qualified isolated hosted evidence: all 23 paths passed across exact-path reruns; combined pooler timeout remains explicit.
-- [ ] Apply compatible hosted migrations and deploy merged production revision.
-- [ ] Verify deployed health, revision and representative access checks.
+- [x] Apply five compatible production migrations and deploy merged revision `41e74de` through staged checks and promotion.
+- [x] Verify deployment metadata/live alias, database health, private API denials, direct routes and anonymous desktop/320-pixel entry.
 
-All eight runtime slices are merged through #139 at `1a0234a1a41a78e46b60723748df6d7d089be4c2`. Production remains unchanged at this checkpoint. Local release suites pass; production migrations, deployment and live checks remain pending; the [delivery evidence](DELIVERY_EVIDENCE.md) records immutable revisions, original failures, superseding reviews and outstanding gates.
+All eight runtime slices are merged through #139 at `1a0234a1a41a78e46b60723748df6d7d089be4c2`. Production now serves `41e74de`; five migrations and staged/live checks pass. Local release suites pass; the [delivery evidence](DELIVERY_EVIDENCE.md) records immutable revisions, original failures, superseding reviews and outstanding gates.
 
 ## Design and verification
 
 Architect exploration compares two independent candidates before the shared shape is chosen. Reviewers use the configured reviewer role. Review independence uses one model family. Existing Playwright and Python contracts are the verification tools. Optional automatic classification is deferred by the plan until F2 and a source-verified pilot dataset exist.
 
 The original checkout and its unrelated untracked files stay untouched. GitHub connector tools own PR publication and merge operations. CLI tools supply local Git and Actions log capabilities.
+
+[Final rollout](ROLLOUT.md) records the deployed revision, staged404 and reviewed correction, production proof, rollback target and external acceptance limits.

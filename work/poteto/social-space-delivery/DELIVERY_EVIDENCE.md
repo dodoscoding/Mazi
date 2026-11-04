@@ -4,7 +4,7 @@
 
 The plan was merged first in [PR #112](https://github.com/dodoscoding/Mazi/pull/112), at `75727e0b3e28d0fea384f1c0f5cfdc4e04ed4914`. All eight runtime slices are merged through [PR #139](https://github.com/dodoscoding/Mazi/pull/139), runtime `1a0234a1a41a78e46b60723748df6d7d089be4c2`. Git first-parent history and GitHub merged-PR metadata agree for every PR below.
 
-This is a pre-deployment checkpoint. Production remains unchanged. The completed local release matrix and qualified hosted evidence are recorded below. Current main is `f69f605d5933bda1884784ba03646536a9fdc617` after reviewed test-only PRs #140/#142 and the separately reviewed About sentence in #141. Production migrations and live deployment evidence will be appended after execution.
+Production is live at [mazi-three.vercel.app](https://mazi-three.vercel.app), deployed revision `41e74de875ab145f4f9d11730df341830f89ab4b`. [Rollout evidence](ROLLOUT.md) records completed migrations, stage/promotion/live gates and the preserved pre-promotion routing failure. The completed local release matrix and qualified hosted evidence are recorded below. The validated pre-rollout integration candidate is `f69f605d5933bda1884784ba03646536a9fdc617` after reviewed test-only PRs #140/#142 and the separately reviewed About sentence in #141. PR #143 preserves the acceptance boundary; PR #144 supplies the independently reviewed hosting rewrite. Production and hosted qualifications are recorded below.
 
 ## Runtime slices and independent review
 
@@ -60,6 +60,8 @@ All entries below are merged on 4 November 2026. The revision column links each 
 | [#140](https://github.com/dodoscoding/Mazi/pull/140) | test(hosted): align private database contracts with current schema | [`d65dda9`](https://github.com/dodoscoding/Mazi/commit/d65dda9c65471720c127b8c9a8cfb3322982cff9) |
 | [#141](https://github.com/dodoscoding/Mazi/pull/141) | fix(about): describe private activity without outdated social claims | [`23388ce`](https://github.com/dodoscoding/Mazi/commit/23388cef28f522023243615351c7a6f9569f0528) |
 | [#142](https://github.com/dodoscoding/Mazi/pull/142) | test(browser): reconcile integrated social archive contracts | [`f69f605`](https://github.com/dodoscoding/Mazi/commit/f69f605d5933bda1884784ba03646536a9fdc617) |
+| [#143](https://github.com/dodoscoding/Mazi/pull/143) | docs(delivery): record reviewed social release acceptance | [`409d20c`](https://github.com/dodoscoding/Mazi/commit/409d20c5b2f31078a4bb9f35fdc835bdccd7783c) |
+| [#144](https://github.com/dodoscoding/Mazi/pull/144) | fix(routing): serve the app for direct memory links | [`41e74de`](https://github.com/dodoscoding/Mazi/commit/41e74de875ab145f4f9d11730df341830f89ab4b) |
 
 ## Final review axes
 
@@ -69,7 +71,7 @@ All entries below are merged on 4 November 2026. The revision column links each 
 
 ### Spec
 
-[Final Spec review](FINAL_SPEC_REVIEW.md): **PASS+NOTES**, no actionable software blocker at the same runtime head. Its P3 documentation note identified the stale combined-filter future status in CONTRACTS.md. The delivery documentation now corrects that sentence; the original finding is preserved. Human/pilot and deployment limits remain open.
+[Final Spec review](FINAL_SPEC_REVIEW.md): **PASS+NOTES**, no actionable software blocker at the same runtime head. Its P3 documentation note identified the stale combined-filter future status in CONTRACTS.md. The delivery documentation now corrects that sentence; the original finding is preserved. Human/pilot limits remain open; deployment completion is documented separately.
 
 The axes are recorded separately without a combined ranking or a claim that either completes deployment acceptance. [About copy delta](ABOUT_COPY_REVIEW.md) separately verifies PR #141 at `b1f5aef`: public audience claims now match private activity and reactions. Its canonical desktop/phone About paths pass; no application logic changed.
 
@@ -111,12 +113,12 @@ Environment: macOS 27.0 arm64, Node 24.15.0, Python 3.14.7, locked Playwright 1.
 
 The four `test:app` configurations are listed separately so their actual commands and counts remain auditable. Text-log trailing whitespace is normalized for Git; outcome text, commands, trace details and historical failures are retained. Earlier interrupted/failed attempts remain in `BROWSER_FINAL.log`, `APP_FINAL.log`, `CONVERSATIONS_FINAL.log`, the browser-correction record and hosted reports. Final green evidence supersedes only the identified failures; nothing is silently rewritten. [Browser correction verification](../ci-browser-contracts/VERIFICATION.md) records fixture consent, grouping cleanup, authoritative total snapshots and current-document logout-race setup.
 
-## Pending final release record
+## Final release record
 
 - Whole-product local suites: **PASS**, with exact counts and skips above. Pending GitHub workflow execution is separate from this completed local matrix; no remote CI pass is inferred. [Superseded CI cancellations](SUPERSEDED_CI.json) record only obsolete delivery runs.
 - Isolated hosted contracts: **PASS+NOTES across exact-path reruns**, after test-only PR #140. All 23 original paths have passing evidence against unchanged runtime. This is not a fresh green monolithic suite: the final four-case batch retained a 45-second pooler connection timeout before its lock window; each corrected path passed separately at `d9bf0df`. [Frozen failures and reruns](FINAL_HOSTED_VERIFICATION.md), [independent correction review](HOSTED_TEST_CONTRACTS_REVIEW.md), and original artifacts remain preserved. Cold hosted connection latency remains a limitation.
-- Production migrations: **not applied by this audit**. Compatible private-schema migrations must precede the application rollout; record their exact names and outcomes under the tested release revision.
-- Deployment: **pending**. Record the exact deployed commit, deployment ID/URL and health/session/representative access results after execution. Main merges do not deploy automatically.
+- Production migrations: **PASS**, five additive reviewed migrations applied before rollout. All nine new tables have RLS/runtime SELECT with no anon/authenticated direct SELECT; six Home indexes exist; the archive bucket remains private and security advisors report zero notices. [Manifest](PRODUCTION_MIGRATIONS.json).
+- Deployment: **PASS**, revision `41e74de`, deployment `dpl_6ghKTvCbAH9C7u3gDYdh2DMpS4Ab`, live at https://mazi-three.vercel.app. Stage and production each pass 18 HTTP checks and four anonymous browser entry routes plus 320-pixel layout. [Rollout](ROLLOUT.md) records exact commands, source/alias proof and rollback target.
 
 Hosted synthetic verification uses only `mazi_social_20261104_test` and the private `mazi-social-test` bucket. Production `mazi` remains separate. Credentials, private archive text and personal screenshots are excluded from this ledger.
 

@@ -1,0 +1,105 @@
+{
+  "recorded_at": "2026-11-04T15:29:07.672Z",
+  "release_sha": "409d20c5b2f31078a4bb9f35fdc835bdccd7783c",
+  "project_id": "elgwhwkqutmmbdjthubl",
+  "schema": "mazi",
+  "migrations": [
+    {
+      "source": "20261104112434_social_plans",
+      "sha256": "ef6eb25ffb84b9e263c122a7039983d0ab7be59a86ec9780eb508145070df4ad",
+      "success": true,
+      "hosted_name": "social_plans_release_20261104",
+      "hosted_version": "20261104152535"
+    },
+    {
+      "source": "20261104114039_social_comments",
+      "sha256": "cc3a171200087bcbe19b09cc18a16efd991fe0d468a31ed445c36fd973b0d7b2",
+      "success": true,
+      "hosted_name": "social_comments_release_20261104",
+      "hosted_version": "20261104152536"
+    },
+    {
+      "source": "20261104115301_social_reactions",
+      "sha256": "176579e8481e205e57ea90c74ae55b5d3cfb93e8689f7f4c5fae3f5d22787f1a",
+      "success": true,
+      "hosted_name": "social_reactions_release_20261104",
+      "hosted_version": "20261104152537"
+    },
+    {
+      "source": "20261104120616_photo_labels",
+      "sha256": "e65d1d853c0541b4050d4644aef433d4710870247df494e9e40c89112645b5f0",
+      "success": true,
+      "hosted_name": "photo_labels_release_20261104",
+      "hosted_version": "20261104152538"
+    },
+    {
+      "source": "20261104124646_social_home_indexes",
+      "sha256": "339f4eb0e7d06661b24f18ec1c02a713a866887e14d28fc791f8bd3f14a2cc0f",
+      "success": true,
+      "hosted_name": "social_home_indexes_release_20261104",
+      "hosted_version": "20261104152539"
+    }
+  ],
+  "verification": {
+    "tables": [
+      {
+        "name": "photo_label_versions",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "photo_labels",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_attendance",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_comment_deletions",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_comments",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_plans",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_reaction_deletions",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_reactions",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      },
+      {
+        "name": "social_receipts",
+        "rls": true,
+        "runtime_select": true,
+        "client_select": false
+      }
+    ],
+    "home_indexes": 6,
+    "private_bucket": true
+  },
+  "security_advisors": [],
+  "compatible_deployed_release_sha": "41e74de875ab145f4f9d11730df341830f89ab4b"
+}
