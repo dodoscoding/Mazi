@@ -192,7 +192,7 @@ test("search capacity clears stale results and offers browsing without losing fi
   $("#place").value = "Lake";
   submit(feature, "#search-form");
   await until(
-    () => $("#result-total").textContent === "1 result",
+    () => $("#result-total").textContent === "1 sonuç",
     "first query",
   );
   unavailable = true;
@@ -203,7 +203,7 @@ test("search capacity clears stale results and offers browsing without losing fi
   );
   assert.equal($("#search-recovery")?.hidden, false);
   assert.equal($("#search-recovery a")?.getAttribute("href"), "#/memories");
-  assert.equal($("#count").textContent, "Search unavailable.");
+  assert.equal($("#count").textContent, "Arama kullanılamıyor.");
   assert.equal($("#result-total").textContent, "");
   assert.equal($("#result-types").hidden, true);
   assert.equal($("#search-groups").hidden, true);
@@ -324,7 +324,7 @@ test("index capacity stops cleanly and retains browsing recovery until a retry s
   );
   assert.equal($("#index-recovery")?.hidden, false);
   assert.equal($("#index-recovery a")?.getAttribute("href"), "#/memories");
-  assert.match($("#index-progress").textContent, /stopped/i);
+  assert.match($("#index-progress").textContent, /dizinleme durdu/);
   assert.equal($("#build-index").disabled, false);
   assert.equal($("#stop-index").hidden, true);
   assert.equal($("#query").value, "Keep this query");
@@ -332,7 +332,7 @@ test("index capacity stops cleanly and retains browsing recovery until a retry s
   unavailable = false;
   $("#build-index").click();
   await until(
-    () => $("#index-progress").textContent.includes("1 photographs indexed"),
+    () => $("#index-progress").textContent.includes("1 fotoğraf dizinlendi"),
     "index retry succeeded",
   );
   assert.equal($("#index-recovery").hidden, true);
@@ -363,7 +363,7 @@ for (const status of [400, 503]) {
       "ordinary error",
     );
     assert.equal($("#search-recovery").hidden, true);
-    assert.equal($("#count").textContent, "Search unavailable.");
+    assert.equal($("#count").textContent, "Arama kullanılamıyor.");
     assert.equal($("#query").value, "Retry this");
     assert.equal(root.hidden, false);
     fail = false;
@@ -468,7 +468,7 @@ test("an older search capacity failure cannot replace newer successful results",
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal($("#query").value, "New");
   assert.equal($("#results h3").textContent, "Lake photograph");
-  assert.equal($("#count").textContent, "1 photographs · keyword");
+  assert.equal($("#count").textContent, "1 fotoğraf · Sözcükler ve filtreler");
   assert.equal($("#search-recovery").hidden, true);
   assert.equal($("#notice").textContent, "");
 });
@@ -574,7 +574,7 @@ test("stopping indexing waits for the current batch before another run can begin
   assert.equal($("#build-index").disabled, true);
   assert.match(
     $("#index-progress").textContent,
-    /stopped after the current small batch/,
+    /Geçerli parça tamamlanınca dizinleme durdu/,
   );
   pending.resolve(capacity("Local index limit is 1,000 items"));
   await until(() => !$("#build-index").disabled, "stopped request settled");
@@ -583,7 +583,7 @@ test("stopping indexing waits for the current batch before another run can begin
   assert.equal($("#notice").textContent, "");
   $("#build-index").click();
   await until(
-    () => $("#index-progress").textContent.includes("1 photographs indexed"),
+    () => $("#index-progress").textContent.includes("1 fotoğraf dizinlendi"),
     "next run succeeded",
   );
 });

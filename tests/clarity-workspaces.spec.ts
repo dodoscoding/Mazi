@@ -506,3 +506,205 @@ test("photo label editing and atomic Gallery selection show honest badges at pho
     });
   }
 });
+
+test("same-photo filters survive reload and keep original child links at narrow width", async ({
+  page,
+}, info) => {
+  if (info.project.name === "phone")
+    await page.setViewportSize({ width: 320, height: 844 });
+  const profile = await (await page.request.get("/api/session")).json();
+  const group = profile.group_id;
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${group}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { photos: unknown[] }) => item.photos.length > 2,
+  );
+  const assets: string[] = memory.photos.map(
+    (photo: { assetId: string }) => photo.assetId,
+  );
+  const target = assets[2],
+    screenshot = assets[1];
+  const before = await (
+    await page.request.get(
+      "/api/social/labels?" +
+        new URLSearchParams({ group, assets: JSON.stringify(assets) }),
+    )
+  ).json();
+  const personResponse = await page.request.post("/api/discovery/person", {
+    data: { group, name: `Sentetik kişi ${info.project.name}` },
+  });
+  expect(personResponse.ok()).toBe(true);
+  const { id: person } = await personResponse.json();
+  expect(
+    (
+      await page.request.post("/api/discovery/tag", {
+        data: { person, asset: target, confirmed: true },
+      })
+    ).ok(),
+  ).toBe(true);
+  const directory = "work/poteto/photo-filters";
+  mkdirSync(directory, { recursive: true });
+  const query = new URLSearchParams({
+    person,
+    screenshot: "yes",
+    ai: "generated,edited",
+    source: "apple",
+    by: "Alice",
+    from: "2024-01-02",
+    through: "2024-01-02",
+    date_basis: "chronology",
+    mode: "keyword",
+  });
+  try {
+    expect(
+      (
+        await page.request.post("/api/social/labels/set", {
+          data: {
+            group,
+            request_key: `filter-setup-${info.project.name}-${Date.now()}`,
+            items: before.items.map(
+              (item: {
+                assetId: string;
+                labels: Record<string, { revision: number }>;
+              }) => ({
+                asset: item.assetId,
+                changes: {
+                  screenshot: item.assetId === screenshot ? "yes" : "unknown",
+                  ai:
+                    item.assetId === target || item.assetId === screenshot
+                      ? "generated"
+                      : "unknown",
+                },
+                expected: {
+                  screenshot: item.labels.screenshot.revision,
+                  ai: item.labels.ai.revision,
+                },
+              }),
+            ),
+          },
+        })
+      ).ok(),
+    ).toBe(true);
+    const requests: string[] = [];
+    page.on("request", (request) => requests.push(request.url()));
+    await page.goto("/#/search?" + query);
+    await expect(page.locator("#count")).toContainText("0 fotoğraf");
+    await expect(page.locator(".photo-filters")).toContainText(
+      "görünür 3 fotoğrafın tamamı",
+    );
+    await expect(page.locator("#date-scope")).toBeVisible();
+    expect(
+      requests.some(
+        (url) =>
+          url.includes("/api/atlas") || url.includes("/api/discovery/state"),
+      ),
+    ).toBe(false);
+    await page
+      .locator(".disc-refine")
+      .evaluate((node) => ((node as HTMLDetailsElement).open = true));
+    await page
+      .getByRole("button", { name: "Ekran görüntüsü: Evet ×", exact: true })
+      .click();
+    await expect(page.locator("#count")).toContainText("1 fotoğraf");
+    await page.reload();
+    await expect(page.locator("#count")).toContainText("1 fotoğraf");
+    await expect(page.locator("#mode")).toHaveValue("keyword");
+    await page
+      .locator("#results")
+      .screenshot({
+        animations: "disabled",
+        path: `${directory}/${info.project.name}-search-filtered.png`,
+      });
+    await page.goto("/#/memories?" + query);
+    await expect(
+      page.getByRole("heading", {
+        name: "Bu filtrelerle eşleşen fotoğraf yok",
+        exact: true,
+      }),
+    ).toBeVisible();
+    if (info.project.name === "phone")
+      await page.locator("#filters-open").click();
+    await page
+      .getByRole("button", { name: "Ekran görüntüsü: Evet ×", exact: true })
+      .click();
+    await expect(page.locator("#grid-summary")).toContainText(
+      "1 eşleşen fotoğraf",
+    );
+    if (info.project.name === "phone")
+      await page.locator("#filters-apply").click();
+    await expect(page.locator(".mem-tile")).toHaveCount(1);
+    await expect(page.locator(".mem-tile")).toHaveAttribute(
+      "href",
+      `#/memory/${memory.id}?photo=2`,
+    );
+    await page.locator('[data-view="all"]').click();
+    await page.reload();
+    await expect(page.locator(".mem-tile")).toHaveCount(1);
+    await expect(page.locator('[data-view="all"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page
+      .locator("#grid")
+      .screenshot({
+        animations: "disabled",
+        path: `${directory}/${info.project.name}-gallery-filtered.png`,
+      });
+    expect(
+      (
+        await page.request.post("/api/discovery/hide", {
+          data: { asset: target, enabled: true },
+        })
+      ).ok(),
+    ).toBe(true);
+    await page.reload();
+    await expect(page.locator("#grid-summary")).toContainText(
+      "0 eşleşen fotoğraf",
+    );
+    await expect(page.locator(".mem-tile")).toHaveCount(0);
+  } finally {
+    await page.request.post("/api/discovery/hide", {
+      data: { asset: target, enabled: false },
+    });
+    await page.request.post("/api/discovery/untag", {
+      data: { person, asset: target },
+    });
+    const current = await (
+      await page.request.get(
+        "/api/social/labels?" +
+          new URLSearchParams({ group, assets: JSON.stringify(assets) }),
+      )
+    ).json();
+    await page.request.post("/api/social/labels/set", {
+      data: {
+        group,
+        request_key: `filter-restore-${info.project.name}-${Date.now()}`,
+        items: current.items.map(
+          (
+            item: {
+              assetId: string;
+              labels: Record<string, { revision: number }>;
+            },
+            index: number,
+          ) => ({
+            asset: item.assetId,
+            changes: {
+              screenshot: before.items[index].labels.screenshot.declared,
+              ai: before.items[index].labels.ai.declared,
+            },
+            expected: {
+              screenshot: item.labels.screenshot.revision,
+              ai: item.labels.ai.revision,
+            },
+          }),
+        ),
+      },
+    });
+  }
+});
