@@ -375,3 +375,39 @@ class AtlasTests(unittest.TestCase):
             self.store.db.execute('UPDATE archive_origins SET withdrawn=0 WHERE id=?', (ben_origin,))
         self.store.remove_member(self.alice, self.group, self.ben)
         self.assertEqual([item['sender'] for item in self._red_card()['photos'][0]['provenance']], ['Ana'])
+
+    def test_photo_evidence_has_stable_identity_and_reviewed_capture_and_place(self):
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='İstanbul')
+        before = [tuple(row) for row in self.store.db.execute('SELECT id,payload FROM archive_origins ORDER BY id')]
+        photo = self._red_card()['photos'][0]
+        self.assertEqual(photo['assetId'], self.assets[0])
+        self.assertEqual(photo['evidence']['capture'], dict(basis='capture', status='exact', days=['2020-01-02'],
+                                                         start='2020-01-02', through='2020-01-02', timezone=None))
+        self.assertEqual(photo['evidence']['chronology'], photo['evidence']['capture'])
+        self.assertEqual(photo['evidence']['place']['text'], 'İstanbul, TR')
+        self.assertEqual(photo['evidence']['place']['status'], 'known')
+        self.assertEqual(before, [tuple(row) for row in self.store.db.execute('SELECT id,payload FROM archive_origins ORDER BY id')])
+
+    def test_photo_evidence_uses_discord_share_day_and_never_upload_time(self):
+        photo = self._discord_card()['photos'][0]
+        self.assertEqual(photo['evidence']['capture']['status'], 'unknown')
+        self.assertEqual(photo['evidence']['chronology'], dict(basis='shared', status='exact', days=['2024-01-02'],
+                                                            start='2024-01-02', through='2024-01-02', timezone='UTC'))
+        self.assertEqual(photo['evidence']['place'], dict(status='unknown', text=None, pin=None))
+        self._forget_reviewed_date(self.assets[1])
+        blue = next(card for card in atlas_view(self.store, self.ben, self.group)['memories'] if card['id'] == 'photo-' + self.assets[1])
+        self.assertEqual(blue['photos'][0]['evidence']['chronology']['status'], 'unknown')
+
+    def test_photo_evidence_keeps_capture_conflicts_and_each_childs_own_place(self):
+        self._forget_reviewed_date(self.assets[1], ['2021-01-02T23:30:00-03:00', '2021-03-04T00:30:00+03:00'])
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='İstanbul')
+        photos = {photo['assetId']: photo for photo in self._memory()['photos']}
+        self.assertEqual(photos[self.assets[1]]['evidence']['chronology']['status'], 'conflict')
+        self.assertEqual(photos[self.assets[1]]['evidence']['capture']['days'], ['2021-01-02', '2021-03-04'])
+        self.assertEqual(photos[self.assets[1]]['evidence']['place']['status'], 'unknown')
+        self.assertEqual(photos[self.assets[0]]['evidence']['place']['status'], 'known')
+
+    def test_unmapped_reviewed_place_is_visible_without_borrowing_a_source_pin(self):
+        self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.1, 25.4, None)
+        evidence = self._red_card()['photos'][0]['evidence']
+        self.assertEqual(evidence['place'], dict(status='unmapped', text='Harbour', pin=None))
