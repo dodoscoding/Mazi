@@ -1,3 +1,4 @@
+import { photoMatches } from "./helpers/photo-match";
 import { mockArchive } from "./helpers/archive";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -826,6 +827,11 @@ test("photo facts stay visible and follow the selected photo across archive view
 }, testInfo) => {
   const { photoEvidenceMemory } = await import("./helpers/photo-evidence");
   await mockArchive(page, [photoEvidenceMemory]);
+  await page.route("**/api/discovery/matches?*", (route) =>
+    route.fulfill({
+      json: photoMatches(["synthetic-capture", "synthetic-share"]),
+    }),
+  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(
