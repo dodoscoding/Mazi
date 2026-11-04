@@ -33,3 +33,29 @@ class PhotoCorrectionTests(unittest.TestCase):
             self.store.photo_correction(self.outsider, self.group, asset)
         with self.assertRaises(ValueError):
             self.store.patch_photo(self.ben, self.group, asset, {'title': 'No'}, state['snapshot'])
+
+    def test_reviewed_place_export_replaces_source_and_clear_restores_it(self):
+        import io
+        import json
+        import zipfile
+        asset = self.assets[0]
+        origin = self.store.db.execute('SELECT id FROM archive_origins WHERE asset_id=?', (asset,)).fetchone()[0]
+        self.store.set_place(self.alice, origin, 'NL', 'Amsterdam', 52.37, 4.9, '2020-01-02')
+        def places():
+            with zipfile.ZipFile(io.BytesIO(self.store.export_archive(self.ben, self.group))) as archive:
+                return json.loads(archive.read('places.json'))
+        state = self.store.photo_correction(self.ben, self.group, asset)
+        self.store.patch_photo(self.ben, self.group, asset, {'place': 'Paris'}, state['snapshot'])
+        points = places()
+        self.assertEqual(len(points), 1)
+        self.assertEqual(points[0]['city'], 'Paris')
+        self.assertEqual(points[0]['method'], 'reviewed city centroid')
+        state = self.store.photo_correction(self.ben, self.group, asset)
+        self.store.patch_photo(self.ben, self.group, asset, {'place': 'A garden'}, state['snapshot'])
+        self.assertEqual(places(), [])
+        self.assertEqual(self.store.places(self.ben, self.group)['points'], [])
+        state = self.store.photo_correction(self.ben, self.group, asset)
+        self.store.patch_photo(self.ben, self.group, asset, {'place': ''}, state['snapshot'])
+        self.assertEqual(places()[0]['city'], 'Amsterdam')
+        self.store.set_place(self.alice, origin, '', '', None, None, None)
+        self.assertEqual(places(), [])
