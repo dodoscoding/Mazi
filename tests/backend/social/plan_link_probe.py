@@ -1,6 +1,9 @@
 """Run UI-produced edit patches against an isolated synthetic archive."""
 import json
+import os
 import sys
+
+os.environ["MAZI_BACKEND"] = "local"
 
 from mazi.social import social
 from tests.backend.social.test_plans import PlanMemoryTests

@@ -56,3 +56,22 @@ D17 exposes one configured circle. The browser fixture changes that configured c
 The app writes no private plan text or draft to localStorage or sessionStorage. No production API, schema, hosted environment or personal archive changed in this interface slice. The test-only controls live in `tests/browser/social_server.py` and are excluded from deployment. That fixture forces the local backend and a temporary archive regardless of inherited hosted settings.
 
 `npm run test:app` now runs the existing integrated archive fixture and the separate empty social fixture in sequence. The coordinator owns the final complete regression run, independent review, PR publication, merge and deployment. The five-friend findability study and physical-phone pilot remain open. Phone evidence uses Chromium emulation and does not establish production milestone acceptance.
+
+## Accepted review correction
+
+The independent review found that an organizer-hidden memory projects as null while the persisted plan association remains available to other members. The original full-field edit payload silently unlinked it. Red commit `6eb218a` demonstrates that unwanted payload ([red output](HIDDEN_LINK_RED.txt)); fix `ce010ca` compares fields against the original opened draft, retaining that baseline across stale-revision reload. Explicit visible-link clearing still sends null. An untouched draft closes without a server write. Access loss and successful writes discard the baseline. Product help now asks for a timezone and an approved memory link without implementation vocabulary.
+
+The focused DOM contract now submits real input changes. Its isolated Python probe takes the actual UI-produced title-only and explicit-unlink patches into a fresh local MemoryStore using the existing synthetic approved-memory fixture. It hides the organizer's memory, verifies the other member can still see the association, edits, unhides and verifies the link returns, then explicitly clears it and verifies both members lose the association. The temporary archive is removed in finally; the empty browser fixture is never populated or changed by this test. The probe forces local storage independently of inherited environment.
+
+Current `origin/main` `39249c4` was merged at `784c580`. Only appended canonical-document conflicts required reconciliation; both sides were retained, and the superseded backend-only acceptance sentence was removed. This includes the current combined comments, reactions, declarations and selected-photo backend work.
+
+Verification on that combined app:
+
+- `node --test tests/dom/social-plans.test.mjs tests/dom/route-history.test.mjs tests/dom/discord-return.test.mjs`: 28 pass, including the real archive probe ([output](REVIEW_DOM.txt)).
+- `MAZI_UNIFIED_PORT=8144 npx playwright test --config playwright.social.config.ts`: 15 pass, one duplicate phone case skipped, 21.1 seconds ([output](REVIEW_BROWSER.txt)). This reruns real uncertain-response replay, stale editing, offset choice, edit/cancel/delete, independent desktop/phone attendance and access loss.
+- Typecheck, Prettier lint and browser-startup production build pass.
+- Existing budgets pass unchanged: entry 148.2/150 KiB gzip, all scripts 398.5/400, stylesheet 36.8/40, globe 242.9/256. This reflects the combined app, rather than attributing all growth to the fix.
+- Document checker: 19 authored documents, 333 local links. Whole branch whitespace check passes.
+- Repeated-hour phone form capture refreshed and visually inspected after help-copy correction.
+
+Independent focused re-review remains the coordinator's gate before publication. No push, production data, schema change or deployment was performed here.

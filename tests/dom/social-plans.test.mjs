@@ -464,3 +464,26 @@ test("actual archive hide/edit/unhide preserves the link and a visible explicit 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /hidden link preserved; visible unlink applied/);
 });
+
+test("saving an untouched edit closes the form without a write", async (t) => {
+  const h = await mount(
+    t,
+    "/src/social/Plans.tsx",
+    "default",
+    { ...plansProps, search: "?section=plans&group=circle&plan=meeting" },
+    async () => Response.json(plan),
+  );
+  await h.click(findButton(h, "Düzenle"));
+  await act(async () =>
+    h.host
+      .querySelector("form")
+      .dispatchEvent(
+        new h.window.Event("submit", { bubbles: true, cancelable: true }),
+      ),
+  );
+  assert.equal(h.host.querySelector("form"), null);
+  assert.equal(
+    h.calls.filter(({ options }) => options.method === "POST").length,
+    0,
+  );
+});
