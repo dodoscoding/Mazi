@@ -529,7 +529,8 @@ class ReviewStore(ImportStore):
     def reviewed_events(self, user, group):
         visible = set(self._visible_ids(user, group))
         result = []
-        for row in self.db.execute("SELECT id,asset_ids,title,status FROM review_events WHERE group_id=? ORDER BY updated_at DESC", (group,)):
+        event_order = 'id' if getattr(self.db, 'hosted', False) else insertion_order(self.db)
+        for row in self.db.execute("SELECT id,asset_ids,title,status FROM review_events WHERE group_id=? ORDER BY updated_at DESC,status," + event_order, (group,)):
             assets = [asset for asset in json.loads(row["asset_ids"]) if asset in visible]
             if len(assets) >= 2:
                 result.append({"id": row["id"], "title": row["title"], "assets": assets, "status": row["status"]})
