@@ -1,13 +1,14 @@
+import concurrent.futures
 import http.client
 import json
+import socket
 import tempfile
 import threading
 import unittest
-from http.server import HTTPServer
 from pathlib import Path
 
 from mazi.memories.memories import MemoryStore
-from mazi.server import APP_PATHS, handler_for
+from mazi.server import APP_PATHS, AppServer, handler_for
 
 
 class AppServerTests(unittest.TestCase):
@@ -26,7 +27,7 @@ class AppServerTests(unittest.TestCase):
         (self.dist / 'assets').mkdir()
         (self.dist / 'assets/app.js').write_text('export {};')
         (self.root / 'private.txt').write_text('secret')
-        self.server = HTTPServer(('127.0.0.1', 0), handler_for(self.store, self.dist))
+        self.server = AppServer(('127.0.0.1', 0), handler_for(self.store, self.dist))
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
@@ -50,6 +51,92 @@ class AppServerTests(unittest.TestCase):
         result = response.status, dict(response.getheaders()), response.read()
         connection.close()
         return result
+
+    def test_idle_accepted_connection_does_not_block_health(self):
+        accepted = threading.Event()
+        get_request = self.server.get_request
+
+        def observe_accept():
+            result = get_request()
+            accepted.set()
+            return result
+
+        self.server.get_request = observe_accept
+        idle = socket.create_connection(('127.0.0.1', self.server.server_port))
+        connection = http.client.HTTPConnection('127.0.0.1', self.server.server_port, timeout=1)
+        try:
+            self.assertTrue(accepted.wait(2), 'Idle socket was not accepted')
+            connection.request('GET', '/health')
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(json.loads(response.read()), {'status': 'ok'})
+        finally:
+            idle.close()
+            connection.close()
+
+    def test_get_and_post_serialize_store_dispatch(self):
+        read_entered = threading.Event()
+        post_parsed = threading.Event()
+        write_entered = threading.Event()
+        release_read = threading.Event()
+        guard = threading.Lock()
+        active = 0
+        maximum_active = 0
+        groups_for = self.store.groups_for
+        complete_introduction = self.store.complete_introduction
+        parse_request = self.server.RequestHandlerClass.parse_request
+
+        def observe_parse(handler):
+            result = parse_request(handler)
+            if result and handler.command == 'POST':
+                post_parsed.set()
+            return result
+
+        def enter():
+            nonlocal active, maximum_active
+            with guard:
+                active += 1
+                maximum_active = max(maximum_active, active)
+
+        def leave():
+            nonlocal active
+            with guard:
+                active -= 1
+
+        def paused_read(user):
+            enter()
+            read_entered.set()
+            try:
+                if not release_read.wait(5):
+                    raise TimeoutError('Test did not release the active read')
+                return groups_for(user)
+            finally:
+                leave()
+
+        def observed_write(token):
+            enter()
+            write_entered.set()
+            try:
+                return complete_introduction(token)
+            finally:
+                leave()
+
+        self.server.RequestHandlerClass.parse_request = observe_parse
+        self.store.groups_for = paused_read
+        self.store.complete_introduction = observed_write
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as clients:
+            read = clients.submit(self.request, '/api/groups', token=self.token)
+            try:
+                self.assertTrue(read_entered.wait(2), 'Read did not enter the store')
+                write = clients.submit(self.request, '/api/introduction/complete', {}, self.token)
+                self.assertTrue(post_parsed.wait(2), 'Concurrent POST was not parsed')
+                self.assertFalse(write_entered.wait(0.2), 'POST overlapped the active store read')
+            finally:
+                release_read.set()
+            self.assertEqual(read.result(timeout=2)[0], 200)
+            self.assertEqual(write.result(timeout=2)[0], 200)
+        self.assertEqual(maximum_active, 1)
+        self.assertTrue(write_entered.is_set())
 
     def test_all_app_routes_share_atlas_and_missing_build_is_actionable(self):
         for route in APP_PATHS:
