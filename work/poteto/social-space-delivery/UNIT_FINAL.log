@@ -1,0 +1,35 @@
+
+> mazi@0.1.0 test:unit
+> node --test "tests/unit/*.test.ts"
+
+✔ groups memories by place name and country with mean coordinates and per-year counts (0.811875ms)
+✔ journeys join consecutive distinct places in year order, once per ordered pair (0.097666ms)
+✔ years are the sorted distinct years of dated memories (0.073542ms)
+✔ memories without a place are returned as unplaced in API order (0.058708ms)
+✔ undated memories never form journeys (0.078209ms)
+✔ the same city name in two countries is two places (0.064375ms)
+✔ an empty archive has no places, journeys or years (0.04475ms)
+✔ scrubbing to a year selects that year's first memory in API order (2.438917ms)
+✔ canonical same-name cities stay distinct in grouped evidence and Atlas nodes (23.475209ms)
+✔ complete sharing evidence supplies same-year distinct replay stops without rewriting capture truth (15.211666ms)
+✔ capture wins, stable ties remain stable and invalid or ambiguous evidence is excluded (0.374333ms)
+✔ grouped photos take their sharing range from dated photos and ignore undated or ambiguous ones (0.288917ms)
+✔ conflicting capture assertions remain explicit when sharing positions Replay (0.119834ms)
+✔ server photo evidence drives chronology without moving calendar days or hiding conflicts (1.179334ms)
+✔ photo summaries distinguish missing places and dates and never lend sibling pins (1.915333ms)
+✔ source dates retain the source calendar day and never invent a timezone (44.336834ms)
+✔ duplicate source evidence is collapsed without conflating distinct senders (0.611583ms)
+✔ optional provenance leaves sample and legacy cards unchanged (0.071167ms)
+✔ opening and closing the portal asks for the dive and the way back (0.860959ms)
+✔ reduced motion drops the whoosh (0.053792ms)
+✔ a new memory in the same year chimes; a new year ticks once (0.05625ms)
+✔ stepping inside the portal chimes (0.045333ms)
+✔ the archive arriving and other screens stay silent (0.062042ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 171.441583
