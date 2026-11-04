@@ -1751,6 +1751,9 @@
   .atlas-sheet .choice-meta {
     display: none;
   }
+  .atlas-home:has(.atlas-sheet:not([data-snap="0"])) .flat-note {
+    display: none;
+  }
   .flat-note {
     top: calc(var(--atlas-top) + 104px);
     bottom: auto;

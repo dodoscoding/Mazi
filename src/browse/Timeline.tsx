@@ -206,20 +206,20 @@ export function Timeline({
     return (
       <section className="timeline-page is-empty">
         <h1 ref={heading} tabIndex={-1} className="browse-title">
-          Timeline
+          Zaman çizelgesi
         </h1>
         <div className="browse-empty">
-          <h2>Your years start with the first import</h2>
+          <h2>Yılların ilk fotoğrafla başlar</h2>
           <p>
-            Each photo’s date and place builds the timeline automatically.
-            Undated items are placed as “about” dates you can fix later.
+            Fotoğrafların çekim ve paylaşım tarihleri zaman çizelgesini
+            oluşturur. Tarihi bilinmeyen fotoğraflar ayrı listelenir.
           </p>
           <a
             className="primary-action"
             href="#/imports"
             onClick={link("/imports")}
           >
-            Add an export
+            Fotoğraf veya arşiv ekle
           </a>
         </div>
       </section>
@@ -293,21 +293,21 @@ export function Timeline({
     moves[event.key]();
   };
   const subtitle = !years.length
-    ? `${plural(memories.length, "moment")}, none dated yet.`
+    ? `${memories.length} anı · Henüz tarih bilinmiyor.`
     : min === max
-      ? `${plural(memories.length, "moment")} in ${min}. Scroll and the year in view follows.`
-      : `${plural(memories.length, "moment")}, ${min} to ${max}. Scroll and the year in view follows.`;
+      ? `${memories.length} anı · ${min}. Kaydırdıkça görünen yıl değişir.`
+      : `${memories.length} anı · ${min}–${max}. Kaydırdıkça görünen yıl değişir.`;
 
   return (
     <section className="timeline-page">
       <header className="browse-head">
         <div>
           <h1 ref={heading} tabIndex={-1} className="browse-title">
-            Timeline
+            Zaman çizelgesi
           </h1>
           <p className="browse-sub">{subtitle}</p>
         </div>
-        <div className="br-segmented" role="group" aria-label="Order">
+        <div className="br-segmented" role="group" aria-label="Sıralama">
           {(["oldest", "newest"] as const).map((value) => (
             <button
               key={value}
@@ -315,7 +315,7 @@ export function Timeline({
               aria-pressed={order === value}
               onClick={() => setOrder(value)}
             >
-              {value === "oldest" ? "Oldest first" : "Newest first"}
+              {value === "oldest" ? "Önce en eskiler" : "Önce en yeniler"}
             </button>
           ))}
         </div>
@@ -325,7 +325,7 @@ export function Timeline({
           ref={list}
           key={order}
           className="timeline-years br-stagger"
-          aria-label="Moments by year"
+          aria-label="Yıllara göre anılar"
         >
           {groups.map((group, index) => (
             <li
@@ -334,7 +334,7 @@ export function Timeline({
               className={group.year === current ? "is-current" : undefined}
               style={stagger(index)}
             >
-              <h2 className="tl-year">{group.year ?? "Date unknown"}</h2>
+              <h2 className="tl-year">{group.year ?? "Tarih bilinmiyor"}</h2>
               <span className="tl-rail" aria-hidden="true">
                 <i />
               </span>
@@ -344,7 +344,7 @@ export function Timeline({
                   return (
                     <Fragment key={memory.id}>
                       {leg && order === "oldest" && (
-                        <span className="tl-leg">Journey · {leg}</span>
+                        <span className="tl-leg">Yolculuk · {leg}</span>
                       )}
                       <a
                         className="tl-card"
@@ -372,7 +372,11 @@ export function Timeline({
                           <span className="tl-meta">
                             {[
                               placeLine(memory),
-                              plural(memory.photos.length, "photo"),
+                              plural(
+                                memory.photos.length,
+                                "fotoğraf",
+                                "fotoğraf",
+                              ),
                               sharedLine(memory),
                             ]
                               .filter(Boolean)
@@ -388,7 +392,7 @@ export function Timeline({
           ))}
         </ol>
       </div>
-      <aside ref={aside} className="timeline-aside" aria-label="Year in view">
+      <aside ref={aside} className="timeline-aside" aria-label="Görünen yıl">
         <div
           className={`timeline-globe${reduced ? "" : " has-globe"}`}
           data-year={current ?? ""}
@@ -416,17 +420,17 @@ export function Timeline({
             />
           )}
           <div className="globe-fallback">
-            <span className="hud-label">In view</span>
-            <span className="globe-year">{current ?? "Date unknown"}</span>
+            <span className="hud-label">Görünen yıl</span>
+            <span className="globe-year">{current ?? "Tarih bilinmiyor"}</span>
             <span className="globe-route">
-              {route || places.join(" · ") || "No place recorded"}
+              {route || places.join(" · ") || "Yer bilinmiyor"}
             </span>
             <span className="globe-count">
-              {plural(inViewMemories.length, "moment")} ·{" "}
-              {plural(photos, "photo")}
+              {plural(inViewMemories.length, "anı", "anı")} ·{" "}
+              {plural(photos, "fotoğraf", "fotoğraf")}
             </span>
             {places.length > 0 && (
-              <ul className="globe-places" aria-label="Places that year">
+              <ul className="globe-places" aria-label="O yılın yerleri">
                 {places.map((place) => (
                   <li key={place}>{place}</li>
                 ))}
@@ -434,12 +438,10 @@ export function Timeline({
             )}
           </div>
         </div>
-        <div className="year-stepper" role="group" aria-label="Year">
+        <div className="year-stepper" role="group" aria-label="Yıl">
           <button
             type="button"
-            aria-label={
-              previous ? `Previous year, ${previous}` : "Previous year"
-            }
+            aria-label={previous ? `Önceki yıl, ${previous}` : "Önceki yıl"}
             disabled={previous === undefined}
             onClick={() => step(-1)}
           >
@@ -447,12 +449,12 @@ export function Timeline({
           </button>
           <span className="stepper-years">
             <span aria-hidden="true">{previous ?? ""}</span>
-            <span className="is-current">{current ?? "Date unknown"}</span>
+            <span className="is-current">{current ?? "Tarih bilinmiyor"}</span>
             <span aria-hidden="true">{next ?? ""}</span>
           </span>
           <button
             type="button"
-            aria-label={next ? `Next year, ${next}` : "Next year"}
+            aria-label={next ? `Sonraki yıl, ${next}` : "Sonraki yıl"}
             disabled={next === undefined}
             onClick={() => step(1)}
           >
@@ -464,11 +466,11 @@ export function Timeline({
             className="year-scrubber"
             role="slider"
             tabIndex={0}
-            aria-label="Year"
+            aria-label="Yıl"
             aria-valuemin={min}
             aria-valuemax={max}
             aria-valuenow={current ?? min}
-            aria-valuetext={`${current ?? min}, ${plural(inViewMemories.length, "moment")}`}
+            aria-valuetext={`${current ?? min}, ${plural(inViewMemories.length, "anı", "anı")}`}
             onKeyDown={onSliderKey}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
@@ -517,13 +519,14 @@ export function Timeline({
             </span>
           </div>
           <p className="scrubber-help">
-            The scrubber and the list move together: drag here and the list
-            scrolls; scroll the list and the year follows. ← → step by year.
+            Yıl çubuğunu sürükle veya listeyi kaydır. İkisi birlikte ilerler. ←
+            → tuşlarıyla yıllar arasında geç.
           </p>
         </div>
         {chronology.ordered.length < 2 && (
           <p className="scrubber-help">
-            Replay needs at least two memories with capture or sharing dates.
+            Yeniden oynatmak için çekim veya paylaşım tarihi bilinen en az iki
+            anı gerekir.
           </p>
         )}
         <div className="timeline-actions">
@@ -533,12 +536,12 @@ export function Timeline({
             disabled={chronology.ordered.length < 2}
             title={
               chronology.ordered.length < 2
-                ? "Replay needs at least two memories with capture or sharing dates"
+                ? "Yeniden oynatmak için tarihli en az iki anı gerekir"
                 : undefined
             }
             onClick={toggleReplay}
           >
-            {replaying ? "Pause replay" : "Replay memories"}
+            {replaying ? "Oynatmayı duraklat" : "Anıları yeniden oynat"}
           </button>
           {inViewMemories[0] && (
             <a
@@ -546,7 +549,7 @@ export function Timeline({
               href={`#/?selected=${inViewMemories[0].id}`}
               onClick={link(`/?selected=${inViewMemories[0].id}`)}
             >
-              Open on the atlas
+              Atlas’ta aç
             </a>
           )}
         </div>

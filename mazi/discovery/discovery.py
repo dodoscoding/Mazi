@@ -306,7 +306,7 @@ class DiscoveryStore(SourceStore):
             tag_query = ('SELECT t.asset FROM discovery_tags t JOIN members m ON m.user_id=t.actor AND m.group_id=? '
                          'WHERE t.person=? AND NOT EXISTS (SELECT 1 FROM discovery_suppressions s WHERE s.person=t.person AND s.asset=t.asset)')
             tags = (self._export_rows(tag_query, (group, row['id']), [('t.asset', 'asset', False)])
-                    if reuse_cities else self.db.execute(tag_query, (group, row['id'])))
+                    if reuse_cities else self.db.execute(tag_query + ' ORDER BY t.asset', (group, row['id'])))
             assets = [r[0] for r in tags if r[0] in visible]
             if assets or (manage and row['creator'] == user):
                 memories = (ExportArray(self._export_person_memories(user, group, visible, set(assets)))

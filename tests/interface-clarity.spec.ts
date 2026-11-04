@@ -25,7 +25,7 @@ test("three primary destinations and a quiet Home make the archive findable", as
   ).toBeVisible();
   await expect(page.locator(".atlas-stage")).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Replay", exact: true }),
+    page.getByRole("button", { name: "Yeniden oynat", exact: true }),
   ).toHaveCount(0);
   await expect(page.locator(".home-featured")).toHaveCount(1);
   await expect(page.locator(".home-memory, .home-contribute")).toHaveCount(0);
@@ -100,7 +100,7 @@ test("legacy portal links remain Atlas entries and globe links use the canonical
   await expect(page.locator(".dossier")).toBeVisible();
   await page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
   await expect(
     page

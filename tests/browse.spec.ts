@@ -30,7 +30,7 @@ test("choosing a year moves the timeline scrubber, card and list together", asyn
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1#/timeline");
-  const list = page.getByRole("list", { name: "Moments by year" });
+  const list = page.getByRole("list", { name: "Yıllara göre anılar" });
   await expect(list.getByRole("heading", { level: 2 })).toHaveText([
     "2022",
     "2023",
@@ -40,11 +40,11 @@ test("choosing a year moves the timeline scrubber, card and list together", asyn
   await expect(card).toHaveAttribute("data-year", "2022");
   await expect(card).toContainText("Nicosia, Cyprus");
   if (isPhone(page)) {
-    await page.getByRole("button", { name: "Next year, 2023" }).click();
+    await page.getByRole("button", { name: "Sonraki yıl, 2023" }).click();
     await expect(card).toHaveAttribute("data-year", "2023");
-    await page.getByRole("button", { name: "Next year, 2024" }).click();
+    await page.getByRole("button", { name: "Sonraki yıl, 2024" }).click();
   } else {
-    const slider = page.getByRole("slider", { name: "Year" });
+    const slider = page.getByRole("slider", { name: "Yıl" });
     await slider.focus();
     await page.keyboard.press("ArrowRight");
     await expect(slider).toHaveAttribute("aria-valuenow", "2023");
@@ -60,12 +60,12 @@ test("choosing a year moves the timeline scrubber, card and list together", asyn
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(card).toHaveAttribute("data-year", "2022");
   if (!isPhone(page))
-    await expect(page.getByRole("slider", { name: "Year" })).toHaveAttribute(
+    await expect(page.getByRole("slider", { name: "Yıl" })).toHaveAttribute(
       "aria-valuenow",
       "2022",
     );
   if (!isPhone(page)) {
-    await page.getByRole("button", { name: "Newest first" }).click();
+    await page.getByRole("button", { name: "Önce en yeniler" }).click();
     await expect(list.getByRole("heading", { level: 2 })).toHaveText([
       "2024",
       "2023",
@@ -183,7 +183,7 @@ test("timeline replays every sharing-only memory within one year and supports pa
   );
   await page.goto("/#/timeline");
   const replay = page.getByRole("button", {
-    name: "Replay memories",
+    name: "Anıları yeniden oynat",
     exact: true,
   });
   await replay.click();
@@ -196,7 +196,9 @@ test("timeline replays every sharing-only memory within one year and supports pa
     "data-memory-id",
     "shared-2",
   );
-  await page.getByRole("button", { name: "Pause replay", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Oynatmayı duraklat", exact: true })
+    .click();
   await page.clock.runFor(1600);
   await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
     "data-memory-id",
@@ -244,24 +246,26 @@ test("manual timeline navigation resets the paused replay cursor and keeps appro
     page.locator('.tl-card[data-memory-id="year-2020"] .tl-date'),
   ).toContainText("About");
   await page
-    .getByRole("button", { name: "Replay memories", exact: true })
+    .getByRole("button", { name: "Anıları yeniden oynat", exact: true })
     .click();
-  await page.getByRole("button", { name: "Pause replay", exact: true }).click();
-  const slider = page.getByRole("slider", { name: "Year", exact: true });
+  await page
+    .getByRole("button", { name: "Oynatmayı duraklat", exact: true })
+    .click();
+  const slider = page.getByRole("slider", { name: "Yıl", exact: true });
   if (await slider.isVisible()) {
     await slider.focus();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowRight");
   } else {
-    await page.getByRole("button", { name: "Next year, 2021" }).click();
-    await page.getByRole("button", { name: "Next year, 2025" }).click();
+    await page.getByRole("button", { name: "Sonraki yıl, 2021" }).click();
+    await page.getByRole("button", { name: "Sonraki yıl, 2025" }).click();
   }
   await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(
     "data-memory-id",
     "year-2025",
   );
   await page
-    .getByRole("button", { name: "Replay memories", exact: true })
+    .getByRole("button", { name: "Anıları yeniden oynat", exact: true })
     .click();
   await page.clock.runFor(1400);
   await expect(page.locator('.tl-card[aria-current="true"]')).toHaveAttribute(

@@ -72,7 +72,7 @@ async function remember(page: Page, key: string, value: string) {
 
 async function openAtlas(page: Page) {
   await page.goto("/?demo=1#/atlas");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
 }
 
@@ -115,10 +115,10 @@ test("with sound off, browsing the atlas never creates an AudioContext", async (
   await spyOnAudio(page);
   await signIn(page);
   await openAtlas(page);
-  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.getByRole("slider", { name: "Yıl" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/selected=lake-days/);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/view=portal/);
   // The URL leads the render by a frame; Esc belongs to the portal once it holds focus.
   await expect(page.locator("#dossier-title")).toBeFocused();
@@ -141,7 +141,7 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   expect((await audio(page)).songStarts).toEqual([0]);
   expect(await calls(page, "createBufferSource")).toBe(0);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
   await expect.poll(() => calls(page, "createBufferSource")).toBe(1);
   await expect(page.locator("#dossier-title")).toBeFocused();
@@ -162,13 +162,13 @@ test("under reduced motion the whoosh is dropped but a year step still ticks", a
   await page.keyboard.press("Shift");
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   const before = await calls(page, "createOscillator");
-  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.getByRole("slider", { name: "Yıl" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/selected=lake-days/);
   await expect
     .poll(() => calls(page, "createOscillator"))
     .toBeGreaterThan(before);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/view=portal/);
   await page.waitForTimeout(300);
   expect(await calls(page, "createBufferSource")).toBe(0);

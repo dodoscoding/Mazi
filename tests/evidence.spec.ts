@@ -25,7 +25,7 @@ test("capture stable Home and memory at the required review sizes", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1");
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
   await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
     /is-loaded/,
   );
@@ -57,8 +57,8 @@ test("resting atlas stops requesting animation frames under reduced motion", asy
     Object.defineProperty(window, "__atlasFrameCount", { get: () => frames });
   });
   await page.goto("/?demo=1#/atlas");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   // A bounded measurement window after the selection has settled.
   await page.waitForTimeout(1200);
   const before = await page.evaluate(() =>

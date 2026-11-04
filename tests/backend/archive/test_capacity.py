@@ -161,6 +161,9 @@ class ArchiveCapacityTests(unittest.TestCase):
 
     def test_ten_thousand_and_one_photos_keep_readable_boundary_pages(self):
         self.seed_projection(10001)
+        from mazi.social import labels
+        labels.set_labels(self.store, self.alice, self.group, 'last-photo-label',
+                          [dict(asset='capacity-00000', changes={'screenshot': 'yes'}, expected={'screenshot': 0})])
         page = self.store.timeline(self.ben, self.group, offset=9900, limit=100)
         self.assertEqual((page['total'], len(page['items']), page['next_offset']), (10001, 100, 10000))
         self.assertEqual((page['items'][0]['id'], page['items'][-1]['id']),
@@ -172,6 +175,7 @@ class ArchiveCapacityTests(unittest.TestCase):
         self.assertEqual(len(cards), 10001)
         self.assertEqual((cards[0]['id'], cards[-1]['id']),
                          ('photo-capacity-10000', 'photo-capacity-00000'))
+        self.assertEqual(cards[-1]['photos'][0]['labels'], {'screenshot': 'yes'})
 
 
 if __name__ == '__main__':
