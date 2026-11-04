@@ -110,9 +110,9 @@ export function MemoryView({
     date,
     sourceSharedLine(memory) ||
       (shared.length
-        ? `${provenanceOf(memory).length ? "Added to archive" : "Shared"} by ${shared.join(", ")}`
+        ? `${provenanceOf(memory).length ? "Arşive ekleyenler" : "Paylaşanlar"}: ${shared.join(", ")}`
         : ""),
-    memory.source ? "" : "Sample Atlas",
+    memory.source ? "" : "Örnek Atlas",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -478,10 +478,10 @@ export function MemoryView({
                       <b>
                         {item.sender
                           ? `Paylaşanlar ${item.sender}`
-                          : "Source share"}
+                          : "Kaynak paylaşımı"}
                       </b>
                       <span>
-                        {shareDate(item) || "Share date not recorded"}
+                        {shareDate(item) || "Paylaşım tarihi kaydedilmemiş"}
                       </span>
                     </span>
                   </li>
@@ -579,7 +579,7 @@ function People({ memory }: { memory: Memory }) {
           )}
           {shared.length > 0 && (
             <div>
-              <dt>{hasProvenance ? "Added to archive by" : "Paylaşanlar"}</dt>
+              <dt>{hasProvenance ? "Arşive ekleyenler" : "Paylaşanlar"}</dt>
               <dd>{chips(shared)}</dd>
             </div>
           )}
