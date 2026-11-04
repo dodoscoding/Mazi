@@ -34,7 +34,7 @@ export function Home({
     (opener || heading.current)?.focus({ preventScroll: true });
   }, [featured?.id]);
   const circle = demo
-    ? "Sample Atlas"
+    ? "Örnek Atlas"
     : archive.groups.find((group) => group.id === archive.group)?.name;
   const metadata = (memory: Memory) =>
     [displayDate(memory), placeLine(memory)].filter(Boolean).join(" · ");

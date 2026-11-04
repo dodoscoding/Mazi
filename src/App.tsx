@@ -138,9 +138,9 @@ export default function App() {
         profileName={profile?.display_name || ""}
         circle={
           demo
-            ? "Sample Atlas"
+            ? "Örnek Atlas"
             : archive.groups.find((group) => group.id === archive.group)
-                ?.name || "your circle"
+                ?.name || "grubumuz"
         }
         link={link}
         heading={heading}

@@ -82,9 +82,9 @@ export default function SelectedMemory({
   }, [id, props.group, props.demo, memory, version]);
   useEffect(() => {
     if (
-      state.kind === "ready" &&
-      !props.notebook &&
-      !new URLSearchParams(search).has("discussion")
+      state.kind !== "loading" &&
+      (state.kind !== "ready" ||
+        (!props.notebook && !new URLSearchParams(search).has("discussion")))
     )
       props.heading.current?.focus({ preventScroll: true });
   }, [state.kind]);

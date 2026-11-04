@@ -379,9 +379,7 @@ test("related memories put the same place first and open that memory", async ({
   ).toBeFocused();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(page).toHaveURL(/#\/atlas$/);
-  await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
-  ).toBeVisible();
+  await expect(page.locator(".atlas-stage")).toBeVisible();
 });
 
 for (const backAction of ["pill", "Escape"]) {
