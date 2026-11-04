@@ -1,3 +1,4 @@
+import { photoMatches } from "../helpers/photo-match.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { act, createElement } from "react";
@@ -9,6 +10,10 @@ import { atlasHarness } from "./atlas-harness.mjs";
 test("both gallery modes render each photo's date and place under its thumbnail", async (t) => {
   const { $, root } = await mountFeature(t, "memories", (path) => {
     if (path === "/api/groups") return [group];
+    if (path.startsWith("/api/discovery/matches"))
+      return photoMatches(
+        photoEvidenceMemory.photos.map((photo) => photo.assetId),
+      );
     if (path.startsWith("/api/atlas"))
       return { memories: [photoEvidenceMemory] };
     if (path.startsWith("/api/memories/recap"))
