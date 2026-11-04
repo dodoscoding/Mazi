@@ -321,8 +321,10 @@ test("named profile imports and logout discard delayed private Atlas responses",
     deliveredLogout();
   });
   await navigate(page, "Home", "");
-  await page.reload();
   await capturedLogout;
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
+  ).toBeVisible();
   await navigate(page, "My Imports", "imports");
   expect(
     (
