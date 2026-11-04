@@ -105,3 +105,31 @@ test("legacy root selection links retain their Atlas state", async (t) => {
   assert.equal(h.route.search, "?selected=lake-days&view=portal");
   assert.equal(h.canGoBack(), false);
 });
+
+for (const [alias, path, search] of [
+  ["people", "/discover", "?section=people"],
+  ["settings", "/circle", "?section=settings"],
+]) {
+  for (const prefix of ["/", "/#/"]) {
+    test(`${prefix}${alias} replaces the legacy entry without adding history`, async (t) => {
+      const h = await harness(t, `http://localhost${prefix}${alias}`);
+      assert.equal(h.route.path, path);
+      assert.equal(h.route.search, search);
+      assert.equal(h.window.location.hash, `#${path}${search}`);
+      assert.equal(h.canGoBack(), false);
+      assert.equal(h.window.history.length, 1);
+    });
+  }
+}
+
+test("aliases reached inside the app preserve the previous destination", async (t) => {
+  const h = await harness(t, "http://localhost/#/explore");
+  await h.navigate("/people");
+  assert.equal(h.route.path, "/discover");
+  assert.equal(h.window.history.length, 2);
+  await act(async () => {
+    h.window.history.back();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  assert.equal(h.route.path, "/explore");
+});
