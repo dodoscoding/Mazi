@@ -1,0 +1,169 @@
+[WebServer] (node:35326) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 4 tests using 4 workers
+
+(node:35337) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35338) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35335) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [firefox-desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views (1ms)
+  ✘  1 [firefox-phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views (0ms)
+  ✘  3 [phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views (8.1s)
+  ✘  4 [desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views (8.1s)
+
+
+  1) [desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.mem-photo-facts')
+    Expected: 2
+    Received: 0
+    Timeout:  7000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.mem-photo-facts') with timeout 7000ms
+      - waiting for locator('.mem-photo-facts')
+        18 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      836 |   ).toContainText("Bazı yerler bilinmiyor");
+      837 |   await page.goto("/#/memories");
+    > 838 |   await expect(page.locator(".mem-photo-facts")).toHaveCount(2);
+          |                                                  ^
+      839 |   await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+      840 |     "2 Oca 2020 · Çekildi",
+      841 |   );
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/ci-browser-contracts/tests/memory-detail.spec.ts:838:50
+
+    Error Context: test-results/memory-detail-photo-facts--953db--photo-across-archive-views-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/memory-detail-photo-facts--953db--photo-across-archive-views-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/memory-detail-photo-facts--953db--photo-across-archive-views-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.mem-photo-facts')
+    Expected: 2
+    Received: 0
+    Timeout:  7000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.mem-photo-facts') with timeout 7000ms
+      - waiting for locator('.mem-photo-facts')
+        18 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      836 |   ).toContainText("Bazı yerler bilinmiyor");
+      837 |   await page.goto("/#/memories");
+    > 838 |   await expect(page.locator(".mem-photo-facts")).toHaveCount(2);
+          |                                                  ^
+      839 |   await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+      840 |     "2 Oca 2020 · Çekildi",
+      841 |   );
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/ci-browser-contracts/tests/memory-detail.spec.ts:838:50
+
+    Error Context: test-results/memory-detail-photo-facts--953db--photo-across-archive-views-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/memory-detail-photo-facts--953db--photo-across-archive-views-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/memory-detail-photo-facts--953db--photo-across-archive-views-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [firefox-desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+
+    Error: browserType.launch: Failed to launch the browser process.
+    Browser logs:
+
+    <launching> /Users/altanesmer/Library/Caches/ms-playwright/firefox-1543/firefox/Nightly.app/Contents/MacOS/firefox -no-remote -headless -profile /var/folders/ks/fhc_wz2110n8x2713thh_m580000gn/T/playwright_firefoxdev_profile-B6JtLs -juggler-pipe -silent
+    <launched> pid=35343
+    [pid=35343][err] *** You are running in headless mode.
+    [pid=35343][err] Could not find profile folder.
+    [pid=35343] <process did exit: exitCode=1, signal=null>
+    [pid=35343] starting temporary directories cleanup
+    Call log:
+      - <launching> /Users/altanesmer/Library/Caches/ms-playwright/firefox-1543/firefox/Nightly.app/Contents/MacOS/firefox -no-remote -headless -profile /var/folders/ks/fhc_wz2110n8x2713thh_m580000gn/T/playwright_firefoxdev_profile-B6JtLs -juggler-pipe -silent
+      - <launched> pid=35343
+      - [pid=35343][err] *** You are running in headless mode.
+      - [pid=35343][err] Could not find profile folder.
+      - [pid=35343] <process did exit: exitCode=1, signal=null>
+      - [pid=35343] starting temporary directories cleanup
+      - [pid=35343] <gracefully close start>
+      - [pid=35343] <kill>
+      - [pid=35343] <skipped force kill spawnedProcess.killed=false processClosed=true>
+      - [pid=35343] finished temporary directories cleanup
+      - [pid=35343] <gracefully close end>
+
+
+    Error Context: test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [firefox-phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+
+    Error: browserType.launch: Failed to launch the browser process.
+    Browser logs:
+
+    <launching> /Users/altanesmer/Library/Caches/ms-playwright/firefox-1543/firefox/Nightly.app/Contents/MacOS/firefox -no-remote -headless -profile /var/folders/ks/fhc_wz2110n8x2713thh_m580000gn/T/playwright_firefoxdev_profile-LefDbO -juggler-pipe -silent
+    <launched> pid=35342
+    [pid=35342][err] *** You are running in headless mode.
+    [pid=35342][err] Could not find profile folder.
+    [pid=35342] <process did exit: exitCode=1, signal=null>
+    [pid=35342] starting temporary directories cleanup
+    Call log:
+      - <launching> /Users/altanesmer/Library/Caches/ms-playwright/firefox-1543/firefox/Nightly.app/Contents/MacOS/firefox -no-remote -headless -profile /var/folders/ks/fhc_wz2110n8x2713thh_m580000gn/T/playwright_firefoxdev_profile-LefDbO -juggler-pipe -silent
+      - <launched> pid=35342
+      - [pid=35342][err] *** You are running in headless mode.
+      - [pid=35342][err] Could not find profile folder.
+      - [pid=35342] <process did exit: exitCode=1, signal=null>
+      - [pid=35342] starting temporary directories cleanup
+      - [pid=35342] <gracefully close start>
+      - [pid=35342] <kill>
+      - [pid=35342] <skipped force kill spawnedProcess.killed=false processClosed=true>
+      - [pid=35342] finished temporary directories cleanup
+      - [pid=35342] <gracefully close end>
+
+
+    Error Context: test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/memory-detail-photo-facts--953db--photo-across-archive-views-firefox-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+    [phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+    [firefox-desktop] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
+    [firefox-phone] › tests/memory-detail.spec.ts:824:1 › photo facts stay visible and follow the selected photo across archive views
