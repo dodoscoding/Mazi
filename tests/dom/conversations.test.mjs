@@ -386,6 +386,8 @@ test("a confirmed create outside the page is visible without expanding reaction 
       21,
     );
   }
+  await h.dispatch("pageshow");
+  assert.equal(h.host.querySelector(".confirmed-comment"), null);
 });
 
 test("deleting a different comment preserves new and edit drafts, including an exact delete retry", async (t) => {

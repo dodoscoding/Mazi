@@ -471,6 +471,12 @@ for (const replay of [false, true])
     await expect(page.locator(".conversation-total")).toHaveText("21 yorum");
     await expect(page.getByLabel("Yorum yaz", { exact: true })).toHaveValue("");
     expect(batches).toEqual([21, 21]);
+    if (replay && test.info().project.name === "phone")
+      await page
+        .locator(".confirmed-comment")
+        .screenshot({
+          path: "work/poteto/social-conversations-ui/confirmed-phone.png",
+        });
     if (replay) {
       expect(sent).toHaveLength(2);
       expect(sent[0]).toEqual(sent[1]);

@@ -54,3 +54,21 @@ The captures use normal device scale, so their raster dimensions exceed CSS pixe
 Current Chromium phone evidence is emulation, not a physical-phone pilot. The five-friend study remains open. No live update transport is added; current authorization is checked on server operations and page visibility/return. The direct grouped-photo `photo-ASSET` detail loader is the following H1 integration scope; this slice proves selected-photo conversations inside approved-memory detail routes.
 
 Parent owns independent review, final combined regression, publication, merge and deployment. No push, PR, deployment, hosted mutation or personal archive access occurred here. Nested delegation is forbidden in this assignment; the parent provides independent no-comments/code review. The implementation adds no code comments, suppressions or any-casts.
+
+## Accepted C1 review corrections
+
+Independent review at `6526219` found two P2 cases: a create beyond the ascending current page was confirmed without showing its text, and deleting another comment cleared an unrelated editor. Red commit `7a6b0d9` exposes both, including separate new-composer and other-comment-edit cases ([output](REVIEW_RED.txt)). Fix `0b6412e` addresses both without changing the backend or pagination order.
+
+A create response absent from the refreshed current page now produces a separate **Son gönderdiğin yorum kaydedildi** receipt with its confirmed plain text. It is not a second conversation row and has no extra reaction request. The normal page remains capped at 20 comments and its reaction batch at 21 targets. If the page already contains the returned ID, the receipt is omitted. Pagination, refresh, target/profile/group replacement or access loss clears the receipt. Exact create replay uses the surviving confirmed result and cannot duplicate a row. [Phone receipt](confirmed-phone.png) was captured and visually inspected at the phone project's normal viewport.
+
+Successful create/update clears that draft. Deletion clears the editor only when it removes the comment currently being edited. An unrelated new composer or another saved comment's edit draft survives normal completion and an exact retry after the first deletion response was lost. The same request body and key are asserted.
+
+Latest fetched main `182d419` (including requested `09f9198`, F1 tools and export-contract CI correction) was merged at `30daacb`. The import conflict retained both lazy PhotoLabels and ConversationPanel; the appended test-plan sections both remain. No production backend behavior changed in this correction.
+
+- Focused DOM plus route-history/Discord-return contracts: **25 pass** ([output](REVIEW_DOM.txt)), including receipt clearing on refresh and both unrelated-draft paths.
+- Full actual conversation suite on combined app: **21 pass, one duplicate phone case skipped**, 28.3 seconds ([output](REVIEW_BROWSER.txt)). Added real normal/replayed create after 20 rows, immediate receipt, single displayed text, unchanged reaction bound, next-page receipt removal/deduplication, and both unrelated draft types through exact delete replay.
+- Focused receipt browser rerun after adding screenshot capture: **four pass**, 6.2 seconds ([output](RECEIPT_BROWSER.txt)).
+- Current budgets pass: entry **149.5/150 KiB gzip**, all scripts **405.5/420**, CSS **36.9/40**, globe **242.9/256**, without ceiling changes.
+- Typecheck, lint, document checker and whole-branch whitespace check run before handoff. The separate F1 selected-photo/Gallery browser journey passes both desktop and phone cases in 4.7 seconds after main integration ([output](F1_COEXIST.txt)). Document checker passes 19 authored documents and 338 local links.
+
+Parent owns focused independent re-review before publication. No push or deployment occurred.
