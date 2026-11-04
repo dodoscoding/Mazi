@@ -386,6 +386,8 @@ class ReviewStore(ImportStore):
         return set(self._visible_ids(user, group))
 
     def _photo_correction(self, user, group, asset):
+        if not all(isinstance(value, str) and 1 <= len(value) <= 36 for value in (group, asset)):
+            raise ValueError('Invalid photograph target')
         row = self._asset(user, asset)
         if row['group_id'] != group or asset not in self._correction_visible_ids(user, group):
             raise Denied('Media unavailable')

@@ -114,3 +114,19 @@ class PhotoCorrectionTests(unittest.TestCase):
         with self.assertRaises(Conflict):
             self.store.patch_photo(self.ben, self.group, asset, {'place': 'Paris'}, state['snapshot'])
         self.assertEqual(self.store.photo_correction(self.ben, self.group, asset)['annotation']['title'], 'Another editor')
+
+    def test_reviewed_place_change_during_export_rejects_delivery_and_keeps_origins(self):
+        from unittest.mock import patch
+        asset = self.assets[0]
+        origins = [tuple(row) for row in self.store.db.execute('SELECT id,fingerprint,payload FROM archive_origins ORDER BY id')]
+        state = self.store.photo_correction(self.ben, self.group, asset)
+        self.store.patch_photo(self.ben, self.group, asset, {'place': 'Paris'}, state['snapshot'])
+        write = self.store._write_export_places
+        def change_after_write(*args, **kwargs):
+            write(*args, **kwargs)
+            current = self.store.photo_correction(self.ben, self.group, asset)
+            self.store.patch_photo(self.ben, self.group, asset, {'place': 'Istanbul'}, current['snapshot'])
+        with patch.object(self.store, '_write_export_places', side_effect=change_after_write):
+            with self.assertRaises(Conflict):
+                self.store.export_archive(self.ben, self.group)
+        self.assertEqual(origins, [tuple(row) for row in self.store.db.execute('SELECT id,fingerprint,payload FROM archive_origins ORDER BY id')])
