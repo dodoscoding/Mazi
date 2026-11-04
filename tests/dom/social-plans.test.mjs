@@ -382,3 +382,14 @@ test("a denied write prevents an already-running read from restoring private con
   assert.match(h.host.textContent, /Bu plan kullanılamıyor/);
   assert.doesNotMatch(h.host.textContent, /Cumartesi birlikte/);
 });
+
+test("unrelated edits preserve a hidden memory and visible links can be explicitly removed", async (t) => {
+  const h = await mount(t, "/src/social/Plans.tsx", "default",
+    { ...plansProps, search: "?section=plans&group=circle&plan=meeting" },
+    async (_path, options) => Response.json(plan));
+  await h.click(findButton(h, "Düzenle"));
+  await act(async () => h.host.querySelector("form").dispatchEvent(
+    new h.window.Event("submit", { bubbles: true, cancelable: true })));
+  const body = JSON.parse(h.calls.find(({ options }) => options.method === "POST").options.body);
+  assert.deepEqual(body.patch, {}, "an unchanged hidden projection must not unlink the stored memory");
+});
