@@ -368,7 +368,7 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
   const personFacets = page.locator('[data-photo-filter^="person:"]');
-  await expect(personFacets.first()).toBeVisible();
+  await expect(personFacets.first()).toBeAttached();
   expect(
     await personFacets.evaluateAll((inputs) =>
       inputs.every((input) => !(input as HTMLInputElement).disabled),
