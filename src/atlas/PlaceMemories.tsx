@@ -166,6 +166,7 @@ export function PlaceForm({
   const saving = outcome.kind === "saving";
   return (
     <form className="place-form" onSubmit={submit} aria-busy={saving}>
+      <p>Tüm anı · {memory.photos.length} fotoğrafın yeri değişir.</p>
       <label className="visually-hidden" htmlFor={id}>
         City for {memory.shortTitle}
       </label>
