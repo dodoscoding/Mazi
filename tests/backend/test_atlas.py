@@ -428,3 +428,22 @@ class AtlasTests(unittest.TestCase):
         self.assertTrue(photos)
         self.assertTrue(all(photo['evidence']['chronology']['status'] == 'ambiguous' for photo in photos))
         self.assertTrue(all(photo['evidence']['capture']['status'] == 'unknown' for photo in photos))
+
+    def test_photo_evidence_preserves_same_name_city_regions_and_source_centroids(self):
+        from mazi.places import lookup
+        from mazi.archive.photo_metadata import place_evidence
+        massachusetts = lookup('Springfield, Massachusetts, US')['city']
+        illinois = lookup('Springfield, Illinois, US')['city']
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='Springfield, Massachusetts, US')
+        self.store.correct_asset(self.alice, self.assets[1], title='Blue', capture_date='2021-01-02', place='Springfield, Illinois, US')
+        photos = {photo['assetId']: photo for photo in self._memory()['photos']}
+        self.assertEqual(photos[self.assets[0]]['evidence']['place']['text'], 'Springfield, Massachusetts, US')
+        self.assertEqual(photos[self.assets[1]]['evidence']['place']['text'], 'Springfield, Illinois, US')
+        for city in (massachusetts, illinois):
+            source = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+            resolved = place_evidence('', [source])
+            self.assertEqual(resolved['status'], 'known')
+            self.assertEqual((resolved['pin']['latitude'], resolved['pin']['longitude']), (city.latitude, city.longitude))
+            self.assertEqual(resolved['text'], f'Springfield, {city.region}, US')
+        conflict = place_evidence('', [dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude) for city in (massachusetts, illinois)])
+        self.assertEqual(conflict, dict(status='conflict', text=None, pin=None))
