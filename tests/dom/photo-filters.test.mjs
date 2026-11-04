@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { group, mountFeature, until } from "./feature-harness.mjs";
+import { deferred, group, mountFeature, until } from "./feature-harness.mjs";
 import { photoEvidenceMemory } from "../helpers/photo-evidence.ts";
 import { photoMatches } from "../helpers/photo-match.ts";
 
@@ -136,8 +136,44 @@ test("Search restores archive year/place predicates and reset clears the complet
     reads.filter((path) => path.includes("/search?"))[1],
     "http://localhost",
   );
-  for (const field of ["years", "places", "uncertain", "screenshot", "person"])
+  for (const field of ["years", "places", "uncertain", "screenshot"])
     assert.equal(reset.searchParams.get(field), null);
   assert.equal(reset.searchParams.get("source"), "");
+  assert.equal(reset.searchParams.get("person"), "");
   assert.equal(window.location.hash, "#/search");
+});
+
+test("pending and failed Gallery matches clear stale thumbnails and totals while retaining the filter", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  const { root } = await mountFeature(t, "memories", (path) => {
+    if (path === "/api/groups") return [group];
+    if (path.startsWith("/api/atlas"))
+      return { memories: [photoEvidenceMemory] };
+    if (path.startsWith("/api/discovery/matches"))
+      return ++calls === 1
+        ? photoMatches(photoEvidenceMemory.photos.map((photo) => photo.assetId))
+        : pending.promise;
+    return [];
+  });
+  await until(
+    () => root.querySelectorAll(".mem-tile").length === 2,
+    "initial matched photos",
+  );
+  const field = [...root.querySelectorAll(".photo-filters fieldset")].find(
+    (node) => node.querySelector("legend").textContent === "Ekran görüntüsü",
+  );
+  field.querySelector('input[value="yes"]').click();
+  assert.equal(root.querySelectorAll(".mem-tile").length, 0);
+  assert.match(root.querySelector("#grid-summary").textContent, /aranıyor/);
+  pending.resolve(
+    Object.assign(Error("Synthetic metadata limit"), {
+      code: "capacity_exceeded",
+      status: 400,
+    }),
+  );
+  await until(() => root.querySelector("#grid button"), "retry action");
+  assert.doesNotMatch(root.querySelector("#grid-summary").textContent, /[0-9]/);
+  assert.equal(root.querySelectorAll(".mem-tile").length, 0);
+  assert.equal(field.querySelector('input[value="yes"]').checked, true);
 });
