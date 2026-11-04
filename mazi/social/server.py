@@ -6,7 +6,7 @@ from mazi.http_origin import validate_origin
 from mazi.identity.core import Conflict, Denied
 from mazi.memories.server import handler_for as memory_handler
 from mazi.persistence import ArchiveBusy
-from . import conversations, reactions, social
+from . import conversations, labels, reactions, social
 
 
 def handler_for(store):
@@ -18,6 +18,8 @@ def handler_for(store):
             try:
                 query = {key: values[0] for key, values in parse_qs(parts.query).items()}
                 user = self.user()
+                if parts.path == '/api/social/labels':
+                    return self.json(200, labels.read_labels(store, user, query['group'], json.loads(query['assets'])))
                 if parts.path == '/api/social/reactions/batch':
                     return self.json(200, reactions.batch_reactions(store, user, query['group'], json.loads(query['targets'])))
                 if parts.path == '/api/social/reactions':
@@ -53,6 +55,8 @@ def handler_for(store):
                 if not isinstance(body, dict) or not isinstance(body.get('group'), str) or not 0 < len(body['group']) <= 200:
                     raise ValueError('Invalid group')
                 user, group = self.user(), body['group']
+                if path == '/api/social/labels/set':
+                    return self.json(200, labels.set_labels(store, user, group, body['request_key'], body['items']))
                 if path == '/api/social/reactions/set':
                     return self.json(200, reactions.set_reaction(store, user, group, body['request_key'], body['target'], body['emoji'], body['active']))
                 if path == '/api/social/comments/create':
