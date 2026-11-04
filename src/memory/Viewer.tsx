@@ -3,6 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Memory, Photo as PhotoData } from "../memories";
 import { Photo } from "../Photo";
 import { Glyph } from "./glyphs";
+import { photoDateLabel, photoPlaceLabel } from "./evidence";
 
 const settle = { duration: 360, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
 const fade = { duration: 150, easing: "linear" };
@@ -210,7 +211,18 @@ export function Viewer({
         <figcaption className="viewer-caption">
           <span className="viewer-caption-text">
             <span className="viewer-caption-title">{photo.caption}</span>
-            {meta && <span className="viewer-caption-meta">{meta}</span>}
+            {photo.evidence ? (
+              <>
+                <span className="viewer-caption-meta">
+                  {photoDateLabel(photo)}
+                </span>
+                <span className="viewer-caption-meta">
+                  {photoPlaceLabel(photo)}
+                </span>
+              </>
+            ) : (
+              meta && <span className="viewer-caption-meta">{meta}</span>
+            )}
           </span>
           <span className="viewer-count" aria-live="polite">
             {index + 1} / {photos.length}

@@ -1,5 +1,6 @@
 import { chronologyDate } from "./chronology";
 import type { Memory } from "../memories";
+import { evidenceChronology, evidencePlaceLabel } from "./evidence";
 
 const isoDay = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
 
@@ -26,6 +27,8 @@ export function hasDate(memory: Memory) {
 
 /** The date as members read it, with "About" when the archive is unsure. */
 export function displayDate(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.label;
   if (memory.year === null) return chronologyDate(memory).label;
   const date = readableDate(memory.date);
   return memory.approximate && hasDate(memory) ? `About ${date}` : date;
@@ -44,6 +47,8 @@ export function countryName(code: string) {
 }
 
 export function placeLine(memory: Memory) {
+  const evidence = evidencePlaceLabel(memory);
+  if (evidence) return evidence;
   if (!memory.place) return "";
   return `${memory.place.name}, ${countryName(memory.place.country)}`;
 }
@@ -69,6 +74,21 @@ const basisNotes: Record<string, string> = {
 
 /** Plain sentences for each recorded date basis, in the archive's order. */
 export function dateBasisNotes(memory: Memory) {
+  if (memory.photos.every((photo) => photo.evidence)) {
+    const evidence = memory.photos.map((photo) => photo.evidence!);
+    const notes = [];
+    if (evidence.some((photo) => photo.chronology.basis === "shared"))
+      notes.push(
+        "Çekim tarihi bilinmeyen fotoğraflarda en erken güvenilir paylaşım günü gösterilir.",
+      );
+    if (evidence.some((photo) => photo.capture.status === "conflict"))
+      notes.push(
+        "Kaynakların farklı çekim günleri korunur; tek bir gün seçilmez.",
+      );
+    if (evidence.some((photo) => photo.chronology.status === "ambiguous"))
+      notes.push("Kaynak gün ve ay sırasını kesinleştirmiyor.");
+    return notes;
+  }
   if (!memory.dateBasis) return [];
   return [
     ...new Set(
@@ -124,6 +144,8 @@ export function sourceRows(memory: Memory): SourceRow[] {
 
 /** Sort key from the first ISO day in the date label, else the year; undated is null. */
 function when(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.sortKey;
   const day = memory.date.match(/\d{4}-\d{2}-\d{2}/)?.[0];
   if (day) return day;
   return memory.year === null ? null : `${memory.year}`;

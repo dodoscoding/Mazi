@@ -384,7 +384,7 @@ class AtlasTests(unittest.TestCase):
         self.assertEqual(photo['evidence']['capture'], dict(basis='capture', status='exact', days=['2020-01-02'],
                                                          start='2020-01-02', through='2020-01-02', timezone=None))
         self.assertEqual(photo['evidence']['chronology'], photo['evidence']['capture'])
-        self.assertEqual(photo['evidence']['place']['text'], 'İstanbul, TR')
+        self.assertEqual(photo['evidence']['place']['text'], 'Istanbul, TR')
         self.assertEqual(photo['evidence']['place']['status'], 'known')
         self.assertEqual(before, [tuple(row) for row in self.store.db.execute('SELECT id,payload FROM archive_origins ORDER BY id')])
 
@@ -411,3 +411,20 @@ class AtlasTests(unittest.TestCase):
         self.store.set_place(self.alice, self._origin(self.assets[0]), 'GR', 'Naxos', 37.1, 25.4, None)
         evidence = self._red_card()['photos'][0]['evidence']
         self.assertEqual(evidence['place'], dict(status='unmapped', text='Harbour', pin=None))
+
+    def test_photo_evidence_different_reviewed_cities_remain_on_their_own_children(self):
+        self.store.correct_asset(self.alice, self.assets[0], title='Red', capture_date='2020-01-02', place='Istanbul, TR')
+        self.store.correct_asset(self.alice, self.assets[1], title='Blue', capture_date='2021-01-02', place='Paris, FR')
+        memory = self._memory()
+        self.assertIsNone(memory['place'])
+        places = {photo['assetId']: photo['evidence']['place']['text'] for photo in memory['photos']}
+        self.assertEqual(places, {self.assets[0]: 'Istanbul, TR', self.assets[1]: 'Paris, FR'})
+
+    def test_photo_evidence_distinguishes_unresolved_chat_days(self):
+        self._whatsapp_shares('04/05/2024, 21:00 - Ana: a.jpg (file attached)\n'
+                              '05/04/2024, 10:00 - Ana: b.jpg (file attached)')
+        photos = [photo for card in atlas_view(self.store, self.ben, self.group)['memories']
+                  for photo in card['photos'] if photo['assetId'] not in self.assets]
+        self.assertTrue(photos)
+        self.assertTrue(all(photo['evidence']['chronology']['status'] == 'ambiguous' for photo in photos))
+        self.assertTrue(all(photo['evidence']['capture']['status'] == 'unknown' for photo in photos))

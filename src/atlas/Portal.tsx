@@ -83,11 +83,9 @@ export function Portal({
             />
           )}
         </div>
-        {memory.place && (
-          <figcaption className="hud-label">
-            {where} · {shortDate(memory)}
-          </figcaption>
-        )}
+        <figcaption className="hud-label">
+          {placeLabel(memory)} · {shortDate(memory)}
+        </figcaption>
       </figure>
       <div className="portal-bar">
         <button

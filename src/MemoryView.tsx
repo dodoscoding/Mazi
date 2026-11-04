@@ -76,7 +76,14 @@ export function MemoryView({
   const photoIndex = Math.min(Math.floor(photo), memory.photos.length - 1);
   const place = placeLine(memory);
   const date = displayDate(memory);
-  const uncertain = memory.approximate && hasDate(memory);
+  const hasEvidence = memory.photos.every((photo) => photo.evidence);
+  const uncertain = hasEvidence
+    ? memory.photos.some((photo) =>
+        ["conflict", "ambiguous", "unknown", "approximate"].includes(
+          photo.evidence!.chronology.status,
+        ),
+      )
+    : memory.approximate && hasDate(memory);
   const basis = dateBasisNotes(memory).join(" ");
   const shared = memory.people?.shared || [];
   const meta = [
@@ -274,8 +281,17 @@ export function MemoryView({
               {uncertain ? (
                 <div className="uncertainty-note" role="note">
                   <p>
-                    <b>Date uncertain.</b> Not every photo has a confirmed date,
-                    so Mazi shows “About”. {basis}
+                    {hasEvidence ? (
+                      <>
+                        <b>Tarih belirsiz.</b> Her fotoğrafın tarih durumu ayrı
+                        gösterilir. {basis}
+                      </>
+                    ) : (
+                      <>
+                        <b>Date uncertain.</b> Not every photo has a confirmed
+                        date, so Mazi shows “About”. {basis}
+                      </>
+                    )}
                   </p>
                   {!demo && (
                     <a href="#/review" onClick={link("/review")}>
@@ -304,7 +320,9 @@ export function MemoryView({
                   </a>
                 ) : (
                   <p className="fact-detail">
-                    The photos disagree on a place, or none was recorded.
+                    {hasEvidence
+                      ? "Her fotoğrafın yeri kendi bilgi satırında gösterilir. Eksik veya çelişkili yerler haritada işaretlenmez."
+                      : "The photos disagree on a place, or none was recorded."}
                   </p>
                 )}
               </div>

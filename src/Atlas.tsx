@@ -10,7 +10,7 @@ import type {
 } from "react";
 import { AtlasStage } from "./atlas/AtlasStage";
 import type { StageView } from "./atlas/AtlasStage";
-import { plural, shortDate } from "./atlas/format";
+import { plural, shortDate, placeLabel } from "./atlas/format";
 import { Intro, claimIntro } from "./atlas/Intro";
 import { buildAtlas, placeIdOf } from "./atlas/model";
 import type { PlaceNode } from "./atlas/model";
@@ -633,7 +633,11 @@ function AtlasHome({
               >
                 <span className="index-name">{memory.shortTitle}</span>
                 <span className="index-meta">
-                  {[shortDate(memory), sourceSharedLine(memory)]
+                  {[
+                    shortDate(memory),
+                    placeLabel(memory),
+                    sourceSharedLine(memory),
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
@@ -675,7 +679,7 @@ function AtlasHome({
           {[
             shortDate(selected),
             sourceSharedLine(selected),
-            selected.place?.name,
+            placeLabel(selected),
             plural(selected.photos.length, "photo"),
           ]
             .filter(Boolean)
@@ -756,7 +760,7 @@ function AtlasHome({
             <span className="choice-copy">
               <span className="choice-title">{item.shortTitle}</span>
               <span className="choice-meta">
-                {[shortDate(item), sourceSharedLine(item)]
+                {[shortDate(item), placeLabel(item), sourceSharedLine(item)]
                   .filter(Boolean)
                   .join(" · ")}
                 {item.place ? ` · ${item.place.name}` : ""}

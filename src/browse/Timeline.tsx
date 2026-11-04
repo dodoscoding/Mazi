@@ -15,6 +15,7 @@ import { Icon } from "../ui/icons";
 import { useReducedMotion } from "../useRoute";
 import type { LinkFor } from "../useRoute";
 import { dateLabel, placeLabel, plural, sharedLine } from "./model";
+import { placeLine } from "../memory/facts";
 
 type Order = "oldest" | "newest";
 const noBirths: Record<string, number> = {};
@@ -370,7 +371,7 @@ export function Timeline({
                           <h3 className="tl-title">{memory.title}</h3>
                           <span className="tl-meta">
                             {[
-                              placeLabel(memory.place),
+                              placeLine(memory),
                               plural(memory.photos.length, "photo"),
                               sharedLine(memory),
                             ]

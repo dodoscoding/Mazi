@@ -5,6 +5,7 @@ import {
   provenanceOf,
 } from "../memory/provenance";
 import type { Memory, Photo, Place } from "../memories";
+import { evidenceChronology } from "../memory/evidence";
 
 let regions: Intl.DisplayNames | undefined;
 export function countryName(code: string) {
@@ -91,6 +92,8 @@ export function monthYear(date: Date) {
 
 /** A memory's date as the Components sheet writes it: exact, or "About". */
 export function dateLabel(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.label;
   if (memory.year === null) return chronologyDate(memory).label;
   const date = firstDate(memory);
   const text = date

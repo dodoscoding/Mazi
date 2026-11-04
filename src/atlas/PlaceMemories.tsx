@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import type { Memory, Place } from "../memories";
 import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/icons";
-import { plural, shortDate } from "./format";
+import { plural, shortDate, placeLabel } from "./format";
 import "../styles/place.css";
 
 /** POST /api/atlas/place; the server writes only for "matched" and "empty". */
@@ -280,6 +280,7 @@ export function UnplacedTray({
                     <span className="place-tray-meta">
                       {[
                         shortDate(memory),
+                        placeLabel(memory),
                         plural(memory.photos.length, "photo"),
                       ]
                         .filter(Boolean)

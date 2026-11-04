@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { memories as samples } from "./memories";
 import { isFeaturePath } from "./featureRoutes";
 import type { Memory } from "./memories";
+import { evidencePin } from "./memory/evidence";
 
 type Circle = { id: string; name: string; role: string };
 type ArchiveState = {
@@ -110,7 +111,11 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
           throw Error(
             "Your archive changed or is unavailable. Refresh to check access.",
           );
-        const { memories } = await result.json();
+        const { memories: received } = await result.json();
+        const memories = (received as Memory[]).map((memory) => ({
+          ...memory,
+          place: evidencePin(memory),
+        }));
         if (!request.signal.aborted)
           setState((previous) => ({ ...previous, memories, atlas: true }));
       } catch (error) {

@@ -353,6 +353,15 @@
 .memories-page .mem-tile:hover img {
   filter: brightness(1.08);
 }
+.memories-page .mem-photo-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 2px 12px;
+  color: var(--text-primary);
+  font: 400 12px / 1.5 var(--font-ui);
+  overflow-wrap: anywhere;
+}
 .memories-page .mem-about {
   position: absolute;
   left: 6px;

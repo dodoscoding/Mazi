@@ -1,5 +1,5 @@
-// Pure Atlas model. No runtime imports, so `node --test` can run it with type stripping.
 import type { Memory } from "../memories";
+import { evidencePin } from "../memory/evidence.ts";
 
 export type PlaceNode = {
   id: string;
@@ -20,7 +20,8 @@ export type AtlasModel = {
 };
 
 export function placeIdOf(memory: Memory): string | null {
-  return memory.place ? `${memory.place.country}:${memory.place.name}` : null;
+  const place = evidencePin(memory);
+  return place ? `${place.country}:${place.name}` : null;
 }
 
 export function buildAtlas(
@@ -34,7 +35,8 @@ export function buildAtlas(
   for (const memory of memories) {
     if (yearOf(memory) !== null) years.add(yearOf(memory)!);
     const id = placeIdOf(memory);
-    if (!id || !memory.place) {
+    const place = evidencePin(memory);
+    if (!id || !place) {
       unplaced.push(memory);
       continue;
     }
@@ -42,8 +44,8 @@ export function buildAtlas(
     if (!node) {
       node = {
         id,
-        name: memory.place.name,
-        country: memory.place.country,
+        name: place.name,
+        country: place.country,
         latitude: 0,
         longitude: 0,
         count: 0,
@@ -54,8 +56,8 @@ export function buildAtlas(
       sums.set(id, { latitude: 0, longitude: 0 });
     }
     const sum = sums.get(id)!;
-    sum.latitude += memory.place.latitude;
-    sum.longitude += memory.place.longitude;
+    sum.latitude += place.latitude;
+    sum.longitude += place.longitude;
     node.count++;
     node.memories.push(memory.id);
     if (yearOf(memory) !== null)
@@ -69,7 +71,7 @@ export function buildAtlas(
   }
   // Array.prototype.sort is stable, so equal years keep the API order.
   const dated = memories
-    .filter((memory) => yearOf(memory) !== null && memory.place)
+    .filter((memory) => yearOf(memory) !== null && evidencePin(memory))
     .sort((a, b) => yearOf(a)! - yearOf(b)!);
   const journeys: Journey[] = [];
   const seen = new Set<string>();

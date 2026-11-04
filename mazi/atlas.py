@@ -7,6 +7,7 @@ from mazi.identity.core import Denied
 from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, label, lookup
+from mazi.archive.photo_metadata import resolve_photo
 
 SAME_PLACE_KM = 50
 
@@ -70,7 +71,7 @@ def atlas_view(store, user, group):
                 date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
             photos = [dict(src='/api/review/rendition/' + item['id'],
                            alt=item['title'] or 'Archive photograph',
-                           caption=item['title'] or 'Untitled photograph') for item in records]
+                           caption=item['title'] or 'Untitled photograph', assetId=item['id']) for item in records]
             detail = dict(messages={}, sources=set(), places=[], shared=set(),
                           provenance=[{} for _ in records],
                           untitled={position for position, item in enumerate(records) if not item['title']})
@@ -143,7 +144,9 @@ def atlas_view(store, user, group):
                             detail['messages'][key] = position
         # A city named in Review stands in for every source location of that photograph.
         reviewed = {}
+        reviewed_text = {}
         for row in store.db.execute("SELECT asset_id,place FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
+            reviewed_text[row['asset_id']] = row['place']
             match = lookup(row['place']) if row['asset_id'] in consumers else {}
             if match.get('status') == 'matched':
                 city = match['city']
@@ -162,9 +165,12 @@ def atlas_view(store, user, group):
                 detail['places'].append((asset_position, place_position, row))
         for result, detail in zip(cards, details):
             for position, photo in enumerate(result['photos']):
+                asset = photo['assetId']
                 evidence = list(detail['provenance'][position].values())
                 if evidence:
                     photo['provenance'] = evidence
+                photo['evidence'] = resolve_photo(items[asset]['dates'], evidence, reviewed_text.get(asset),
+                    [entry[2] for entry in detail['places'] if entry[0] == position])
                 names = sorted({item['sender'] for item in evidence if item['sender']})
                 if names and position in detail['untitled']:
                     title = 'Photo shared by ' + (

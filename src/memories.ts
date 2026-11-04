@@ -8,11 +8,32 @@ export type PhotoProvenance = {
     ambiguous: boolean;
   };
 };
+export type DateEvidence = {
+  basis: "capture" | "shared" | "unknown";
+  status:
+    "exact" | "approximate" | "range" | "conflict" | "ambiguous" | "unknown";
+  days: string[];
+  start: string | null;
+  through: string | null;
+  timezone: string | null;
+};
+export type PhotoEvidence = {
+  capture: DateEvidence;
+  shared: DateEvidence[];
+  chronology: DateEvidence;
+  place: {
+    status: "known" | "unmapped" | "conflict" | "unknown";
+    text: string | null;
+    pin: Place | null;
+  };
+};
 export type Photo = {
   src: string;
   alt: string;
   caption: string;
   provenance?: PhotoProvenance[];
+  assetId?: string;
+  evidence?: PhotoEvidence;
 };
 export type Place = {
   name: string;
