@@ -104,8 +104,8 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await currentStory
     .getByRole("button", { name: "Show slideshow", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+  await currentStory
+    .getByRole("button", { name: "Next photo", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
   for (const [label, filename] of [
