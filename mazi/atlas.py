@@ -14,6 +14,8 @@ from mazi.archive.photo_metadata import origin_timestamps, place_evidence, resol
 from mazi.archive.photo_context import hidden_event_assets as _hidden_event_assets
 
 SAME_PLACE_KM = 50
+SELECTED_REQUEST_BYTES = 64 * 1024 * 1024
+SELECTED_REQUEST_ORIGINS = 65536
 
 
 def _place(rows):
@@ -41,7 +43,7 @@ def atlas_view(store, user, group):
         return _project_cards(store, user, group, items, store._approved(user, group))
 
 
-def _project_cards(store, user, group, items, events, *, selected=False):
+def _project_cards(store, user, group, items, events, *, selected=False, budget=None):
     hidden_assets = _hidden_event_assets(store, user, group)
     cards, grouped = [], set()
 
@@ -88,7 +90,7 @@ def _project_cards(store, user, group, items, events, *, selected=False):
     if selected:
         where += ' AND o.asset_id IN (' + ','.join('?' for _ in items) + ') '
         params += tuple(items)
-    context = SharingContext(store, user, group, time.perf_counter(), 2) if selected else None
+    context = SharingContext(store, user, group, budget.started, 2, consume=budget.consume) if selected else None
     origins = ('SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
                'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
                'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'))
@@ -226,9 +228,20 @@ def place_memory(store, user, group, memory, place):
             'pin': city and place_evidence(label(city), [])['pin']}
 
 
-def _selected_items(store, user, group, assets):
-    result, after, total, count = {}, ('', ''), 0, 0
-    started = time.perf_counter()
+class _SelectedBudget:
+    def __init__(self):
+        self.started = time.perf_counter()
+        self.bytes = self.origins = 0
+
+    def consume(self, size):
+        self.bytes += size
+        self.origins += 1
+        if size > 65536 or self.bytes > SELECTED_REQUEST_BYTES or self.origins > SELECTED_REQUEST_ORIGINS or time.perf_counter() - self.started > 2:
+            raise CapacityExceeded('Selected memory exceeds the metadata read budget')
+
+
+def _selected_items(store, user, group, assets, budget):
+    result, after = {}, ('', '')
     size = 'octet_length(o.payload)' if getattr(store.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
     while True:
         rows = store.db.execute('SELECT a.id,o.id AS origin_id,' + size + ' AS payload_bytes,CASE WHEN ' + size + '<=65536 THEN o.payload ELSE NULL END AS payload,r.title,r.capture_date,r.place,r.anniversary '
@@ -239,10 +252,7 @@ def _selected_items(store, user, group, assets):
         if not rows:
             break
         for row in rows:
-            total += row['payload_bytes']
-            count += 1
-            if row['payload_bytes'] > 65536 or total > 64 * 1024 * 1024 or count > 65536 or time.perf_counter() - started > 2:
-                raise CapacityExceeded('Selected memory exceeds the metadata read budget')
+            budget.consume(row['payload_bytes'])
             item = result.setdefault(row['id'], dict(id=row['id'], title=row['title'] or '', dates=set(), cities=set(),
                 annotation=row, origin_count=0, metadata_bytes=0))
             item['origin_count'] += 1
@@ -277,10 +287,11 @@ def _selected_memory(store, user, group, memory):
             raise CapacityExceeded('Selected memory supports at most 100 photographs')
         events = [dict(id=row['id'], title=row['title'], assets=assets)]
     authorize_photos(store, user, group, assets)
-    items = _selected_items(store, user, group, assets)
+    budget = _SelectedBudget()
+    items = _selected_items(store, user, group, assets, budget)
     if set(items) != set(assets):
         raise Denied('Memory unavailable')
-    cards = _project_cards(store, user, group, items, events, selected=True)['memories']
+    cards = _project_cards(store, user, group, items, events, selected=True, budget=budget)['memories']
     return next((card for card in cards if card['id'] == memory), None)
 
 
