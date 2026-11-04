@@ -254,3 +254,12 @@ class PlanMemoryTests(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(self.store.export_archive(self.alice, self.group))) as archive:
             exported = json.loads(archive.read('social.json'))
         self.assertIsNone(exported['plans'][0]['memory'])
+
+    def test_hidden_event_children_do_not_leak_through_a_different_memory_link(self):
+        event = self.store.review_event(self.alice, self.group, self.assets, 'Visible winter', 'accept')
+        with self.store.transaction():
+            self.store.db.execute("INSERT INTO review_events SELECT 'overlapping-event',group_id,asset_ids,'Hidden winter',status,actor_id,updated_at FROM review_events WHERE id=?", (event,))
+        self.store.hide_event(self.ben, self.group, 'overlapping-event', True)
+        data = dict(title='Meet again', start_local='2030-06-01T18:00', timezone='UTC', memory=event)
+        plan = social.create_plan(self.store, self.alice, self.group, 'create', data)
+        self.assertIsNone(social.get_plan(self.store, self.ben, self.group, plan['id'])['memory'])

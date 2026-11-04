@@ -62,7 +62,11 @@ def _memory(store, user, group, identity):
     row = store.db.execute("SELECT id,title,asset_ids FROM review_events WHERE id=? AND group_id=? AND status='accepted'", (identity, group)).fetchone()
     if row is None or store.db.execute('SELECT 1 FROM discovery_hidden_events WHERE event=? AND "user"=?', (identity, user)).fetchone():
         raise Denied('Memory unavailable')
-    for asset in json.loads(row['asset_ids']):
+    assets = json.loads(row['asset_ids'])
+    hidden_events = store.db.execute('SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE e.group_id=? AND h."user"=?', (group, user))
+    if any(set(assets).intersection(json.loads(hidden[0])) for hidden in hidden_events):
+        raise Denied('Memory unavailable')
+    for asset in assets:
         original = store._asset(user, asset)
         if original['group_id'] != group or store.db.execute('SELECT 1 FROM discovery_hidden WHERE asset=? AND "user"=?', (asset, user)).fetchone():
             raise Denied('Memory unavailable')
