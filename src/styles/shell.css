@@ -291,3 +291,16 @@
   right: 0;
   max-width: calc(100vw - 32px);
 }
+
+@media (max-width: 600px) {
+  .header-end .add-menu {
+    position: static;
+  }
+  .add-menu .menu-popover {
+    left: var(--gutter);
+    right: var(--gutter);
+    top: calc(100% + 4px);
+    width: auto;
+    max-width: none;
+  }
+}
