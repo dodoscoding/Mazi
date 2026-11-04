@@ -77,3 +77,37 @@ test("Gallery selection stops at fifty stable asset IDs", async (t) => {
   boxes[0].click();
   assert.equal(boxes[50].disabled, false);
 });
+
+for (const action of ["deselect", "clear", "toggle"]) {
+  test(`Gallery ${action} cancels an editor whose lazy import is pending`, async (t) => {
+    const reads = [];
+    const { root } = await mountFeature(t, "memories", (path) => {
+      reads.push(path);
+      if (path === "/api/groups") return [group];
+      if (path.startsWith("/api/atlas")) return { memories: [memory()] };
+      if (path.startsWith("/api/social/labels?")) return { items: [] };
+      return [];
+    });
+    await until(() => root.querySelector(".mem-tile"), "gallery");
+    button(root, "Fotoğraf seç").click();
+    const checkbox = root.querySelector(".mem-photo-select input");
+    checkbox.click();
+    button(root, "Seçili etiketleri düzenle").click();
+    if (action === "deselect") checkbox.click();
+    else
+      button(
+        root,
+        action === "clear" ? "Seçimi temizle" : "Fotoğraf seç",
+      ).click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    assert.match(
+      root.querySelector(".mem-label-tools").textContent,
+      /0 fotoğraf seçildi/,
+    );
+    assert.equal(
+      reads.filter((path) => path.includes("social/labels")).length,
+      0,
+    );
+    assert.equal(root.querySelector(".photo-label-editor"), null);
+  });
+}
