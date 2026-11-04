@@ -7,7 +7,7 @@ from mazi.identity.core import Conflict, Denied
 from mazi.discovery.discovery import text
 from mazi.answers.answers import AnswerStore
 from .advanced import AdvancedMixin, SCHEMA as ADVANCED_SCHEMA
-from mazi.social.schema import SCHEMA as SOCIAL_SCHEMA, COMMENT_SCHEMA, REACTION_SCHEMA, LABEL_SCHEMA
+from mazi.social.schema import SCHEMA as SOCIAL_SCHEMA, COMMENT_SCHEMA, REACTION_SCHEMA, LABEL_SCHEMA, HOME_SCHEMA
 from mazi.social.social import export_social
 from mazi.social.conversations import export_comments
 from mazi.social.reactions import export_reactions
@@ -41,6 +41,7 @@ class MemoryStore(AdvancedMixin, AnswerStore):
         initialize_schema(self.db, COMMENT_SCHEMA)
         initialize_schema(self.db, REACTION_SCHEMA)
         initialize_schema(self.db, LABEL_SCHEMA)
+        initialize_schema(self.db, HOME_SCHEMA)
 
     def _capture_export_metadata(self, user, group, ids, fingerprint):
         super()._capture_export_metadata(user, group, ids, fingerprint)

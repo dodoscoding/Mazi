@@ -5,6 +5,7 @@ import mimetypes
 
 from mazi.http_origin import validate_origin
 from mazi.persistence import ArchiveBusy
+from mazi.capacity import CapacityExceeded
 import os
 import threading
 from http.server import ThreadingHTTPServer
@@ -146,11 +147,16 @@ def handler_for(store, dist=None, drain=None):
                 return self.work()
             if path == '/api/atlas/photo':
                 return self.photo()
-            if path == '/api/atlas':
+            if path in ('/api/atlas', '/api/atlas/memory'):
                 try:
-                    from .atlas import atlas_view
-                    group = parse_qs(parts.query).get('group', [''])[0]
+                    from .atlas import atlas_view, memory_view
+                    query = parse_qs(parts.query)
+                    group = query.get('group', [''])[0]
+                    if path == '/api/atlas/memory':
+                        return self.json(200, memory_view(store, self.user(), group, query.get('memory', [''])[0]))
                     return self.json(200, atlas_view(store, self.user(), group))
+                except CapacityExceeded as exc:
+                    return self.json(400, {'code': 'capacity_exceeded', 'error': str(exc)})
                 except ArchiveBusy:
                     return self.json(503, {"error": "Archive is busy; retry shortly"})
                 except Denied as exc:
