@@ -141,3 +141,50 @@ class DateBasisTests(unittest.TestCase):
             self.assertEqual(matches_dates(evidence, 'capture', day, day), expected)
         evidence['capture'] = {**item, 'status': 'conflict', 'days': ['2020-01-02', '2020-01-04']}
         self.assertFalse(matches_dates(evidence, 'capture', '2020-01-03', '2020-01-03'))
+
+    def test_vector_reference_document_never_fetches_unrelated_sharing_context(self):
+        capacity_helpers.ArchiveCapacityTests.seed_projection(self, 1001)
+        self.set_evidence('capacity-00000', share='04/05/2024, 21:00')
+        with self.store.transaction():
+            row = self.store.db.execute("SELECT id,payload FROM archive_origins WHERE asset_id='capacity-00001'").fetchone()
+            payload = json.loads(row['payload'])
+            payload['context'] = [dict(text='x' * 70000, shared_at='23/05/2024, 10:00')]
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+        statements = []
+        self.store.db.set_trace_callback(statements.append)
+        try:
+            document = self.store._bounded_document(self.alice, 'capacity-00000')
+        finally:
+            self.store.db.set_trace_callback(None)
+        self.assertNotIn('evidence', document)
+        self.assertFalse(any('o.run_id=' in statement and 'AS payload_bytes' in statement for statement in statements))
+
+    def test_large_public_similar_reference_never_fetches_oversized_neighbor_payload(self):
+        import sqlite3
+        from unittest.mock import patch
+        from mazi.capacity import CapacityExceeded
+        capacity_helpers.ArchiveCapacityTests.seed_projection(self, 1001)
+        self.set_evidence('capacity-00000', share='04/05/2024, 21:00')
+        for user in (self.alice, self.ben):
+            self.store.processing(user, self.group, True)
+        self.store.processing(self.alice, self.group, True, group_wide=True)
+        with self.store.transaction():
+            row = self.store.db.execute("SELECT id,payload FROM archive_origins WHERE asset_id='capacity-00001'").fetchone()
+            payload = json.loads(row['payload'])
+            payload['context'] = [dict(text='x' * 70000, shared_at='23/05/2024, 10:00')]
+            self.store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (json.dumps(payload), row['id']))
+        oversized = []
+        def observe(cursor, values):
+            row = sqlite3.Row(cursor, values)
+            if 'payload_bytes' in row.keys() and row['payload_bytes'] > 65536:
+                oversized.append(row['payload'])
+            return row
+        self.store.db.row_factory = observe
+        try:
+            with patch.object(self.store, '_cached_vectors', return_value=dict(text=[1.0] * 11, visual=[1.0] * 11)):
+                with self.assertRaisesRegex(CapacityExceeded, 'per-origin'):
+                    self.store.search(self.alice, self.group, mode='semantic', similar='capacity-00000', date_basis='chronology')
+        finally:
+            self.store.db.row_factory = sqlite3.Row
+        self.assertEqual(oversized, [None])
+        self.assertFalse(self.store.db.in_transaction)
