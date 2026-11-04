@@ -131,3 +131,19 @@ test("group change clears selection drafts and ignores late write results", asyn
   await new Promise((done) => setTimeout(done, 0));
   assert.equal(ui.saved, 0);
 });
+
+test("access denial rereads the whole selection and removes drafts", async (t) => {
+  let reads = 0;
+  const ui = await mounted(t, async (path, options) => {
+    if (options.method === "POST") return json({}, 403);
+    return ++reads === 1
+      ? json({ items: [item("one"), item("two")] })
+      : json({}, 403);
+  });
+  choose(ui.host);
+  await save(ui.host);
+  assert.equal(reads, 2);
+  assert.equal(ui.host.textContent, "");
+  assert.equal(ui.saved, 0);
+  assert.equal(ui.closed, 1);
+});

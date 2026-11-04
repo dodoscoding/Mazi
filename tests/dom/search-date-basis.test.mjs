@@ -97,3 +97,40 @@ test("old dated bookmarks keep omitted capture semantics through pagination unti
   assert.equal(searches(requests)[2].get("date_basis"), "shared");
   assert.match(window.location.hash, /date_basis=shared/);
 });
+
+test("approved person links preserve the existing photo predicate without loading People management", async (t) => {
+  const requests = [];
+  const { root } = await mountFeature(t, "discovery", boundary(requests), {
+    route: "/search?person=approved-person",
+  });
+  await until(
+    () => requests.some((path) => path.startsWith("/api/discovery/search")),
+    "photo search",
+  );
+  const query = new URL(
+    requests.find((path) => path.startsWith("/api/discovery/search")),
+    "http://localhost",
+  );
+  assert.equal(query.searchParams.get("person"), "approved-person");
+  assert.equal(
+    requests.some((path) => path.startsWith("/api/discovery/people")),
+    false,
+  );
+  const clear = [...root.querySelectorAll("button")].find(
+    (button) => button.textContent === "Onaylı kişi filtresini kaldır",
+  );
+  clear.click();
+  await until(
+    () =>
+      requests.filter((path) => path.startsWith("/api/discovery/search"))
+        .length === 2,
+    "cleared photo search",
+  );
+  assert.equal(
+    new URL(
+      requests.filter((path) => path.startsWith("/api/discovery/search"))[1],
+      "http://localhost",
+    ).searchParams.get("person"),
+    "",
+  );
+});
