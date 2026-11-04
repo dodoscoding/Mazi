@@ -41,7 +41,20 @@ async function upload(page: Page) {
   await expect(page.locator("#report-title")).toContainText("completed", {
     timeout: 30000,
   });
-  return (await fixture(page)).assets[0] as string;
+  const asset = (await fixture(page)).assets[0] as string;
+  expect(
+    (
+      await page.request.post("/api/review/correct", {
+        data: {
+          asset,
+          title: "Kıyıda bir gün",
+          capture_date: "2020-01-02",
+          place: "",
+        },
+      })
+    ).ok(),
+  ).toBe(true);
+  return asset;
 }
 async function comment(page: Page, text: string) {
   await page.getByLabel("Yorum yaz", { exact: true }).fill(text);
@@ -82,6 +95,10 @@ test("two sessions go from an empty Home through planning, a real photo upload, 
   await expect(
     page.getByRole("heading", { name: "İlk buluşmamızı planlayalım" }),
   ).toBeVisible();
+  await page.screenshot({
+    path: "work/poteto/social-home-ui/empty-desktop.png",
+    fullPage: true,
+  });
   await page.getByRole("link", { name: "Buluşma planla", exact: true }).click();
   await page.getByLabel("Başlık", { exact: true }).fill("Bu akşam birlikte");
   await page.getByLabel("Saat dilimi", { exact: true }).fill("UTC");
@@ -96,6 +113,17 @@ test("two sessions go from an empty Home through planning, a real photo upload, 
   ).toBeVisible();
   await home(page);
   await expect(page.locator(".home-plan")).toContainText("Bu akşam birlikte");
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  });
+  await page.screenshot({
+    path: "work/poteto/social-home-ui/plan-desktop.png",
+    fullPage: true,
+    animations: "disabled",
+  });
   const context = await browser.newContext({
     ...devices["Pixel 7"],
     viewport: { width: 320, height: 760 },
@@ -155,6 +183,10 @@ test("two sessions go from an empty Home through planning, a real photo upload, 
   await expect(page.locator(".home-featured")).toContainText(
     "İkinci yeni sözümüz",
   );
+  await expect(page.locator(".home-featured .memory-meta")).toContainText(
+    "2020",
+  );
+  await expect(page.locator(".home-featured time")).not.toContainText("2020");
   await expect(
     page.getByRole("link", { name: "Sohbeti aç", exact: true }),
   ).toHaveAttribute("href", `#/memory/photo-${asset}?discussion=photo`);

@@ -1,0 +1,37 @@
+✔ independent feature routes load circle context without requesting Atlas (103.226916ms)
+✔ Atlas routes still load current memories and demo search remains local (77.357375ms)
+✔ leaving Atlas aborts and ignores late data; returning fetches again (63.454584ms)
+✔ a reload that is denied clears the circle and reports lost access (42.632292ms)
+✔ without an authenticated profile no archive requests are made (28.522458ms)
+✔ superseded loads abort and lost access cancels private work (25.028875ms)
+✔ backgrounding keeps the loaded atlas and makes no requests (18.905375ms)
+✔ moving between Atlas and feature pages keeps the loaded atlas (22.61075ms)
+✔ choosing another circle sticks and loads that circle (21.584917ms)
+✔ a saved photo correction rereads authoritative Atlas facts (21.955375ms)
+✔ Home and selected-memory routes never request the full Atlas (16.271709ms)
+✔ Discord return completes once across the React effect lifecycle (358.58175ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (62.298583ms)
+✔ a memory opened from inside the app can go back, across photo changes (42.096375ms)
+✔ a plain hash link from a feature page counts as an in-app entry (41.8165ms)
+✔ Home and Atlas have separate canonical routes (58.7945ms)
+✔ legacy root selection links retain their Atlas state (15.026ms)
+✔ /people replaces the legacy entry without adding history (21.7035ms)
+✔ /#/people replaces the legacy entry without adding history (23.668708ms)
+✔ /settings replaces the legacy entry without adding history (17.517542ms)
+✔ /#/settings replaces the legacy entry without adding history (14.611916ms)
+✔ aliases reached inside the app preserve the previous destination (18.482709ms)
+✔ a People alias preserves search and sample parameters but owns its section (14.745209ms)
+✔ empty social Home offers planning before photo upload without Atlas or notebook reads (206.840625ms)
+✔ social Home uses the server's plan feature and canonical distinct activity links (91.335125ms)
+✔ Home disposes a late feed and private activity on group replacement (63.799959ms)
+✔ paged activity retries its exact cursor and preserves an explicit continuation when filtered (60.073666ms)
+✔ a grouped photo detail reads only the explicit selected-memory endpoint (73.188042ms)
+✔ selected memory ignores a late private response after session disposal (63.29975ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 784.522375

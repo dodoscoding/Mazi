@@ -178,7 +178,7 @@ The unified `photo label editing` scenario uses the real synthetic API on deskto
 
 ## H1 backend summary, activity and selected-detail contracts
 
-The H1 backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_home.py), [HTTP tests](../tests/backend/social/test_home_http.py) and [isolated hosted tests](../tests/backend/social/test_home_postgres.py). The Home UI and two-member browser journey remain a separate implementation gate.
+The H1 backend extends T01, T02, T06, T09, T11 and T14 through [domain tests](../tests/backend/social/test_home.py), [HTTP tests](../tests/backend/social/test_home_http.py) and [isolated hosted tests](../tests/backend/social/test_home_postgres.py). The interface contracts below cover the Home UI and two-member browser journey.
 
 Seed empty, archive-only, plan-only and active groups. Empty Home permits planning without archive data. Select the nearest active plan without invoking full plan rendering or resolving an unrelated memory. Otherwise choose the latest visible conversation or one real photo. Require at most three activity rows and no featured target repetition. Edit a historical photo's comment and assert its social action time changes while the photo's capture evidence remains historical. Distinguish edited/cancelled actions in the wire.
 
@@ -191,3 +191,11 @@ Compare selected event cards with the full Atlas representation, including compa
 ## F2 authoritative matching regressions
 
 `tests/backend/discovery/test_photo_filters.py` verifies same-child AND, multi-value OR, Unknown, semantic/keyword attribute parity, exact pagination, source/sharer/date/year/place combinations, suppression, hidden/withdrawn photos and invalid input. Its 1,001-photo fixture checks exact matched IDs/full-visible denominator with one grouped declaration query and two grouped approved-person queries. The discovery HTTP test exercises the matches endpoint and invalid enums. Existing keyword metadata-budget, complete 10,000-photo, shared-by and A2 date-basis suites remain applicable; capacity errors must never expose partial totals.
+
+## H1 browser summary and selected-detail contracts
+
+[Home browser contracts](../tests/social-home.spec.ts) use a separate force-local empty-circle fixture. Desktop Alice creates a plan through Home, independent 320-pixel phone Ben joins, and Alice imports two real synthetic JPEGs through the ZIP interface and actual worker. Accept their grouping, open a grouped permanent photo directly, write two comments and react from Ben. A synthetic next-day server clock plus page-return event must replace the past plan with the recent conversation. Follow the canonical photo discussion and an existing notebook deep link with correct focus. Keep capture/share evidence separate from action time.
+
+Require zero initial full Atlas and notebook reads on Home and selected photo entry. Home has one bounded summary request, and activity reads one page of 20 rather than per-row fanout. Seed 22 real comments, page as 20 then two and retry the exact cursor on read failure. Keep an explicit continuation through a filtered empty window. Verify feature priority, archive fallback, plan-without-photo, error versus empty states, withdrawn targets, retryable selected reads, delayed private disposal and optional-chunk reload recovery. Preserve opener focus/scroll and sample navigation.
+
+[DOM contracts](../tests/dom/social-home.test.mjs) and the [archive hook](../tests/dom/archive-hook.test.mjs) cover Home versus Atlas ownership and late-result cancellation. Existing notebook and detail suites retain their assertions using the new selected/Home mock seams. Explicit full-Atlas chronological/related navigation warms the Atlas route before opening a detail. Existing notebook content, export and ownership contracts stay unchanged. Capture synthetic Home and activity screens, run 320-pixel keyboard/reduced-motion/axe checks and record actual local SQL counts/latency separately from hosted limits. [H1 interface evidence](../work/poteto/social-home-ui/VERIFICATION.md) does not close physical-device, friend-study or production acceptance.
