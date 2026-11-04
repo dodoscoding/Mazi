@@ -122,7 +122,7 @@ Native reactions share a limited emoji and the reacting member's current profile
 
 A member sets or clears their own reaction. Removing that member or deleting a native comment cascades the affected records. Text-free reaction deletion entries retain only reaction, group and member IDs and deletion time to suppress restored stale rows. They contain no emoji or text. Current receipts and deletion ledgers must be reconciled before restored data is served. An old receipt cannot overwrite a newer desired state; a fresh action after rejoining is a new contribution. Production retention and recovery acceptance remain operational gates, not claims made by these synthetic backend tests.
 
-The archive export includes only the requesting member's active, currently visible reactions. It excludes other reactors' names and aggregate counts. Backend reads cap member-name output at 50 per emoji and target while retaining exact current counts. The UI and physical-device acceptance remain separate work.
+The archive export includes only the requesting member's active, currently visible reactions. It excludes other reactors' names and aggregate counts. Backend reads cap member-name output at 50 per emoji and target while retaining exact current counts. The lazy interface requests only the selected target and visible comment page. Comment drafts and uncertain write bodies remain in tab memory, never localStorage or sessionStorage. Group, profile, target or access replacement disposes them and ignores late responses. Private counts and names disappear with denied targets or removed comments. Physical-device acceptance remains separate work.
 
 ## Manual photo declarations
 

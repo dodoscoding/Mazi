@@ -1,0 +1,35 @@
+✔ selected photo conversation batches only its visible page reactions and escapes plain text (81.174625ms)
+✔ session loss clears conversation text, counts and private draft (28.812417ms)
+✔ a lost write keeps its text and retries the identical command (35.367459ms)
+▶ late reads and writes cannot restore comments after group or access loss
+  ✔ late read (24.316334ms)
+  ✔ late write (27.42575ms)
+✔ late reads and writes cannot restore comments after group or access loss (52.014792ms)
+✔ a stale edit reloads current text without replacing its private draft (38.391ms)
+✔ denied reaction batches discard a previously visible comment and every reaction (20.729334ms)
+✔ failed page loads offer an exact-cursor retry without leaking the previous projection (25.271833ms)
+✔ a confirmed create outside the page is visible without expanding reaction batches (96.233208ms)
+▶ deleting a different comment preserves new and edit drafts, including an exact delete retry
+  ✔ new composer (23.619166ms)
+  ✔ other edit draft (21.205083ms)
+✔ deleting a different comment preserves new and edit drafts, including an exact delete retry (45.087042ms)
+✔ Discord return completes once across the React effect lifecycle (235.135625ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (49.838625ms)
+✔ a memory opened from inside the app can go back, across photo changes (22.941459ms)
+✔ a plain hash link from a feature page counts as an in-app entry (18.50825ms)
+✔ Home and Atlas have separate canonical routes (15.851417ms)
+✔ legacy root selection links retain their Atlas state (14.984958ms)
+✔ /people replaces the legacy entry without adding history (14.392375ms)
+✔ /#/people replaces the legacy entry without adding history (13.384333ms)
+✔ /settings replaces the legacy entry without adding history (18.015917ms)
+✔ /#/settings replaces the legacy entry without adding history (12.53775ms)
+✔ aliases reached inside the app preserve the previous destination (15.23ms)
+✔ a People alias preserves search and sample parameters but owns its section (15.318959ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 634.357542

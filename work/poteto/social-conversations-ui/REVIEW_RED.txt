@@ -1,0 +1,84 @@
+✔ selected photo conversation batches only its visible page reactions and escapes plain text (72.088417ms)
+✔ session loss clears conversation text, counts and private draft (24.824042ms)
+✔ a lost write keeps its text and retries the identical command (30.860416ms)
+▶ late reads and writes cannot restore comments after group or access loss
+  ✔ late read (21.913291ms)
+  ✔ late write (22.90475ms)
+✔ late reads and writes cannot restore comments after group or access loss (45.082792ms)
+✔ a stale edit reloads current text without replacing its private draft (33.173917ms)
+✔ denied reaction batches discard a previously visible comment and every reaction (17.812667ms)
+✔ failed page loads offer an exact-cursor retry without leaking the previous projection (39.26675ms)
+✖ a confirmed create outside the page is visible without expanding reaction batches (67.370167ms)
+▶ deleting a different comment preserves new and edit drafts, including an exact delete retry
+  ✖ new composer (28.900167ms)
+  ✖ other edit draft (24.441041ms)
+✖ deleting a different comment preserves new and edit drafts, including an exact delete retry (53.616667ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 9
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 587.102875
+
+✖ failing tests:
+
+test at tests/dom/conversations.test.mjs:348:1
+✖ a confirmed create outside the page is visible without expanding reaction batches (67.370167ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Yeni kaydedilmiş söz/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-conversations-ui/tests/dom/conversations.test.mjs:374:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Yeni kaydedilmiş söz/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/dom/conversations.test.mjs:393:13
+✖ new composer (28.900167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + ''
+  - 'Silinmemesi gereken taslak'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-conversations-ui/tests/dom/conversations.test.mjs:428:16)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-conversations-ui/tests/dom/conversations.test.mjs:393:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: 'Silinmemesi gereken taslak',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/conversations.test.mjs:393:13
+✖ other edit draft (24.441041ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + ''
+  - 'Silinmemesi gereken taslak'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-conversations-ui/tests/dom/conversations.test.mjs:428:16)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-conversations-ui/tests/dom/conversations.test.mjs:393:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: 'Silinmemesi gereken taslak',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
