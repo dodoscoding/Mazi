@@ -304,7 +304,9 @@ export default function SocialHome({
                 <article className="home-plan">
                   <p className="memory-meta">Bir sonraki buluşmamız</p>
                   <h2>{featured.plan.title}</h2>
-                  <p>{planDate(featured.plan)}</p>
+                  <p>
+                    {planDate(featured.plan)} · {featured.plan.timezone}
+                  </p>
                   {featured.plan.place && <p>{featured.plan.place}</p>}
                   <p>
                     {featured.plan.attendance.yes} kişi geliyor ·{" "}

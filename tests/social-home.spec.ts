@@ -127,6 +127,7 @@ test("two sessions go from an empty Home through planning, a real photo upload, 
   const context = await browser.newContext({
     ...devices["Pixel 7"],
     viewport: { width: 320, height: 760 },
+    timezoneId: "America/New_York",
   });
   const phone = await context.newPage();
   await enter(phone, "Ben");
@@ -137,6 +138,7 @@ test("two sessions go from an empty Home through planning, a real photo upload, 
   await expect(phone.locator(".plan-detail")).toContainText("Ben");
   await home(phone);
   await expect(phone.locator(".home-plan")).toContainText("1 kişi geliyor");
+  await expect(phone.locator(".home-plan")).toContainText("UTC");
   const asset = await upload(page);
   const { group } = await fixture(page);
   const approved = await page.request.post("/api/review/event", {

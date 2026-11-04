@@ -52,3 +52,9 @@ Inspected synthetic captures show empty planning, the upcoming plan, next-day re
 - [Phone activity](activity-phone.png).
 
 Physical phones and the five-friend study remain open. No production migration, external service, hosted mutation, publication or deployment is claimed by this frontend verification. Parent owns independent review, final combined release checks, PR/merge and deployment. Nested delegation is forbidden in this assignment; independent review comes from the parent.
+
+## Final combined-main check
+
+Published main `2b4b09d` (reviewed H1 API, JSON-memory, label boundary, Turkish Atlas/Viewer and export ordering) is merged at `fa0743c`. Only the affected selectors were repeated: the real two-session Home journey passes in 10.5 seconds ([output](FINAL_MAIN_JOURNEY.txt)); detail/clarity passes 51 cases with seven optional skips in 15.9 seconds ([output](FINAL_MAIN_DETAIL.txt)). Plan cards explicitly show their stored timezone. The independent phone uses America/New_York while the plan retains UTC. Capture waits for fonts and two paint frames; the final plan capture was inspected rather than retaining the earlier incomplete paint.
+
+Final production build: entry 92.9/150 KiB gzip, all scripts 414.2/420, entry stylesheet 19.7/40 and Globe 243.0/256. Summed optional emitted CSS is approximately 40.9 KiB; the unchanged checker measures index CSS, and the optional sum is not presented as that primary stylesheet. No ceiling changed. Generated older screenshots and result JSON are restored. Physical-device and friend-study gates remain open.
