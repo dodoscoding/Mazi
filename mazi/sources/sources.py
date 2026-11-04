@@ -466,9 +466,12 @@ class SourceStore(ReviewStore):
 
     def _reviewed_places(self, user, group):
         """A city named for a photograph this member can see stands in for its shared locations, as on Atlas cards."""
-        points, visible = {}, set(self._visible_ids(user, group))
+        points, visible = {}, self._correction_visible_ids(user, group)
         for row in self.db.execute("SELECT asset_id,place,capture_date FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
-            city = row['asset_id'] in visible and lookup(row['place']).get('city')
+            if row['asset_id'] not in visible:
+                continue
+            points[row['asset_id']] = None
+            city = lookup(row['place']).get('city')
             if city:
                 points[row['asset_id']] = {'origin': 'review:' + row['asset_id'], 'country': city.country, 'city': city.name,
                                            'latitude': city.latitude, 'longitude': city.longitude,
@@ -514,7 +517,8 @@ class SourceStore(ReviewStore):
                     keep({key: row[key] for key in ('origin', 'country', 'city', 'latitude', 'longitude', 'day', 'asset_id')})
             last_day, last_origin = batch[-1]['day'] or '', batch[-1]['origin']
         for point in reviewed.values():
-            keep(point)
+            if point is not None:
+                keep(point)
         if reviewed:
             rows.sort(key=lambda r: (r['day'] or '', r['origin']))
         countries = sorted({r['country'] for r in rows})
@@ -575,6 +579,9 @@ class SourceStore(ReviewStore):
             if time.perf_counter() - started > PLACES_EXPORT_SCAN_SECONDS:
                 raise CapacityExceeded('Export exceeded the local location scan time budget')
 
+        reviewed = self._reviewed_places(user, group)
+        exported_ids = set(ids)
+        reviewed = {asset: point for asset, point in reviewed.items() if asset in exported_ids}
         clause, params = self._places_query(user, group)
         clause += ' AND o.asset_id IN (' + ','.join('?' for _ in ids) + ')'
         params += tuple(ids)
@@ -607,6 +614,8 @@ class SourceStore(ReviewStore):
             for row in page:
                 check_time()
                 encoded = self._serialize_export_place(row)
+                if row['asset_id'] in reviewed:
+                    continue
                 check_time()
                 if not first:
                     yield b','
@@ -616,6 +625,20 @@ class SourceStore(ReviewStore):
                 break
             cursor = (page[-1]['day'] or '', page[-1]['origin'])
             del page
+        for asset, point in sorted(reviewed.items()):
+            check_time()
+            if point is None:
+                continue
+            encoded = self._serialize_export_place({**point, 'origin': asset, 'oversized': False})
+            value = json.loads(encoded)
+            value.update(origin='review:' + asset, source='manual review', method='reviewed city centroid')
+            encoded = json.dumps(value, ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+            if len(encoded) > PLACES_EXPORT_ROW_BYTES:
+                raise CapacityExceeded('Export location record exceeds its 2 KiB serialized limit')
+            if not first:
+                yield b','
+            yield encoded
+            first = False
         self._member(user, group)
         check_time()
         yield b']'

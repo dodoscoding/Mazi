@@ -119,6 +119,9 @@ class DiscoveryStore(SourceStore):
         hidden = {r[0] for r in self.db.execute('SELECT asset FROM discovery_hidden WHERE "user"=?', (user,))}
         return [asset for asset in ids if asset not in hidden]
 
+    def _correction_visible_ids(self, user, group):
+        return set(self._visible_ids(user, group)) - hidden_event_assets(self, user, group)
+
     def gallery(self, user, group, offset=0, limit=30):
         if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError('Invalid page')

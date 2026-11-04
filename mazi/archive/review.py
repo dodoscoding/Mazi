@@ -382,10 +382,12 @@ class ReviewStore(ImportStore):
                 return result
             offset = page["next_offset"]
 
+    def _correction_visible_ids(self, user, group):
+        return set(self._visible_ids(user, group))
+
     def _photo_correction(self, user, group, asset):
-        from mazi.archive.photo_context import hidden_event_assets
         row = self._asset(user, asset)
-        if row['group_id'] != group or asset not in self._visible_ids(user, group) or asset in hidden_event_assets(self, user, group):
+        if row['group_id'] != group or asset not in self._correction_visible_ids(user, group):
             raise Denied('Media unavailable')
         annotation = dict(self.db.execute(
             'SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?', (asset,)).fetchone() or
