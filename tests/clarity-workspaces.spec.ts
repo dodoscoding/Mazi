@@ -364,3 +364,142 @@ test("selected child corrections refresh facts and leave its sibling untouched",
     });
   }
 });
+
+test("photo label editing and atomic Gallery selection show honest badges at phone width", async ({
+  page,
+}, info) => {
+  if (info.project.name === "phone")
+    await page.setViewportSize({ width: 320, height: 844 });
+  const profile = await (await page.request.get("/api/session")).json();
+  const group = profile.group_id;
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${group}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { photos: unknown[] }) => item.photos.length > 2,
+  );
+  const assets: string[] = memory.photos.map(
+    (photo: { assetId: string }) => photo.assetId,
+  );
+  const read = async () =>
+    (
+      await page.request.get(
+        "/api/social/labels?" +
+          new URLSearchParams({ group, assets: JSON.stringify(assets) }),
+      )
+    ).json();
+  const before = await read();
+  const directory = "work/poteto/photo-labels-ui";
+  mkdirSync(directory, { recursive: true });
+  try {
+    await page.goto(`/#/memory/${memory.id}?photo=0`);
+    await page
+      .getByRole("button", { name: "Etiketleri düzenle", exact: true })
+      .click();
+    const editor = page.getByRole("form", {
+      name: "Fotoğraf etiketlerini düzenle",
+    });
+    await expect(editor).toContainText("Beyan: Bilinmiyor");
+    await expect(editor).toContainText("onaylı kişi etiketlerinden");
+    await editor
+      .getByLabel("Ekran görüntüsü", { exact: true })
+      .selectOption("yes");
+    await editor
+      .getByLabel("AI kullanımı", { exact: true })
+      .selectOption("generated");
+    await editor
+      .getByRole("button", { name: "Etiketleri kaydet", exact: true })
+      .click();
+    await expect(editor).toHaveCount(0);
+    const afterSingle = await read();
+    expect(afterSingle.items[1]).toEqual(before.items[1]);
+    expect(afterSingle.items[0].labels.screenshot.value).toBe("yes");
+    await page.goto("/#/memories");
+    await expect(
+      page.locator(".photo-label-badge", { hasText: "Ekran görüntüsü" }),
+    ).toHaveCount(1);
+    await expect(
+      page.locator(".photo-label-badge", { hasText: "AI üretimi" }),
+    ).toHaveCount(1);
+    await page
+      .getByRole("button", { name: "Fotoğraf seç", exact: true })
+      .click();
+    for (const asset of assets.slice(0, 2))
+      await page.locator(`.mem-photo-select input[value="${asset}"]`).check();
+    await page
+      .getByRole("button", { name: "Seçili etiketleri düzenle", exact: true })
+      .click();
+    await expect(editor).toContainText("2 fotoğrafın etiketleri");
+    await editor
+      .getByLabel("AI kullanımı", { exact: true })
+      .selectOption("edited");
+    await editor.screenshot({
+      path: `${directory}/${info.project.name}-bulk-editor.png`,
+    });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await editor
+      .getByRole("button", { name: "Etiketleri kaydet", exact: true })
+      .click();
+    await expect(
+      page.locator(".photo-label-badge", { hasText: "AI ile düzenlendi" }),
+    ).toHaveCount(2);
+    expect((await read()).items[2]).toEqual(before.items[2]);
+    await page.locator("#grid").screenshot({
+      path: `${directory}/${info.project.name}-gallery-badges.png`,
+    });
+    const requests: string[] = [];
+    page.on("request", (request) => requests.push(request.url()));
+    await page.goto("/#/search");
+    await expect(
+      page.locator("#results .photo-label-badge", {
+        hasText: "AI ile düzenlendi",
+      }),
+    ).toHaveCount(2);
+    expect(
+      requests.filter(
+        (url) =>
+          url.includes("/api/atlas") || url.includes("/api/discovery/people"),
+      ),
+    ).toEqual([]);
+    await page.locator("#results").screenshot({
+      path: `${directory}/${info.project.name}-search-badges.png`,
+    });
+  } finally {
+    const current = await read();
+    await page.request.post("/api/social/labels/set", {
+      data: {
+        group,
+        request_key: `restore-labels-${info.project.name}-${Date.now()}`,
+        items: current.items.map(
+          (
+            item: {
+              assetId: string;
+              labels: Record<string, { revision: number }>;
+            },
+            index: number,
+          ) => ({
+            asset: item.assetId,
+            changes: Object.fromEntries(
+              Object.entries(before.items[index].labels).map(
+                ([dimension, value]) => [
+                  dimension,
+                  (value as { declared: string }).declared,
+                ],
+              ),
+            ),
+            expected: Object.fromEntries(
+              Object.entries(item.labels).map(([dimension, value]) => [
+                dimension,
+                value.revision,
+              ]),
+            ),
+          }),
+        ),
+      },
+    });
+  }
+});
