@@ -25,7 +25,7 @@ test("Memories filters the photo grid by year with removable chips", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/memories");
   await expect(
-    page.getByRole("heading", { name: "Memories", level: 1 }),
+    page.getByRole("heading", { name: "Fotoğraflar", level: 1 }),
   ).toBeVisible();
   const grid = page.locator("#grid");
   await expect(grid.locator(".mem-tile img")).toHaveCount(3);
@@ -102,7 +102,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
     .click();
   await expect(page.locator("#person")).toBeEnabled();
   await page.getByLabel("Search", { exact: true }).fill("summer");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   const memories = page.getByRole("region", { name: "Memories · 1" });
   await expect(memories).toBeVisible();
   const result = memories.getByRole("link", { name: /Our summer/ });
@@ -114,13 +114,13 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await expect(page.getByRole("link", { name: "Ask this" })).toBeVisible();
 
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await page.getByRole("button", { name: /Photographs 1/ }).click();
   await expect(page.locator("#results article")).toBeVisible();
 
   await page.getByLabel("Search", { exact: true }).fill("snorkel");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(
     page.getByRole("heading", { name: "Nothing for “snorkel”" }),
   ).toBeVisible();
@@ -128,7 +128,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
     page.getByRole("link", { name: "Ask your archive instead" }),
   ).toBeVisible();
   await axeInBothThemes(page);
-  await page.getByRole("button", { name: "Clear search" }).click();
+  await page.getByRole("button", { name: "Aramayı temizle" }).click();
   await expect(page.locator("#results article")).toHaveCount(3);
   expect(
     await page.evaluate(

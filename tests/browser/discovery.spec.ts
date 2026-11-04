@@ -14,18 +14,18 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   const groupAlreadyOn = await page
     .getByLabel("Enable optional local processing")
     .isChecked();
-  await page.getByLabel("Search mode").selectOption("semantic");
+  await page.getByLabel("Arama türü").selectOption("semantic");
   const searched = page.waitForResponse(
     (response) =>
       response.url().includes("/api/discovery/search") &&
       response.request().method() === "GET",
   );
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await searched;
   await expect(
-    page.getByRole("button", { name: "Find similar colors" }),
+    page.getByRole("button", { name: "Benzer renkleri bul" }),
   ).toHaveCount(groupAlreadyOn ? 3 : 0);
-  await page.getByLabel("Search mode").selectOption("keyword");
+  await page.getByLabel("Arama türü").selectOption("keyword");
   await page
     .getByText("My visibility & processing choices", { exact: true })
     .click();
@@ -35,24 +35,24 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   );
   await page.getByLabel("Allow local related-search processing").check();
   await expect(page.locator("#notice")).toHaveText("Changes saved.");
-  await page.getByLabel("Search mode").selectOption("semantic");
+  await page.getByLabel("Arama türü").selectOption("semantic");
   await page.getByLabel("Search", { exact: true }).fill("bike");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#results")).toContainText(
     "Bicycle beside the sea",
   );
   await expect(
-    page.getByRole("button", { name: "Find similar colors" }),
+    page.getByRole("button", { name: "Benzer renkleri bul" }),
   ).toHaveCount(1);
-  await page.getByRole("button", { name: "Hide from my discovery" }).click();
+  await page.getByRole("button", { name: "Keşfimden gizle" }).click();
   await expect(page.locator("#results article")).toHaveCount(0);
   await page.getByRole("button", { name: "Restore hidden photograph" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await page.getByLabel("Allow local related-search processing").uncheck();
   await expect(page.locator("#results article")).toHaveCount(0);
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await page.getByLabel("Person’s name").fill("<img src=x onerror=alert(1)>");
   await page
@@ -63,7 +63,7 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   );
   await expect(page.locator("#people img")).toHaveCount(0);
   await page.getByLabel("Search", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(3);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(
@@ -92,7 +92,7 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   await page
     .locator("#results article")
     .first()
-    .getByRole("button", { name: "Remove my association" })
+    .getByRole("button", { name: "Kendi ilişkimi kaldır" })
     .click();
   await page
     .getByText("My visibility & processing choices", { exact: true })
@@ -115,7 +115,7 @@ test("People, combined retrieval, hiding and consent work without recognition", 
   const denied = await page.request.get("/api/discovery/search?group=" + group);
   expect(denied.status()).toBe(403);
   expect(await denied.text()).not.toContain("Amsterdam");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(0);
   await expect(page.locator("#private")).toBeHidden();
   expect(errors).toEqual([]);
@@ -180,15 +180,15 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page
     .getByLabel("Search", { exact: true })
     .fill("scaling-keyword-fixture");
-  await page.getByLabel("Search mode").selectOption("semantic");
-  await page.getByText("Refine by place, person or date").click();
+  await page.getByLabel("Arama türü").selectOption("semantic");
+  await page.getByText("Yer, kişi, tarih ve etiketle daralt").click();
   await page.locator("#person").selectOption({ label: "Ben" });
-  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
-  await page.getByLabel("Country code").fill("NL");
-  await page.getByLabel("Object or concept in text").fill("bicycle");
+  await page.getByLabel("Yer", { exact: true }).fill("Amsterdam");
+  await page.getByLabel("Ülke kodu").fill("NL");
+  await page.getByLabel("Metindeki nesne veya kavram").fill("bicycle");
   await page.getByLabel("Başlangıç", { exact: true }).fill("2024-01-01");
   await page.getByLabel("Bitiş", { exact: true }).fill("2024-12-31");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
     "10,000 visible photographs",
@@ -204,7 +204,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await expect(page.locator("#mode")).toHaveValue("keyword");
   expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
   for (let offset = 30; offset < 1001; offset += 30) {
-    await page.getByRole("button", { name: "Next page" }).click();
+    await page.getByRole("button", { name: "Sonraki sayfa" }).click();
     await expect(page.locator("#results h3").first()).toHaveText(
       `Keyword photograph ${offset + 1}`,
     );
@@ -216,7 +216,9 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await expect(page.locator("#results h3").last()).toHaveText(
     "Keyword photograph 1001",
   );
-  await expect(page.getByRole("button", { name: "Next page" })).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Sonraki sayfa" }),
+  ).toBeHidden();
   await expect(page.locator("#result-total")).toHaveText("1001 results");
   expect(requests.at(-1)).toEqual({
     ...failedSearch,
@@ -224,7 +226,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
     offset: "990",
   });
   budgetExceeded = true;
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
     "Complete results are unavailable",
@@ -250,7 +252,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
     fullPage: true,
   });
   budgetExceeded = false;
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#result-total")).toHaveText("1001 results");
   await expect(page.locator("#search-recovery")).toBeHidden();
   expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });

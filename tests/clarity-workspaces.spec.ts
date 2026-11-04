@@ -91,7 +91,7 @@ test("unknown section names keep the normal workspace available", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/#/memories?section=toString");
   await expect(
-    page.getByRole("heading", { name: "Memories", exact: true }),
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true }),
   ).toBeVisible();
   await expect(page.locator("#grid")).not.toBeEmpty();
   expect(errors).toEqual([]);
@@ -230,11 +230,11 @@ test("date bases find an imported sharing-only photo while old bookmarks retain 
     await page.goto(
       `/#/search?q=${filename}&from=2024-02-03&through=2024-02-03`,
     );
-    await expect(page.locator("#count")).toContainText("0 photographs");
+    await expect(page.locator("#count")).toContainText("0 fotoğraf");
     await expect(page.locator("#date-basis")).toHaveValue("");
     await page.locator("#date-basis").selectOption("shared");
     await page
-      .getByRole("button", { name: "Search archive", exact: true })
+      .getByRole("button", { name: "Arşivde ara", exact: true })
       .click();
     await expect(page.locator("#results .disc-photo")).toHaveCount(1);
     await expect(page.locator("#results .disc-photo")).toContainText(
@@ -246,9 +246,9 @@ test("date bases find an imported sharing-only photo while old bookmarks retain 
     await expect(page).toHaveURL(/date_basis=shared/);
     await page.locator("#date-basis").selectOption("chronology");
     await page
-      .getByRole("button", { name: "Search archive", exact: true })
+      .getByRole("button", { name: "Arşivde ara", exact: true })
       .click();
-    await expect(page.locator("#count")).toContainText("1 photographs");
+    await expect(page.locator("#count")).toContainText("1 fotoğraf");
     await page.reload();
     await expect(page.locator("#date-basis")).toHaveValue("chronology");
     await expect(page.locator("#results .disc-photo")).toHaveCount(1);
@@ -610,12 +610,10 @@ test("same-photo filters survive reload and keep original child links at narrow 
     await page.reload();
     await expect(page.locator("#count")).toContainText("1 fotoğraf");
     await expect(page.locator("#mode")).toHaveValue("keyword");
-    await page
-      .locator("#results")
-      .screenshot({
-        animations: "disabled",
-        path: `${directory}/${info.project.name}-search-filtered.png`,
-      });
+    await page.locator("#results").screenshot({
+      animations: "disabled",
+      path: `${directory}/${info.project.name}-search-filtered.png`,
+    });
     await page.goto("/#/memories?" + query);
     await expect(
       page.getByRole("heading", {
@@ -650,12 +648,10 @@ test("same-photo filters survive reload and keep original child links at narrow 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    await page
-      .locator("#grid")
-      .screenshot({
-        animations: "disabled",
-        path: `${directory}/${info.project.name}-gallery-filtered.png`,
-      });
+    await page.locator("#grid").screenshot({
+      animations: "disabled",
+      path: `${directory}/${info.project.name}-gallery-filtered.png`,
+    });
     expect(
       (
         await page.request.post("/api/discovery/hide", {

@@ -88,3 +88,56 @@ test("Search combines label choices, restores mode and excludes unrelated contex
   );
   assert.match(window.location.hash, /mode=semantic/);
 });
+
+test("Search restores archive year/place predicates and reset clears the complete filter selection", async (t) => {
+  const reads = [];
+  const { root, window } = await mountFeature(
+    t,
+    "discovery",
+    (path) => {
+      reads.push(path);
+      if (path === "/api/groups") return [group];
+      if (path.startsWith("/api/discovery/search"))
+        return {
+          items: [],
+          total: 0,
+          next_offset: null,
+          mode: "keyword / filters",
+          unindexed: 0,
+          facets: { sources: [], shared_by: [] },
+          photo_facets: photoMatches([]).photo_facets,
+        };
+      return [];
+    },
+    {
+      route:
+        "/search?years=2024&places=%5B%22Doe%2C%20City%22%5D&uncertain=true&screenshot=unknown&source=apple&by=Ana",
+    },
+  );
+  await until(
+    () => reads.some((path) => path.includes("/search?")),
+    "restored search",
+  );
+  const query = new URL(
+    reads.find((path) => path.includes("/search?")),
+    "http://localhost",
+  );
+  assert.equal(query.searchParams.get("years"), "2024");
+  assert.equal(query.searchParams.get("places"), '["Doe, City"]');
+  assert.equal(query.searchParams.get("uncertain"), "true");
+  [...root.querySelectorAll("button")]
+    .find((button) => button.textContent === "Filtreleri temizle")
+    .click();
+  await until(
+    () => reads.filter((path) => path.includes("/search?")).length === 2,
+    "reset search",
+  );
+  const reset = new URL(
+    reads.filter((path) => path.includes("/search?"))[1],
+    "http://localhost",
+  );
+  for (const field of ["years", "places", "uncertain", "screenshot", "person"])
+    assert.equal(reset.searchParams.get(field), null);
+  assert.equal(reset.searchParams.get("source"), "");
+  assert.equal(window.location.hash, "#/search");
+});

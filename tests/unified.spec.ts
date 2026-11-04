@@ -78,7 +78,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   );
   await page.getByRole("button", { name: "Next photo", exact: true }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
-  await navigate(page, "Memories", "memories");
+  await navigate(page, "Fotoğraflar", "memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
   await page
     .getByRole("button", { name: "Start a story", exact: true })
@@ -131,9 +131,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await navigate(page, "Search", "search");
   await expect(page.locator("#results article")).toHaveCount(initialCount);
   await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page
-    .getByRole("button", { name: "Search archive", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   await navigate(page, "Ask your archive", "ask");
   await page.getByLabel("Ask the archive").fill("When was bicycle?");
@@ -170,11 +168,11 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await navigate(page, "Archive review", "review");
   await expect(page.locator("#timeline article")).toHaveCount(initialCount);
   for (let i = 0; i < 2; i++) {
-    await navigate(page, "Memories", "memories");
+    await navigate(page, "Fotoğraflar", "memories");
     await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
     await navigate(page, "Home", "");
   }
-  await navigate(page, "Memories", "memories");
+  await navigate(page, "Fotoğraflar", "memories");
   let saves = 0;
   page.on("request", (request) => {
     if (
@@ -194,7 +192,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   );
   expect(saves).toBe(1);
   await page
-    .getByRole("heading", { name: "Memories", exact: true, level: 1 })
+    .getByRole("heading", { name: "Fotoğraflar", exact: true, level: 1 })
     .click();
   await page.evaluate(() =>
     (document.activeElement as HTMLElement | null)?.blur(),
@@ -287,7 +285,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
   });
   expect(storyResponse.ok()).toBe(true);
   const story = await storyResponse.json();
-  await navigate(page, "Memories", "memories");
+  await navigate(page, "Fotoğraflar", "memories");
   await expect(page.locator("#stories")).toContainText(title);
   let releaseLogout!: () => void;
   let heldLogout!: () => void;
@@ -354,7 +352,7 @@ test("access loss clears private drafts and supporting records", async ({
     .getByRole("link", { name: "View supporting record", exact: true })
     .click();
   await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
-  await navigate(page, "Memories", "memories");
+  await navigate(page, "Fotoğraflar", "memories");
   await page
     .getByLabel("Note for the future")
     .fill("Private unsaved capsule draft");
