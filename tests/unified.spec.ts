@@ -326,6 +326,13 @@ test("named profile imports and logout discard delayed private Atlas responses",
     page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
   ).toBeVisible();
   await navigate(page, "My Imports", "imports");
+  await expect(
+    page.getByRole("heading", {
+      name: "İçe aktarmalar",
+      exact: true,
+      level: 1,
+    }),
+  ).toBeFocused();
   expect(
     (
       await page.request.post("/api/memories/delete", {
