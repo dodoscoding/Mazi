@@ -38,6 +38,7 @@ export type Photo = {
 export type Place = {
   name: string;
   country: string;
+  region?: string;
   latitude: number;
   longitude: number;
 };

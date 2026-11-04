@@ -39,3 +39,9 @@ The browser checks wait for finite animations and image loading before capture. 
 ## Acceptance limits
 
 The coordinator owns independent review, the final full suites, merge and deployment. This slice does not claim physical-phone verification, a five-friend discovery study, production milestone acceptance, or rollout. It adds no processing inference or new private audience.
+
+## Same-name city review correction
+
+Independent review at `5e6630c` found that Springfield in Massachusetts and Illinois shared the short label `Springfield, US`. The grouped summary borrowed the first pin and separate Atlas cards collapsed into one node. Red commit `f743794` reproduces both failures using the actual bundled gazetteer. The correction preserves region labels when names repeat within a country, matches authorized source centroids to canonical cities, compares canonical coordinates for grouped pins and summary identity, and uses those coordinates in new-evidence Atlas node IDs. Legacy sample keys remain compatible. A source with an ambiguous city name and no matching canonical centroid stays unmapped. The existing whole-memory place response carries an optional region through optimistic photo facts.
+
+After the correction, 55 focused Atlas backend tests and 22 chronology/Atlas unit plus photo-evidence/place-tray DOM tests passed. The added source-centroid and region-preserving save checks passed separately. The desktop/phone photo-facts browser journey passed again. Typecheck passed. Lint was rerun after formatting the final regression additions. Canonical contracts record the optional pin region and coordinate identity.

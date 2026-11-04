@@ -7,7 +7,7 @@ from mazi.identity.core import Denied
 from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, label, lookup
-from mazi.archive.photo_metadata import resolve_photo
+from mazi.archive.photo_metadata import place_evidence, resolve_photo
 
 SAME_PLACE_KM = 50
 
@@ -233,4 +233,4 @@ def place_memory(store, user, group, memory, place):
             store._audit(user, 'atlas.place' if city else 'atlas.place.clear', memory)
     return {'place_match': match['status'], 'place': city and f'{city.name}, {city.country}',
             'candidates': [label(candidate) for candidate in match.get('candidates', [])],
-            'pin': city and dict(name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)}
+            'pin': city and place_evidence(label(city), [])['pin']}

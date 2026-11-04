@@ -447,3 +447,7 @@ class AtlasTests(unittest.TestCase):
             self.assertEqual(resolved['text'], f'Springfield, {city.region}, US')
         conflict = place_evidence('', [dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude) for city in (massachusetts, illinois)])
         self.assertEqual(conflict, dict(status='conflict', text=None, pin=None))
+        self.assertEqual(place_evidence('', [dict(city='Springfield', country='US', latitude=40, longitude=-80)])['status'], 'unmapped')
+        from mazi.atlas import place_memory
+        saved = place_memory(self.store, self.alice, self.group, 'photo-' + self.assets[0], 'Springfield, Illinois, US')
+        self.assertEqual(saved['pin']['region'], 'Illinois')

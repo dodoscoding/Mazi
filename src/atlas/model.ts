@@ -1,5 +1,5 @@
 import type { Memory } from "../memories";
-import { evidencePin } from "../memory/evidence.ts";
+import { evidencePin, pinIdentity } from "../memory/evidence.ts";
 
 export type PlaceNode = {
   id: string;
@@ -21,7 +21,11 @@ export type AtlasModel = {
 
 export function placeIdOf(memory: Memory): string | null {
   const place = evidencePin(memory);
-  return place ? `${place.country}:${place.name}` : null;
+  return place
+    ? memory.photos.every((photo) => photo.evidence)
+      ? pinIdentity(place)
+      : `${place.country}:${place.name}`
+    : null;
 }
 
 export function buildAtlas(
@@ -44,7 +48,7 @@ export function buildAtlas(
     if (!node) {
       node = {
         id,
-        name: place.name,
+        name: [place.name, place.region].filter(Boolean).join(", "),
         country: place.country,
         latitude: 0,
         longitude: 0,

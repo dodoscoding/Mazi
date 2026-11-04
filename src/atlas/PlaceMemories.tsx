@@ -79,7 +79,9 @@ export function usePlacedMemories(source: Memory[], group: string) {
                             ...photo.evidence,
                             place: {
                               status: "known",
-                              text: `${pin.name}, ${pin.country}`,
+                              text: [pin.name, pin.region, pin.country]
+                                .filter(Boolean)
+                                .join(", "),
                               pin,
                             },
                           },

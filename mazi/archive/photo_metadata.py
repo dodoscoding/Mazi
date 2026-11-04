@@ -1,7 +1,8 @@
 """Photo facts resolved from evidence already admitted by the archive reader."""
 from datetime import datetime
+from functools import lru_cache
 
-from mazi.places import identify, lookup
+from mazi.places import cities, fold, label, lookup
 
 
 def date_evidence(days=(), *, basis='unknown', status=None, timezone=None):
@@ -18,25 +19,50 @@ def date_evidence(days=(), *, basis='unknown', status=None, timezone=None):
                 through=valid[-1] if valid else None, timezone=timezone if valid else None)
 
 
+@lru_cache(maxsize=1)
+def _city_names():
+    result = {}
+    for city in cities():
+        result.setdefault((fold(city.name), city.country), []).append(city)
+    return result
+
+
+def _city_place(city):
+    ambiguous = len({candidate.region for candidate in _city_names()[(fold(city.name), city.country)]}) > 1
+    text = label(city) if ambiguous else f'{city.name}, {city.country}'
+    pin = dict(name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+    if ambiguous:
+        pin['region'] = city.region
+    return dict(status='known', text=text, pin=pin)
+
+
+def _source_city(row):
+    candidates = _city_names().get((fold(row['city']), row['country']), [])
+    matches = [city for city in candidates
+               if abs(city.latitude - row['latitude']) < 1e-8 and abs(city.longitude - row['longitude']) < 1e-8]
+    if matches:
+        return lookup(label(matches[0])).get('city')
+    if len({city.region for city in candidates}) > 1:
+        return None
+    return lookup(f"{row['city']}, {row['country']}").get('city')
+
+
 def place_evidence(reviewed, places):
     if reviewed:
         match = lookup(reviewed)
         if match['status'] != 'matched':
             return dict(status='unmapped', text=reviewed, pin=None)
-        city = match['city']
-        return dict(status='known', text=f'{city.name}, {city.country}', pin=dict(
-            name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude))
+        return _city_place(match['city'])
     if not places:
         return dict(status='unknown', text=None, pin=None)
-    cities = {identify(row['city'], row['country']) or (row['city'].casefold(), row['country']) for row in places}
-    if len(cities) != 1:
+    resolved = [_source_city(row) for row in places]
+    identities = {city.id if city else (fold(row['city']), row['country'], row['latitude'], row['longitude'])
+                  for row, city in zip(places, resolved)}
+    if len(identities) != 1:
         return dict(status='conflict', text=None, pin=None)
-    match = lookup(f"{places[0]['city']}, {places[0]['country']}")
-    if match['status'] != 'matched':
+    if not resolved[0]:
         return dict(status='unmapped', text=f"{places[0]['city']}, {places[0]['country']}", pin=None)
-    city = match['city']
-    return dict(status='known', text=f'{city.name}, {city.country}', pin=dict(
-        name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude))
+    return _city_place(resolved[0])
 
 
 def resolve_photo(dates, provenance, reviewed_place, places):

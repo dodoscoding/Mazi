@@ -88,7 +88,9 @@ export function evidencePlaceLabel(memory: Memory) {
     return null;
   const places = memory.photos.map((photo) => photo.evidence!.place);
   const names = new Set(
-    places.flatMap((place) => (place.text ? [place.text] : [])),
+    places.flatMap((place) =>
+      place.pin ? [pinIdentity(place.pin)] : place.text ? [place.text] : [],
+    ),
   );
   if (places.some((place) => place.status === "conflict"))
     return "Yer çelişkili";
@@ -105,9 +107,11 @@ export function evidencePin(memory: Memory): Place | null {
   const pins = memory.photos.map((photo) => photo.evidence!.place.pin);
   const first = pins[0];
   return first &&
-    pins.every(
-      (pin) => pin?.name === first.name && pin?.country === first.country,
-    )
+    pins.every((pin) => pin !== null && pinIdentity(pin) === pinIdentity(first))
     ? first
     : null;
+}
+
+export function pinIdentity(place: Place) {
+  return `${place.country}:${place.name}:${place.latitude}:${place.longitude}`;
 }

@@ -348,4 +348,17 @@ test("a saved whole-memory place updates each child's evidence before a failed r
     [KYRENIA, KYRENIA],
   );
   assert.equal(source[0].photos[1].evidence.place.status, "unknown");
+  await act(async () =>
+    api.placed(source[0].id, {
+      name: "Springfield",
+      region: "Illinois",
+      country: "US",
+      latitude: 39.82,
+      longitude: -89.65,
+    }),
+  );
+  assert.deepEqual(
+    api.memories[0].photos.map((photo) => photo.evidence.place.text),
+    ["Springfield, Illinois, US", "Springfield, Illinois, US"],
+  );
 });
