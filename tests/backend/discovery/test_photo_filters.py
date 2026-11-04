@@ -71,6 +71,8 @@ class PhotoFilterCapacityTests(unittest.TestCase):
     setUp = capacity_helpers.ArchiveCapacityTests.setUp
     tearDown = capacity_helpers.ArchiveCapacityTests.tearDown
     seed_projection = capacity_helpers.ArchiveCapacityTests.seed_projection
+    submit = capacity_helpers.ArchiveCapacityTests.submit
+    process = capacity_helpers.ArchiveCapacityTests.process
 
     def test_large_match_ids_keep_exact_totals_and_constant_fact_queries(self):
         self.seed_projection(1001)
