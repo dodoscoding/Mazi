@@ -49,7 +49,11 @@ export function createGallery(root, lifecycle, api) {
     const raw = entry.get(parameter) || "";
     const values = raw.startsWith("[")
       ? JSON.parse(raw)
-      : raw.split(",").filter(Boolean);
+      : key === "people"
+        ? raw
+          ? [raw]
+          : []
+        : raw.split(",").filter(Boolean);
     filters[key] = new Set(key === "years" ? values.map(Number) : values);
   }
   filters.uncertain = entry.get("uncertain") === "true";
@@ -532,6 +536,17 @@ export function createGallery(root, lifecycle, api) {
       "aria-checked",
       String(filters.uncertain),
     );
+    root
+      .querySelectorAll("#grid-view button")
+      .forEach((button) =>
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.view === view),
+        ),
+      );
+    $("grid-order-label").textContent = newest
+      ? "Önce en yeni"
+      : "Önce en eski";
     const shown = sorted(
       memories.filter((memory) =>
         memory.photos.some((photo) => matched.has(photo.assetId)),

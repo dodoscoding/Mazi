@@ -81,7 +81,7 @@ export function createPhotoFilters(host, search, changed) {
       for (const value of state[key]) {
         const chip = document.createElement("button");
         chip.type = "button";
-        chip.textContent = `${title}: ${names[value] || options.find((item) => item.value === value)?.name || "Onaylı kişi"} ×`;
+        chip.textContent = `${title}: ${names[value] || options.find((item) => item.value === value)?.name || (key === "person" ? "Onaylı kişi" : "Geçersiz seçim")} ×`;
         chip.onclick = () => {
           state[key].delete(value);
           render();

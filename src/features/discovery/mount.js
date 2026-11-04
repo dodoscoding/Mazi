@@ -238,7 +238,7 @@ export function mount(root, lifecycle) {
         group = "";
         $("#private").hidden = true;
       }
-      throw Object.assign(Error(value.error || "Request failed"), {
+      throw Object.assign(Error(value.error || "İstek tamamlanamadı"), {
         status: response.status,
         code: value.code,
       });
@@ -277,7 +277,7 @@ export function mount(root, lifecycle) {
   async function mutate(path, body) {
     await api("/api/discovery/" + path, body);
     await refresh();
-    $("#notice").textContent = "Changes saved.";
+    $("#notice").textContent = "Değişiklikler kaydedildi.";
   }
   function showGroups() {
     const shown = (key, count) =>
@@ -462,7 +462,7 @@ export function mount(root, lifecycle) {
         id: item.id,
         name: item.title || "Başlıksız fotoğraf",
       })),
-      "Choose a photograph",
+      "Fotoğraf seçin",
     );
     for (const item of result.items) {
       const card = node("article", undefined, { class: "disc-photo" });
@@ -477,7 +477,7 @@ export function mount(root, lifecycle) {
           "p",
           item.evidence
             ? [photoDateLabel(item), photoPlaceLabel(item)].join(" · ")
-            : [item.date || "Undated", item.place].filter(Boolean).join(" · "),
+            : [item.date || "Tarihsiz", item.place].filter(Boolean).join(" · "),
         ),
         node("p", sharedByLine(item), { class: "disc-shared" }),
         node("a", "Aslını aç", {
@@ -493,20 +493,22 @@ export function mount(root, lifecycle) {
         const line = node("p", person.name, { class: "disc-person" });
         if (person.is_me || person.can_remove)
           line.append(
-            action(person.is_me ? "Remove my association" : "Remove tag", () =>
-              mutate(person.is_me ? "disassociate" : "untag", {
-                person: person.id,
-                asset: item.id,
-              }),
+            action(
+              person.is_me ? "Kendi ilişkimi kaldır" : "Etiketi kaldır",
+              () =>
+                mutate(person.is_me ? "disassociate" : "untag", {
+                  person: person.id,
+                  asset: item.id,
+                }),
             ),
           );
         card.append(line);
       }
-      const label = node("label", "Confirm someone in this photo", {
+      const label = node("label", "Bu fotoğraftaki kişiyi onayla", {
         class: "disc-tag",
       });
       const select = node("select", undefined, {
-        "aria-label": "Person to tag",
+        "aria-label": "Etiketlenecek kişi",
       });
       select.append(
         node("option", "Kişi seçin", { value: "" }),
@@ -514,8 +516,8 @@ export function mount(root, lifecycle) {
       );
       select.disabled = view === "search" && !contextReady;
       label.append(select);
-      const confirmTag = action("Confirm tag", async () => {
-        if (!select.value) throw Error("Choose a person first.");
+      const confirmTag = action("Etiketi onayla", async () => {
+        if (!select.value) throw Error("Önce bir kişi seçin.");
         await mutate("tag", {
           person: select.value,
           asset: item.id,
@@ -527,7 +529,7 @@ export function mount(root, lifecycle) {
       card.append(
         label,
         confirmTag,
-        action("Hide from my discovery", () =>
+        action("Keşfimden gizle", () =>
           mutate("hide", { asset: item.id, enabled: true }),
         ),
       );
@@ -735,7 +737,7 @@ export function mount(root, lifecycle) {
     } catch (error) {
       if (revision !== contextRevision || currentGroup !== group) return;
       $("#context-status").textContent =
-        "Other categories and People are unavailable. Your photograph search is still here. Try again.";
+        "Diğer sonuç türleri yüklenemedi. Fotoğraf aramanız korunur; yeniden deneyin.";
     } finally {
       if (revision === contextRevision) {
         contextLoading = false;
@@ -785,11 +787,20 @@ export function mount(root, lifecycle) {
   $("#source-filter").onclick = (event) => {
     const button = event.target.closest("button");
     if (!button) return;
-    filters.source = button.dataset.source;
+    const selected = new Set(filters.source.split(",").filter(Boolean));
+    const value = button.dataset.source;
+    if (!value) selected.clear();
+    else selected.has(value) ? selected.delete(value) : selected.add(value);
+    filters.source = [...selected].sort().join(",");
     run(() => search());
   };
   $("#shared-by").onchange = () => {
-    filters.sharedBy = $("#shared-by").value;
+    const selected = [...$("#shared-by").selectedOptions].map(
+      (option) => option.value,
+    );
+    const names = selected.includes("") ? [] : selected;
+    filters.sharedBy =
+      names.length > 1 ? JSON.stringify(names) : names[0] || "";
     run(() => search());
   };
   $("#more").onclick = () => run(() => search(next));
@@ -865,7 +876,7 @@ export function mount(root, lifecycle) {
     $("#groups").closest("label").hidden = groups.length < 2;
     if (!group) {
       $("#notice").textContent =
-        "Sign in and join a group through Imports to explore your archive.";
+        "Arşivinizi görmek için Ekle bölümünden giriş yapın ve bir gruba katılın.";
       return;
     }
     await refresh();
@@ -900,10 +911,10 @@ export function mount(root, lifecycle) {
           if (runId !== indexRun || group !== targetGroup) break;
           completed += progress.indexed;
           $("#index-progress").textContent =
-            `${completed} photographs indexed; ${progress.remaining} remaining.`;
+            `${completed} fotoğraf dizinlendi; ${progress.remaining} kaldı.`;
           if (progress.discarded) {
             $("#index-progress").textContent =
-              "Permissions or source data changed. Old work was discarded; restart indexing when ready.";
+              "Erişim veya kaynak değişti. Eski çalışma bırakıldı; hazır olduğunuzda dizinlemeyi yeniden başlatın.";
             break;
           }
           if (!progress.remaining) {
@@ -915,7 +926,7 @@ export function mount(root, lifecycle) {
         if (runId !== indexRun || group !== targetGroup) return;
         if (error.status === 400 && error.code === "capacity_exceeded") {
           $("#index-progress").textContent =
-            "Indexing stopped at the local capacity limit.";
+            "Yerel işleme sınırına ulaşıldığı için dizinleme durdu.";
           $("#index-recovery").hidden = false;
         }
         throw error;
@@ -927,6 +938,6 @@ export function mount(root, lifecycle) {
   $("#stop-index").onclick = () => {
     indexRun++;
     $("#index-progress").textContent =
-      "Indexing stopped after the current small batch. You can resume later.";
+      "Geçerli parça tamamlanınca dizinleme durdu. Daha sonra sürdürebilirsiniz.";
   };
 }

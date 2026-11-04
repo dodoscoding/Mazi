@@ -71,23 +71,41 @@ const noFacets = { sources: [], shared_by: [] };
 /** Source chips and Shared by choices, offered only from the server's authorized facets. */
 export function renderFilters(root, facets = noFacets, filters) {
   const $ = (id) => root.querySelector(`#${id}`);
-  const withSelected = (values, selected) =>
-    selected && !values.includes(selected) ? [...values, selected] : values;
-  const sources = withSelected(
-    facets.sources.map((option) => option.value),
-    filters.source,
-  );
-  const names = withSelected(
-    facets.shared_by.map((option) => option.value),
-    filters.sharedBy,
-  );
+  const selectedSources = new Set(filters.source.split(",").filter(Boolean));
+  let selectedNames;
+  try {
+    selectedNames = new Set(
+      filters.sharedBy.startsWith("[")
+        ? JSON.parse(filters.sharedBy)
+        : filters.sharedBy
+          ? [filters.sharedBy]
+          : [],
+    );
+  } catch {
+    selectedNames = new Set();
+  }
+  const sources = [
+    ...new Set([
+      ...facets.sources.map((option) => option.value),
+      ...selectedSources,
+    ]),
+  ];
+  const names = [
+    ...new Set([
+      ...facets.shared_by.map((option) => option.value),
+      ...selectedNames,
+    ]),
+  ];
   $("source-filter").replaceChildren(
     ...[["", "Tümü"], ...sources.map((code) => [code, sourceLabel(code)])].map(
       ([code, label]) => {
         const button = node("button", label);
         button.type = "button";
         button.dataset.source = code;
-        button.setAttribute("aria-pressed", String(code === filters.source));
+        button.setAttribute(
+          "aria-pressed",
+          String(code ? selectedSources.has(code) : !selectedSources.size),
+        );
         return button;
       },
     ),
@@ -102,7 +120,10 @@ export function renderFilters(root, facets = noFacets, filters) {
       },
     ),
   );
-  select.value = filters.sharedBy;
+  select.multiple = true;
+  select.size = Math.min(5, names.length + 1);
+  for (const option of select.options)
+    option.selected = selectedNames.has(option.value);
   $("search-filters").hidden = !sources.length && !names.length;
 }
 
