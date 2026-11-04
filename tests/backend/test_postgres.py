@@ -197,6 +197,9 @@ class PostgresContracts(unittest.TestCase):
         writer = MemoryStore(self.temp.name)
         reader.db._lock_timeout = writer.db._lock_timeout = '50ms'
         try:
+            for participant in (reader, writer):
+                with participant.db.read_transaction():
+                    self.assertEqual(participant.db.execute('SELECT 1').fetchone()[0], 1)
             with self.store.db.read_transaction():
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                     result = pool.submit(atlas_view, reader, self.user, self.group).result(timeout=10)
