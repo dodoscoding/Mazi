@@ -12,6 +12,8 @@ These increments reuse M3 correction, M4 places, M5 People/filtering and M7 stor
 
 The owner requested the clarity increment first under [D26](DECISIONS.md#interface-clarity-1-november-2026). It separates Home from Atlas, shares Home/Keşfet/Grubumuz navigation across screen sizes and gives existing capabilities named destinations. [Clarity verification](../work/poteto/interface-clarity/VERIFICATION.md) distinguishes local implementation from production and physical-device acceptance. Metadata semantics, content labels and social domains remain separate increments.
 
+The 3 November plan starts with photo-level metadata and navigation on the merged D26 interface. Group plans and attendance can reach a circle with an empty archive while work on content filters proceeds. Comments, reactions and the social Home each have a separate acceptance gate. [Implementation sequence and owners](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Baseline measurements](../work/poteto/social-space-plan/BASELINE.md)
+
 ## Use the planning assumptions
 
 Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.

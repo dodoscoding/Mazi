@@ -10,6 +10,8 @@ The next product direction is a private social space with shared memories, comme
 
 The first clarity increment uses **Home**, **Keşfet** and **Grubumuz** on phones and computers, with a separate **Ekle** action. Home presents memories and their notes. Keşfet names the existing exploration tools, including Atlas, People, stories, recaps and capsules. Grubumuz exposes group controls and management links. [D26](docs/DECISIONS.md#interface-clarity-1-november-2026) records compatibility; [verification](work/poteto/interface-clarity/VERIFICATION.md) records synthetic evidence and limits.
 
+The next implementation plan starts with the missing date and place on individual photos. It maps the existing tools to member tasks, then specifies People, screenshot and AI filters, group plans, comments and reactions. [Implementation plan in Turkish](docs/SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Current behavior on desktop and phone](work/poteto/social-space-plan/BASELINE.md)
+
 ## What you can do
 
 - Import photographs and supported conversation archives from ZIP files.

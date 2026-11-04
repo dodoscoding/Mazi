@@ -4,6 +4,8 @@ Investigated on 1 November 2026 against `origin/main` at `3e79ad79b7feb48bea99e8
 
 Follow-up: the owner requested the clarity increment first. [D26](DECISIONS.md#interface-clarity-1-november-2026) and [its verification](../work/poteto/interface-clarity/VERIFICATION.md) record that implementation separately. The audit below preserves the investigated baseline; metadata, classification and social-domain proposals remain future work.
 
+On 3 November the team checked the merged interface, counted available date and place evidence in the configured circle and followed the same photos across six screens. The resulting plan assigns the remaining work, including changes to the photo grid and dated Search. [Implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Measurements and reproducer](../work/poteto/social-space-plan/BASELINE.md)
+
 ## Recommended groups and difficulty
 
 Difficulty includes implementation, integration and relevant verification in the existing React/Python app: 1 is a local presentation change; 2 changes several UI surfaces; 3 crosses UI, API or metadata semantics; 4 adds a domain and lifecycle rules; 5 adds substantial model or live spatial infrastructure. Scores are engineering judgments, not measured delivery times. Dependencies matter more than adding the scores.
