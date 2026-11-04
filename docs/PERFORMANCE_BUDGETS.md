@@ -55,3 +55,11 @@ A synthetic hosted page with one visible photograph and 20 native comments requi
 The batch now loads eligible comment targets once, deduplicates their original photo/memory targets, and shares bounded photo authorization with the existing label and conversation readers. Every requested target remains mandatory. Hidden, withdrawn, departed-author and deletion-tombstoned targets still deny the whole batch. Memory authorization retains the current all-original-children policy.
 
 A query-count regression caps the 21-target fixture at 15 statements instead of using a flaky wall-clock threshold. The [measurement and verification](../work/poteto/reaction-batch-performance/VERIFICATION.md) includes guarded reproduction and raw samples. The performance correction changes no storage schema or audience rule.
+
+## Bounded Home and selected detail
+
+The H1 backend uses indexed native-action candidates and a selected-assets Atlas projector. A guarded synthetic hosted profile measured two serial warm reads for each state after compact label summaries were integrated. Archive-only Home took 0.662/0.593 seconds with 22 SQL calls; conversation Home took 0.735/0.579 seconds with 21 calls; upcoming-plan Home took 0.310/0.299 seconds with 10 calls. A selected photo took 0.373/0.615 seconds with 12 calls. Serialized responses were 1,090, 1,674, 2,524 and 935 bytes respectively.
+
+These samples exclude fixture creation, browser and Vercel HTTP overhead. They do not establish p95 or production concurrency performance. A separate profile overlapped hosted verification and is retained as additional evidence, including a 1.036-second selected read. The [H1 verification and guarded profile](../work/poteto/social-home-api/VERIFICATION.md) records both runs.
+
+The candidate boundary is 33 rows per source query, 32 merged rows per chunk and 512 examined candidates per page. A 10,000-comment synthetic local fixture proves Home does not download or project the full archive; the hosted 2,000-row fixture verifies the action-time indexes and bounded candidate batches. Full browser adoption still must prove zero initial Atlas/notebook requests.
