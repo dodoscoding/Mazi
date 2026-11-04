@@ -313,3 +313,15 @@ test("a saved photo correction rereads authoritative Atlas facts", async (t) => 
   assert.equal(h.current.memories[0].title, "Corrected");
   assert.equal(reads, 2);
 });
+
+test("Home and selected-memory routes never request the full Atlas", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(path === "/api/groups" ? groups : { memories: [] });
+  });
+  await h.render("/");
+  await h.render("/memory/photo-selected");
+  assert.deepEqual(calls, ["/api/groups"]);
+  assert.equal(h.current.status, "ready");
+});
