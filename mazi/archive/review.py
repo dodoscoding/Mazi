@@ -434,7 +434,6 @@ class ReviewStore(ImportStore):
                 raise ValueError("Use a precise YYYY-MM-DD date") from None
         if type(anniversary) is not bool or (anniversary and not capture_date):
             raise ValueError("Anniversary needs an approved date")
-        self._asset(user, asset)
         self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,?) "
                         "ON CONFLICT(asset_id) DO UPDATE SET title=excluded.title,capture_date=excluded.capture_date,"
                         "place=excluded.place,anniversary=excluded.anniversary,actor_id=excluded.actor_id,"

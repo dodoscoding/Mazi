@@ -118,6 +118,7 @@ class PlacesListTests(Fixture):
     def test_places_list_shows_a_named_city_instead_of_the_shared_location(self):
         self.store.set_place(self.alice, self._origin(self.assets[0]), 'TR', 'Istanbul', 41.1, 29.0, '2020-01-02')
         self.store.set_place(self.alice, self._origin(self.assets[1]), 'GR', 'Naxos', 37.1, 25.4, None)
+        self.store.correct_asset(self.alice, self.assets[1], title='Blue', capture_date='2021-01-02', place='')
         place_memory(self.store, self.ben, self.group, 'photo-' + self.assets[0], 'girne')
         self.assertEqual(self.store.places(self.ben, self.group)['points'], [
             {'origin': self._origin(self.assets[1]), 'country': 'GR', 'city': 'Naxos', 'latitude': 37.1, 'longitude': 25.4,

@@ -96,6 +96,8 @@ def handler_for(store, dist=None, drain=None):
                     if not 0 < length <= 4096:
                         raise ValueError('Invalid request size')
                     body = json.loads(self.rfile.read(length))
+                    if not isinstance(body, dict):
+                        raise ValueError('Expected object')
                     result = store.patch_photo(self.user(), body['group'], body['asset'], body['changes'], body['expected_snapshot'])
                 else:
                     query = parse_qs(urlsplit(self.path).query)

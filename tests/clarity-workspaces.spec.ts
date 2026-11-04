@@ -276,3 +276,91 @@ test("date bases find an imported sharing-only photo while old bookmarks retain 
     ).toBe(true);
   }
 });
+
+test("selected child corrections refresh facts and leave its sibling untouched", async ({
+  page,
+}, info) => {
+  const profile = await (await page.request.get("/api/session")).json();
+  const group = profile.group_id;
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${group}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { photos: unknown[] }) => item.photos.length > 1,
+  );
+  expect(memory).toBeTruthy();
+  const asset = memory.photos[0].assetId;
+  const sibling = memory.photos[1].assetId;
+  const read = async (id: string) =>
+    (
+      await page.request.get(`/api/atlas/photo?group=${group}&asset=${id}`)
+    ).json();
+  const before = await read(asset);
+  const siblingBefore = await read(sibling);
+  try {
+    await page.goto(`/#/memory/${memory.id}?photo=0`);
+    await page
+      .getByRole("button", { name: "Yeri değiştir", exact: true })
+      .click();
+    const editor = page.getByRole("form", { name: "Seçili fotoğrafı düzelt" });
+    await expect(editor.getByLabel("Yer", { exact: true })).toHaveValue(
+      before.annotation.place,
+    );
+    await editor
+      .getByLabel("Yer", { exact: true })
+      .fill("Synthetic garden beside the lake");
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "Synthetic garden beside the lake",
+    );
+    expect((await read(sibling)).annotation).toEqual(siblingBefore.annotation);
+    await page
+      .getByRole("button", { name: "Tarihi düzelt", exact: true })
+      .click();
+    await editor.getByLabel("Çekim tarihi", { exact: true }).fill("2023-05-06");
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "6 May 2023",
+    );
+    const directory = "work/poteto/photo-corrections-ui";
+    mkdirSync(directory, { recursive: true });
+    await page.locator(".detail-body").screenshot({
+      path: `${directory}/${info.project.name}-selected-photo.png`,
+    });
+    await page.goto(`/#/memory/${memory.id}?photo=1`);
+    await expect(page.locator(".viewer-caption-text")).not.toContainText(
+      "Synthetic garden",
+    );
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "2 Oca 2024",
+    );
+    expect((await read(sibling)).annotation).toEqual(siblingBefore.annotation);
+    await page.goto(`/#/memory/${memory.id}?photo=0`);
+    await page
+      .getByRole("button", { name: "Yeri değiştir", exact: true })
+      .click();
+    await expect(editor.getByLabel("Yer", { exact: true })).toHaveValue(
+      "Synthetic garden beside the lake",
+    );
+    await editor.getByRole("button", { name: "Temizle", exact: true }).click();
+    await expect
+      .poll(async () => (await read(asset)).annotation.place)
+      .toBe("");
+    await expect(page.locator(".viewer-caption-text")).not.toContainText(
+      "Synthetic garden",
+    );
+  } finally {
+    const current = await read(asset);
+    await page.request.post("/api/atlas/photo", {
+      data: {
+        group,
+        asset,
+        expected_snapshot: current.snapshot,
+        changes: {
+          capture_date: before.annotation.capture_date,
+          place: before.annotation.place,
+        },
+      },
+    });
+  }
+});

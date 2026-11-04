@@ -106,3 +106,11 @@ class PhotoCorrectionTests(unittest.TestCase):
             server.shutdown()
             thread.join()
             server.server_close()
+
+    def test_other_annotation_change_invalidates_snapshot_even_same_second(self):
+        asset = self.assets[0]
+        state = self.store.photo_correction(self.ben, self.group, asset)
+        self.store.correct_asset(self.alice, asset, title='Another editor', capture_date='2020-01-02', place='Harbour')
+        with self.assertRaises(Conflict):
+            self.store.patch_photo(self.ben, self.group, asset, {'place': 'Paris'}, state['snapshot'])
+        self.assertEqual(self.store.photo_correction(self.ben, self.group, asset)['annotation']['title'], 'Another editor')
