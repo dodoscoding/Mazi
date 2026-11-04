@@ -8,7 +8,7 @@ The downloaded PR #113 desktop import-workspace trace timed out during `page.rel
 
 ## Structural choice
 
-`AppServer` now uses `ThreadingHTTPServer`. Each accepted connection can read its headers independently. A lock created inside each server's constructor wraps GET and POST dispatch through a handler subclass. The lock covers complete handler execution and response delivery, preserving single-request access to the shared store. The queue size stays 128. Request-body reads remain inside their existing handlers.
+`AppServer` now uses `ThreadingHTTPServer`. Each accepted connection can read its headers independently. A lock created inside each server's constructor wraps GET and POST dispatch through a handler subclass. The lock covers complete handler execution and response delivery, preserving single-request access to the shared store. The queue size stays 128. Request-body reads remain inside their existing handlers. A follow-up closing gate waits for active dispatch under the same lock, marks the server closed, and rejects later dispatch with HTTP 503 before calling a store handler. Idle connections reading headers do not delay close.
 
 Plain threaded dispatch was rejected. Running the concurrent GET and POST test with unguarded `ThreadingHTTPServer` fails with `POST overlapped the active store read`. [Rejected alternative output](unsafe-threading.txt) records the observed overlap. A pre-read socket deadline was also rejected because synchronous acceptance would still delay ready requests until that deadline, and a connection-wide timeout would change upload behavior. No upload deadline was added.
 
@@ -16,7 +16,7 @@ Vercel imports the original `handler_for` directly and keeps its existing reques
 
 ## Revisions and contract
 
-Base `49f1f218ead0c64e3af1e027d5edd5a40fb49bb4` contains N1. Test commit `6b76b0b` changes the existing server fixture to exercise the real `AppServer` and adds two contracts. Fix commit `696e0f8` changes only the server class and its stdlib import.
+Base `49f1f218ead0c64e3af1e027d5edd5a40fb49bb4` merges the GPS assertion fix. Test commit `6b76b0b` changes the existing server fixture to exercise the real `AppServer` and adds two contracts. Fix commit `696e0f8` changes only the server class and its stdlib import.
 
 The idle test waits for the server to accept a TCP connection that sends no HTTP bytes. It then makes a separate `/health` request while the idle connection remains open. The response must arrive before its one-second socket deadline.
 
@@ -39,6 +39,22 @@ OK
 ```
 
 [Full red output](red.txt), [green output](green.txt) and [Python 3.11 output](python311.txt) retain the exact commands' test names and results.
+
+## Independent review correction
+
+Review at `1b7b191` reproduced a shutdown regression in the initial threaded fix. `ThreadingHTTPServer` uses daemon request threads, so its ordinary close could return while a request was still inside the store. Main could then close the database underneath that request. The review also corrected this document's earlier claim that the GPS-fix base contained N1.
+
+Test commit `3a89241` exposes both missing shutdown contracts. Before the closing gate, the active-dispatch test fails with `Server close passed an active store request`. A second test leaves an accepted connection reading headers, closes the server and store, then sends `/health`. It detects that the late request still reaches the closed database. [Shutdown red output](shutdown-red.txt) records both failures.
+
+Fix commit `24160c0` waits for active GET or POST dispatch before close can return, and checks the closed state under that same lock before any later handler enters. The queued-POST test pauses after parsing, completes server close and store cleanup, then resumes. It receives 503 without entering the write method. The idle-header test also receives 503 without touching the closed database, while close itself returns without waiting for those headers.
+
+Final shutdown verification:
+
+| Command | Result |
+| --- | --- |
+| `.venv/bin/python -m unittest tests.backend.test_server tests.backend.test_vercel_bridge -v` | 30 passed on Python 3.14.7. [Output](shutdown-green.txt). |
+| `python3.11 -m unittest tests.backend.test_server -v` | Nine passed. [Output](shutdown-python311.txt). |
+| `MAZI_UNIFIED_PORT=8134 npx playwright test --config playwright.imports.config.ts --grep 'working pages fit narrow|phone memories preserves'` | Three passed and one inapplicable desktop phone test skipped. [Output](shutdown-browser.txt). |
 
 ## Verification
 
