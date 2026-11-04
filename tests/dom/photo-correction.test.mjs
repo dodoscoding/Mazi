@@ -99,3 +99,12 @@ test("access loss aborts pending save and ignores its late success", async (t) =
   await act(async () => pending.resolve(json({})));
   assert.equal(ui.closed, 1);
 });
+
+test("draft input waits for its selected-photo snapshot before accepting edits", async (t) => {
+  const pending = deferred();
+  const ui = await mount(t, () => pending.promise);
+  assert.equal(ui.host.querySelector("input").disabled, true);
+  await act(async () => pending.resolve(json(state("loaded"))));
+  assert.equal(ui.host.querySelector("input").disabled, false);
+  assert.equal(ui.host.querySelector("input").value, "Garden");
+});
