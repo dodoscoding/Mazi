@@ -1,9 +1,8 @@
+import { createPhotoFilters } from "../photoFilters";
 import { labelBadges } from "../../memory/labels";
 import {
-  applyFilters,
   dateLabel,
   emptyFilters,
-  filterOptions,
   initials,
   plural,
   sharedLine,
@@ -12,7 +11,6 @@ import {
 } from "../../browse/model";
 import { photoDateLabel, photoPlaceLabel } from "../../memory/evidence";
 import { placeLine } from "../../memory/facts";
-import { chronologyDate } from "../../memory/chronology";
 
 const closeIcon =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -33,6 +31,195 @@ export function createGallery(root, lifecycle, api) {
     newest = true,
     run = 0,
     opener = null;
+  let matched = new Set(),
+    matching = false,
+    matchRun = 0,
+    facets = null;
+  const searchText =
+    lifecycle.search ??
+    (location.hash.includes("?")
+      ? location.hash.split("?").slice(1).join("?")
+      : location.search);
+  const entry = new URLSearchParams(searchText);
+  const invalidFilters = new Map();
+  for (const [key, parameter] of [
+    ["years", "years"],
+    ["places", "places"],
+    ["sources", "source"],
+    ["people", "by"],
+  ]) {
+    const raw = entry.get(parameter) || "";
+    let values;
+    try {
+      values = raw.startsWith("[")
+        ? JSON.parse(raw)
+        : key === "people"
+          ? raw
+            ? [raw]
+            : []
+          : raw.split(",").filter(Boolean);
+      if (
+        !Array.isArray(values) ||
+        values.some((value) => typeof value !== "string")
+      )
+        throw Error();
+    } catch {
+      invalidFilters.set(key, raw);
+      values = [raw];
+    }
+    filters[key] = new Set(key === "years" ? values.map(Number) : values);
+  }
+  filters.uncertain = entry.get("uncertain") === "true";
+  view = entry.get("view") === "all" ? "all" : "moment";
+  newest = entry.get("order") !== "oldest";
+  const photoFilters = createPhotoFilters(
+    $("memory-filters"),
+    searchText,
+    () => void refreshMatches(),
+  );
+  const searchForm = document.createElement("form");
+  searchForm.className = "photo-date-filters";
+  for (const [key, text, type] of [
+    ["q", "Sözcük", "search"],
+    ["from", "Başlangıç", "date"],
+    ["through", "Bitiş", "date"],
+  ]) {
+    const label = document.createElement("label"),
+      input = document.createElement("input");
+    label.textContent = text;
+    input.type = type;
+    input.name = key;
+    input.value = entry.get(key) || "";
+    label.append(input);
+    searchForm.append(label);
+  }
+  const basisLabel = document.createElement("label"),
+    basis = document.createElement("select");
+  basisLabel.textContent = "Tarih türü";
+  basis.name = "date_basis";
+  for (const [value, text] of [
+    ["chronology", "Gösterilen tarih"],
+    ["capture", "Çekim tarihi"],
+    ["shared", "Paylaşım tarihi"],
+    ["", "Çekim tarihi (eski bağlantı)"],
+  ]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    basis.append(option);
+  }
+  basis.value =
+    entry.get("date_basis") ||
+    (entry.has("from") || entry.has("through") ? "" : "chronology");
+  basisLabel.append(basis);
+  searchForm.append(basisLabel);
+  const applyDates = document.createElement("button");
+  applyDates.textContent = "Filtrele";
+  searchForm.append(applyDates);
+  searchForm.onsubmit = (event) => {
+    event.preventDefault();
+    void refreshMatches();
+  };
+  $("memory-filters").append(
+    searchForm,
+    $("memory-filters").querySelector(".mem-sheet-foot"),
+  );
+  function parameters() {
+    const params = new URLSearchParams();
+    photoFilters.apply(params);
+    for (const [key, parameter] of [
+      ["years", "years"],
+      ["places", "places"],
+      ["sources", "source"],
+      ["people", "by"],
+    ])
+      if (filters[key].size)
+        params.set(
+          parameter,
+          invalidFilters.has(key) && filters[key].has(invalidFilters.get(key))
+            ? invalidFilters.get(key)
+            : key === "years" || key === "sources"
+              ? [...filters[key]].join(",")
+              : JSON.stringify([...filters[key]]),
+        );
+    if (filters.uncertain) params.set("uncertain", "true");
+    for (const input of searchForm.querySelectorAll("input,select"))
+      if (input.value) params.set(input.name, input.value);
+    return params;
+  }
+  function remember() {
+    const params = parameters();
+    if (!params.get("from") && !params.get("through"))
+      params.delete("date_basis");
+    if (view === "all") params.set("view", view);
+    if (!newest) params.set("order", "oldest");
+    if (entry.get("section")) params.set("section", entry.get("section"));
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      "#/memories" + (query ? "?" + query : ""),
+    );
+  }
+  async function refreshMatches() {
+    if (!galleryGroup) return;
+    const generation = ++matchRun,
+      current = run;
+    closeEditor();
+    matching = true;
+    matched.clear();
+    loading();
+    $("grid-summary").textContent = "Eşleşmeler aranıyor…";
+    $("filters-apply").textContent = "Eşleşmeler aranıyor…";
+    update();
+    const params = parameters();
+    params.set("group", galleryGroup);
+    if (params.has("q")) {
+      params.set("query", params.get("q"));
+      params.delete("q");
+    }
+    for (const [from, to] of [
+      ["by", "shared_by"],
+      ["from", "start"],
+      ["through", "end"],
+    ])
+      if (params.has(from)) {
+        params.set(to, params.get(from));
+        params.delete(from);
+      }
+    try {
+      const result = await api("/api/discovery/matches?" + params);
+      if (generation !== matchRun || current !== run) return;
+      matching = false;
+      matched = new Set(result.asset_ids);
+      facets = result;
+      photoFilters.update(result.photo_facets);
+      buildRail();
+      remember();
+      update();
+    } catch (error) {
+      if (generation === matchRun && current === run) {
+        matching = false;
+        matched.clear();
+        facets = null;
+        photoFilters.update({});
+        $("grid-summary").textContent = "Eşleşmeler yüklenemedi.";
+        $("filters-apply").textContent = "Filtreleri uygula";
+        const retry = node("button", "Yeniden dene", "br-chip");
+        retry.type = "button";
+        retry.onclick = () => void refreshMatches();
+        $("grid").replaceChildren(
+          node(
+            "p",
+            error.code === "capacity_exceeded"
+              ? "İşleme sınırı aşıldı. Kısmi sonuç gösterilmez; filtreleri gözden geçirin."
+              : "Filtreler yüklenemedi. Seçiminiz korundu; yeniden deneyin.",
+          ),
+          retry,
+        );
+      }
+    }
+  }
 
   let galleryGroup = "",
     selecting = false,
@@ -41,7 +228,7 @@ export function createGallery(root, lifecycle, api) {
     disposeEditor;
   const tools = document.createElement("section");
   tools.className = "mem-label-tools";
-  tools.setAttribute("aria-label", "Fotoğraf seçimi");
+  tools.setAttribute("aria-label", "Fotoğraf araçları");
   const choose = document.createElement("button");
   choose.textContent = "Fotoğraf seç";
   choose.type = "button";
@@ -53,7 +240,11 @@ export function createGallery(root, lifecycle, api) {
   cancel.textContent = "Seçimi temizle";
   cancel.type = "button";
   const editor = document.createElement("div");
-  tools.append(choose, count, edit, cancel, editor);
+  const refresh = document.createElement("button");
+  refresh.type = "button";
+  refresh.textContent = "Fotoğrafları yenile";
+  refresh.onclick = () => void load(galleryGroup);
+  tools.append(refresh, choose, count, edit, cancel, editor);
   $("grid").before(tools);
   function closeEditor() {
     editorGeneration++;
@@ -128,7 +319,7 @@ export function createGallery(root, lifecycle, api) {
       if (set.has(key)) set.delete(key);
       else set.add(key);
     }
-    update();
+    void refreshMatches();
   }
   function chip(kind, option, className = "mem-chip") {
     const button = node("button", option.label, className);
@@ -161,7 +352,27 @@ export function createGallery(root, lifecycle, api) {
     if (!items.length) field.append(node("p", empty, "mem-filter-note"));
   }
   function buildRail() {
-    const options = filterOptions(memories);
+    if (!facets) return;
+    const options = {
+      years: (facets.photo_facets.years || []).map((item) => ({
+        ...item,
+        value: Number(item.value),
+        label: item.value,
+      })),
+      places: (facets.photo_facets.places || []).map((item) => ({
+        ...item,
+        label: item.value,
+      })),
+      people: (facets.facets.shared_by || []).map((item) => ({
+        ...item,
+        label: item.value,
+      })),
+      sources: (facets.facets.sources || []).map((item) => ({
+        ...item,
+        label: sourceLabel(item.value),
+      })),
+      uncertain: true,
+    };
     $("filter-years").replaceChildren(
       ...options.years.map((option) => chip("years", option)),
     );
@@ -172,7 +383,7 @@ export function createGallery(root, lifecycle, api) {
       "place-filter",
       "filter-places",
       options.places.map((option) => check("places", option)),
-      "No places are recorded for these photographs yet.",
+      "Bu fotoğraflarda yer kaydı yok.",
     );
     fill(
       "person-filter",
@@ -187,21 +398,18 @@ export function createGallery(root, lifecycle, api) {
         button.title = option.label;
         return button;
       }),
-      "No sharers or chat participants are recorded yet.",
+      "Paylaşan bilgisi yok.",
     );
     fill(
       "source-filter",
       "filter-sources",
       options.sources.map((option) => check("sources", option)),
-      "No import sources are recorded yet.",
+      "Kaynak kaydı yok.",
     );
     $("filter-uncertain").disabled = !options.uncertain;
   }
   function sorted(list) {
     return newest ? list : [...list].reverse();
-  }
-  function photoCount(list) {
-    return list.reduce((sum, memory) => sum + memory.photos.length, 0);
   }
   function activeLabels() {
     const labels = [];
@@ -211,7 +419,7 @@ export function createGallery(root, lifecycle, api) {
     for (const value of filters.people) labels.push(["people", value, value]);
     for (const value of filters.sources)
       labels.push(["sources", sourceLabel(value), value]);
-    if (filters.uncertain) labels.push(["uncertain", "Uncertain dates"]);
+    if (filters.uncertain) labels.push(["uncertain", "Belirsiz tarihler"]);
     return labels;
   }
   function renderActive() {
@@ -220,19 +428,20 @@ export function createGallery(root, lifecycle, api) {
       ...labels.map(([kind, label, value]) => {
         const button = node("button", label, "br-chip mem-active-chip");
         button.type = "button";
-        button.setAttribute("aria-label", `Remove filter ${label}`);
+        button.setAttribute("aria-label", `Filtreyi kaldır: ${label}`);
         button.insertAdjacentHTML("beforeend", closeIcon);
         button.onclick = () => {
           if (kind === "years") filters.years.clear();
           else if (kind === "uncertain") filters.uncertain = false;
           else filters[kind].delete(value);
-          update();
+          void refreshMatches();
           $("active-filters").querySelector("button")?.focus();
         };
         return button;
       }),
     );
-    $("filters-count").textContent = labels.length ? ` · ${labels.length}` : "";
+    const count = labels.length + photoFilters.count();
+    $("filters-count").textContent = count ? ` · ${count}` : "";
   }
   function tile(memory, photo, index, position) {
     const link = node("a", undefined, "mem-tile");
@@ -256,7 +465,7 @@ export function createGallery(root, lifecycle, api) {
     );
     link.append(facts);
     if (!photo.evidence && memory.approximate) {
-      const badge = node("span", "About", "mem-about");
+      const badge = node("span", "Yaklaşık", "mem-about");
       badge.setAttribute("aria-hidden", "true");
       link.append(badge);
     }
@@ -286,33 +495,24 @@ export function createGallery(root, lifecycle, api) {
     const frames = node("div", undefined, "mem-empty-frames");
     frames.setAttribute("aria-hidden", "true");
     frames.append(node("i"), node("i"), node("i"));
-    const link = node("a", "Go to My Imports", "primary-action");
+    const link = node("a", "İçe aktarımlarım", "primary-action");
     link.href = "/imports";
     box.append(
       frames,
-      node("h2", "No memories yet"),
-      node(
-        "p",
-        "Once someone in the circle imports an export, every photo shows up here, grouped by moment. Imports are shared with everyone in the circle straight away.",
-      ),
+      node("h2", "Henüz fotoğraf yok"),
+      node("p", "Grubunuza fotoğraf eklendiğinde burada anılara göre görünür."),
       link,
     );
     return box;
   }
   function noMatch() {
     const box = node("div", undefined, "mem-empty");
-    const reset = node("button", "Reset filters", "br-chip");
+    const reset = node("button", "Filtreleri temizle", "br-chip");
     reset.type = "button";
-    reset.onclick = () => {
-      filters = emptyFilters();
-      update();
-    };
+    reset.onclick = resetFilters;
     box.append(
-      node("h2", "No memories match these filters"),
-      node(
-        "p",
-        "Remove a filter above or reset them all to see every photograph again.",
-      ),
+      node("h2", "Bu filtrelerle eşleşen fotoğraf yok"),
+      node("p", "Bir filtreyi kaldırın veya hepsini temizleyin."),
       reset,
     );
     return box;
@@ -325,8 +525,10 @@ export function createGallery(root, lifecycle, api) {
     const tiles = (list) => {
       const box = node("div", undefined, "mem-tiles br-grid-stagger");
       for (const memory of list)
-        memory.photos.forEach((photo, index) =>
-          box.append(tile(memory, photo, index, position++)),
+        memory.photos.forEach(
+          (photo, index) =>
+            matched.has(photo.assetId) &&
+            box.append(tile(memory, photo, index, position++)),
         );
       return box;
     };
@@ -342,8 +544,10 @@ export function createGallery(root, lifecycle, api) {
           [
             dateLabel(memory),
             placeLine(memory),
-            plural(memory.photos.length, "photo"),
-            sharedLine(memory),
+            `${memory.photos.filter((photo) => matched.has(photo.assetId)).length} eşleşen / ${memory.photos.length} fotoğraf`,
+            sharedLine(memory)
+              .replace(/^Shared by /, "Paylaşan: ")
+              .replace(/^Added by /, "Ekleyen: "),
           ]
             .filter(Boolean)
             .join(" · "),
@@ -354,7 +558,7 @@ export function createGallery(root, lifecycle, api) {
         section.setAttribute("aria-labelledby", id);
         head.append(title, meta);
         if (memory.kind === "memory") {
-          const notes = node("a", "View notes", "notes-link");
+          const notes = node("a", "Notları aç", "notes-link");
           notes.href = `#/memory/${encodeURIComponent(memory.id)}?notebook=1`;
           head.append(notes);
         }
@@ -373,34 +577,37 @@ export function createGallery(root, lifecycle, api) {
       "aria-checked",
       String(filters.uncertain),
     );
-    const shown = sorted(applyFilters(memories, filters));
-    const years = [
-      ...new Set(
-        shown.flatMap((memory) => {
-          const year = chronologyDate(memory).year;
-          return year ? [year] : [];
-        }),
-      ),
-    ];
-    $("grid-summary").textContent = memories.length
-      ? [
-          `${photoCount(shown)} of ${plural(photoCount(memories), "photo")}`,
-          plural(shown.length, "moment"),
-          yearsLabel(years) || "Undated",
-          filters.sources.size
-            ? [...filters.sources].map(sourceLabel).join(", ")
-            : "all sources",
-        ].join(" · ")
-      : "";
-    $("filters-apply").textContent =
-      `Show ${plural(photoCount(shown), "photo")}`;
+    root
+      .querySelectorAll("#grid-view button")
+      .forEach((button) =>
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.view === view),
+        ),
+      );
+    $("grid-order-label").textContent = newest
+      ? "Önce en yeni"
+      : "Önce en eski";
     renderActive();
+    if (matching || !facets) {
+      remember();
+      return;
+    }
+    const shown = sorted(
+      memories.filter((memory) =>
+        memory.photos.some((photo) => matched.has(photo.assetId)),
+      ),
+    );
+    $("grid-summary").textContent =
+      `${facets?.total || 0} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
+    $("filters-apply").textContent = `${facets?.total || 0} fotoğrafı göster`;
+    remember();
     renderGrid(shown);
   }
   function loading() {
     const box = node("div", undefined, "mem-loading");
     box.setAttribute("role", "status");
-    box.setAttribute("aria-label", "Loading memories");
+    box.setAttribute("aria-label", "Fotoğraflar yükleniyor");
     const bar = node("i", undefined, "br-skeleton mem-skeleton-title");
     const tiles = node("div", undefined, "mem-tiles");
     for (let index = 0; index < 12; index++)
@@ -478,16 +685,20 @@ export function createGallery(root, lifecycle, api) {
   $("filters-open").onclick = openSheet;
   $("filters-apply").onclick = () => closeSheet();
   $("filters-scrim").onclick = () => closeSheet();
-  $("filters-reset").onclick = () => {
+  function resetFilters() {
     filters = emptyFilters();
-    update();
-  };
+    photoFilters.reset(false);
+    for (const input of searchForm.querySelectorAll("input")) input.value = "";
+    basis.value = "chronology";
+    void refreshMatches();
+  }
+  $("filters-reset").onclick = resetFilters;
   $("filter-uncertain").onclick = () => toggle("uncertain");
   $("grid-order").onclick = () => {
     newest = !newest;
     $("grid-order-label").textContent = newest
-      ? "Newest first"
-      : "Oldest first";
+      ? "Önce en yeni"
+      : "Önce en eski";
     update();
   };
   root.querySelectorAll("#grid-view button").forEach((button) => {
@@ -504,13 +715,21 @@ export function createGallery(root, lifecycle, api) {
 
   async function load(group) {
     const current = ++run;
+    if (galleryGroup && galleryGroup !== group) {
+      filters = emptyFilters();
+      photoFilters.reset(false);
+      for (const input of searchForm.querySelectorAll("input"))
+        input.value = "";
+      basis.value = "chronology";
+    }
     galleryGroup = group;
     closeEditor();
     selection.clear();
     selecting = false;
     selectionState();
     memories = [];
-    filters = emptyFilters();
+    matched.clear();
+    facets = null;
     if (!group) return;
     loading();
     try {
@@ -520,19 +739,21 @@ export function createGallery(root, lifecycle, api) {
     } catch (error) {
       if (current !== run) return;
       const box = node("div", undefined, "mem-empty");
-      const retry = node("button", "Try again", "br-chip");
+      const retry = node("button", "Yeniden dene", "br-chip");
       retry.type = "button";
       retry.onclick = () => load(group);
       box.append(
-        node("h2", "Memories could not load"),
-        node("p", `${error.message}. Check your connection and try again.`),
+        node("h2", "Fotoğraflar yüklenemedi"),
+        node(
+          "p",
+          `${error.message}. Bağlantınızı kontrol edip yeniden deneyin.`,
+        ),
         retry,
       );
       $("grid").replaceChildren(box);
       return;
     }
-    buildRail();
-    update();
+    await refreshMatches();
   }
   return { load };
 }

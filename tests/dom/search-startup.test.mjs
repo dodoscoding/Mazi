@@ -80,7 +80,7 @@ test("Search pages photographs before requesting optional context and preserves 
   $("#query").value = "Sam";
   submit(feature);
   await until(
-    () => $("#result-total").textContent.includes("photograph"),
+    () => $("#result-total").textContent.includes("fotoğraf"),
     "honest photo count",
   );
   await until(() => $("#results h3"), "searched photograph");
@@ -105,14 +105,15 @@ test("Search pages photographs before requesting optional context and preserves 
   await until(() => !$("#person").disabled, "People ready");
   assert.equal($("#query").value, "Sam");
   assert.equal($("#place").value, "Lake");
-  assert.match($("#people-list").textContent, /Sam/);
+  assert.equal($("#people-list").textContent, "");
+  assert.equal($("#date-scope").hidden, false);
   assert.equal(
     $(".disc-tag select option[value=synthetic-person]").textContent,
     "Sam",
   );
   assert.equal($("#results h3").textContent, photograph.title);
   const confirm = [...feature.root.querySelectorAll("#results button")].find(
-    (button) => button.textContent === "Confirm tag",
+    (button) => button.textContent === "Etiketi onayla",
   );
   assert.equal(confirm.disabled, false);
   $(".disc-tag select").value = "synthetic-person";
@@ -126,7 +127,7 @@ test("Search pages photographs before requesting optional context and preserves 
     { person: "synthetic-person", asset: "synthetic-photo", confirmed: true },
   );
   await until(
-    () => $("#notice").textContent === "Changes saved.",
+    () => $("#notice").textContent === "Değişiklikler kaydedildi.",
     "tag refresh completed",
   );
 });
@@ -152,7 +153,7 @@ test("Search optional context failure offers retry without hiding photographs", 
   submit(feature);
   $("#include-context").click();
   await until(
-    () => $("#context-status").textContent.includes("unavailable"),
+    () => $("#context-status").textContent.includes("yüklenemedi"),
     "retryable failure",
   );
   assert.equal($("#include-context").disabled, false);

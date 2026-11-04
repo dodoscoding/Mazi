@@ -113,7 +113,7 @@ const searches = (requests) =>
 const texts = (root, selector) =>
   [...root.querySelectorAll(selector)].map((el) => el.textContent.trim());
 
-test("Source and Shared by are visible, apply at once and narrow every result group", async (t) => {
+test("Source and sharer constrain photos and explicitly exclude unrelated context", async (t) => {
   const requests = [];
   const feature = await mountFeature(t, "discovery", archive(requests), {
     route: "/search",
@@ -122,20 +122,20 @@ test("Source and Shared by are visible, apply at once and narrow every result gr
   await until(() => !$("#search-filters").hidden, "filters offered");
   assert.equal($(".disc-refine").open, false);
   assert.deepEqual(texts(root, "#source-filter button"), [
-    "All",
+    "Tümü",
     "WhatsApp",
     "Discord",
   ]);
   assert.deepEqual(texts(root, "#shared-by option"), [
-    "Anyone",
+    "Herkes",
     "Ana",
     "Ben",
     "Deniz",
   ]);
   assert.deepEqual(texts(root, "#results .disc-shared"), [
-    "Shared by Ana · WhatsApp",
-    "Shared by Deniz · WhatsApp",
-    "Shared by Ben · Discord",
+    "Paylaşan: Ana · WhatsApp",
+    "Paylaşan: Deniz · WhatsApp",
+    "Paylaşan: Ben · Discord",
   ]);
   $("#include-context").click();
   await until(() => !$("#person").disabled, "context loaded");
@@ -157,10 +157,9 @@ test("Source and Shared by are visible, apply at once and narrow every result gr
   );
   assert.equal(searches(requests).at(-1).get("source"), "discord");
   assert.deepEqual(texts(root, "#results h3"), ["Lake by Ben"]);
-  assert.deepEqual(texts(root, "#memory-list .result-title"), [
-    "Lake from the server",
-  ]);
-  assert.deepEqual(texts(root, "#chat-list b"), ["Ben"]);
+  assert.deepEqual(texts(root, "#memory-list .result-title"), []);
+  assert.deepEqual(texts(root, "#chat-list b"), []);
+  assert.equal($("#date-scope").hidden, false);
   assert.deepEqual(texts(root, "#source-filter button[aria-pressed=true]"), [
     "Discord",
   ]);
@@ -178,7 +177,7 @@ test("Source and Shared by are visible, apply at once and narrow every result gr
     "Ana's photograph only",
   );
   assert.equal(searches(requests).at(-1).get("source"), "");
-  assert.deepEqual(texts(root, "#memory-list .result-title"), ["Lake picnic"]);
+  assert.deepEqual(texts(root, "#memory-list .result-title"), []);
   assert.equal(window.location.hash, "#/search?q=lake&by=Ana");
 });
 
@@ -211,7 +210,7 @@ test("A filter from the URL stays selectable when no visible photograph carries 
   const { $, root } = feature;
   await until(() => !$("#search-filters").hidden, "filters offered");
   assert.deepEqual(texts(root, "#source-filter button"), [
-    "All",
+    "Tümü",
     "WhatsApp",
     "Discord",
     "Messenger",

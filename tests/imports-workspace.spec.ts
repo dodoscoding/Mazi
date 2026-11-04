@@ -291,9 +291,15 @@ test("phone memories preserves view and order with reachable touch controls", as
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/#/memories");
     await page.reload();
-    const all = page.getByRole("button", { name: "All photos", exact: true });
-    const moment = page.getByRole("button", { name: "By moment", exact: true });
-    const order = page.getByRole("button", { name: "Order: Newest first" });
+    const all = page.getByRole("button", {
+      name: "Tüm fotoğraflar",
+      exact: true,
+    });
+    const moment = page.getByRole("button", {
+      name: "Anılara göre",
+      exact: true,
+    });
+    const order = page.getByRole("button", { name: "Sıra: Önce en yeni" });
     for (const control of [all, moment, order]) {
       await expect(control).toBeVisible();
       const box = await control.boundingBox();
@@ -307,11 +313,11 @@ test("phone memories preserves view and order with reachable touch controls", as
     await order.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator("#grid-order")).toBeFocused();
-    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+    await expect(page.locator("#grid-order")).toContainText("Önce en eski");
     await moment.tap();
     await expect(moment).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator(".mem-moment").first()).toBeVisible();
-    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+    await expect(page.locator("#grid-order")).toContainText("Önce en eski");
   }
 });
 

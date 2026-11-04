@@ -1,3 +1,4 @@
+import { photoMatches } from "../helpers/photo-match.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { group, mountFeature, until } from "./feature-harness.mjs";
@@ -24,6 +25,8 @@ test("Gallery badges come from its read and explicit selection loads one bounded
     reads.push(path);
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/atlas")) return { memories: [memory()] };
+    if (path.startsWith("/api/discovery/matches"))
+      return photoMatches(memory().photos.map((photo) => photo.assetId));
     if (path.startsWith("/api/social/labels?")) return { items: [] };
     return [];
   });
@@ -63,6 +66,8 @@ test("Gallery selection stops at fifty stable asset IDs", async (t) => {
   const { root } = await mountFeature(t, "memories", (path) => {
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/atlas")) return { memories: [memory(51)] };
+    if (path.startsWith("/api/discovery/matches"))
+      return photoMatches(memory(51).photos.map((photo) => photo.assetId));
     return [];
   });
   await until(() => root.querySelector(".mem-tile"), "gallery");
@@ -85,6 +90,8 @@ for (const action of ["deselect", "clear", "toggle"]) {
       reads.push(path);
       if (path === "/api/groups") return [group];
       if (path.startsWith("/api/atlas")) return { memories: [memory()] };
+      if (path.startsWith("/api/discovery/matches"))
+        return photoMatches(memory().photos.map((photo) => photo.assetId));
       if (path.startsWith("/api/social/labels?")) return { items: [] };
       return [];
     });
