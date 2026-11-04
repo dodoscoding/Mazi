@@ -44,6 +44,12 @@ Follow named links to Search, Atlas/map, Timeline, People, stories, annual recap
 
 Exercise canonical `/atlas` and legacy root selection/portal links, direct memory/photo/notebook refresh, Back/Forward and return focus. Reuse background-retention, access-loss and group-switching contracts. Run direct `/places` Discord callback tests with the new shell. Record exact commands, environments and captures in [the clarity verification](../work/poteto/interface-clarity/VERIFICATION.md). Synthetic browser evidence does not satisfy physical-device or production milestone gates.
 
+## Local photo-facts acceptance
+
+A1 extends the synthetic T08 reading journey. A reviewed photo shows its capture day and Istanbul beneath the thumbnail in both gallery modes. A sharing-only Discord photo shows its sharing day, UTC qualification and unknown place. Switching the Viewer photo changes both facts. Home, Atlas/list, Timeline and detail show consistent summaries, including conflicts and missing children. Two-city and partially located groups never acquire a borrowed pin. Ambiguous WhatsApp days stay explicit, and EXIF offsets do not shift the calendar day. Hidden photos, source withdrawal and removed membership retain the existing read restrictions.
+
+Run `tests/backend/test_atlas.py`, `test_atlas_place.py`, `test_atlas_projection.py` and `archive/test_chronology.py`; the chronology unit and photo-evidence DOM contracts; and the photo-facts case in `tests/memory-detail.spec.ts` on desktop and phone. Exact legacy-projection assertions remove only the two additive photo fields before their byte comparison. Dedicated assertions cover the new evidence values. The projection query-count and memory budgets remain enforced. [A1 evidence](../work/poteto/photo-evidence/VERIFICATION.md) records revisions, commands and synthetic screenshots. Physical-phone and five-friend discovery acceptance remain separate from these synthetic checks.
+
 ## First design experiment
 
 D15 confirms a concept image followed by a working Home-to-memory/photos/context prototype using synthetic content. On 5 October 2026 the owner reported positive feedback from 2-3 friends; no raw study record or precise device inventory was supplied. Record what they can discover unaided, confusion with controls, enjoyment, and willingness to return. This experiment tests the proposed experience; it does not demonstrate retention or production readiness.

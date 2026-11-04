@@ -58,6 +58,18 @@ Contradictory offsets, ambiguous locale dates, implausible EXIF, or conflicts be
 
 Timestamp, location, identity, duplicate, and cluster confidence are separate values. Each includes evidence, method/model version, and a reason. A score is not called a probability until calibrated against labeled fixtures.
 
+### Photo facts in the Atlas read model
+
+`GET /api/atlas` adds `assetId` and `evidence` to every authorized photo. `assetId` is the stored archive asset ID, independent of its rendition URL. Existing card fields, provenance, stored payloads and fingerprints keep their meanings. This read model adds no audience, schema or processing consent.
+
+`evidence` contains `capture`, per-source `shared`, `chronology` and `place`. A date has `basis` (`capture`, `shared` or `unknown`), `status` (`exact`, `approximate`, `range`, `conflict`, `ambiguous` or `unknown`), sorted evidence `days`, `start`, `through` and `timezone`. Unknown bounds are null. Current capture producers emit precise EXIF timestamps, selected-source calendar days and precise Review corrections; they do not encode approximate dates or asserted intervals. The read model reserves those states and the renderer distinguishes them, but it does not invent such evidence. Multiple exact capture days remain a conflict with their original days, not an asserted interval. A correction takes precedence over capture assertions. Without valid capture evidence, chronology uses the earliest reliable sharing day. An unresolved chat day/month remains ambiguous. No import/upload timestamp supplies a capture fallback.
+
+Calendar days remain in their recorded local date. Discord's UTC sharing day is labelled UTC. Viewing the same photo from another timezone does not change that day. Each source's raw sharing evidence remains in `provenance`; the display does not rewrite it.
+
+A photo's `place` has `status` (`known`, `unmapped`, `conflict` or `unknown`), display `text` and a nullable canonical city-centre `pin`. Nonempty Review text overrides source places, including text that cannot be mapped. Conflicting source cities receive no pin. Photo facts never borrow a sibling's place. New interface readers pin a grouped memory only when every child has the same known city; its legacy card `place` field remains compatible. Summary text identifies multiple places and missing child dates/places.
+
+Both gallery layouts show the photo's own date and place beneath its thumbnail. The selected Viewer photo uses the same labels. Home, memory detail, Atlas/list and Timeline use the child-based summary. Search date bases, selected-photo correction writes and editable content labels remain subsequent delivery slices in the [social-space implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md).
+
 ## Normalized import boundary
 
 An adapter emits a versioned NormalizedImportItem and a capability/coverage report. The minimum logical fields are below.
