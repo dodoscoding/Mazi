@@ -257,8 +257,9 @@ export default function ConversationPanel({
               className="reaction-button"
               aria-pressed={reaction.mine}
               aria-label={`${label}: ${emojiNames[reaction.emoji]}, ${reaction.count}`}
-              disabled={blocked}
+              aria-disabled={blocked}
               onClick={() =>
+                !blocked &&
                 void send("reactions/set", {
                   target: value,
                   emoji: reaction.emoji,
