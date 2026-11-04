@@ -344,3 +344,99 @@ test("failed page loads offer an exact-cursor retry without leaking the previous
   assert.equal(button(h, "Sonraki yorumlar"), undefined);
   assert.match(h.host.textContent, /Alice/);
 });
+
+test("a confirmed create outside the page is visible without expanding reaction batches", async (t) => {
+  const saved = { ...comment, id: "new-comment", text: "Yeni kaydedilmiş söz" };
+  const rows = Array.from({ length: 20 }, (_, index) => ({
+    ...comment,
+    id: `old-${index}`,
+    text: `Önceki ${index}`,
+  }));
+  const h = await mount(
+    t,
+    "/src/social/ConversationPanel.tsx",
+    "default",
+    props,
+    async (path, options) => {
+      if (options.method === "POST") return Response.json(saved);
+      if (path.startsWith("/api/social/comments?"))
+        return Response.json({ items: rows, total: 21, next_cursor: "next" });
+      return Response.json({
+        items: [
+          reaction(target),
+          ...rows.map(({ id }) => reaction({ kind: "comment", id })),
+        ],
+      });
+    },
+  );
+  await fill(h, saved.text);
+  await submit(h);
+  assert.match(
+    h.host.querySelector(".confirmed-comment")?.textContent || "",
+    /Yeni kaydedilmiş söz/,
+  );
+  assert.equal(h.host.querySelectorAll(".native-comments article").length, 20);
+  assert.equal(h.host.querySelector("textarea").value, "");
+  for (const { path } of h.calls.filter(({ path }) =>
+    path.startsWith("/api/social/reactions/batch?"),
+  )) {
+    assert.equal(
+      JSON.parse(new URL(path, "http://localhost").searchParams.get("targets"))
+        .length,
+      21,
+    );
+  }
+});
+
+test("deleting a different comment preserves new and edit drafts, including an exact delete retry", async (t) => {
+  for (const editing of [false, true])
+    await t.test(
+      editing ? "other edit draft" : "new composer",
+      async (scope) => {
+        const other = { ...comment, id: "other", text: "Silinecek yorum" };
+        let deleted = false;
+        let writes = 0;
+        const h = await mount(
+          scope,
+          "/src/social/ConversationPanel.tsx",
+          "default",
+          props,
+          async (path, options) => {
+            if (options.method === "POST") {
+              if (++writes === 1) throw new TypeError("Lost delete response");
+              deleted = true;
+              return Response.json({ id: other.id, deleted: true });
+            }
+            if (path.startsWith("/api/social/comments?"))
+              return Response.json({
+                items: deleted ? [comment] : [comment, other],
+                total: deleted ? 1 : 2,
+                next_cursor: null,
+              });
+            return boundary(path);
+          },
+        );
+        if (editing) await h.click(button(h, "Düzenle"));
+        await fill(h, "Silinmemesi gereken taslak");
+        await h.click(
+          [
+            ...h.host.querySelectorAll(".native-comments article"),
+          ][1].querySelectorAll(".conversation-actions button")[1],
+        );
+        await h.click(button(h, "Yorumu sil"));
+        await h.click(button(h, "Aynı işlemi yeniden dene"));
+        assert.equal(
+          h.host.querySelector("textarea").value,
+          "Silinmemesi gereken taslak",
+        );
+        assert.equal(
+          h.host
+            .querySelector("label")
+            .textContent.startsWith(editing ? "Yorumunu düzenle" : "Yorum yaz"),
+          true,
+        );
+        const sent = h.calls.filter(({ options }) => options.method === "POST");
+        assert.equal(sent[0].options.body, sent[1].options.body);
+      },
+    );
+});
