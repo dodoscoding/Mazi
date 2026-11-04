@@ -9,14 +9,14 @@ test.beforeEach(async ({ page }) => {
 
 test("three primary destinations and a quiet Home make the archive findable", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto("/?demo=1");
   const navigation = page.getByRole("navigation", {
     name: "Main navigation",
     exact: true,
   });
   await expect(navigation.getByRole("link")).toHaveText([
-    "Home",
+    "Ana sayfa",
     "Keşfet",
     "Grubumuz",
   ]);
@@ -27,9 +27,17 @@ test("three primary destinations and a quiet Home make the archive findable", as
   await expect(
     page.getByRole("button", { name: "Replay", exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: "Arşivden anılar", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".home-featured")).toHaveCount(1);
+  await expect(page.locator(".home-memory, .home-contribute")).toHaveCount(0);
+  const detailLinks = await page
+    .locator(".home-featured a")
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  expect(new Set(detailLinks).size).toBe(1);
+  await page.screenshot({
+    path: `work/poteto/social-navigation/home-${testInfo.project.name}.png`,
+    fullPage: true,
+    scale: "css",
+  });
   await navigation.getByRole("link", { name: "Keşfet", exact: true }).click();
   await expect(page).toHaveURL(/#\/explore$/);
   for (const name of [
@@ -47,6 +55,15 @@ test("three primary destinations and a quiet Home make the archive findable", as
         .getByRole("link", { name, exact: true }),
     ).toBeVisible();
   }
+  await page.screenshot({
+    path: `work/poteto/social-navigation/explore-${testInfo.project.name}.png`,
+    fullPage: true,
+    scale: "css",
+  });
+  for (const name of ["Bul", "Gez", "Birlikte hatırla"])
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
+    ).toBeVisible();
   await expect(
     navigation.getByRole("link", { name: "Keşfet", exact: true }),
   ).toHaveAttribute("aria-current", "page");
@@ -56,7 +73,7 @@ test("Home returns focus and scroll to the archive link that opened a memory", a
   page,
 }) => {
   await page.goto("/?demo=1");
-  const opener = page.locator(".home-memory h3 a").first();
+  const opener = page.locator("#home-featured-title");
   await opener.scrollIntoViewIfNeeded();
   const openerId = await opener.getAttribute("id");
   const scroll = await page.evaluate(() => scrollY);
@@ -145,7 +162,7 @@ test("entering Home from another section starts at its heading", async ({
   expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
   await page
     .getByRole("navigation", { name: "Main navigation", exact: true })
-    .getByRole("link", { name: "Home", exact: true })
+    .getByRole("link", { name: "Ana sayfa", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
@@ -207,14 +224,13 @@ test("main Home from a memory starts at the top instead of restoring an old card
   page,
 }) => {
   await page.goto("/?demo=1");
-  const opener = page.locator(".home-memory h3 a").first();
+  const opener = page.locator("#home-featured-title");
   await opener.scrollIntoViewIfNeeded();
-  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
   await opener.click();
   await expect(page.locator(".memory-detail")).toBeVisible();
   await page
     .getByRole("navigation", { name: "Main navigation", exact: true })
-    .getByRole("link", { name: "Home", exact: true })
+    .getByRole("link", { name: "Ana sayfa", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),

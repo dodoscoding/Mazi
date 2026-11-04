@@ -12,7 +12,7 @@ test("import workspace exposes source and file controls in both themes", async (
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/imports");
   await expect(
-    page.getByRole("heading", { name: "My Imports", level: 1 }),
+    page.getByRole("heading", { name: "İçe aktarmalar", level: 1 }),
   ).toBeVisible();
   await expect(page.getByRole("list", { name: "Import steps" })).toBeVisible();
   await page.getByRole("button", { name: "Choose Photos in a ZIP" }).click();
@@ -562,7 +562,7 @@ test("circle retains its mounted state across visibility changes", async ({
   ).toBe(true);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Our circle", level: 1 }),
+    page.getByRole("heading", { name: "Grubumuz", level: 1 }),
   ).toBeVisible();
   await page.locator(".feature-content").evaluate((element) => {
     element.setAttribute("data-retained-probe", "original");

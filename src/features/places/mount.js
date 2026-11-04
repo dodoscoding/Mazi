@@ -884,8 +884,31 @@ export function mount(root, lifecycle) {
       "",
       location.pathname + location.hash,
     );
-  loadWorkspace().then(() => {
-    if (!active() || $("#workspace").hidden || !(link || cancelled)) return;
+  loadWorkspace().then(async () => {
+    if (!active() || $("#workspace").hidden) return;
+    const focusEntry = () => {
+      if (lifecycle.mountKind === "refresh" || !active()) return;
+      const sources =
+        new URLSearchParams(lifecycle.search).get("section") === "sources";
+      const target = $(sources ? "#source-title" : "h1");
+      target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+      if (sources) {
+        root
+          .querySelectorAll("[data-jump]")
+          .forEach((jump) =>
+            jump.setAttribute(
+              "aria-current",
+              String(jump.dataset.jump === "source-title"),
+            ),
+          );
+        target.scrollIntoView({ block: "start" });
+      }
+    };
+    if (!(link || cancelled)) {
+      focusEntry();
+      return;
+    }
     $("#kind").value = "discord";
     $("#kind").onchange();
     if (cancelled) {
@@ -893,9 +916,10 @@ export function mount(root, lifecycle) {
       $("#notice").dataset.tone = "";
       $("#notice").textContent =
         "Discord connection cancelled. Nothing was changed.";
+      focusEntry();
       return;
     }
-    run(async () => {
+    await run(async () => {
       let result;
       try {
         result = lifecycle.discordReturn
@@ -910,5 +934,6 @@ export function mount(root, lifecycle) {
       const { guild } = result;
       return `${guild.name} is connected. Choose its channels to create a source.`;
     });
+    focusEntry();
   });
 }

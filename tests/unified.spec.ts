@@ -152,7 +152,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   ).toBeVisible();
   await navigate(page, "Places & sources", "places");
   await expect(
-    page.getByRole("heading", { name: "Your sources", exact: true }),
+    page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
   ).toBeVisible();
   const sourceForm = page.locator("#source-form");
   await sourceForm

@@ -71,7 +71,7 @@ test("People opens confirmed-association controls and retains its entry URL", as
     .click();
   await expect(
     page.getByRole("heading", {
-      name: "People, confirmed by you",
+      name: "Fotoğraftaki kişiler",
       exact: true,
     }),
   ).toBeFocused();
@@ -112,4 +112,66 @@ test("a group refresh does not repeat the requested section focus", async ({
   await expect(page.locator("#grid")).not.toBeEmpty();
   await expect(heading).not.toBeFocused();
   await expect(page).toHaveURL(/#\/memories\?section=capsules$/);
+});
+
+for (const prefix of ["/", "/#/"]) {
+  test(`${prefix}people opens the confirmed people heading without an extra history entry`, async ({
+    page,
+  }) => {
+    await page.goto("/#/explore");
+    await page.goto(`${prefix}people`);
+    await expect(page).toHaveURL(/#\/discover\?section=people$/);
+    await expect(
+      page.getByRole("heading", { name: "Fotoğraftaki kişiler", exact: true }),
+    ).toBeFocused();
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/explore$/);
+  });
+  test(`${prefix}settings opens the visible group settings and keeps Back usable`, async ({
+    page,
+  }) => {
+    await page.goto("/#/explore");
+    await page.goto(`${prefix}settings`);
+    await expect(page).toHaveURL(/#\/circle\?section=settings$/);
+    await expect(
+      page.getByRole("heading", { name: "Grup ayarları", exact: true }),
+    ).toBeFocused();
+    await expect(
+      page.getByRole("link", {
+        name: "Hesap, yardım ve gizlilik",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/explore$/);
+  });
+}
+
+test("source management has its own section, focus and parent destination", async ({
+  page,
+}) => {
+  await page.goto("/#/circle");
+  await page
+    .getByRole("navigation", { name: "Grup araçları" })
+    .getByRole("link", { name: "Kaynak bağlantıları", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/places\?section=sources$/);
+  await expect(
+    page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
+  ).toBeFocused();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main navigation", exact: true })
+      .getByRole("link", { name: "Grubumuz", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await page
+    .locator('#source-form input[name="label"]')
+    .fill("Unsent source draft");
+  await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+  await expect(page.locator('#source-form input[name="label"]')).toHaveValue(
+    "Unsent source draft",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
+  ).not.toBeFocused();
 });

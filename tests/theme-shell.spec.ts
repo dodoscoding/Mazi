@@ -66,7 +66,7 @@ test("the phone has three tabs, one-tap Add and reachable account help", async (
     exact: true,
   });
   await expect(tabs.getByRole("link")).toHaveText([
-    "Home",
+    "Ana sayfa",
     "Keşfet",
     "Grubumuz",
   ]);
@@ -87,7 +87,7 @@ test("the phone has three tabs, one-tap Add and reachable account help", async (
   await account.click();
   await page
     .locator(".menu-popover")
-    .getByRole("link", { name: "About", exact: true })
+    .getByRole("link", { name: "Yardım ve gizlilik", exact: true })
     .click();
   await expect(page).toHaveURL(/#\/about/);
   await expect(
@@ -107,15 +107,18 @@ test("account controls are keyboard operable and Escape returns focus", async ({
   await page.keyboard.press("Enter");
   await expect(button).toHaveAttribute("aria-expanded", "true");
   const menu = page.locator(".menu-popover");
-  const about = menu.getByRole("link", { name: "About", exact: true });
+  const about = menu.getByRole("link", {
+    name: "Yardım ve gizlilik",
+    exact: true,
+  });
   await expect(about).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(
-    menu.getByRole("link", { name: "Replay introduction", exact: true }),
+    menu.getByRole("link", { name: "Tanıtımı izle", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("End");
   await expect(
-    menu.getByRole("button", { name: "Sign out", exact: true }),
+    menu.getByRole("button", { name: "Çıkış yap", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(about).toBeFocused();
@@ -148,7 +151,7 @@ test("a mouse click on account help lands even when clicks do not focus", async 
   await page.getByRole("button", { name: "Hesap", exact: true }).click();
   const about = page
     .locator(".menu-popover")
-    .getByRole("link", { name: "About", exact: true });
+    .getByRole("link", { name: "Yardım ve gizlilik", exact: true });
   await expect(about).toBeFocused();
   await about.evaluate((link) =>
     link.addEventListener("mousedown", (event) => event.preventDefault()),
