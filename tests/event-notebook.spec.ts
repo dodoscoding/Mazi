@@ -422,7 +422,7 @@ test("event title links open notes alongside imported excerpts and use event IDs
     page
       .locator(".mem-moment-head")
       .filter({ has: galleryTitle })
-      .getByRole("link", { name: "View notes", exact: true }),
+      .getByRole("link", { name: "Notları aç", exact: true }),
   ).toBeVisible();
   await galleryTitle.click();
   await page.evaluate(() => document.fonts.ready);

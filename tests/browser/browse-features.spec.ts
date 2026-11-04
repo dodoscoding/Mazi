@@ -96,7 +96,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await page.goto("/#/search");
   await expect(page.locator("#results article")).toHaveCount(3);
   await page
-    .getByRole("button", { name: "Include memories, chats, places and people" })
+    .getByRole("button", { name: "Anı, sohbet, yer ve kişileri dahil et" })
     .click();
   await expect(page.locator("#person")).toBeEnabled();
   await page.getByLabel("Ara", { exact: true }).fill("summer");
@@ -105,7 +105,7 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await expect(memories).toBeVisible();
   const result = memories.getByRole("link", { name: /Our summer/ });
   await expect(result.locator("img").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /All 1/ })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: /Tümü 1/ })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -114,17 +114,15 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await page.getByRole("button", { name: /Photographs 1/ }).click();
+  await page.getByRole("button", { name: /Fotoğraflar 1/ }).click();
   await expect(page.locator("#results article")).toBeVisible();
 
   await page.getByLabel("Ara", { exact: true }).fill("snorkel");
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(
-    page.getByRole("heading", { name: "Nothing for “snorkel”" }),
+    page.getByRole("heading", { name: "“snorkel” için sonuç yok" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Ask your archive instead" }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Arşivine sor" })).toBeVisible();
   await axeInBothThemes(page);
   await page.getByRole("button", { name: "Aramayı temizle" }).click();
   await expect(page.locator("#results article")).toHaveCount(3);

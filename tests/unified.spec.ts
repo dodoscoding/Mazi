@@ -66,7 +66,7 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await page.goto("/#/atlas");
   await shell(page);
   await page
-    .getByRole("button", { name: "Select Our summer", exact: true })
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
     .click();
   await openFullMemory(page);
   await expect(
@@ -104,8 +104,8 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await currentStory
     .getByRole("button", { name: "Show slideshow", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+  await currentStory
+    .getByRole("button", { name: "Next photo", exact: true })
     .click();
   await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
   for (const [label, filename] of [
@@ -304,23 +304,51 @@ test("named profile imports and logout discard delayed private Atlas responses",
     deliveredLogout = resolve;
   });
   let intercepted = false;
+  let privatePreviewTitle = "";
   await page.route("**/api/social/home?*", async (route) => {
     if (intercepted) return route.continue();
     intercepted = true;
     const response = await route.fetch();
+    const payload = await response.json();
+    privatePreviewTitle =
+      payload.featured?.memory?.title ||
+      payload.featured?.preview?.title ||
+      payload.featured?.plan?.title;
+    expect(privatePreviewTitle).toBeTruthy();
     heldLogout();
     await logoutGate;
     await route.fulfill({ response }).catch(() => {});
     deliveredLogout();
   });
   await navigate(page, "Home", "");
-  await page.reload();
   await capturedLogout;
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
+  ).toBeVisible();
   await navigate(page, "My Imports", "imports");
+  await expect(
+    page.getByRole("heading", {
+      name: "İçe aktarmalar",
+      exact: true,
+      level: 1,
+    }),
+  ).toBeFocused();
   expect(
     (
       await page.request.post("/api/memories/delete", {
         data: { group: firstGroup, story: story.id, revision: story.revision },
+      })
+    ).ok(),
+  ).toBe(true);
+  expect(
+    (
+      await page.request.post("/api/review/event", {
+        data: {
+          group: firstGroup,
+          assets: timeline.items.map((item: { id: string }) => item.id),
+          title,
+          decision: "undo",
+        },
       })
     ).ok(),
   ).toBe(true);
@@ -330,10 +358,16 @@ test("named profile imports and logout discard delayed private Atlas responses",
   await logoutDelivery;
   await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: `Select ${title}`, exact: true }),
+    page.locator(".home-featured, .home-plan, .activity-list"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(privatePreviewTitle, { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: `${title} anısını seç`, exact: true }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Hesap" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "More" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ekle" })).toHaveCount(0);
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });
 

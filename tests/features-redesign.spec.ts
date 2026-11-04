@@ -352,9 +352,9 @@ test("Search photographs stay usable while included categories load and retry", 
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText("1 photograph");
+  await expect(page.locator("#result-total")).toHaveText("1 fotoğraf");
   const include = page.getByRole("button", {
-    name: "Include memories, chats, places and people",
+    name: "Anı, sohbet, yer ve kişileri dahil et",
   });
   await page.screenshot({
     path: info.outputPath("search-photographs-ready.png"),
@@ -369,7 +369,17 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#person")).toBeDisabled();
+  const personFacets = page.locator('[data-photo-filter^="person:"]');
+  await expect(personFacets.first()).toBeAttached();
+  expect(
+    await personFacets.evaluateAll((inputs) =>
+      inputs.every((input) => !(input as HTMLInputElement).disabled),
+    ),
+  ).toBe(true);
+  await expect(page.locator(".photo-filters")).toContainText(
+    `Sayaçların paydası: görünür ${snapshot.total} fotoğrafın tamamı.`,
+  );
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
   await page
     .getByText("Yer, kişi, tarih ve etiketle daralt", { exact: true })
     .click();
@@ -377,16 +387,24 @@ test("Search photographs stay usable while included categories load and retry", 
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   release();
-  await expect(page.locator("#context-status")).toContainText("unavailable");
+  await expect(page.locator("#context-status")).toContainText(
+    "Diğer sonuç türleri yüklenemedi",
+  );
   await expect(include).toBeEnabled();
   await expect(page.locator("#results article")).toHaveCount(1);
   fail = false;
   await include.click();
+  await expect(page.locator("#context-status")).toContainText(
+    "Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır",
+  );
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
+  await page.getByLabel("Yer", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await include.click();
   await expect(page.locator("#person")).toBeEnabled();
   await expect(page.getByLabel("Ara", { exact: true })).toHaveValue("bicycle");
-  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue(
-    "Amsterdam",
-  );
+  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue("");
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#people")).toContainText("Ben");
   await expect(page.locator(".disc-tag select")).toBeEnabled();

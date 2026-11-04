@@ -131,7 +131,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page.goto("/#/search");
   await expect(page.locator("#results article")).toHaveCount(3);
   await page
-    .getByRole("button", { name: "Include memories, chats, places and people" })
+    .getByRole("button", { name: "Anı, sohbet, yer ve kişileri dahil et" })
     .click();
   await expect(page.locator("#person")).toBeEnabled();
   const requests: Record<string, string>[] = [];
@@ -189,15 +189,19 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
-    "10,000 visible photographs",
+    "10.000 görünür fotoğrafı",
   );
   await expect(page.locator("#mode")).toHaveValue("semantic");
   expect(requests.map((request) => request.mode)).toEqual(["semantic"]);
   const failedSearch = requests[0];
-  await page.getByRole("button", { name: "Use Words & filters" }).click();
+  await page
+    .getByRole("button", { name: "Sözcükler ve filtreleri kullan" })
+    .click();
   await expect(page.locator("#query")).toBeFocused();
-  await expect(page.locator("#count")).toHaveText("1001 photographs · keyword");
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  await expect(page.locator("#count")).toHaveText(
+    "1001 fotoğraf · Sözcükler ve filtreler",
+  );
+  await expect(page.locator("#result-total")).toHaveText("1001 sonuç");
   await expect(page.locator("#search-recovery")).toBeHidden();
   await expect(page.locator("#mode")).toHaveValue("keyword");
   expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
@@ -207,7 +211,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
       `Keyword photograph ${offset + 1}`,
     );
     await expect(page.locator("#count")).toHaveText(
-      "1001 photographs · keyword",
+      "1001 fotoğraf · Sözcükler ve filtreler",
     );
   }
   await expect(page.locator("#results article")).toHaveCount(11);
@@ -217,7 +221,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await expect(
     page.getByRole("button", { name: "Sonraki sayfa" }),
   ).toBeHidden();
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  await expect(page.locator("#result-total")).toHaveText("1001 sonuç");
   expect(requests.at(-1)).toEqual({
     ...failedSearch,
     mode: "keyword",
@@ -227,16 +231,16 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#search-recovery")).toBeVisible();
   await expect(page.locator("#search-recovery")).toContainText(
-    "Complete results are unavailable",
+    "tam sonuç getirilemiyor",
   );
   await expect(page.locator("#search-recovery")).toContainText(
-    "metadata-work budget",
+    "işleme sınırını aştığı",
   );
   await expect(page.locator("#search-recovery")).toContainText(
-    "No partial results",
+    "Kısmi sonuç gösterilmez.",
   );
   await expect(
-    page.getByRole("button", { name: "Use Words & filters" }),
+    page.getByRole("button", { name: "Sözcükler ve filtreleri kullan" }),
   ).toBeHidden();
   await expect(page.locator("#results article")).toHaveCount(0);
   await expect(page.locator("#result-total")).toBeEmpty();
@@ -251,7 +255,7 @@ test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results an
   });
   budgetExceeded = false;
   await page.getByRole("button", { name: "Arşivde ara" }).click();
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
+  await expect(page.locator("#result-total")).toHaveText("1001 sonuç");
   await expect(page.locator("#search-recovery")).toBeHidden();
   expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
 });

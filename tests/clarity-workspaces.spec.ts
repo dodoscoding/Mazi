@@ -514,6 +514,10 @@ test("same-photo filters survive reload and keep original child links at narrow 
     await page.setViewportSize({ width: 320, height: 844 });
   const profile = await (await page.request.get("/api/session")).json();
   const group = profile.group_id;
+  const visible = await (
+    await page.request.get(`/api/discovery/matches?group=${group}`)
+  ).json();
+  expect(visible.total).toBeGreaterThanOrEqual(3);
   const atlas = await (
     await page.request.get(`/api/atlas?group=${group}`)
   ).json();
@@ -591,7 +595,7 @@ test("same-photo filters survive reload and keep original child links at narrow 
     await page.goto("/#/search?" + query);
     await expect(page.locator("#count")).toContainText("0 fotoğraf");
     await expect(page.locator(".photo-filters")).toContainText(
-      "görünür 3 fotoğrafın tamamı",
+      `görünür ${visible.total} fotoğrafın tamamı`,
     );
     await expect(page.locator("#date-scope")).toBeVisible();
     expect(
@@ -715,8 +719,13 @@ test("Gallery presentation controls retain failed matching authority until retry
 }, info) => {
   if (info.project.name === "phone")
     await page.setViewportSize({ width: 320, height: 844 });
+  const profile = await (await page.request.get("/api/session")).json();
+  const visible = await (
+    await page.request.get(`/api/discovery/matches?group=${profile.group_id}`)
+  ).json();
+  expect(visible.total).toBeGreaterThanOrEqual(3);
   await page.goto("/#/memories");
-  await expect(page.locator(".mem-tile")).toHaveCount(3);
+  await expect(page.locator(".mem-tile")).toHaveCount(visible.total);
   let failed = false;
   await page.route("**/api/discovery/matches?**", (route) => {
     if (failed) return route.continue();
@@ -763,7 +772,7 @@ test("Gallery presentation controls retain failed matching authority until retry
     .getByRole("button", { name: "Yeniden dene", exact: true })
     .click();
   await expect(page.locator("#grid-summary")).toHaveText(
-    "0 eşleşen fotoğraf · 3 görünür fotoğraf",
+    `0 eşleşen fotoğraf · ${visible.total} görünür fotoğraf`,
   );
   await expect(
     page.getByRole("heading", {

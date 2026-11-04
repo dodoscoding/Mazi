@@ -246,9 +246,14 @@ test("deletion removes reactions and source withdrawal clears the panel", async 
   await page.getByLabel("Yorum yaz", { exact: true }).fill("Özel taslak");
   expect((await page.request.post("/__test__/withdraw")).ok()).toBe(true);
   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-  await expect(page.locator(".native-conversation")).toContainText(
-    "Bu sohbet kullanılamıyor",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Anı bulunamadı", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".native-conversation")).toHaveCount(0);
+  await expect(
+    page.getByText("Kaynak çekilince gizlenecek", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator("textarea")).toHaveCount(0);
   await expect(page.locator(".native-comments article")).toHaveCount(0);
   await expect(page.locator(".native-conversation [aria-pressed]")).toHaveCount(
     0,
