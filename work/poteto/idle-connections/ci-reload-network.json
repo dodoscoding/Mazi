@@ -1,0 +1,42 @@
+{
+  "artifact": "PR 113 import-workspace desktop working-pages reload trace",
+  "sha256": "09dafde4e37880c71394e2ee77566fb09c740d18c1195b5c183ec160a1b58b73",
+  "network_entry": "1-trace.network",
+  "final_requests": [
+    {
+      "path": "/",
+      "status": 200,
+      "duration_ms": 11.259
+    },
+    {
+      "path": "/assets/index-CE2qptCW.css",
+      "status": 200,
+      "duration_ms": 17.066
+    },
+    {
+      "path": "/api/atlas",
+      "status": 200,
+      "duration_ms": 16.96
+    },
+    {
+      "path": "/api/memories/recap",
+      "status": 200,
+      "duration_ms": 16.322
+    },
+    {
+      "path": "/api/memories/stories",
+      "status": -1,
+      "duration_ms": -1
+    },
+    {
+      "path": "/theme.js",
+      "status": -1,
+      "duration_ms": -1
+    },
+    {
+      "path": "/assets/index-Cd5iyiHo.js",
+      "status": -1,
+      "duration_ms": -1
+    }
+  ]
+}

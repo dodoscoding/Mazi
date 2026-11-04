@@ -1,0 +1,43 @@
+[WebServer] (node:68972) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 20 tests using 1 worker
+
+(node:68980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/imports-workspace.spec.ts:5:1 › import workspace exposes source and file controls in both themes (767ms)
+
+  ✓   2 [desktop] › tests/imports-workspace.spec.ts:47:1 › a synthetic ZIP reaches the shared archive and reupload does not duplicate it (6.4s)
+  ✓   3 [desktop] › tests/imports-workspace.spec.ts:167:1 › workspace failure exposes keyboard retry and restores visible focus (363ms)
+  ✓   4 [desktop] › tests/imports-workspace.spec.ts:206:1 › working pages fit narrow and zoomed viewports in both themes (7.3s)
+  -   5 [desktop] › tests/imports-workspace.spec.ts:279:1 › phone memories preserves view and order with reachable touch controls
+
+  ✓   6 [desktop] › tests/imports-workspace.spec.ts:318:1 › interrupted transfers resume at the acknowledged offset after reload (2.4s)
+
+  ✓   7 [desktop] › tests/imports-workspace.spec.ts:408:3 › imports keeps an in-flight upload across hiding and returning (3.7s)
+  ✓   8 [desktop] › tests/imports-workspace.spec.ts:553:1 › circle retains its mounted state across visibility changes (118ms)
+  ✓   9 [desktop] › tests/imports-workspace.spec.ts:586:1 › imports mounts when opened in a hidden document (96ms)
+  ✓  10 [desktop] › tests/imports-workspace.spec.ts:604:1 › foreground session identity change clears retained imports (120ms)
+(node:69087) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 [phone] › tests/imports-workspace.spec.ts:5:1 › import workspace exposes source and file controls in both themes (807ms)
+
+  ✓  12 [phone] › tests/imports-workspace.spec.ts:47:1 › a synthetic ZIP reaches the shared archive and reupload does not duplicate it (6.7s)
+  ✓  13 [phone] › tests/imports-workspace.spec.ts:167:1 › workspace failure exposes keyboard retry and restores visible focus (384ms)
+  ✓  14 [phone] › tests/imports-workspace.spec.ts:206:1 › working pages fit narrow and zoomed viewports in both themes (8.8s)
+  ✓  15 [phone] › tests/imports-workspace.spec.ts:279:1 › phone memories preserves view and order with reachable touch controls (480ms)
+
+  ✓  16 [phone] › tests/imports-workspace.spec.ts:318:1 › interrupted transfers resume at the acknowledged offset after reload (2.7s)
+
+  ✓  17 [phone] › tests/imports-workspace.spec.ts:408:3 › imports keeps an in-flight upload across hiding and returning (3.9s)
+  ✓  18 [phone] › tests/imports-workspace.spec.ts:553:1 › circle retains its mounted state across visibility changes (113ms)
+  ✓  19 [phone] › tests/imports-workspace.spec.ts:586:1 › imports mounts when opened in a hidden document (93ms)
+  ✓  20 [phone] › tests/imports-workspace.spec.ts:604:1 › foreground session identity change clears retained imports (125ms)
+
+  1 skipped
+  19 passed (47.1s)

@@ -1,0 +1,26 @@
+test_abandoned_stream_disconnects_its_store (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_abandoned_stream_disconnects_its_store) ... ok
+test_drain_disconnects_its_store_before_releasing_worker_lock (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_drain_disconnects_its_store_before_releasing_worker_lock) ... ok
+test_handler_eviction_closes_its_owned_store (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_handler_eviction_closes_its_owned_store) ... ok
+test_old_request_cannot_evict_a_new_handler_after_a_drain (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_old_request_cannot_evict_a_new_handler_after_a_drain) ... ok
+test_success_and_failure_disconnect_under_the_request_lock (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_success_and_failure_disconnect_under_the_request_lock) ... ok
+test_unavailable_is_sanitized_503_without_authentication_loss (tests.backend.test_vercel_bridge.ConnectionLeaseTests.test_unavailable_is_sanitized_503_without_authentication_loss) ... ok
+test_budget_reports_pending_work (tests.backend.test_vercel_bridge.DrainBudgetTests.test_budget_reports_pending_work) ... ok
+test_busy_archive_backs_off_without_reconciling (tests.backend.test_vercel_bridge.DrainBudgetTests.test_busy_archive_backs_off_without_reconciling) ... ok
+test_idle_queue_reconciles_once (tests.backend.test_vercel_bridge.DrainBudgetTests.test_idle_queue_reconciles_once) ... ok
+test_cron_get_requires_the_bearer_secret (tests.backend.test_vercel_bridge.VercelBridgeTests.test_cron_get_requires_the_bearer_secret) ... ok
+test_health_and_unknown_api_route (tests.backend.test_vercel_bridge.VercelBridgeTests.test_health_and_unknown_api_route) ... ok
+test_json_post_sets_session_cookie (tests.backend.test_vercel_bridge.VercelBridgeTests.test_json_post_sets_session_cookie) ... ok
+test_large_body_streams_before_the_handler_finishes (tests.backend.test_vercel_bridge.VercelBridgeTests.test_large_body_streams_before_the_handler_finishes) ... ok
+test_sequential_work_requests_reuse_the_inventory_session (tests.backend.test_vercel_bridge.VercelBridgeTests.test_sequential_work_requests_reuse_the_inventory_session) ... ok
+test_signed_in_post_drains_a_queued_import (tests.backend.test_vercel_bridge.VercelBridgeTests.test_signed_in_post_drains_a_queued_import) ... ok
+test_thread_worker_mode_never_drains (tests.backend.test_vercel_bridge.VercelBridgeTests.test_thread_worker_mode_never_drains) ... ok
+test_unexpected_failure_reconnects_the_store (tests.backend.test_vercel_bridge.VercelBridgeTests.test_unexpected_failure_reconnects_the_store) ... ok
+test_unknown_method_and_handler_failure (tests.backend.test_vercel_bridge.VercelBridgeTests.test_unknown_method_and_handler_failure) ... ok
+test_expected_request_failures_keep_the_warm_worker (tests.backend.test_vercel_bridge.WorkerEvictionTests.test_expected_request_failures_keep_the_warm_worker) ... ok
+test_store_cleanup_failure_does_not_mask_the_original_failure (tests.backend.test_vercel_bridge.WorkerEvictionTests.test_store_cleanup_failure_does_not_mask_the_original_failure) ... ok
+test_unexpected_failure_closes_the_evicted_worker_store_once (tests.backend.test_vercel_bridge.WorkerEvictionTests.test_unexpected_failure_closes_the_evicted_worker_store_once) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.120s
+
+OK

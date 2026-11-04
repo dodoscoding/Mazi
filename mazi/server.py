@@ -7,7 +7,7 @@ from mazi.http_origin import validate_origin
 from mazi.persistence import ArchiveBusy
 import os
 import threading
-from http.server import HTTPServer
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
@@ -17,10 +17,33 @@ from .social.server import handler_for as social_handler
 from .sources.server import worker
 
 
-class AppServer(HTTPServer):
-    # One thread keeps the SQLite store safe; a deep backlog stops a page's
-    # parallel asset requests from being reset while one request is served.
+class AppServer(ThreadingHTTPServer):
     request_queue_size = 128
+
+    def __init__(self, server_address, handler, bind_and_activate=True):
+        self._dispatch_lock = threading.Lock()
+        self._closed = False
+        dispatch_lock = self._dispatch_lock
+
+        class SerializedHandler(handler):
+            def do_GET(self):
+                with dispatch_lock:
+                    if self.server._closed:
+                        return self.send_error(503, 'Server is closing')
+                    return super().do_GET()
+
+            def do_POST(self):
+                with dispatch_lock:
+                    if self.server._closed:
+                        return self.send_error(503, 'Server is closing')
+                    return super().do_POST()
+
+        super().__init__(server_address, SerializedHandler, bind_and_activate)
+
+    def server_close(self):
+        with self._dispatch_lock:
+            self._closed = True
+            super().server_close()
 
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
