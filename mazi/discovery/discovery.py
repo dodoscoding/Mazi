@@ -5,8 +5,9 @@ mutations. Vectors are derivatives, never an authorization source.
 """
 from mazi.archive.export import ExportArray
 from mazi.archive.photo_context import SharingContext, hidden_event_assets
-from mazi.archive.photo_metadata import matches_dates, resolve_photo
+from mazi.archive.photo_metadata import resolve_photo
 
+from .photo_filters import PhotoFilter
 import hashlib
 from mazi.persistence import initialize_schema, insertion_order
 
@@ -638,7 +639,7 @@ class DiscoveryStore(SourceStore):
         if bounded_metadata and time.perf_counter() - started > scan_seconds:
             raise CapacityExceeded('Words & filters exceeded the local metadata scan time budget')
 
-    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, bounded_metadata=True, shared_by='', date_basis=''):
+    def _keyword_search(self, user, group, query='', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, bounded_metadata=True, shared_by='', date_basis='', photo_filters=None, collect=False):
         self._member(user, group)
         if similar and not self.db.execute('''SELECT 1 FROM archive_assets a
                 WHERE a.id=? AND a.group_id=?
@@ -661,32 +662,32 @@ class DiscoveryStore(SourceStore):
                         NOT EXISTS (SELECT 1 FROM discovery_processing p WHERE p.group_id=a.group_id AND p.subject=n.actor_id AND p.enabled<>0)
                         OR NOT EXISTS (SELECT 1 FROM members m WHERE m.group_id=a.group_id AND m.user_id=n.actor_id)))
                 ))))''', (group, user))
-        total, items = 0, []
+        total, items, matched = 0, [], []
+        predicate = PhotoFilter(self, user, group, person=person, place=place, country=country, source=source, shared_by=shared_by, start=start, end=end, date_basis=date_basis, **(photo_filters or {}))
         source_counts, sharer_counts = Counter(), Counter()
         words, objects = query.casefold().split(), model.terms(object_query)
-        for doc in self._keyword_documents(user, group, person, started, bounded_metadata=bounded_metadata):
+        for doc in self._keyword_documents(user, group, "", started, bounded_metadata=bounded_metadata):
             source_counts.update(doc['sources'])
             sharer_counts.update(doc['shared_by'])
-            if shared_by and shared_by not in doc['shared_by']:
-                continue
-            if person and not doc['person_match'] or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
-                continue
-            if country and country.upper() not in doc['countries']:
-                continue
-            if source and source not in doc['sources'] or not matches_dates(doc['evidence'], date_basis, start, end, doc['date']):
+            predicate.count(doc)
+            if not predicate.matches(doc):
                 continue
             if object_query and not objects <= model.terms(doc['content']):
                 continue
             if query and not all(word in doc['content'].casefold() for word in words):
                 continue
-            if offset <= total < offset + limit:
+            if collect:
+                matched.append(doc["id"])
+            elif offset <= total < offset + limit:
                 items.append(dict(id=doc['id'], title=doc['title'], date=doc['date'], place=doc['place'],
                                   sources=sorted(doc['sources']), shared_by=sorted(doc['shared_by']),
                                   score=1.0, basis='keyword / filters', people=[], assetId=doc['id'], evidence=doc['evidence']))
             total += 1
+        if collect:
+            return dict(asset_ids=matched, total=total, photo_facets=predicate.facets(), facets=facets(source_counts, sharer_counts))
         self._hydrate_people(user, group, items)
         self._attach_photo_labels(group, items)
-        return dict(items=items, total=total, next_offset=offset + limit if offset + limit < total else None,
+        return dict(items=items, total=total, photo_facets=predicate.facets(), next_offset=offset + limit if offset + limit < total else None,
                     facets=facets(source_counts, sharer_counts),
                     mode='keyword / filters', model=None, unindexed=0, message=self.encoder.message)
 
@@ -703,8 +704,19 @@ class DiscoveryStore(SourceStore):
                     ORDER BY p.name,p.id''' % ','.join('?' for _ in page), (group, *page)):
                 page[row['asset']]['people'].append(dict(id=row['id'], name=row['name'], is_me=row['account'] == user,
                                                        can_remove=row['actor'] == user or row['creator'] == user))
-    def search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, shared_by='', date_basis=''):
-        for value in (query, person, place, country, object_query, start, end, source, similar, shared_by):
+    def search(self, user, group, **filters):
+        if any(key.startswith('_') for key in filters):
+            raise ValueError('Invalid search parameter')
+        return self._search(user, group, **filters)
+
+    def photo_matches(self, user, group, **filters):
+        if any(key.startswith('_') for key in filters) or filters.get('mode', 'keyword') != 'keyword':
+            raise ValueError('Gallery supports words and filters')
+        return self._search(user, group, _all_ids=True, **filters)
+
+    def _search(self, user, group, query='', mode='keyword', person='', place='', country='', object_query='', start='', end='', source='', similar='', offset=0, limit=30, shared_by='', date_basis='', people_present='', screenshot='', ai='', years='', places='', uncertain='', _all_ids=False):
+        photo_filters = dict(people_present=people_present, screenshot=screenshot, ai=ai, years=years, places=places, uncertain=uncertain)
+        for value in (query, place, country, object_query, start, end, similar):
             text(value)
         if mode not in ('keyword', 'semantic') or date_basis not in ('', 'capture', 'shared', 'chronology') or type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError('Invalid search')
@@ -723,7 +735,7 @@ class DiscoveryStore(SourceStore):
                     LIMIT 1001''', (group, user)).fetchall()
                 return self._keyword_search(user, group, query, person, place, country, object_query,
                                             start, end, source, similar, offset, limit,
-                                            bounded_metadata=len(probe) > 1000, shared_by=shared_by, date_basis=date_basis)
+                                            bounded_metadata=len(probe) > 1000, shared_by=shared_by, date_basis=date_basis, photo_filters=photo_filters, collect=_all_ids)
             hidden = hidden_event_assets(self, user, group)
             visible = [asset for asset in self._visible_ids(user, group) if asset not in hidden]
             large = len(visible) > 1000
@@ -731,7 +743,7 @@ class DiscoveryStore(SourceStore):
                 raise CapacityExceeded('Local related search supports up to 10,000 visible photographs')
             started = time.perf_counter()
             people = [] if large else self.people(user, group)
-            person_assets = next((set(p['assets']) for p in people if p['id'] == person), set())
+            predicate = PhotoFilter(self, user, group, person=person, place=place, country=country, source=source, shared_by=shared_by, start=start, end=end, date_basis=date_basis, **photo_filters)
             semantic = mode == 'semantic' and self._enabled(group, '*') and self.encoder.ready
             try:
                 query_vector = self.encoder.text_vector(query) if semantic and query else None
@@ -760,7 +772,7 @@ class DiscoveryStore(SourceStore):
             result = []
             source_counts, sharer_counts = Counter(), Counter()
             context = SharingContext(self, user, group, started, DISCOVERY_SCAN_SECONDS, bounded=large)
-            documents = (self._keyword_documents(user, group, person, started, processing=True) if large
+            documents = (self._keyword_documents(user, group, "", started, processing=True) if large
                          else (self._document(user, asset, context) for asset in visible))
             for doc in documents:
                 asset = doc['id']
@@ -770,13 +782,8 @@ class DiscoveryStore(SourceStore):
                     self.db.execute('DELETE FROM discovery_vectors WHERE asset=?', (asset,))
                 source_counts.update(doc['sources'])
                 sharer_counts.update(doc['shared_by'])
-                if shared_by and shared_by not in doc['shared_by']:
-                    continue
-                if person and (not doc['person_match'] if large else asset not in person_assets) or place and not any(place.casefold() in city.casefold() for city in doc['cities']):
-                    continue
-                if country and country.upper() not in doc['countries']:
-                    continue
-                if source and source not in doc['sources'] or not matches_dates(doc['evidence'], date_basis, start, end, doc['date']):
+                predicate.count(doc)
+                if not predicate.matches(doc):
                     continue
                 if object_query and not model.terms(object_query) <= model.terms(doc['content']):
                     continue  # Explicit text concepts, never inferred objects/faces.
@@ -805,7 +812,7 @@ class DiscoveryStore(SourceStore):
             if large:
                 self._hydrate_people(user, group, page)
             self._attach_photo_labels(group, page)
-            return dict(items=page, total=len(result), next_offset=offset + limit if offset + limit < len(result) else None,
+            return dict(items=page, total=len(result), photo_facets=predicate.facets(), next_offset=offset + limit if offset + limit < len(result) else None,
                         facets=facets(source_counts, sharer_counts),
                         mode=self.encoder.label if semantic else 'keyword / filters', model=self.encoder.version if semantic else None, unindexed=unindexed, message=self.encoder.message)
 
