@@ -83,7 +83,10 @@ class HostedReactionsTests(unittest.TestCase):
         with self.store.transaction():
             self.store.db.execute('SET LOCAL enable_seqscan=off')
             details = ' '.join(item[0] for item in self.store.db.execute('EXPLAIN SELECT id FROM social_reactions WHERE group_id=? AND photo_id=? AND active=1', (self.group, self.asset)))
-            self.assertIn('social_reactions_photo_member', details)
+            self.assertTrue(any(index in details for index in ('social_reactions_photo_member', 'social_reactions_activity')), details)
+            self.assertIn('Index Cond:', details)
+            self.assertIn('group_id', details)
+            self.assertIn('photo_id', details)
         for table in ('social_reactions', 'social_reaction_deletions'):
             self.assertTrue(self.store.db.execute('SELECT relrowsecurity FROM pg_class WHERE oid=(current_schema()||\'.\'||?)::regclass', (table,)).fetchone()[0])
             for role in ('anon', 'authenticated'):
