@@ -1,0 +1,9 @@
+test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit) ... {"connect_seconds": 0.275, "thread": "MainThread", "outcome": "ok"}
+{"connect_seconds": 30.246, "thread": "MainThread", "outcome": "ok"}
+{"connect_seconds": 0.274, "thread": "MainThread", "outcome": "ok"}
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 35.125s
+
+OK
