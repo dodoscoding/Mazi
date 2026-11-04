@@ -14,3 +14,11 @@ class JsonResponseTests(unittest.TestCase):
                  'facts': [None, True, False, 3, -1.25, {'nested': []}]}
         handler.json(200, value, cookie='mazi_session=synthetic')
         self.assertEqual(sent, [(200, json.dumps(value).encode(), {'cookie': 'mazi_session=synthetic'})])
+
+    def test_encoding_failure_does_not_send_headers_or_partial_response(self):
+        handler = object.__new__(handler_for(None))
+        sent = []
+        handler.send = lambda *args, **options: sent.append((args, options))
+        with self.assertRaises(TypeError):
+            handler.json(200, {'prefix': 'encoded first', 'unsupported': object()})
+        self.assertEqual(sent, [])
