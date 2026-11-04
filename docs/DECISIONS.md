@@ -139,7 +139,17 @@ Engineering selected a dedicated `/explore` directory over permanent secondary n
 
 Atlas moves to `/atlas` with its map, Replay, date controls and place correction intact. Legacy root links carrying `selected` or `view=portal` still resolve to Atlas. Existing memory/photo/notebook URLs, browser history, sample mode and `/places` Discord callbacks remain compatible. Section queries reach the actual People, stories, recap, capsule and source controls. `/people` and `/settings`, including hash links, replace their own history entry with the confirmed People section and the visible Grup ayarları section. Source management belongs to Grubumuz, while place review belongs to Keşfet. Memory detail belongs to Keşfet; browser history determines its contextual return.
 
-This changes navigation and presentation, not storage, access, metadata semantics or processing consent. D24 background retention remains applicable. Comments, reactions, events and content classifiers remain later increments. [N1 evidence](../work/poteto/social-navigation/VERIFICATION.md) records the simpler Home, grouped directory and repaired legacy entries. [Implementation evidence](../work/poteto/interface-clarity/VERIFICATION.md) records synthetic checks and remaining limits; it does not close production milestones or authorize a new deployment.
+This changes navigation and presentation, not storage, access, metadata semantics or processing consent. D24 background retention remains applicable. Comments, reactions and content classifiers remain later increments. P1 adds independent group plans and attendance. [N1 evidence](../work/poteto/social-navigation/VERIFICATION.md) records the simpler Home, grouped directory and repaired legacy entries. [Implementation evidence](../work/poteto/interface-clarity/VERIFICATION.md) records synthetic checks and remaining limits; it does not close production milestones or authorize a new deployment.
+
+On 4 November 2026, P1 extends Ekle into a menu with Fotoğraf veya arşiv and Buluşma planla. Grubumuz exposes Planlar. A plan detail link carries its group and stable plan ID, and rechecks the current circle. The route loads independently of Atlas so an empty group can arrange its first meeting. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records the two-profile desktop/phone journey and remaining acceptance limits.
+
+## Social feature bundle budget, 4 November 2026
+
+**D27: Keep the initial script limit and budget the optional social code.** The authorized social-space implementation adds plans, manual labels, conversations, filters and bounded Home reads. The combined plans and labels candidate measures 401.8 KiB gzip across scripts, exceeding the earlier 400 KiB total ceiling by 1.8 KiB. Its entry script is 149.1 KiB and its stylesheet is 36.9 KiB, both within their existing limits.
+
+Allocate 420 KiB gzip for total scripts in this increment. Keep entry JavaScript at 150 KiB, CSS at 40 KiB and the Globe chunk at 256 KiB. No new UI dependency is authorized by this decision. Load optional editors and social tools on use. Do not increase a primary limit to absorb feature growth. [Measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) records the candidate and commands.
+
+The final combined release must pass all bundle gates. H1 must also prove that initial Home requests neither Atlas nor a notebook per card. This is a delegated engineering budget decision, not evidence of hosted latency, physical-phone acceptance or a production milestone.
 
 ## Open choices
 

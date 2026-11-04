@@ -33,6 +33,10 @@ END;
 
 
 class MemoryStore(AdvancedMixin, AnswerStore):
+    def _attach_photo_labels(self, group, photos):
+        from mazi.social.labels import attach_summaries
+        attach_summaries(self, group, photos)
+
     def __init__(self, root, encoder=None):
         super().__init__(root, encoder)
         initialize_schema(self.db, SCHEMA)

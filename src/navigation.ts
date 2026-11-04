@@ -119,6 +119,12 @@ export const routeAliases: Readonly<Record<string, string>> = {
 
 export const groupDestinations: readonly Destination[] = [
   {
+    path: "/circle?section=plans",
+    label: "Planlar",
+    description:
+      "Bir buluşma planla, katılımını bildir ve grubunla bir araya gel.",
+  },
+  {
     path: "/imports",
     label: "İçe aktarmalar",
     description: "Fotoğraf ekle, arşiv aktar ve aktarma geçmişini gör.",

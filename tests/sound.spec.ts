@@ -81,7 +81,7 @@ async function soundToggle(page: Page) {
   if ((await account.getAttribute("aria-expanded")) !== "true")
     await account.click();
   return page
-    .locator(".menu-popover")
+    .locator(".account-menu .menu-popover")
     .getByRole("button", { name: "Sound", exact: true });
 }
 

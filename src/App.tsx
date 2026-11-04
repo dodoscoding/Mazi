@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
 import { Browse } from "./Browse";
@@ -17,6 +24,8 @@ import { useArchive } from "./useArchive";
 import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
 import { useWorkDrain } from "./useWorkDrain";
+
+const Plans = lazy(() => import("./social/Plans"));
 
 export default function App() {
   const discordReturn = useRef(createDiscordReturn(location.search));
@@ -145,6 +154,24 @@ export default function App() {
         openLink={openLink}
       />
     );
+  else if (
+    route.path === "/circle" &&
+    new URLSearchParams(route.search).get("section") === "plans"
+  )
+    content =
+      archive.status !== "ready" ? (
+        <ArchiveStatus archive={archive} heading={heading} />
+      ) : (
+        <Suspense fallback={<p role="status">Planlar açılıyor…</p>}>
+          <Plans
+            key={`${profile?.user_id}:${archive.group}:${route.search}`}
+            group={archive.group || profile?.group_id || ""}
+            search={route.search}
+            demo={demo}
+            navigate={navigate}
+          />
+        </Suspense>
+      );
   else if (isFeaturePath(route.path, demo))
     content = (
       <FeaturePage

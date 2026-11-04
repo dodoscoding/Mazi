@@ -56,7 +56,7 @@ test("the theme renders without storage", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("the phone has three tabs, one-tap Add and reachable account help", async ({
+test("the phone has three tabs, reachable Add choices and reachable account help", async ({
   page,
 }) => {
   test.skip(!isPhone(page), "The tab bar is the phone navigation.");
@@ -72,7 +72,11 @@ test("the phone has three tabs, one-tap Add and reachable account help", async (
   ]);
   await page
     .locator(".site-header")
-    .getByRole("link", { name: "Ekle", exact: true })
+    .getByRole("button", { name: "Ekle", exact: true })
+    .click();
+  await page
+    .getByRole("navigation", { name: "Ekle seçenekleri" })
+    .getByRole("link", { name: "Fotoğraf veya arşiv", exact: true })
     .click();
   await expect(page).toHaveURL(/#\/imports/);
   await expect(
@@ -86,7 +90,7 @@ test("the phone has three tabs, one-tap Add and reachable account help", async (
   await expect(account).toBeFocused();
   await account.click();
   await page
-    .locator(".menu-popover")
+    .locator(".account-menu .menu-popover")
     .getByRole("link", { name: "Yardım ve gizlilik", exact: true })
     .click();
   await expect(page).toHaveURL(/#\/about/);
@@ -106,7 +110,7 @@ test("account controls are keyboard operable and Escape returns focus", async ({
   await button.focus();
   await page.keyboard.press("Enter");
   await expect(button).toHaveAttribute("aria-expanded", "true");
-  const menu = page.locator(".menu-popover");
+  const menu = page.locator(".account-menu .menu-popover");
   const about = menu.getByRole("link", {
     name: "Yardım ve gizlilik",
     exact: true,
@@ -150,7 +154,7 @@ test("a mouse click on account help lands even when clicks do not focus", async 
   await openHome(page);
   await page.getByRole("button", { name: "Hesap", exact: true }).click();
   const about = page
-    .locator(".menu-popover")
+    .locator(".account-menu .menu-popover")
     .getByRole("link", { name: "Yardım ve gizlilik", exact: true });
   await expect(about).toBeFocused();
   await about.evaluate((link) =>
@@ -167,7 +171,10 @@ test("the open account menu has no axe violations", async ({ page }) => {
   await page.getByRole("button", { name: "Hesap", exact: true }).click();
   await settled(page);
   expect(
-    (await new AxeBuilder({ page }).include(".menu-popover").analyze())
-      .violations,
+    (
+      await new AxeBuilder({ page })
+        .include(".account-menu .menu-popover")
+        .analyze()
+    ).violations,
   ).toEqual([]);
 });

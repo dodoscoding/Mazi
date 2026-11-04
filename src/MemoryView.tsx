@@ -39,6 +39,7 @@ import { Arrow } from "./ui/icons";
 import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
 
+const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
 const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
@@ -73,7 +74,9 @@ export function MemoryView({
   navigate: Navigate;
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
-  const [editing, setEditing] = useState<"capture_date" | "place" | null>(null);
+  const [editing, setEditing] = useState<
+    "capture_date" | "place" | "labels" | null
+  >(null);
   useEffect(() => setEditing(null), [group, memory.id, photo]);
   const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
   const reduced = useReducedMotion();
@@ -260,7 +263,24 @@ export function MemoryView({
                 ? "Yeri değiştir"
                 : "Yer ekle"}
             </button>
-            {editing && (
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("labels")}
+            >
+              Etiketleri düzenle
+            </button>
+            {editing === "labels" && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoLabels
+                  key={`${group}:${memory.photos[photoIndex].assetId}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
+            {editing && editing !== "labels" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoCorrection
                   key={`${group}:${memory.photos[photoIndex].assetId}:${editing}`}
