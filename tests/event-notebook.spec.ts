@@ -398,7 +398,7 @@ test("event title links open notes alongside imported excerpts and use event IDs
   await expect(
     page
       .locator(".featured")
-      .getByRole("link", { name: "View notes", exact: true }),
+      .getByRole("link", { name: "Notları aç", exact: true }),
   ).toBeVisible();
   await title.click();
   await expect(page.locator("#notebook-heading")).toBeFocused();
@@ -471,14 +471,14 @@ test("standalone photographs and sample mode never load private recollections", 
   await expect(
     page
       .locator(".featured")
-      .getByRole("link", { name: "View notes", exact: true }),
+      .getByRole("link", { name: "Notları aç", exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page.locator(".dossier")).toBeVisible();
   await expect(
     page
       .locator(".dossier")
-      .getByRole("link", { name: "View notes", exact: true }),
+      .getByRole("link", { name: "Notları aç", exact: true }),
   ).toHaveCount(0);
   expect(requests).toBe(0);
 });

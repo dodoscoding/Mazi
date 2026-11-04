@@ -16,7 +16,7 @@ test("select, open, explore photos and context; Back restores selection and focu
   page,
 }) => {
   await page.goto("/?demo=1#/atlas");
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();
@@ -26,14 +26,14 @@ test("select, open, explore photos and context; Back restores selection and focu
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeFocused();
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show conversation" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Back", exact: true }).click();
-  await expect(page.getByRole("link", { name: "Open memory" })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Anıyı aç" })).toBeFocused();
   await expect(
     page.getByRole("button", { name: "Select The last ferry" }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -44,11 +44,13 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
 }) => {
   await page.goto("/?demo=1#/memory/last-ferry");
   await expect(
-    page.getByRole("button", { name: "Previous photo" }),
+    page.getByRole("button", { name: "Önceki fotoğraf" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Next photo" }).click();
-  await page.getByRole("button", { name: "Next photo" }).click();
-  await expect(page.getByRole("button", { name: "Next photo" })).toBeDisabled();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await expect(
+    page.getByRole("button", { name: "Sonraki fotoğraf" }),
+  ).toBeDisabled();
   await page.getByRole("link", { name: "Back", exact: true }).click();
   await page.goBack();
   await expect(
@@ -70,7 +72,7 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1#/atlas");
   for (let i = 0; i < 3; i++) {
-    await page.getByRole("button", { name: "Select Lake days" }).click();
+    await page.getByRole("button", { name: "Lake days anısını seç" }).click();
     await page.getByRole("button", { name: "Select The last ferry" }).click();
     await openFullMemory(page);
     await page.getByRole("link", { name: "Back", exact: true }).click();
@@ -102,8 +104,10 @@ test("failed images are recoverable and renderer failure preserves the journey",
   await page.getByRole("button", { name: "Retry photo" }).click();
   await expect(page.locator(".photo-frame img")).toBeVisible();
   await page.getByRole("link", { name: "Back", exact: true }).click();
-  await expect(page.getByText("The atlas is in flat view.")).toBeVisible();
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await expect(
+    page.getByText("Atlas düz haritada gösteriliyor."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   await openFullMemory(page);
   await expect(page).toHaveURL(/memory\/lake-days/);
   await expect(

@@ -91,7 +91,7 @@ test("a timeline with nothing dated says so instead of printing undefined", asyn
   ]);
   const subtitle = host.querySelector(".browse-sub").textContent;
   assert.doesNotMatch(subtitle, /undefined/);
-  assert.match(subtitle, /^1 moment, none dated yet\./);
+  assert.match(subtitle, /^1 anı · Henüz tarih bilinmiyor\./);
 });
 
 test("a memory with one undated photo keeps the year of its dated photos", async (t) => {
@@ -103,7 +103,7 @@ test("a memory with one undated photo keeps the year of its dated photos", async
   ]);
   assert.match(
     host.querySelector(".browse-sub").textContent,
-    /^1 moment in 2024\./,
+    /^1 anı · 2024\./,
   );
   assert.equal(
     host.querySelector("[data-memory-id='trip']").closest("li[data-year]")
