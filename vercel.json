@@ -68,6 +68,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/memory/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/memories",
       "destination": "/index.html"
     },
