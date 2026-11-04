@@ -145,4 +145,10 @@ The backend includes bounded list/detail reads, transactional retry protection, 
 
 The C1 comments backend gives each permanent photo and fully visible approved memory its own flat conversation. A member may write separate messages, edit their own message with version checks or remove it. Creation time belongs to the server and remains unchanged when text is edited. Lists page by creation time and stable identity. Current target visibility, active authors, request replay and deletion tombstones apply consistently to text, totals and authored export.
 
-[The comment API](CONTRACTS.md#photo-and-approved-memory-comments-api) is implemented for SQLite and hosted PostgreSQL. [The privacy policy](PRIVACY.md#native-conversation-contributions) distinguishes current-ledger restoration checks from a full stale-backup recovery guarantee. Notebook recollections remain unchanged. Reactions, browser conversation controls, draft handling and social Home remain pending delivery slices.
+[The comment API](CONTRACTS.md#photo-and-approved-memory-comments-api) is implemented for SQLite and hosted PostgreSQL. [The privacy policy](PRIVACY.md#native-conversation-contributions) distinguishes current-ledger restoration checks from a full stale-backup recovery guarantee. Notebook recollections remain unchanged. Browser conversation and reaction controls, draft handling and social Home remain pending delivery slices.
+
+## Native reactions backend
+
+The C1 backend lets a current member set or remove a reaction from the closed set `👍`, `❤️`, `😂`, `🎉` on a visible permanent photo, approved memory or native comment. It returns current counts, the member's own state and bounded current member-name lists. Desired-state writes and retained request receipts prevent duplicate taps and delayed retries from changing a later choice.
+
+[The reaction API](CONTRACTS.md#native-reactions-api) includes a bounded, fully authorized batch read for conversation pages. SQLite and hosted storage enforce uniqueness, group relationships, departure cleanup and comment-delete cascades. Reaction tombstones suppress stale rows while the current deletion ledger is retained. Authored export participates in the existing final admission checks. Notebook recollections and imported source reactions remain unchanged. Browser reaction controls and social Home remain pending delivery slices.
