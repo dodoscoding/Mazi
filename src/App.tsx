@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
+import { RouteBoundary } from "./RouteBoundary";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
 import { createDiscordReturn } from "./features/discordReturn";
@@ -304,7 +305,9 @@ export default function App() {
           void entry.logout();
         }}
       >
-        {content}
+        <RouteBoundary key={`${profile?.user_id}:${route.path}`}>
+          {content}
+        </RouteBoundary>
       </Shell>
     );
   return (

@@ -44,7 +44,7 @@ type Featured =
 type Home = {
   featured: Featured | null;
   activity: ActivityPage;
-  server_time: number;
+  server_time: string;
   can_plan: boolean;
 };
 type State =
@@ -148,6 +148,9 @@ export default function SocialHome({
       document.removeEventListener("visibilitychange", visible);
     };
   }, [group, activity]);
+  useEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [activity]);
   const rows = (items: Activity[]) => (
     <ol className="social-activity">
       {items.map((item) => (

@@ -13,7 +13,8 @@ type Props = Omit<
   search: string;
 };
 type State =
-  { kind: "loading" | "denied" | "error" } | { kind: "ready"; memory: Memory };
+  | { kind: "loading" | "denied" | "error" }
+  | { kind: "ready"; memory: Memory; error?: string };
 export default function SelectedMemory({
   id,
   memory,
@@ -25,7 +26,9 @@ export default function SelectedMemory({
   const retry = () => setVersion((value) => value + 1);
   useEffect(() => {
     const request = new AbortController();
-    setState({ kind: "loading" });
+    setState((previous) =>
+      previous.kind === "ready" ? previous : { kind: "loading" },
+    );
     const clear = () => {
       request.abort();
       setState({ kind: "denied" });
@@ -33,7 +36,12 @@ export default function SelectedMemory({
     const events = ["mazi:access-lost", "mazi:session", "mazi:group"];
     events.forEach((event) => window.addEventListener(event, clear));
     const refresh = () => retry();
+    const visible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
     window.addEventListener("mazi:archive-changed", refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", visible);
     void (async () => {
       if (props.demo) {
         setState(memory ? { kind: "ready", memory } : { kind: "denied" });
@@ -56,17 +64,28 @@ export default function SelectedMemory({
           memory: { ...value.memory, place: evidencePin(value.memory) },
         });
       } catch {
-        if (!request.signal.aborted) setState({ kind: "error" });
+        if (!request.signal.aborted)
+          setState((previous) =>
+            previous.kind === "ready"
+              ? { ...previous, error: "Anı yeniden kontrol edilemedi." }
+              : { kind: "error" },
+          );
       }
     })();
     return () => {
       request.abort();
       events.forEach((event) => window.removeEventListener(event, clear));
       window.removeEventListener("mazi:archive-changed", refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", visible);
     };
   }, [id, props.group, props.demo, memory, version]);
   useEffect(() => {
-    if (state.kind === "ready")
+    if (
+      state.kind === "ready" &&
+      !props.notebook &&
+      !new URLSearchParams(search).has("discussion")
+    )
       props.heading.current?.focus({ preventScroll: true });
   }, [state.kind]);
   const discussion = new URLSearchParams(search).get("discussion");
@@ -86,14 +105,24 @@ export default function SelectedMemory({
     );
   if (state.kind !== "ready") return null;
   return (
-    <MemoryView
-      {...props}
-      memory={state.memory}
-      discussion={
-        discussion === "photo" || discussion === "memory"
-          ? discussion
-          : undefined
-      }
-    />
+    <>
+      {state.error && (
+        <p role="alert">
+          {state.error}{" "}
+          <button className="button button--secondary" onClick={retry}>
+            Yeniden dene
+          </button>
+        </p>
+      )}
+      <MemoryView
+        {...props}
+        memory={state.memory}
+        discussion={
+          discussion === "photo" || discussion === "memory"
+            ? discussion
+            : undefined
+        }
+      />
+    </>
   );
 }

@@ -194,3 +194,78 @@ test("paged activity retries its exact cursor and preserves an explicit continua
   assert.match(h.host.textContent, /Bu aralıkta görünen bir haber yok/);
   assert.ok(find("Sonraki haberler"));
 });
+
+const selectedProps = {
+  id: "photo-asset",
+  group: "circle",
+  demo: false,
+  sessionKey: "alice",
+  search: "",
+  notebook: false,
+  photo: 0,
+  memories: [],
+  backUrl: "/",
+  link: () => () => {},
+  navigate() {},
+  heading: { current: null },
+};
+const photo = {
+  id: "photo-asset",
+  kind: "photo",
+  title: "Seçili fotoğraf",
+  shortTitle: "Seçili",
+  date: "Date not recorded",
+  year: null,
+  approximate: true,
+  by: "Alice",
+  description: "Sentetik fotoğraf",
+  source: "manual",
+  photos: [
+    {
+      src: "/synthetic.jpg",
+      alt: "Sentetik",
+      caption: "Sentetik",
+      assetId: "asset",
+    },
+  ],
+  messages: [],
+  place: null,
+  people: { shared: [], conversation: [] },
+  dateBasis: "undated",
+};
+test("a grouped photo detail reads only the explicit selected-memory endpoint", async (t) => {
+  const h = await mount(
+    t,
+    "/src/memory/SelectedMemory.tsx",
+    "default",
+    selectedProps,
+    async () => Response.json({ memory: photo }),
+  );
+  assert.match(h.host.textContent, /Seçili fotoğraf/);
+  assert.ok(
+    h.calls.every(
+      ({ path }) =>
+        path === "/api/atlas/memory?group=circle&memory=photo-asset",
+    ),
+  );
+});
+test("selected memory ignores a late private response after session disposal", async (t) => {
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const h = await mount(
+    t,
+    "/src/memory/SelectedMemory.tsx",
+    "default",
+    selectedProps,
+    async () => {
+      await gate;
+      return Response.json({ memory: photo });
+    },
+  );
+  await h.dispatch("mazi:session");
+  await act(async () => release());
+  assert.doesNotMatch(h.host.textContent, /Seçili fotoğraf/);
+  assert.match(h.host.textContent, /Anı bulunamadı/);
+});

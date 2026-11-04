@@ -188,7 +188,7 @@ export function MemoryView({
         <div className="detail-bar-start">
           <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
-            <span className="back-label">Back</span>
+            <span className="back-label">Geri</span>
             <kbd aria-hidden="true">Esc</kbd>
           </a>
           <p className="hud-label crumb">
@@ -220,16 +220,16 @@ export function MemoryView({
               notebookHeading.current?.scrollIntoView({ block: "start" });
             }}
           >
-            View notes <Glyph name="chevron-right" size={14} />
+            Notları aç <Glyph name="chevron-right" size={14} />
           </a>
         )}
         {moments.length > 1 && position >= 0 && (
-          <nav className="moments" aria-label="Other memories">
+          <nav className="moments" aria-label="Diğer anılar">
             <span className="hud-label">
-              Memory {position + 1} of {moments.length}
+              Anı {position + 1} / {moments.length}
             </span>
-            {momentLink(earlier, "Earlier memory", "chevron-left")}
-            {momentLink(later, "Later memory", "chevron-right")}
+            {momentLink(earlier, "Önceki anı", "chevron-left")}
+            {momentLink(later, "Sonraki anı", "chevron-right")}
           </nav>
         )}
         {memory.place && (
@@ -237,7 +237,7 @@ export function MemoryView({
             className="round-link globe-link"
             href={`#${atlasUrl}`}
             onClick={link(atlasUrl, true)}
-            aria-label="Show on the globe"
+            aria-label="Kürede göster"
           >
             <Glyph name="globe" size={18} />
           </a>
@@ -380,7 +380,7 @@ export function MemoryView({
                   href="#/review"
                   onClick={link("/review")}
                 >
-                  Review this archive
+                  Arşivi incele
                 </a>
                 {memory.kind === "memory" && (
                   <a
@@ -388,16 +388,16 @@ export function MemoryView({
                     href="#/memories"
                     onClick={link("/memories")}
                   >
-                    Write a shared story
+                    Ortak bir hikâye yaz
                   </a>
                 )}
               </div>
             )}
           </div>
-          <aside className="facts" aria-label="About this memory">
+          <aside className="facts" aria-label="Bu anı hakkında">
             <section className="fact" aria-labelledby="fact-when">
               <h2 id="fact-when" className="hud-label">
-                When
+                Ne zaman
               </h2>
               <p className="fact-value">{date}</p>
               {uncertain ? (
@@ -410,14 +410,14 @@ export function MemoryView({
                       </>
                     ) : (
                       <>
-                        <b>Date uncertain.</b> Not every photo has a confirmed
-                        date, so Mazi shows “About”. {basis}
+                        <b>Tarih belirsiz.</b> Her fotoğrafın tarihi doğrulanmış
+                        değil; bu nedenle yaklaşık tarih gösterilir. {basis}
                       </>
                     )}
                   </p>
                   {!demo && (
                     <a href="#/review" onClick={link("/review")}>
-                      Fix the date in Archive review
+                      Arşiv incelemesinde tarihi düzelt
                     </a>
                   )}
                 </div>
@@ -429,22 +429,22 @@ export function MemoryView({
               {memory.place && <Locator memory={memory} />}
               <div>
                 <h2 id="fact-where" className="hud-label">
-                  Where
+                  Nerede
                 </h2>
-                <p className="fact-value">{place || "No place recorded"}</p>
+                <p className="fact-value">{place || "Yer kaydedilmemiş"}</p>
                 {memory.place ? (
                   <a
                     className="text-link globe-text-link"
                     href={`#${atlasUrl}`}
                     onClick={link(atlasUrl, true)}
                   >
-                    Show on the globe
+                    Kürede göster
                   </a>
                 ) : (
                   <p className="fact-detail">
                     {hasEvidence
                       ? "Her fotoğrafın yeri kendi bilgi satırında gösterilir. Eksik veya çelişkili yerler haritada işaretlenmez."
-                      : "The photos disagree on a place, or none was recorded."}
+                      : "Fotoğrafların yerleri uyuşmuyor veya yer kaydedilmemiş."}
                   </p>
                 )}
               </div>
@@ -452,7 +452,7 @@ export function MemoryView({
             <People memory={memory} />
             <section className="fact" aria-labelledby="fact-sources">
               <h2 id="fact-sources" className="hud-label">
-                Source evidence
+                Kaynak bilgileri
               </h2>
               <ul className="sources">
                 {sourceRows(memory).map((row) => (
@@ -477,7 +477,7 @@ export function MemoryView({
                     <span className="source-text">
                       <b>
                         {item.sender
-                          ? `Shared by ${item.sender}`
+                          ? `Paylaşanlar ${item.sender}`
                           : "Source share"}
                       </b>
                       <span>
@@ -502,9 +502,9 @@ function Conversation({ memory }: { memory: Memory }) {
   if (!first) return null;
   return (
     <section className="conversation" aria-labelledby="conversation-heading">
-      <h2 id="conversation-heading">From the conversation</h2>
+      <h2 id="conversation-heading">Kaynak konuşmadan</h2>
       <p className="conversation-origin">
-        Imported excerpts, shared in the original conversation.
+        Özgün konuşmada paylaşılan, aktarılmış alıntılar.
       </p>
       <blockquote>
         <p>“{first.text}”</p>
@@ -522,7 +522,7 @@ function Conversation({ memory }: { memory: Memory }) {
             aria-controls="conversation-messages"
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? "Hide conversation" : "Show conversation"}
+            {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
             <span className="toggle-mark" aria-hidden="true">
               <Glyph name="chevron-right" size={16} />
             </span>
@@ -563,29 +563,29 @@ function People({ memory }: { memory: Memory }) {
   return (
     <section className="fact" aria-labelledby="fact-people">
       <h2 id="fact-people" className="hud-label">
-        People in the evidence
+        Kaynaklarda adı geçenler
       </h2>
       {shared.length === 0 &&
       conversation.length === 0 &&
       senders.length === 0 ? (
-        <p className="fact-detail">No one is named in the sources.</p>
+        <p className="fact-detail">Kaynaklarda kimsenin adı geçmiyor.</p>
       ) : (
         <dl className="people">
           {senders.length > 0 && (
             <div>
-              <dt>Shared by</dt>
+              <dt>Paylaşanlar</dt>
               <dd>{chips(senders)}</dd>
             </div>
           )}
           {shared.length > 0 && (
             <div>
-              <dt>{hasProvenance ? "Added to archive by" : "Shared by"}</dt>
+              <dt>{hasProvenance ? "Added to archive by" : "Paylaşanlar"}</dt>
               <dd>{chips(shared)}</dd>
             </div>
           )}
           {conversation.length > 0 && (
             <div>
-              <dt>In the conversation</dt>
+              <dt>Konuşmada adı geçenler</dt>
               <dd>{chips(conversation)}</dd>
             </div>
           )}
@@ -628,7 +628,7 @@ function RelatedMemories({
   return (
     <section className="related" aria-labelledby="related-heading">
       <h2 id="related-heading" className="hud-label">
-        Related memories
+        İlgili anılar
       </h2>
       <ul>
         {related.map(({ memory: item, why }) => (
@@ -668,22 +668,19 @@ export function MemoryNotFound({
         <Glyph name="compass" size={28} stroke={1.4} />
       </span>
       <h1 ref={heading} tabIndex={-1}>
-        Memory not found
+        Anı bulunamadı
       </h1>
-      <p>
-        This memory is unavailable, or you no longer have access to it. The rest
-        of your atlas is still here.
-      </p>
+      <p>Bu anı şu anda kullanılamıyor veya erişimin değişmiş olabilir.</p>
       <div className="not-found-actions">
         <a className="primary-action" href="#/" onClick={link("/")}>
-          Back <Arrow />
+          Geri <Arrow />
         </a>
         <a
           className="button button--ghost"
           href="#/timeline"
           onClick={link("/timeline")}
         >
-          Browse the timeline
+          Zaman çizelgesini aç
         </a>
       </div>
     </section>
