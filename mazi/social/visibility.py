@@ -14,4 +14,3 @@ def authorize_photos(store, user, group, assets):
     hidden = store.db.execute('SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE e.group_id=? AND h."user"=?', (group, user))
     if visible != set(assets) or any(visible.intersection(json.loads(row[0])) for row in hidden):
         raise Denied('Photograph unavailable')
-
