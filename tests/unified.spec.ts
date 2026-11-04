@@ -324,6 +324,18 @@ test("named profile imports and logout discard delayed private Atlas responses",
       })
     ).ok(),
   ).toBe(true);
+  expect(
+    (
+      await page.request.post("/api/review/event", {
+        data: {
+          group: firstGroup,
+          assets: timeline.items.map((item: { id: string }) => item.id),
+          title,
+          decision: "undo",
+        },
+      })
+    ).ok(),
+  ).toBe(true);
   await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
   releaseLogout();
