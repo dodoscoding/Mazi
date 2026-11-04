@@ -7,10 +7,11 @@ from mazi.identity.core import Conflict, Denied
 from mazi.discovery.discovery import text
 from mazi.answers.answers import AnswerStore
 from .advanced import AdvancedMixin, SCHEMA as ADVANCED_SCHEMA
-from mazi.social.schema import SCHEMA as SOCIAL_SCHEMA, COMMENT_SCHEMA, REACTION_SCHEMA
+from mazi.social.schema import SCHEMA as SOCIAL_SCHEMA, COMMENT_SCHEMA, REACTION_SCHEMA, LABEL_SCHEMA
 from mazi.social.social import export_social
 from mazi.social.conversations import export_comments
 from mazi.social.reactions import export_reactions
+from mazi.social.labels import export_labels
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS advanced_stories (
@@ -39,18 +40,21 @@ class MemoryStore(AdvancedMixin, AnswerStore):
         initialize_schema(self.db, SOCIAL_SCHEMA)
         initialize_schema(self.db, COMMENT_SCHEMA)
         initialize_schema(self.db, REACTION_SCHEMA)
+        initialize_schema(self.db, LABEL_SCHEMA)
 
     def _capture_export_metadata(self, user, group, ids, fingerprint):
         super()._capture_export_metadata(user, group, ids, fingerprint)
         export_social(self, user, group, fingerprint)
         export_comments(self, user, group, fingerprint)
         export_reactions(self, user, group, fingerprint)
+        export_labels(self, user, group, fingerprint)
 
     def _write_export_archive(self, user, group, ids, fingerprint, archive, output):
         super()._write_export_archive(user, group, ids, fingerprint, archive, output)
         export_social(self, user, group, fingerprint, archive)
         export_comments(self, user, group, fingerprint, archive)
         export_reactions(self, user, group, fingerprint, archive)
+        export_labels(self, user, group, fingerprint, archive)
 
     def _approved(self, user, group):
         self._member(user, group)

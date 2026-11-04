@@ -62,6 +62,23 @@ async function harness(t, boundary) {
   };
 }
 const groups = [{ id: "circle", name: "Our circle", role: "admin" }];
+const archivePhoto = (id) => ({
+  id,
+  kind: "photo",
+  shortTitle: "Synthetic photograph",
+  title: "Synthetic photograph",
+  date: "Date not recorded",
+  year: null,
+  approximate: true,
+  by: "Our circle",
+  description: "A synthetic archive photograph.",
+  source: "manual",
+  photos: [{ src: "/synthetic.jpg", alt: "Synthetic", caption: "Synthetic" }],
+  messages: [],
+  place: null,
+  people: { shared: [], conversation: [] },
+  dateBasis: "undated",
+});
 
 test("independent feature routes load circle context without requesting Atlas", async (t) => {
   const calls = [];
@@ -95,7 +112,7 @@ test("Atlas routes still load current memories and demo search remains local", a
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
   for (const path of ["/", "/timeline", "/memory/photo"]) {
@@ -120,13 +137,13 @@ test("leaving Atlas aborts and ignores late data; returning fetches again", asyn
       signal = options.signal;
       return pending.promise;
     }
-    return Response.json({ memories: [{ id: "fresh" }] });
+    return Response.json({ memories: [archivePhoto("fresh")] });
   });
   await h.render("/");
   await h.render("/imports");
   assert.equal(signal.aborted, true);
   await act(async () =>
-    pending.resolve(Response.json({ memories: [{ id: "stale" }] })),
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
   );
   assert.deepEqual(h.current.memories, []);
   assert.equal(calls, 1);
@@ -178,7 +195,7 @@ test("superseded loads abort and lost access cancels private work", async (t) =>
     signals.push(options.signal);
     if (++calls === 1) return pending.promise;
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("fresh")] },
     );
   });
   await h.render("/");
@@ -201,7 +218,7 @@ test("backgrounding keeps the loaded atlas and makes no requests", async (t) => 
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
   await h.render("/");
@@ -229,7 +246,7 @@ test("moving between Atlas and feature pages keeps the loaded atlas", async (t) 
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
   await h.render("/");
@@ -258,7 +275,7 @@ test("choosing another circle sticks and loads that circle", async (t) => {
     calls.push(String(path));
     if (path === "/api/groups") return Response.json(circles);
     const group = new URL(path, "http://localhost").searchParams.get("group");
-    return Response.json({ memories: [{ id: `${group}-photo` }] });
+    return Response.json({ memories: [archivePhoto(`${group}-photo`)] });
   });
   await h.render("/");
   assert.equal(h.current.group, "circle");
