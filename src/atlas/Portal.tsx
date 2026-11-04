@@ -59,7 +59,7 @@ export function Portal({
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  const where = memory.place ? memory.place.name : "No place recorded";
+  const where = memory.place ? memory.place.name : "Yer bilinmiyor";
   const moveSheet = (offset: number) => {
     if (sheet.current)
       sheet.current.style.transform = offset ? `translateY(${offset}px)` : "";
@@ -92,12 +92,12 @@ export function Portal({
           type="button"
           className="portal-back"
           onClick={onClose}
-          aria-label={phone ? "Back to the atlas" : undefined}
+          aria-label={phone ? "Atlas’a dön" : undefined}
         >
           <Icon name="chevron-right" size={14} className="is-back" />
           {!phone && (
             <>
-              Back to the atlas <kbd aria-hidden="true">Esc</kbd>
+              Atlas’a dön <kbd aria-hidden="true">Esc</kbd>
             </>
           )}
         </button>
@@ -112,7 +112,7 @@ export function Portal({
           <button
             type="button"
             className="dossier-handle"
-            aria-label="Close the memory summary"
+            aria-label="Anı özetini kapat"
             onClick={onClose}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
@@ -142,13 +142,13 @@ export function Portal({
         )}
         <div className="dossier-head">
           <span className="hud-label">
-            {memory.place ? coordinates(memory) : "No place recorded"}
+            {memory.place ? coordinates(memory) : "Yer bilinmiyor"}
           </span>
           <span className="dossier-steps">
             <button
               type="button"
               className="icon-button"
-              aria-label="Previous moment"
+              aria-label="Önceki anı"
               disabled={!hasPrevious}
               onClick={() => onStep(-1)}
             >
@@ -157,7 +157,7 @@ export function Portal({
             <button
               type="button"
               className="icon-button"
-              aria-label="Next moment"
+              aria-label="Sonraki anı"
               disabled={!hasNext}
               onClick={() => onStep(1)}
             >
@@ -190,14 +190,12 @@ export function Portal({
             {sourceSharing && <p>{sourceSharing}</p>}
             {memory.people.shared.length > 0 && (
               <p>
-                {provenance.length ? "Added to archive by" : "Shared by"}{" "}
+                {provenance.length ? "Arşive ekleyen" : "Paylaşan"}{" "}
                 {listNames(memory.people.shared)}
               </p>
             )}
             {memory.people.conversation.length > 0 && (
-              <p>
-                In the conversation: {listNames(memory.people.conversation)}
-              </p>
+              <p>Konuşmada: {listNames(memory.people.conversation)}</p>
             )}
           </div>
         )}
@@ -214,10 +212,10 @@ export function Portal({
           </div>
         )}
         <div className="dossier-sources">
-          <span className="hud-label">Gathered from</span>
+          <span className="hud-label">Kaynaklar</span>
           {provenanceOf(memory).map((item, index) => (
             <p key={`sharing-${index}`}>
-              {[item.sender ? `Shared by ${item.sender}` : "", shareDate(item)]
+              {[item.sender ? `Paylaşan ${item.sender}` : "", shareDate(item)]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
@@ -228,9 +226,9 @@ export function Portal({
                 <span>{sourceName(source)}</span>
                 {i === 0 && (
                   <span className="data">
-                    {plural(memory.photos.length, "photo")}
+                    {plural(memory.photos.length, "fotoğraf", "fotoğraf")}
                     {memory.messages.length
-                      ? ` · ${plural(memory.messages.length, "message")}`
+                      ? ` · ${plural(memory.messages.length, "mesaj", "mesaj")}`
                       : ""}
                   </span>
                 )}
@@ -238,11 +236,11 @@ export function Portal({
             ))
           ) : (
             <p>
-              <span>Added by {memory.by}</span>
+              <span>Ekleyen {memory.by}</span>
               <span className="data">
-                {plural(memory.photos.length, "photo")}
+                {plural(memory.photos.length, "fotoğraf", "fotoğraf")}
                 {memory.messages.length
-                  ? ` · ${plural(memory.messages.length, "message")}`
+                  ? ` · ${plural(memory.messages.length, "mesaj", "mesaj")}`
                   : ""}
               </span>
             </p>
@@ -253,7 +251,7 @@ export function Portal({
           href={`#/memory/${memory.id}`}
           onClick={onOpen}
         >
-          Open memory <kbd aria-hidden="true">↵</kbd>
+          Anıyı aç <kbd aria-hidden="true">↵</kbd>
         </a>
         {!demo && memory.kind === "memory" && (
           <a
@@ -261,7 +259,7 @@ export function Portal({
             href={`#/memory/${memory.id}?notebook=1`}
             onClick={onNotebook}
           >
-            View notes <Icon name="chevron-right" size={14} />
+            Notları aç <Icon name="chevron-right" size={14} />
           </a>
         )}
       </section>

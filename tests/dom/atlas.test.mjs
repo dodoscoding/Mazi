@@ -193,5 +193,5 @@ test("repeated scene failures remain usable in flat view with reload guidance", 
   assert.ok(h.$(".flat-map"));
   assert.equal(h.$(".scene-loading"), null);
   assert.equal(h.scene.calls, 2, "no automatic retry loop");
-  assert.match(h.$(".flat-note").textContent, /reload the page/i);
+  assert.match(h.$(".flat-note").textContent, /sayfayı yenile/i);
 });

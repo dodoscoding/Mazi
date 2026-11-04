@@ -1,11 +1,11 @@
 import type { Page } from "@playwright/test";
 
-/** Open memory dives into the Atlas portal; the dossier's Open memory reaches the full memory. */
+/** Anıyı aç dives into the Atlas portal; the dossier's Anıyı aç reaches the full memory. */
 export async function openFullMemory(page: Page) {
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
 }
 

@@ -59,39 +59,36 @@ export function ArchiveStatus({
   return (
     <section className="atlas-home atlas-status-page">
       <h1 ref={heading} tabIndex={-1} className="visually-hidden">
-        The Atlas of Us
+        Atlas
       </h1>
       <div className="status-globe" aria-hidden="true" />
       {archive.status === "loading" ? (
         <div className="atlas-loading" role="status">
           <span className="loading-ring" aria-hidden="true" />
-          <span className="hud-label">Loading the atlas</span>
+          <span className="hud-label">Atlas yükleniyor</span>
         </div>
       ) : archive.status === "error" ? (
         <div className="atlas-error" role="alert">
           <p className="hud-label atlas-error-label">
             <Icon name="alert" size={16} />
-            Couldn't load
+            Yüklenemedi
           </p>
-          <h2>The atlas didn't arrive</h2>
-          <p>
-            {archive.error} Nothing is lost; check your connection and try
-            again.
-          </p>
+          <h2>Atlas yüklenemedi</h2>
+          <p>{archive.error} Bağlantını kontrol edip yeniden dene.</p>
           <button
             type="button"
             className="button button--primary"
             onClick={archive.refresh}
           >
-            Try again
+            Yeniden dene
           </button>
         </div>
       ) : (
         <div className="atlas-empty">
-          <h2>Your circle's archive</h2>
+          <h2>Grubunun arşivi</h2>
           <p>
-            Your photographs, shared stories and the places that bring you back.
-            Together in one private archive.
+            Fotoğraflarınız, ortak hikâyeleriniz ve hatırladığınız yerler
+            grubunuza özel bir arşivde buluşur.
           </p>
         </div>
       )}
@@ -141,7 +138,7 @@ function EmptyAtlas({
   return (
     <section className="atlas-home atlas-empty-page" data-layout={layout}>
       <h1 ref={heading} tabIndex={-1} className="visually-hidden">
-        The Atlas of Us
+        Atlas
       </h1>
       <div className="atlas-dim">
         <AtlasStage
@@ -166,18 +163,18 @@ function EmptyAtlas({
       <div className="atlas-empty">
         {circle && (
           <p className="hud-label atlas-empty-circle">
-            {circle.name} · new circle
+            {circle.name} · yeni grup
           </p>
         )}
         <h2>
           {archive.group
-            ? "The atlas is waiting for its first memory"
-            : "Start your circle's atlas"}
+            ? "Atlas ilk anısını bekliyor"
+            : "Grubunun Atlas’ını başlat"}
         </h2>
         <p>
           {archive.group
-            ? "Add an export from Apple Photos, WhatsApp, Discord or Messenger. Mazi pins each photo and chat to where and when it happened, and the globe lights up."
-            : "Create or join your circle to start your shared archive."}
+            ? "Apple Photos, WhatsApp, Discord veya Messenger arşivi ekle. Bilinen tarihler ve izinli yerler Atlas’ta görünür."
+            : "Ortak arşivinizi başlatmak için bir grup oluştur veya gruba katıl."}
         </p>
         {archive.group && (
           <div className="atlas-note" role="note">
@@ -187,8 +184,7 @@ function EmptyAtlas({
               <path d="M3 19c1-3 3.3-4.5 6-4.5s5 1.5 6 4.5" />
             </svg>
             <span>
-              Whatever you add is shared with everyone in your circle as soon as
-              it's imported.
+              Eklediğin içerik içe aktarılınca grubundaki herkesle paylaşılır.
             </span>
           </div>
         )}
@@ -198,14 +194,14 @@ function EmptyAtlas({
             href="#/imports"
             onClick={link("/imports")}
           >
-            {archive.group ? "Add photographs" : "Create or join a circle"}
+            {archive.group ? "Fotoğraf ekle" : "Grup oluştur veya gruba katıl"}
           </a>
           <a
             className="button button--secondary"
             href="#/introduction"
             onClick={link("/introduction")}
           >
-            Replay introduction
+            Tanıtımı yeniden izle
           </a>
         </div>
       </div>
@@ -449,7 +445,7 @@ function AtlasHome({
     buttons[next]?.focus();
   };
 
-  // Page shortcuts: ← → years, ↑ ↓ places, Enter open, Esc back, / search.
+  // Page shortcuts: ← → yıllar, ↑ ↓ yerler, Enter aç, Esc geri, / ara.
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (
@@ -519,7 +515,7 @@ function AtlasHome({
   ]);
 
   const circle = demo
-    ? "Sample Atlas"
+    ? "Örnek Atlas"
     : archive.groups.find((group) => group.id === archive.group)?.name;
   const placesThisYear =
     year === null
@@ -529,10 +525,10 @@ function AtlasHome({
   const yearSummary =
     year === null
       ? selectedDate.label
-      : `${selectedDate.basis === "shared" ? selectedDate.label + " · " : ""}${plural(placesThisYear, "place")} · ${plural(memoriesThisYear, "memory", "memories")}`;
+      : `${selectedDate.basis === "shared" ? selectedDate.label + " · " : ""}${plural(placesThisYear, "yer", "yer")} · ${plural(memoriesThisYear, "anı", "anı")}`;
   const valueText =
     year === null
-      ? `No date recorded for ${selected.shortTitle}`
+      ? `${selected.shortTitle}: tarih bilinmiyor`
       : `${year}, ${yearSummary.replace(" · ", ", ")}`;
   const thumbnails = useMemo(
     () =>
@@ -544,7 +540,7 @@ function AtlasHome({
             {
               src: memory.photos[0]?.src || "",
               title: place.name,
-              meta: `${shortDate(memory)} · ${plural(place.count, "memory", "memories")}`,
+              meta: `${shortDate(memory)} · ${plural(place.count, "anı", "anı")}`,
             },
           ];
         }),
@@ -557,7 +553,7 @@ function AtlasHome({
       : `${atlas.years[0]} – ${atlas.years[atlas.years.length - 1]}`
     : "";
   const kicker = [circle, span].filter(Boolean).join(" · ");
-  const summary = `${plural(atlas.places.length, "place")}. ${plural(memories.length, "memory", "memories")}. One thread.`;
+  const summary = `${plural(atlas.places.length, "yer", "yer")}. ${plural(memories.length, "anı", "anı")}. Ortak bir yolculuk.`;
 
   const openFeatured = (event: MouseEvent<HTMLAnchorElement>) => {
     if (
@@ -577,12 +573,12 @@ function AtlasHome({
     <nav
       ref={indexNav}
       className={`atlas-index ${drawer ? "is-open" : ""}`}
-      aria-label="Places and moments"
+      aria-label="Yerler ve anılar"
       onKeyDown={onIndexKey}
       onMouseLeave={() => setFocusPlace(null)}
     >
       <p className="hud-label index-title">
-        Places &amp; moments · {atlas.places.length}
+        Yerler ve anılar · {atlas.places.length}
       </p>
       <ul className="index-list">
         {rows.map((row, index) => {
@@ -610,9 +606,7 @@ function AtlasHome({
                   >
                     {current ? selected.shortTitle : shortDate(latest)} ·{" "}
                     {place.count}
-                    <span className="visually-hidden">
-                      {place.count === 1 ? " memory" : " memories"}
-                    </span>
+                    <span className="visually-hidden">{" anı"}</span>
                   </span>
                 </button>
               </li>
@@ -622,7 +616,7 @@ function AtlasHome({
           return (
             <li key={row.key} style={style}>
               {index === atlas.places.length && (
-                <p className="hud-label index-group">No place recorded</p>
+                <p className="hud-label index-group">Yer bilinmiyor</p>
               )}
               <button
                 type="button"
@@ -658,7 +652,7 @@ function AtlasHome({
         eager
         openMemory={{
           href: `#/memory/${selected.id}`,
-          label: `Open ${selected.shortTitle}`,
+          label: `${selected.shortTitle} anısını aç`,
           onClick: openFeatured,
         }}
       />
@@ -680,7 +674,7 @@ function AtlasHome({
             shortDate(selected),
             sourceSharedLine(selected),
             placeLabel(selected),
-            plural(selected.photos.length, "photo"),
+            plural(selected.photos.length, "fotoğraf", "fotoğraf"),
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -694,7 +688,7 @@ function AtlasHome({
               setPlacing(placing === selected.id ? null : selected.id)
             }
           >
-            {selected.place ? "Change place" : "Add a place"}
+            {selected.place ? "Yeri değiştir" : "Yer ekle"}
           </button>
         )}
         {!demo && placing === selected.id && (
@@ -715,7 +709,7 @@ function AtlasHome({
           href={`#/memory/${selected.id}`}
           onClick={openFeatured}
         >
-          Open memory
+          Anıyı aç
         </a>
         {!demo && selected.kind === "memory" && (
           <a
@@ -723,7 +717,7 @@ function AtlasHome({
             href={`#/memory/${selected.id}?notebook=1`}
             onClick={link(`/memory/${selected.id}?notebook=1`)}
           >
-            View notes <Icon name="chevron-right" size={14} />
+            Notları aç <Icon name="chevron-right" size={14} />
           </a>
         )}
       </div>
@@ -734,14 +728,14 @@ function AtlasHome({
     <section className="atlas-card atlas-recent" aria-labelledby="recent-title">
       <div className="recent-head">
         <h2 id="recent-title" className="hud-label">
-          {demo ? "Sample memories" : "Memories"} · {memories.length}
+          {demo ? "Örnek anılar" : "Anılar"} · {memories.length}
         </h2>
         <a
           href="#/timeline"
           onClick={link("/timeline")}
-          aria-label="All memories"
+          aria-label="Bütün anılar"
         >
-          All
+          Tümü
         </a>
       </div>
       <div className="memory-list">
@@ -750,7 +744,7 @@ function AtlasHome({
             key={item.id}
             type="button"
             className="memory-choice"
-            aria-label={`Select ${item.shortTitle}`}
+            aria-label={`${item.shortTitle} anısını seç`}
             aria-pressed={selected.id === item.id}
             onClick={() => chooseMemory(item.id)}
             onMouseEnter={() => setFocusPlace(placeIdOf(item))}
@@ -782,7 +776,7 @@ function AtlasHome({
           disabled={chronology.ordered.length < 2}
           title={
             chronology.ordered.length < 2
-              ? "Replay needs at least two memories with capture or sharing dates"
+              ? "Yeniden oynatmak için tarihli en az iki anı gerekir"
               : undefined
           }
         >
@@ -793,7 +787,7 @@ function AtlasHome({
               <path d="M2 1l9 5-9 5z" />
             )}
           </svg>
-          {playing ? "Pause" : "Replay"}
+          {playing ? "Duraklat" : "Yeniden oynat"}
         </button>
         <Scrubber
           years={atlas.years}
@@ -810,17 +804,17 @@ function AtlasHome({
       </div>
       {chronology.ordered.length < 2 && (
         <p className="hud-label">
-          Replay needs at least two memories with capture or sharing dates.
+          Yeniden oynatmak için tarihli en az iki anı gerekir.
         </p>
       )}
       {!compact && (
         <p className="hud-label atlas-hints" aria-hidden="true">
-          <span>Drag to turn</span>
-          <span>↑ ↓ places</span>
-          <span>← → years</span>
-          <span>Enter open</span>
-          <span>Esc back</span>
-          <span>/ search</span>
+          <span>Döndürmek için sürükle</span>
+          <span>↑ ↓ yerler</span>
+          <span>← → yıllar</span>
+          <span>Enter aç</span>
+          <span>Esc geri</span>
+          <span>/ ara</span>
         </p>
       )}
     </div>
@@ -836,7 +830,7 @@ function AtlasHome({
       aria-labelledby="atlas-title"
     >
       <h1 id="atlas-title" className="visually-hidden">
-        The Atlas of Us
+        Atlas
       </h1>
       <AtlasStage
         atlas={atlas}
@@ -862,10 +856,10 @@ function AtlasHome({
         aria-hidden={portalOpen || undefined}
       >
         <div className="atlas-readout">
-          <p className="readout-year">{year ?? "Date unknown"}</p>
+          <p className="readout-year">{year ?? "Tarih bilinmiyor"}</p>
           <p className="hud-label readout-summary">{yearSummary}</p>
         </div>
-        <div className="atlas-view" role="group" aria-label="View">
+        <div className="atlas-view" role="group" aria-label="Görünüm">
           <button
             type="button"
             aria-pressed={!flat}
@@ -874,14 +868,14 @@ function AtlasHome({
               setView("globe");
             }}
           >
-            Globe
+            Küre
           </button>
           <button
             type="button"
             aria-pressed={flat}
             onClick={() => setView("flat")}
           >
-            Flat map
+            Düz harita
           </button>
         </div>
         {layout === "tablet" && (
@@ -892,7 +886,7 @@ function AtlasHome({
             onClick={() => setDrawer((open) => !open)}
           >
             <Icon name={drawer ? "close" : "chevron-right"} size={14} />
-            Places
+            Yerler
           </button>
         )}
         {!phone && indexRows}
@@ -993,15 +987,13 @@ function AtlasSheet({
       ref={sheet}
       className="atlas-sheet"
       data-snap={snap}
-      aria-label="Places and memories"
+      aria-label="Yerler ve anılar"
     >
       {timebar}
       <button
         type="button"
         className="atlas-sheet-handle"
-        aria-label={
-          snap < 2 ? "Show more places and memories" : "Show less of the sheet"
-        }
+        aria-label={snap < 2 ? "Daha fazla yer ve anı göster" : "Paneli küçült"}
         aria-expanded={snap > 0}
         onClick={() => {
           if (drag.current && drag.current.moved > 6) return;

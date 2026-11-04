@@ -123,7 +123,9 @@ test("two sessions keep multiple photo messages separate from memory and sibling
   await page
     .getByLabel("Yorum yaz", { exact: true })
     .fill("Kardeş fotoğrafa taşınmamalı");
-  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
   await expect(page).toHaveURL(/photo=1&discussion=photo/);
   await expect(page.locator(".native-comments article")).toHaveCount(0);
   await expect(page.getByLabel("Yorum yaz", { exact: true })).toHaveValue("");

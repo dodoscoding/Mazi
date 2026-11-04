@@ -174,11 +174,11 @@ test("the tray opens, asks which Victoria, and pins every photo of the chosen me
     [
       [
         "/api/review/rendition/a",
-        "Lake weekendJun 2024 · No place recorded · 2 photos",
+        "Lake weekendJun 2024 · No place recorded · 2 fotoğraf",
       ],
       [
         "/api/review/rendition/c",
-        "Photo shared by AnaJun 2024 · No place recorded · 1 photo",
+        "Photo shared by AnaJun 2024 · No place recorded · 1 fotoğraf",
       ],
     ],
   );
@@ -234,7 +234,7 @@ test("an unknown city is reported, writes nothing and keeps the memory in the tr
   await h.type("Nowhereville");
   assert.equal(
     h.$(".place-status").textContent,
-    "“Nowhereville” isn't on the map. Check the spelling or add the country, e.g. “Victoria, CA”.",
+    "“Nowhereville” haritada bulunamadı. Yazımı kontrol et veya ülke kodunu ekle, ör. “Victoria, CA”.",
   );
   assert.equal(h.$(".place-field input").getAttribute("aria-invalid"), "true");
   assert.deepEqual(placed, []);
