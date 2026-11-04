@@ -1,0 +1,115 @@
+.native-conversation {
+  margin-block: 36px;
+  padding-block: 28px;
+  border-block: 1px solid var(--line);
+  scroll-margin-top: 90px;
+}
+.native-conversation h2 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+.conversation-hint,
+.conversation-total {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.native-comments {
+  list-style: none;
+  margin: 24px 0;
+  padding: 0;
+}
+.native-comments > li {
+  padding-block: 20px;
+  border-top: 1px solid var(--line);
+}
+.native-comments header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+}
+.native-comments time,
+.native-comments header > span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.comment-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.native-reactions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+.native-reactions > div {
+  min-width: 52px;
+  max-width: 100%;
+}
+.reaction-button {
+  min-height: 44px;
+  min-width: 52px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  padding: 8px 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.reaction-button[aria-pressed="true"] {
+  border-color: var(--accent-terminator);
+  background: color-mix(in srgb, var(--accent-terminator) 14%, var(--surface));
+}
+.native-reactions details {
+  font-size: 12px;
+  max-width: 210px;
+  overflow-wrap: anywhere;
+}
+.native-reactions summary {
+  min-height: 30px;
+  padding-top: 5px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.native-conversation form label {
+  display: grid;
+  gap: 8px;
+}
+.native-conversation textarea {
+  width: 100%;
+  min-height: 108px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+}
+.conversation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.conversation-actions .text-link {
+  min-height: 44px;
+  padding-inline: 4px;
+}
+.conversation-confirm {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.confirmed-comment {
+  margin-block: 16px;
+  padding: 12px;
+  border-inline-start: 2px solid var(--accent-terminator);
+}
+.confirmed-comment blockquote {
+  margin: 8px 0 0;
+}

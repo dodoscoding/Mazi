@@ -39,6 +39,8 @@ import { Arrow } from "./ui/icons";
 import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
 
+const ConversationPanel = lazy(() => import("./social/ConversationPanel"));
+
 const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
 const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
 
@@ -55,6 +57,8 @@ export function MemoryView({
   memory,
   group,
   notebook,
+  discussion,
+  sessionKey,
   memories = [memory],
   photo,
   demo,
@@ -66,6 +70,8 @@ export function MemoryView({
   memory: Memory;
   group: string;
   notebook: boolean;
+  discussion?: "photo" | "memory";
+  sessionKey?: string;
   memories?: Memory[];
   photo: number;
   demo: boolean;
@@ -151,7 +157,11 @@ export function MemoryView({
     history.back();
   };
   const go = (index: number) =>
-    navigate(`/memory/${memory.id}?photo=${index}`, false, true);
+    navigate(
+      `/memory/${memory.id}?photo=${index}${discussion ? `&discussion=${discussion}` : ""}`,
+      false,
+      true,
+    );
   const momentLink = (
     item: Memory | undefined,
     label: string,
@@ -310,6 +320,53 @@ export function MemoryView({
             </h1>
             <p className="memory-description">{memory.description}</p>
             <Conversation key={memory.id} memory={memory} />
+            {!demo && (
+              <>
+                <nav className="memory-tools" aria-label="Sohbet seçimi">
+                  {memory.photos[photoIndex]?.assetId && (
+                    <a
+                      className="button button--secondary"
+                      href={`#/memory/${memory.id}?photo=${photoIndex}&discussion=photo`}
+                      onClick={link(
+                        `/memory/${memory.id}?photo=${photoIndex}&discussion=photo`,
+                      )}
+                    >
+                      Fotoğraf üzerine konuş
+                    </a>
+                  )}
+                  {memory.kind === "memory" && (
+                    <a
+                      className="button button--secondary"
+                      href={`#/memory/${memory.id}?discussion=memory`}
+                      onClick={link(`/memory/${memory.id}?discussion=memory`)}
+                    >
+                      Anı üzerine konuş
+                    </a>
+                  )}
+                </nav>
+                {discussion &&
+                  (discussion === "photo"
+                    ? memory.photos[photoIndex]?.assetId
+                    : memory.kind === "memory") && (
+                    <Suspense
+                      fallback={<p role="status">Sohbet yükleniyor…</p>}
+                    >
+                      <ConversationPanel
+                        key={`${sessionKey}:${group}:${discussion}:${discussion === "photo" ? memory.photos[photoIndex].assetId : memory.id}`}
+                        group={group}
+                        target={{
+                          kind: discussion,
+                          id:
+                            discussion === "photo"
+                              ? memory.photos[photoIndex].assetId!
+                              : memory.id,
+                        }}
+                        focus
+                      />
+                    </Suspense>
+                  )}
+              </>
+            )}
             <EventNotebook
               key={`${group}:${memory.id}`}
               group={group}

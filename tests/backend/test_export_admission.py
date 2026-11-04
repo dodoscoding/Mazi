@@ -208,7 +208,7 @@ class ExportAdmissionTests(unittest.TestCase):
         person = self.tagged_person()
         origin = self.store.owned_origins(self.alice, self.group)[0]['id']
         self.store.set_place(self.alice, origin, 'NL', 'Amsterdam', 52.37, 4.9, '2024-01-01')
-        self.store.correct_asset(self.alice, self.asset, title='A title', capture_date='2024-01-01', place='A place', anniversary=True)
+        self.store.correct_asset(self.alice, self.asset, title='A title', capture_date='2024-01-01', place='Amsterdam, NL', anniversary=True)
         reads = []
         materialize = self.store.objects.materialize
         @contextmanager
@@ -233,8 +233,8 @@ class ExportAdmissionTests(unittest.TestCase):
             record = json.loads(archive.read('manifest.json'))['assets'][0]
             self.assertEqual(record['sha256'], hashlib.sha256(helpers.picture()).hexdigest())
             self.assertEqual(record['origins'], self.store.origins(self.ben, self.asset)['items'])
-            self.assertEqual(record['annotation'], dict(title='A title', capture_date='2024-01-01', place='A place', anniversary=1))
-            self.assertEqual(json.loads(archive.read('places.json'))[0]['origin'], origin)
+            self.assertEqual(record['annotation'], dict(title='A title', capture_date='2024-01-01', place='Amsterdam, NL', anniversary=1))
+            self.assertEqual(json.loads(archive.read('places.json'))[0]['origin'], 'review:' + self.asset)
             self.assertEqual(json.loads(archive.read('people.json'))[0]['id'], person)
             self.assertEqual(set(json.loads(archive.read('personal-discovery.json'))),
                              {'hidden', 'hidden_memories', 'suppressed', 'processing'})
