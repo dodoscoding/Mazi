@@ -1,0 +1,73 @@
+[WebServer] (node:82997) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 2 tests using 1 worker
+
+(node:82999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels (156ms)
+(node:83013) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [phone] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels (153ms)
+
+
+  1) [desktop] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 0
+    Received:    -61.03125
+
+      422 |     .locator(".add-menu .menu-popover")
+      423 |     .boundingBox();
+    > 424 |   expect(menuBounds!.x).toBeGreaterThanOrEqual(0);
+          |                         ^
+      425 |   expect(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(320);
+      426 |   await expect(
+      427 |     page
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-plans-ui/tests/social-plans.spec.ts:424:25
+
+    Error Context: test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [phone] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 0
+    Received:    -61.03125
+
+      422 |     .locator(".add-menu .menu-popover")
+      423 |     .boundingBox();
+    > 424 |   expect(menuBounds!.x).toBeGreaterThanOrEqual(0);
+          |                         ^
+      425 |   expect(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(320);
+      426 |   await expect(
+      427 |     page
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-plans-ui/tests/social-plans.spec.ts:424:25
+
+    Error Context: test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/social-plans/social-plans-the-contribut-283c6--the-keyboard-at-320-pixels-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels
+    [phone] › tests/social-plans.spec.ts:413:1 › the contribution menu and plan form work with the keyboard at 320 pixels
