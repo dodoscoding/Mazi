@@ -1,6 +1,7 @@
 import concurrent.futures
 import io
 import json
+import sqlite3
 import tempfile
 import threading
 import unittest
@@ -187,3 +188,69 @@ class PlansTests(PlansFixture):
         self.assertEqual(final['status'], 'cancelled')
         with self.assertRaises(Conflict):
             social.set_attendance(self.store, self.ben, self.group, plan['id'], 'yes', 'later')
+
+    def test_same_command_concurrently_creates_only_one_plan(self):
+        barrier = threading.Barrier(2)
+        def create(_):
+            store = MemoryStore(self.temp.name)
+            try:
+                barrier.wait()
+                return social.create_plan(store, self.alice, self.group, 'concurrent',
+                    dict(title='One plan', start_local='2030-06-01T18:00', timezone='UTC'))['id']
+            finally:
+                store.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            identities = list(pool.map(create, range(2)))
+        self.assertEqual(identities[0], identities[1])
+        self.assertEqual(len(social.plans(self.store, self.alice, self.group)['items']), 1)
+
+    def test_database_rejects_cross_group_organizer_and_attendance(self):
+        plan = self.create()
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('UPDATE social_plans SET organizer=? WHERE id=?', (self.other, plan['id']))
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('INSERT INTO social_attendance VALUES(?,?,?,?,?,?)',
+                    (plan['id'], self.other, 'yes', 1, 0, self.group))
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.store.transaction():
+                self.store.db.execute('INSERT INTO social_attendance VALUES(?,?,?,?,?,?)',
+                    (plan['id'], self.other, 'yes', 1, 0, self.other_group))
+
+    def test_invalid_patches_revisions_and_attendance_do_not_write(self):
+        plan = self.create()
+        for values in ({}, {'organizer': self.ben}, {'title': ''}, {'description': 'x' * 4001}, {'memory': 'missing'}):
+            with self.assertRaises((ValueError, Denied)):
+                social.update_plan(self.store, self.alice, self.group, plan['id'], 1, 'invalid', values)
+        for revision in (0, True, '1'):
+            with self.assertRaises(ValueError):
+                social.delete_plan(self.store, self.alice, self.group, plan['id'], revision, 'delete')
+        with self.assertRaises(ValueError):
+            social.set_attendance(self.store, self.ben, self.group, plan['id'], 'attending', 'bad')
+        self.assertEqual(social.get_plan(self.store, self.alice, self.group, plan['id'])['revision'], 1)
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM social_receipts').fetchone()[0], 1)
+
+
+class PlanMemoryTests(unittest.TestCase):
+    from tests.backend.test_atlas import AtlasTests as _Fixture
+    setUp, tearDown, _origin = _Fixture.setUp, _Fixture.tearDown, _Fixture._origin
+
+    def test_memory_link_rechecks_visibility_without_changing_archive_dates(self):
+        event = self.store.review_event(self.alice, self.group, self.assets, 'Two winters', 'accept')
+        data = dict(title='Meet again', start_local='2030-06-01T18:00', timezone='UTC', memory=event)
+        plan = social.create_plan(self.store, self.alice, self.group, 'create', data)
+        self.assertEqual(plan['memory'], dict(id=event, title='Two winters'))
+        self.store.hide_event(self.ben, self.group, event, True)
+        self.assertIsNone(social.get_plan(self.store, self.ben, self.group, plan['id'])['memory'])
+        with self.assertRaises(Denied):
+            social.create_plan(self.store, self.ben, self.group, 'hidden', data)
+        self.store.delete_origin(self.alice, self._origin(self.assets[0]))
+        self.assertIsNone(social.get_plan(self.store, self.alice, self.group, plan['id'])['memory'])
+        changed = social.update_plan(self.store, self.alice, self.group, plan['id'], 1, 'edit', {'title': 'Still meet'})
+        self.assertEqual((changed['title'], changed['memory']), ('Still meet', None))
+        annotation = self.store.db.execute('SELECT capture_date FROM review_annotations WHERE asset_id=?', (self.assets[1],)).fetchone()
+        self.assertEqual(annotation[0], '2021-01-02')
+        with zipfile.ZipFile(io.BytesIO(self.store.export_archive(self.alice, self.group))) as archive:
+            exported = json.loads(archive.read('social.json'))
+        self.assertIsNone(exported['plans'][0]['memory'])

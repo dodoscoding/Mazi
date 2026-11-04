@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from .identity.core import Denied
 from .memories.memories import MemoryStore
-from .memories.server import handler_for as memory_handler
+from .social.server import handler_for as social_handler
 from .sources.server import worker
 
 
@@ -33,7 +33,7 @@ def handler_for(store, dist=None, drain=None):
     store.shared_mode = True
     build = Path(dist) if dist is not None else DIST
 
-    class Handler(memory_handler(store)):
+    class Handler(social_handler(store)):
         def work(self):
             if drain is None:
                 return self.json(200, {'pending': False, 'mode': 'thread'})
