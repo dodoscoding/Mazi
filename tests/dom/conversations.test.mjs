@@ -44,6 +44,7 @@ async function mount(
     configFile: false,
     server: { middlewareMode: true, hmr: false, ws: false },
   });
+  t.after(() => vite.close());
   const module = await vite.ssrLoadModule(modulePath);
   const host = document.createElement("div");
   document.body.append(host);
@@ -51,7 +52,6 @@ async function mount(
   const root = createRoot(host);
   t.after(async () => {
     await act(async () => root.unmount());
-    await vite.close();
     window.happyDOM.abort();
     for (const [name, descriptor] of saved) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
