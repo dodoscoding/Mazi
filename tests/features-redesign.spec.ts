@@ -385,11 +385,17 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect(page.locator("#results article")).toHaveCount(1);
   fail = false;
   await include.click();
+  await expect(page.locator("#context-status")).toContainText(
+    "Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır",
+  );
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
+  await page.getByLabel("Yer", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await include.click();
   await expect(page.locator("#person")).toBeEnabled();
   await expect(page.getByLabel("Ara", { exact: true })).toHaveValue("bicycle");
-  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue(
-    "Amsterdam",
-  );
+  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue("");
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#people")).toContainText("Ben");
   await expect(page.locator(".disc-tag select")).toBeEnabled();
