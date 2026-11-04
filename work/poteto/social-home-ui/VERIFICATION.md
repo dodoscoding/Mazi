@@ -58,3 +58,17 @@ Physical phones and the five-friend study remain open. No production migration, 
 Published main `2b4b09d` (reviewed H1 API, JSON-memory, label boundary, Turkish Atlas/Viewer and export ordering) is merged at `fa0743c`. Only the affected selectors were repeated: the real two-session Home journey passes in 10.5 seconds ([output](FINAL_MAIN_JOURNEY.txt)); detail/clarity passes 51 cases with seven optional skips in 15.9 seconds ([output](FINAL_MAIN_DETAIL.txt)). Plan cards explicitly show their stored timezone. The independent phone uses America/New_York while the plan retains UTC. Capture waits for fonts and two paint frames; the final plan capture was inspected rather than retaining the earlier incomplete paint.
 
 Final production build: entry 92.9/150 KiB gzip, all scripts 414.2/420, entry stylesheet 19.7/40 and Globe 243.0/256. Summed optional emitted CSS is approximately 40.9 KiB; the unchanged checker measures index CSS, and the optional sum is not presented as that primary stylesheet. No ceiling changed. Generated older screenshots and result JSON are restored. Physical-device and friend-study gates remain open.
+
+## Accepted activity-return and selector corrections
+
+Independent review at `65056c9` identified two P2 findings: activity page two was lost on detail return, and several existing journey selectors still named the earlier English MemoryView controls. Red `2599118` adds the actual page-two return contract; both desktop and phone fail with 20 rows instead of two ([output](RETURN_RED.txt)). It also updates exact MemoryView selectors to Geri, Konuşmayı göster and Anı bulunamadı without changing behavior assertions or introduction controls.
+
+Fix `aa3ca76` retains the opaque cursor and group in the activity URL and binds its history entry to the current profile/group. The initial position is captured once for that scoped mount, so clearing an unbound URL cannot accidentally promote its stale cursor during a React rerender. Query changes mount their corresponding read context. No activity text or comment data is cached in history. Only bounded current-authority reads supply the returned page.
+
+The actual browser case now tests both detail Geri and browser Back from the second page, exact page URL, opener focus and nonzero scroll restoration at 320 pixels. Refresh preserves the same page. Deleting the opener while in detail yields the remaining authorized row and deliberate heading/zero-scroll fallback. There are still zero full Atlas/notebook reads, and each activity request remains bounded to 20. An unbound profile/group cursor is dropped and canonicalized rather than read.
+
+- Focused DOM/archive/route/OAuth: **30 pass** ([output](RETURN_DOM.txt)).
+- Actual desktop/phone return, refresh and disappearance regression: **two pass**, 18.1 seconds ([output](RETURN_BROWSER.txt)).
+- Existing Atlas, journey, resilience, detail and clarity suites in desktop/phone Chromium: **93 pass, nine optional/inapplicable skips**, 34.4 seconds ([output](REVIEW_JOURNEYS.txt)). All context, history, focus, content, image-recovery, rendering and accessibility assertions remain present. Shared Atlas helper labels already matched the reviewed Turkish runtime and needed no additional change.
+
+Typecheck, lint, docs, bundle gates and entire branch whitespace run before handoff. Generated screenshots from the existing suites are restored. The interface changes no backend API, permission rule or storage schema. Independent focused re-review remains the parent gate before publication.
