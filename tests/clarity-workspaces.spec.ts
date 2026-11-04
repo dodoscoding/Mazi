@@ -434,6 +434,7 @@ test("photo label editing and atomic Gallery selection show honest badges at pho
       .getByLabel("AI kullanımı", { exact: true })
       .selectOption("edited");
     await editor.screenshot({
+      animations: "disabled",
       path: `${directory}/${info.project.name}-bulk-editor.png`,
     });
     expect(
@@ -449,6 +450,7 @@ test("photo label editing and atomic Gallery selection show honest badges at pho
     ).toHaveCount(2);
     expect((await read()).items[2]).toEqual(before.items[2]);
     await page.locator("#grid").screenshot({
+      animations: "disabled",
       path: `${directory}/${info.project.name}-gallery-badges.png`,
     });
     const requests: string[] = [];
@@ -466,6 +468,7 @@ test("photo label editing and atomic Gallery selection show honest badges at pho
       ),
     ).toEqual([]);
     await page.locator("#results").screenshot({
+      animations: "disabled",
       path: `${directory}/${info.project.name}-search-badges.png`,
     });
   } finally {
