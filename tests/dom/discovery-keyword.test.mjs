@@ -137,6 +137,7 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     start: "2024-01-01",
     end: "2024-12-31",
     source: "apple",
+    date_basis: "chronology",
     shared_by: "Ana",
     similar: "",
     offset: "0",
