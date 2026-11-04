@@ -268,16 +268,24 @@ test("photo-only Home fallback opens one selected photo and activity stays bound
     .getByRole("button", { name: "Sonraki haberler", exact: true })
     .click();
   await expect(page.locator(".social-activity li")).toHaveCount(2);
+  await page.setViewportSize({ width: 320, height: 440 });
+  const activityUrl = page.url();
+  expect(activityUrl).toContain("cursor=");
   for (const back of ["pill", "history"]) {
-    const opener = page.locator(".social-activity li a").first();
+    const opener = page.locator(".social-activity li a").last();
+    await page.evaluate(() =>
+      scrollTo(0, document.documentElement.scrollHeight),
+    );
     await opener.scrollIntoViewIfNeeded();
     const openerId = await opener.getAttribute("id");
     const scroll = await page.evaluate(() => scrollY);
+    expect(scroll).toBeGreaterThan(0);
     await opener.click();
     await expect(page.locator(".native-conversation")).toBeVisible();
     if (back === "pill") await page.locator(".back-pill").click();
     else await page.goBack();
     await expect(page.locator(".social-activity li")).toHaveCount(2);
+    expect(page.url()).toBe(activityUrl);
     await expect(page.locator(`[id="${openerId}"]`)).toBeFocused();
     expect(
       Math.abs((await page.evaluate(() => scrollY)) - scroll),
@@ -285,6 +293,35 @@ test("photo-only Home fallback opens one selected photo and activity stays bound
   }
   await page.reload();
   await expect(page.locator(".social-activity li")).toHaveCount(2);
+  const removed = page.locator(".social-activity li a").first();
+  const removedId = (await removed.getAttribute("id"))!.slice(
+    "activity-comment:".length,
+  );
+  await removed.click();
+  await expect(page.locator(".native-conversation")).toBeVisible();
+  expect(
+    (
+      await page.request.post("/api/social/comments/delete", {
+        data: {
+          group,
+          comment: removedId,
+          revision: 1,
+          request_key: crypto.randomUUID(),
+        },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.locator(".back-pill").click();
+  await expect(page.locator(".social-activity li")).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", { name: "Grubumuzdan haberler", exact: true }),
+  ).toBeFocused();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  expect(
+    requests.filter(
+      (path) => path === "/api/atlas" || path === "/api/memories/notebook",
+    ),
+  ).toEqual([]);
   await page.getByRole("button", { name: "İlk haberler", exact: true }).click();
   await expect(page.locator(".social-activity li")).toHaveCount(20);
   if (info.project.name === "phone") {

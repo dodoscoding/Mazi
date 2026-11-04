@@ -177,13 +177,15 @@ export default function App() {
             />
           ) : (
             <SocialHome
-              key={`${profile?.user_id}:${archive.group}:${route.path}`}
+              key={`${profile?.user_id}:${archive.group}:${route.path}:${route.search}`}
               group={archive.group}
               circle={
                 archive.groups.find(({ id }) => id === archive.group)?.name ||
                 "Grubumuz"
               }
               activity={route.path === "/circle"}
+              search={route.search}
+              sessionKey={profile?.user_id}
               restore={
                 browsingReturn.current?.path === route.path
                   ? browsingReturn.current

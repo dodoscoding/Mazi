@@ -269,3 +269,23 @@ test("selected memory ignores a late private response after session disposal", a
   assert.doesNotMatch(h.host.textContent, /Seçili fotoğraf/);
   assert.match(h.host.textContent, /Anı bulunamadı/);
 });
+
+test("activity cursors without the current profile and group history scope are discarded", async (t) => {
+  const h = await mount(
+    t,
+    "/src/social/SocialHome.tsx",
+    "default",
+    {
+      ...props,
+      activity: true,
+      sessionKey: "alice",
+      search: "?section=activity&group=circle&cursor=old-private-position",
+    },
+    async () => Response.json({ items: [], next_cursor: null }),
+  );
+  assert.ok(h.calls.every(({ path }) => !path.includes("cursor=")));
+  assert.equal(
+    h.window.location.hash,
+    "#/circle?section=activity&group=circle",
+  );
+});

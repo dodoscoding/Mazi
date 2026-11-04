@@ -74,7 +74,11 @@ export default function SocialHome({
   link,
   heading,
   restore,
+  search = "",
+  sessionKey = "",
 }: {
+  search?: string;
+  sessionKey?: string;
   restore?: { openerId: string; scroll: number };
   group: string;
   circle: string;
@@ -82,11 +86,25 @@ export default function SocialHome({
   link: LinkFor;
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
+  const params = new URLSearchParams(search);
+  const scope = `${sessionKey}:${group}`;
+  const [initialPosition] = useState(() => ({
+    scope,
+    cursor:
+      activity &&
+      params.get("group") === group &&
+      history.state?.activityScope === scope
+        ? params.get("cursor") || ""
+        : "",
+  }));
+  const initialCursor =
+    initialPosition.scope === scope ? initialPosition.cursor : "";
+  const restored = useRef(false);
   const [state, setState] = useState<State>({ kind: "loading" });
-  const [cursor, setCursor] = useState("");
+  const [cursor, setCursor] = useState(initialCursor);
   const controller = useRef<AbortController | null>(null);
   const disposed = useRef(false);
-  const cursorRef = useRef("");
+  const cursorRef = useRef(initialCursor);
   async function load(next = "") {
     if (disposed.current) return;
     controller.current?.abort();
@@ -126,7 +144,15 @@ export default function SocialHome({
   }
   useEffect(() => {
     disposed.current = false;
-    void load();
+    restored.current = false;
+    if (activity && params.has("cursor") && !initialCursor) {
+      history.replaceState(
+        history.state,
+        "",
+        `#/circle?${new URLSearchParams({ section: "activity", group })}`,
+      );
+    }
+    void load(initialCursor);
     const invalidation = () => clear();
     const refresh = () => {
       if (!disposed.current) void load(cursorRef.current);
@@ -149,17 +175,28 @@ export default function SocialHome({
       window.removeEventListener("mazi:archive-changed", refresh);
       document.removeEventListener("visibilitychange", visible);
     };
-  }, [group, activity]);
+  }, [group, activity, initialCursor]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [activity]);
   useEffect(() => {
-    if (state.kind !== "ready" || !restore) return;
+    if (state.kind !== "ready" || !restore || restored.current) return;
+    restored.current = true;
     const opener = document.getElementById(restore.openerId);
     window.scrollTo(0, opener ? restore.scroll : 0);
     (opener || heading.current)?.focus({ preventScroll: true });
   }, [state.kind, restore?.openerId]);
   const changePage = (next = "") => {
+    const query = new URLSearchParams({
+      section: "activity",
+      group,
+      ...(next ? { cursor: next } : {}),
+    });
+    history.replaceState(
+      { ...history.state, activityScope: scope },
+      "",
+      `#/circle?${query}`,
+    );
     heading.current?.focus({ preventScroll: true });
     void load(next);
   };
