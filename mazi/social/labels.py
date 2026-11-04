@@ -175,7 +175,9 @@ def summaries(store, group, assets):
 
 
 def attach_summaries(store, group, photos):
-    facts = summaries(store, group, [photo['assetId'] for photo in photos])
-    for photo in photos:
-        if photo['assetId'] in facts:
-            photo['labels'] = facts[photo['assetId']]
+    for offset in range(0, len(photos), 10000):
+        page = photos[offset:offset + 10000]
+        facts = summaries(store, group, [photo['assetId'] for photo in page])
+        for photo in page:
+            if photo['assetId'] in facts:
+                photo['labels'] = facts[photo['assetId']]
