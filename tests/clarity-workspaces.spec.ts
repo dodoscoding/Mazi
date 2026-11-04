@@ -648,6 +648,11 @@ test("same-photo filters survive reload and keep original child links at narrow 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    await page
+      .locator("#grid")
+      .evaluate((node) =>
+        node.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
     await page.locator("#grid").screenshot({
       animations: "disabled",
       path: `${directory}/${info.project.name}-gallery-filtered.png`,

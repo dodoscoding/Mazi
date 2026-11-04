@@ -228,7 +228,7 @@ export function createGallery(root, lifecycle, api) {
     disposeEditor;
   const tools = document.createElement("section");
   tools.className = "mem-label-tools";
-  tools.setAttribute("aria-label", "Fotoğraf seçimi");
+  tools.setAttribute("aria-label", "Fotoğraf araçları");
   const choose = document.createElement("button");
   choose.textContent = "Fotoğraf seç";
   choose.type = "button";
@@ -240,7 +240,11 @@ export function createGallery(root, lifecycle, api) {
   cancel.textContent = "Seçimi temizle";
   cancel.type = "button";
   const editor = document.createElement("div");
-  tools.append(choose, count, edit, cancel, editor);
+  const refresh = document.createElement("button");
+  refresh.type = "button";
+  refresh.textContent = "Fotoğrafları yenile";
+  refresh.onclick = () => void load(galleryGroup);
+  tools.append(refresh, choose, count, edit, cancel, editor);
   $("grid").before(tools);
   function closeEditor() {
     editorGeneration++;
