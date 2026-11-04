@@ -115,7 +115,7 @@ export default function PhotoCorrection({
   }
   return (
     <form
-      className="fact"
+      className="fact photo-correction"
       aria-label="Seçili fotoğrafı düzelt"
       onSubmit={(event) => {
         event.preventDefault();
@@ -129,7 +129,7 @@ export default function PhotoCorrection({
           type={field === "capture_date" ? "date" : "text"}
           maxLength={200}
           value={draft}
-          disabled={busy}
+          disabled={busy || !current}
           onChange={(event) => {
             setDraft(event.target.value);
             setCandidates([]);
@@ -142,6 +142,7 @@ export default function PhotoCorrection({
             Serbest metin saklanır; yalnız eşleşen şehir haritada işaretlenir.
           </p>
           <button
+            className="button button--secondary"
             type="button"
             disabled={busy || !current}
             onClick={() => {
@@ -159,6 +160,7 @@ export default function PhotoCorrection({
           </button>
           {candidates.map((candidate) => (
             <button
+              className="button button--secondary"
               key={candidate}
               type="button"
               onClick={() => setDraft(candidate)}
@@ -168,10 +170,15 @@ export default function PhotoCorrection({
           ))}
         </>
       )}
-      <button type="submit" disabled={busy || !current}>
+      <button
+        className="button button--secondary"
+        type="submit"
+        disabled={busy || !current}
+      >
         Kaydet
       </button>
       <button
+        className="button button--secondary"
         type="button"
         disabled={busy || !current}
         onClick={() => {
@@ -181,7 +188,11 @@ export default function PhotoCorrection({
       >
         Temizle
       </button>
-      <button type="button" onClick={close}>
+      <button
+        className="button button--secondary"
+        type="button"
+        onClick={close}
+      >
         Vazgeç
       </button>
       <p role="status">{message || (!current ? "Yükleniyor…" : "")}</p>

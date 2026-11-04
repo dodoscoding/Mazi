@@ -242,12 +242,20 @@ export function MemoryView({
         {!demo && memory.photos[photoIndex]?.assetId && (
           <section
             aria-label="Seçili fotoğraf bilgisi"
-            className="memory-tools"
+            className="memory-tools photo-tools"
           >
-            <button type="button" onClick={() => setEditing("capture_date")}>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("capture_date")}
+            >
               Tarihi düzelt
             </button>
-            <button type="button" onClick={() => setEditing("place")}>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("place")}
+            >
               {memory.photos[photoIndex].evidence?.place.text
                 ? "Yeri değiştir"
                 : "Yer ekle"}

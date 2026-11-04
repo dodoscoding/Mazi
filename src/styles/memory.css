@@ -1189,3 +1189,29 @@
     color: var(--on-photo);
   }
 }
+
+.photo-tools {
+  padding: 16px clamp(20px, 4vw, 56px);
+}
+.photo-correction {
+  flex-basis: 100%;
+  max-width: 36rem;
+}
+.photo-correction label {
+  display: grid;
+  gap: 8px;
+}
+.photo-correction input {
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 12px;
+  padding: 8px;
+  color: var(--text-primary);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}
+.photo-correction .button {
+  margin: 8px 8px 0 0;
+}
