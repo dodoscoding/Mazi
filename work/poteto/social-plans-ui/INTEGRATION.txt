@@ -1,0 +1,42 @@
+[WebServer] (node:79700) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 24 tests using 1 worker
+
+(node:79724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/clarity-workspaces.spec.ts:11:1 › named feature links land on their actual section and survive refresh failure (496ms)
+  ✓   2 [desktop] › tests/clarity-workspaces.spec.ts:64:1 › People opens confirmed-association controls and retains its entry URL (213ms)
+  ✓   3 [desktop] › tests/clarity-workspaces.spec.ts:84:1 › unknown section names keep the normal workspace available (117ms)
+  ✓   4 [desktop] › tests/clarity-workspaces.spec.ts:97:1 › a group refresh does not repeat the requested section focus (158ms)
+  ✓   5 [desktop] › tests/clarity-workspaces.spec.ts:118:3 › /people opens the confirmed people heading without an extra history entry (188ms)
+  ✓   6 [desktop] › tests/clarity-workspaces.spec.ts:130:3 › /settings opens the visible group settings and keeps Back usable (178ms)
+  ✓   7 [desktop] › tests/clarity-workspaces.spec.ts:118:3 › /#/people opens the confirmed people heading without an extra history entry (148ms)
+  ✓   8 [desktop] › tests/clarity-workspaces.spec.ts:130:3 › /#/settings opens the visible group settings and keeps Back usable (113ms)
+  ✓   9 [desktop] › tests/clarity-workspaces.spec.ts:150:1 › source management has its own section, focus and parent destination (201ms)
+  ✓  10 [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (9.7s)
+
+  ✓  11 [desktop] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (5.6s)
+  ✓  12 [desktop] › tests/unified.spec.ts:338:1 › access loss clears private drafts and supporting records (2.3s)
+(node:79796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [phone] › tests/clarity-workspaces.spec.ts:11:1 › named feature links land on their actual section and survive refresh failure (511ms)
+  ✓  14 [phone] › tests/clarity-workspaces.spec.ts:64:1 › People opens confirmed-association controls and retains its entry URL (208ms)
+  ✓  15 [phone] › tests/clarity-workspaces.spec.ts:84:1 › unknown section names keep the normal workspace available (115ms)
+  ✓  16 [phone] › tests/clarity-workspaces.spec.ts:97:1 › a group refresh does not repeat the requested section focus (146ms)
+  ✓  17 [phone] › tests/clarity-workspaces.spec.ts:118:3 › /people opens the confirmed people heading without an extra history entry (191ms)
+  ✓  18 [phone] › tests/clarity-workspaces.spec.ts:130:3 › /settings opens the visible group settings and keeps Back usable (177ms)
+  ✓  19 [phone] › tests/clarity-workspaces.spec.ts:118:3 › /#/people opens the confirmed people heading without an extra history entry (129ms)
+  ✓  20 [phone] › tests/clarity-workspaces.spec.ts:130:3 › /#/settings opens the visible group settings and keeps Back usable (113ms)
+  ✓  21 [phone] › tests/clarity-workspaces.spec.ts:150:1 › source management has its own section, focus and parent destination (196ms)
+  ✓  22 [phone] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (9.4s)
+
+  ✓  23 [phone] › tests/unified.spec.ts:220:1 › named profile imports and logout discard delayed private Atlas responses (5.6s)
+  ✓  24 [phone] › tests/unified.spec.ts:338:1 › access loss clears private drafts and supporting records (2.4s)
+
+  24 passed (40.2s)

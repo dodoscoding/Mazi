@@ -110,13 +110,32 @@ export function Shell({
               <Icon name="search" size={20} />
               <span>Anı ara</span>
             </a>
-            <a
-              className="shell-add button button--primary"
-              href="#/imports"
-              onClick={link("/imports")}
-            >
-              <Icon name="plus" size={18} /> Ekle
-            </a>
+            <Menu label="Ekle" className="add-menu">
+              {(close) => (
+                <nav aria-label="Ekle seçenekleri" className="menu-list">
+                  <a
+                    className="menu-item"
+                    href="#/imports"
+                    onClick={(event) => {
+                      link("/imports")(event);
+                      close();
+                    }}
+                  >
+                    Fotoğraf veya arşiv
+                  </a>
+                  <a
+                    className="menu-item"
+                    href="#/circle?section=plans&new=1"
+                    onClick={(event) => {
+                      link("/circle?section=plans&new=1")(event);
+                      close();
+                    }}
+                  >
+                    Buluşma planla
+                  </a>
+                </nav>
+              )}
+            </Menu>
             <Menu label="Hesap" className="account-menu">
               {(close) => (
                 <nav aria-label="Hesap araçları" className="menu-list">

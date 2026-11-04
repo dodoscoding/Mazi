@@ -105,6 +105,9 @@ An optional approved-memory link is rechecked on every plan read and export. A h
 
 When the member has authored plans or current attendance, the existing archive export includes those contributions in `social.json`, with final metadata admission checks. Empty exports preserve their previous file inventory. Other members' attendance lists are not copied into an organizer's exported plan. Durable retry receipts retain only actor and group IDs, request key, operation, payload hash, result ID and timestamp. They survive contribution removal so retrying an earlier command cannot restore it. The UI, physical-device pilot and production acceptance are not established by these backend contracts.
 
+
+The P1 interface keeps unsent plan drafts and exact retry commands only in that tab's component memory. Group, profile and access loss clear the draft and abort its pending requests; late responses are discarded. Private plan text and drafts are not written to localStorage or sessionStorage. A deep link cannot silently adopt its group, and the sample-mode Plans page never reads or writes the real group's social API. Physical-device pilot and production acceptance remain separate.
+
 ## Native conversation contributions
 
 The C1 backend stores each native comment under one permanent photo or approved-memory target and one author. Current group members can read a conversation only while its target remains visible to them. This includes list totals and export records. A hidden memory masks its original children even through another overlapping event. An independent eligible source can keep a photo conversation accessible after one source is withdrawn. Losing the last eligible source removes access.

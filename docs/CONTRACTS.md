@@ -119,7 +119,7 @@ Jobs use import_item_id, stage, input version, and algorithm version as their id
 
 ## Interface navigation
 
-[D26](DECISIONS.md#interface-clarity-1-november-2026) defines one navigation table for the desktop and phone primary links. Exactly Ana sayfa, Keşfet and Grubumuz appear in that order. Ekle remains a separate visible link to `/imports`. A route derives its parent section without a second stored navigation state. Archive detail belongs to Keşfet even when opened from Home.
+[D26](DECISIONS.md#interface-clarity-1-november-2026) defines one navigation table for the desktop and phone primary links. Exactly Ana sayfa, Keşfet and Grubumuz appear in that order. Ekle remains a separate visible menu button. Fotoğraf veya arşiv opens `/imports`; Buluşma planla opens `/circle?section=plans&new=1`. A route derives its parent section without a second stored navigation state. Archive detail belongs to Keşfet even when opened from Home.
 
 Bare `/` renders the Home landing. `/explore` renders the capability directory grouped by Bul, Gez and Birlikte hatırla and `/atlas` renders the existing globe/flat-map experience. Root URLs with explicit `selected` or `view=portal` parameters retain their Atlas meaning without adding a history entry. Existing `/timeline`, `/search`, `/discover`, `/places`, `/ask`, `/answer-evidence`, `/review`, `/imports`, `/circle`, `/about`, `/introduction` and `/memory/:id` entries remain valid. Photo and notebook parameters retain their meaning. Outer sample-mode and Discord OAuth parameters are not consumed by section navigation.
 
@@ -165,7 +165,7 @@ The browser archive download is prepared in a private temporary file before resp
 
 ## Group plans and attendance API
 
-The P1 backend implements the [social-space plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) with independent plans. A plan requires no archive photo. The UI and social Home remain separate delivery slices.
+The P1 backend implements the [social-space plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) with independent plans. A plan requires no archive photo. The P1 interface implements the list, detail, organizer forms and attendance controls. Social Home remains a separate delivery slice.
 
 `GET /api/social/plans` accepts `group`, `scope=upcoming|all`, `limit` from 1 to 50 and an opaque cursor. Results sort by UTC start and stable ID. Upcoming means active plans whose start has not passed the server clock. `GET /api/social/plan` reads one plan with current organizer and active-member attendance.
 
@@ -184,6 +184,17 @@ Plan local times use ISO calendar values without an offset and an IANA timezone.
 Plan edits, cancellation and deletion require the expected positive integer revision and return HTTP 409 on stale state. Attendance and cancellation serialize in the same write boundary. Group-and-actor-scoped request receipts retain the operation, canonical payload hash and result ID. Exact replay reads the surviving result without another write. A newer attendance state is preserved when an older request is replayed. A removed result returns `{id, deleted: true}`. Reusing a key with different content conflicts. Receipts retain no comment text, plan description or member name.
 
 SQLite schema initialization and the hosted migration create the same plan, attendance and receipt relationships. PostgreSQL epoch columns use double precision. Membership-delete triggers withdraw the departed organizer's plans and dependent attendance, and remove the departed attendee's responses even when removal uses the identity store. Current-member joins also exclude departed actors on reads. The archive ZIP adds `social.json` when the exporting member has authored plans or current attendance. It contains only those contributions. It participates in both export assembly and final admission fingerprints.
+
+
+### Plan interface
+
+`/circle?section=plans` opens the bounded upcoming list. `scope=all` includes past and cancelled plans. A detail link includes both `group` and `plan`; the current group must match before the page reads that plan. The existing group/session gate still verifies membership. The Plans route fetches no Atlas or per-card notebook data. Its create action and the Ekle menu require no existing photograph.
+
+The form asks for local start, optional end and an IANA timezone. A nonexistent local time cannot be submitted. A repeated time exposes a required UTC-offset choice. The server validates every value again. The optional memory field accepts an existing approved-memory identifier or detail link, and linking preserves archive chronology. Editing another field preserves start-time seconds already present in the plan. Updates contain only fields changed from the opened draft. An unavailable memory projection is not an unlink: an unchanged association is omitted, while clearing a visible link sends explicit null. Reloading a stale revision retains the original edit baseline and draft. Saving an untouched draft closes it without a write.
+
+A draft and an uncertain write command stay in component memory. An uncertain response offers retry of the exact payload and request key; another save stays blocked until that command resolves. HTTP 409 offers the current plan for comparison without replacing the draft. Group, profile or access loss clears both and aborts requests. Late reads and writes cannot restore them. The app does not write private plan text or drafts to browser storage. Demo Plans never reads or writes the real group's social API.
+
+The organizer can edit, cancel or delete. Cancellation disables attendance controls; deletion removes the detail. Attendance displays server-authorized counts and active participant names, with distinct yes, maybe, no and clear actions. API failures, loading, an empty list and denied access have separate states. New controls and errors use Turkish. Shared confirmation sheets remain above mobile navigation and return keyboard focus through the existing Sheet behavior.
 
 ## Photo and approved-memory comments API
 

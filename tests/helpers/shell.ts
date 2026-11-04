@@ -30,20 +30,26 @@ export async function followShellLink(page: Page, name: string) {
       .click();
     return;
   }
-  if (name === "My Imports" || name === "Search") {
+  if (name === "My Imports") {
+    const add = page.getByRole("button", { name: "Ekle", exact: true });
+    if ((await add.getAttribute("aria-expanded")) !== "true") await add.click();
+    await page
+      .getByRole("navigation", { name: "Ekle seçenekleri" })
+      .getByRole("link", { name: "Fotoğraf veya arşiv", exact: true })
+      .click();
+    return;
+  }
+  if (name === "Search") {
     await page
       .locator(".site-header")
-      .getByRole("link", {
-        name: name === "Search" ? "Anı ara" : "Ekle",
-        exact: true,
-      })
+      .getByRole("link", { name: "Anı ara", exact: true })
       .click();
     return;
   }
   if (name === "About" || name === "Replay introduction") {
     await openArchiveTools(page);
     await page
-      .locator(".menu-popover")
+      .locator(".account-menu .menu-popover")
       .getByRole("link", {
         name: name === "About" ? "Yardım ve gizlilik" : "Tanıtımı izle",
         exact: true,
@@ -61,7 +67,7 @@ export async function followShellLink(page: Page, name: string) {
 export async function signOut(page: Page) {
   await openArchiveTools(page);
   await page
-    .locator(".menu-popover")
+    .locator(".account-menu .menu-popover")
     .getByRole("button", { name: "Çıkış yap", exact: true })
     .click();
 }
