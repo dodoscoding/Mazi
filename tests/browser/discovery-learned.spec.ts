@@ -38,7 +38,7 @@ test("learned model indexes locally and keeps keyword fallback", async ({
       .fill("people relaxing on a wooden dock beside a mountain lake");
     await page.getByLabel("Arama türü").selectOption("keyword");
     await page.getByRole("button", { name: "Arşivde ara" }).click();
-    await expect(page.locator("#result-total")).toHaveText("0 results");
+    await expect(page.locator("#result-total")).toHaveText("0 sonuç");
     await page.getByLabel("Arama türü").selectOption("semantic");
     await page.getByRole("button", { name: "Arşivde ara" }).click();
     await expect(page.locator("#index-progress")).toContainText(
@@ -47,8 +47,16 @@ test("learned model indexes locally and keeps keyword fallback", async ({
     await page
       .getByRole("button", { name: "Yerel arama dizini oluştur" })
       .click();
-    await expect(page.locator("#index-progress")).toContainText("0 remaining");
-    await expect(page.locator("#count")).toContainText("Local CLIP");
+    await expect(page.locator("#index-progress")).toContainText("0 kaldı.");
+    await expect(page.locator("#count")).toContainText("İlişkili arama");
+    const state = await (
+      await page.request.get(
+        `/api/discovery/state?group=${encodeURIComponent(group)}`,
+      )
+    ).json();
+    expect(state.settings.model_label).toContain("Local CLIP");
+    expect(state.settings.learned).toBe(true);
+    expect(state.settings.model_ready).toBe(true);
     await expect(page.locator("#results article").first()).toContainText(
       "Archive item one",
     );
