@@ -23,10 +23,10 @@ test at tests/dom/route-history.test.mjs:114:5
 ✖ /people replaces the legacy entry without adding history (9.854416ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + '/people'
   - '/discover'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -42,10 +42,10 @@ test at tests/dom/route-history.test.mjs:114:5
 ✖ /#/people replaces the legacy entry without adding history (10.27125ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + '/people'
   - '/discover'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -61,10 +61,10 @@ test at tests/dom/route-history.test.mjs:114:5
 ✖ /settings replaces the legacy entry without adding history (9.261542ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + '/settings'
   - '/circle'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -80,10 +80,10 @@ test at tests/dom/route-history.test.mjs:114:5
 ✖ /#/settings replaces the legacy entry without adding history (10.357209ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + '/settings'
   - '/circle'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
@@ -99,10 +99,10 @@ test at tests/dom/route-history.test.mjs:125:1
 ✖ aliases reached inside the app preserve the previous destination (9.706416ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + '/people'
   - '/discover'
-  
+
       at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:128:10)
       at async Test.run (node:internal/test_runner/test:1208:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
