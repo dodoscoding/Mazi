@@ -30,11 +30,11 @@ test("select, open, explore photos and context; Back restores selection and focu
   ).toBeFocused();
   await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Show conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı göster" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(page.getByRole("link", { name: "Anıyı aç" })).toBeFocused();
   await expect(
     page.getByRole("button", { name: "The last ferry anısını seç" }),
@@ -53,16 +53,16 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
   await expect(
     page.getByRole("button", { name: "Sonraki fotoğraf" }),
   ).toBeDisabled();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeVisible();
   await page.goto("/?demo=1#/memory/missing");
   await expect(
-    page.getByRole("heading", { name: "Memory not found" }),
+    page.getByRole("heading", { name: "Anı bulunamadı" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
   ).toBeVisible();
@@ -79,7 +79,7 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
       .getByRole("button", { name: "The last ferry anısını seç" })
       .click();
     await openFullMemory(page);
-    await page.getByRole("link", { name: "Back", exact: true }).click();
+    await page.getByRole("link", { name: "Geri", exact: true }).click();
   }
   expect(
     await page.evaluate(
@@ -107,7 +107,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
   await expect(page.locator(".photo-frame img")).toBeVisible();
-  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(
     page.getByText("Atlas düz haritada gösteriliyor."),
   ).toBeVisible();

@@ -268,6 +268,23 @@ test("photo-only Home fallback opens one selected photo and activity stays bound
     .getByRole("button", { name: "Sonraki haberler", exact: true })
     .click();
   await expect(page.locator(".social-activity li")).toHaveCount(2);
+  for (const back of ["pill", "history"]) {
+    const opener = page.locator(".social-activity li a").first();
+    await opener.scrollIntoViewIfNeeded();
+    const openerId = await opener.getAttribute("id");
+    const scroll = await page.evaluate(() => scrollY);
+    await opener.click();
+    await expect(page.locator(".native-conversation")).toBeVisible();
+    if (back === "pill") await page.locator(".back-pill").click();
+    else await page.goBack();
+    await expect(page.locator(".social-activity li")).toHaveCount(2);
+    await expect(page.locator(`[id="${openerId}"]`)).toBeFocused();
+    expect(
+      Math.abs((await page.evaluate(() => scrollY)) - scroll),
+    ).toBeLessThan(3);
+  }
+  await page.reload();
+  await expect(page.locator(".social-activity li")).toHaveCount(2);
   await page.getByRole("button", { name: "İlk haberler", exact: true }).click();
   await expect(page.locator(".social-activity li")).toHaveCount(20);
   if (info.project.name === "phone") {
