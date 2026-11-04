@@ -20,7 +20,9 @@ test("select, open, explore photos and context; Back restores selection and focu
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Select The last ferry" }).click();
+  await page
+    .getByRole("button", { name: "The last ferry anısını seç" })
+    .click();
   await openFullMemory(page);
   await expect(page).toHaveURL(/memory\/last-ferry/);
   await expect(
@@ -35,7 +37,7 @@ test("select, open, explore photos and context; Back restores selection and focu
   await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(page.getByRole("link", { name: "Anıyı aç" })).toBeFocused();
   await expect(
-    page.getByRole("button", { name: "Select The last ferry" }),
+    page.getByRole("button", { name: "The last ferry anısını seç" }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -73,7 +75,9 @@ test("reduced motion, fast reversals, no overflow and basic accessibility", asyn
   await page.goto("/?demo=1#/atlas");
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Lake days anısını seç" }).click();
-    await page.getByRole("button", { name: "Select The last ferry" }).click();
+    await page
+      .getByRole("button", { name: "The last ferry anısını seç" })
+      .click();
     await openFullMemory(page);
     await page.getByRole("link", { name: "Back", exact: true }).click();
   }

@@ -34,7 +34,7 @@ function Thumb({
     <button
       type="button"
       className={failed ? "is-failed" : undefined}
-      aria-label={`Photo ${index + 1}: ${photo.caption}`}
+      aria-label={`Fotoğraf ${index + 1}: ${photo.caption}`}
       aria-pressed={current}
       onClick={choose}
     >
@@ -170,8 +170,8 @@ export function Viewer({
   return (
     <section
       className="gallery viewer"
-      aria-label="Memory photographs"
-      aria-roledescription="carousel"
+      aria-label="Anının fotoğrafları"
+      aria-roledescription="fotoğraf dizisi"
       tabIndex={0}
       onKeyDown={(event) => {
         if (
@@ -233,7 +233,7 @@ export function Viewer({
             <button
               type="button"
               className="viewer-arrow viewer-arrow--previous"
-              aria-label="Previous photo"
+              aria-label="Önceki fotoğraf"
               aria-disabled={index === 0}
               onClick={() => index > 0 && go(index - 1)}
             >
@@ -242,7 +242,7 @@ export function Viewer({
             <button
               type="button"
               className="viewer-arrow viewer-arrow--next"
-              aria-label="Next photo"
+              aria-label="Sonraki fotoğraf"
               aria-disabled={index === photos.length - 1}
               onClick={() => index < photos.length - 1 && go(index + 1)}
             >
@@ -257,7 +257,7 @@ export function Viewer({
         )}
       </figure>
       {many && (
-        <div className="filmstrip" role="group" aria-label="Choose a photo">
+        <div className="filmstrip" role="group" aria-label="Fotoğraf seç">
           {photos.map((item, position) => (
             <Thumb
               key={item.src}

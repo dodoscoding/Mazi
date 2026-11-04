@@ -35,7 +35,9 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   ).toBeFocused();
   await page.getByRole("link", { name: "Back", exact: true }).click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.getByRole("button", { name: "Select The last ferry" }).click();
+  await page
+    .getByRole("button", { name: "The last ferry anısını seç" })
+    .click();
   await openFullMemory(page);
   // The portal entry is replaced by the memory, so one Back reaches the atlas.
   await page.goBack();
