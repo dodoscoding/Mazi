@@ -719,13 +719,13 @@
   color: var(--accent-atmosphere);
 }
 
-.add-sections {
+.feature-content .add-sections {
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
   margin-bottom: 32px;
 }
-.add-sections a[aria-current="page"] {
+.feature-content .add-sections a[aria-current="page"] {
   color: var(--text-primary);
   text-decoration: underline;
   text-underline-offset: 6px;
