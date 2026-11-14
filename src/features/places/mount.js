@@ -31,6 +31,16 @@ function sourceKey(type) {
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (selector) => root.querySelector(selector);
+  const sourcesOnly = root.dataset.surface === "add";
+  if (sourcesOnly) {
+    $(".fx-places").classList.add("sources-only");
+    $("h1").textContent = "Add";
+    $(".fx-head .fx-sub").textContent =
+      "Connect existing sources and follow their transfers to your circle.";
+    $(".places-main").hidden = true;
+    $(".places-switch").hidden = true;
+    $("#source-title").after(action("Refresh connections", refresh));
+  }
   let group = "";
   let generation = 0;
   let land;
@@ -413,10 +423,16 @@ export function mount(root, lifecycle) {
       )
         return;
       $("#sources").replaceChildren(
-        node("p", "Sources could not load. Refresh places to retry.", {
-          role: "status",
-          class: "fx-small",
-        }),
+        node(
+          "p",
+          sourcesOnly
+            ? "Sources could not load. Refresh connections to retry."
+            : "Sources could not load. Refresh places to retry.",
+          {
+            role: "status",
+            class: "fx-small",
+          },
+        ),
       );
       throw error;
     }
@@ -635,8 +651,9 @@ export function mount(root, lifecycle) {
     } catch {
       if (request === countRequest && active()) {
         $("#origin-counts").replaceChildren();
-        $("#origin-sub").textContent =
-          "Source overview could not load. Refresh places to retry.";
+        $("#origin-sub").textContent = sourcesOnly
+          ? "Source overview could not load. Refresh connections to retry."
+          : "Source overview could not load. Refresh places to retry.";
       }
     }
   }
@@ -653,8 +670,9 @@ export function mount(root, lifecycle) {
     } catch (error) {
       if (request !== guildRequest || !active() || error.name === "AbortError")
         return;
-      $("#guild-status").textContent =
-        "Connected servers could not load. Refresh places to retry.";
+      $("#guild-status").textContent = sourcesOnly
+        ? "Connected servers could not load. Refresh connections to retry."
+        : "Connected servers could not load. Refresh places to retry.";
       return;
     }
     if (request !== guildRequest || group !== selectedGroup || !active())
@@ -722,9 +740,8 @@ export function mount(root, lifecycle) {
   }
   async function refresh() {
     await Promise.allSettled([
-      map(),
+      ...(sourcesOnly ? [] : [map(), loadOrigins()]),
       loadGuilds().then(loadSources),
-      loadOrigins(),
       loadOverview(),
     ]);
   }
