@@ -267,3 +267,49 @@ test("an old Atlas denial cannot clear a newer authorized load", async ({
   ).toBeVisible();
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
 });
+
+test("Settings retains membership, account, About and introduction replay", async ({
+  page,
+}, info) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("heading", { name: "Settings", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("list", { name: "Members" })).toContainText(
+    "Alice",
+  );
+  await expect(page.getByRole("list", { name: "Members" })).toContainText(
+    "Ben",
+  );
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Account", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "About", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Replay introduction" })
+    .click();
+  await page.getByRole("button", { name: "Open the Atlas" }).click();
+  await expect(page).toHaveURL(/#\/settings$/);
+  await page.screenshot({
+    path: `work/poteto/app-simplification/screenshots/settings-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Sign out", exact: true })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Sign out", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Members" })).toHaveCount(0);
+  expect((await page.request.get("/api/groups")).status()).toBe(403);
+});
