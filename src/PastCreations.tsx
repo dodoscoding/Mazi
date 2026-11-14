@@ -88,6 +88,30 @@ function CreationPhoto({ path, alt }: { path: string; alt: string }) {
   );
 }
 
+function StoryPhotos({ assets }: { assets: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary>Original photographs</summary>
+      {open && (
+        <div className="past-photos">
+          {assets.map((asset) => (
+            <a
+              href={`/api/archive/${encodeURIComponent(asset)}/original`}
+              key={asset}
+            >
+              <CreationPhoto
+                path={`/api/archive/${encodeURIComponent(asset)}/preview`}
+                alt="Original photograph from this saved story"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+    </details>
+  );
+}
+
 export default function PastCreations({
   group,
   preview = false,
@@ -235,6 +259,9 @@ export default function PastCreations({
         recollections are preserved as written.
       </p>
       <a href="#/settings">Back to Settings</a>
+      <button disabled={pending} onClick={reload}>
+        Refresh Past creations
+      </button>
       <p role="status">{notice}</p>
       {state.kind === "loading" && <p role="status">Loading Past creations…</p>}
       {state.kind === "error" && (
@@ -268,22 +295,7 @@ export default function PastCreations({
               {section.title} · {section.assets.length} photographs
             </p>
           ))}
-          <details>
-            <summary>Original photographs</summary>
-            <div className="past-photos">
-              {story.event.assets.map((asset) => (
-                <a
-                  href={`/api/archive/${encodeURIComponent(asset)}/original`}
-                  key={asset}
-                >
-                  <CreationPhoto
-                    path={`/api/archive/${encodeURIComponent(asset)}/preview`}
-                    alt="Original photograph from this saved story"
-                  />
-                </a>
-              ))}
-            </div>
-          </details>
+          <StoryPhotos assets={story.event.assets} />
           <button
             disabled={pending}
             onClick={() => void act(() => exportRecord("story", story.id))}

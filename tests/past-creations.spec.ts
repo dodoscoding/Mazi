@@ -75,6 +75,14 @@ test("Past creations retains historical reads and only authorized deletion", asy
   await expect(
     page.getByRole("button", { name: "Delete story", exact: true }),
   ).toHaveCount(0);
+  await page.getByText("Original photographs", { exact: true }).click();
+  await expect(
+    page.getByAltText("Original photograph from this saved story"),
+  ).toHaveCount(3);
+  await expect(
+    page.getByAltText("Original photograph from this saved story").first(),
+  ).toBeVisible();
+  await expect(page.locator("#grid")).toHaveCount(0);
   expect(
     (
       await page.request.post("/api/memories/delete", {
@@ -110,4 +118,15 @@ test("Past creations retains historical reads and only authorized deletion", asy
     fullPage: true,
     animations: "disabled",
   });
+  await page.route("**/api/memories/stories?*", (route) =>
+    route.fulfill({ status: 403, json: { error: "Access withdrawn" } }),
+  );
+  await page
+    .getByRole("button", { name: "Refresh Past creations", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator(".past-card")).toHaveCount(0);
+  await expect(
+    page.getByAltText("Photograph inside the opened capsule"),
+  ).toHaveCount(0);
 });

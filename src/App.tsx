@@ -170,6 +170,13 @@ export default function App() {
       heading.current?.focus({ preventScroll: true });
     }
   }, [route.path]);
+  const legacyCreation =
+    route.path === "/memories" &&
+    (["stories", "capsules"].includes(
+      new URLSearchParams(route.search).get("section") || "",
+    ) ||
+      new URLSearchParams(route.search).has("story") ||
+      new URLSearchParams(route.search).has("capsule"));
   useEffect(() => {
     const params = new URLSearchParams(route.search);
     if (
@@ -236,7 +243,7 @@ export default function App() {
         />
       </>
     );
-  else if (route.path === "/past-creations")
+  else if (route.path === "/past-creations" || legacyCreation)
     content = (
       <Suspense fallback={<p role="status">Loading Past creations…</p>}>
         <PastCreations

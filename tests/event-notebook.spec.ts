@@ -217,10 +217,10 @@ test("standalone photographs and sample mode never load private recollections", 
       .getByRole("link", { name: "Notları aç", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
-  await expect(page.locator(".dossier")).toBeVisible();
+  await expect(page.locator(".memory-detail")).toBeVisible();
   await expect(
     page
-      .locator(".dossier")
+      .locator(".memory-detail")
       .getByRole("link", { name: "Notları aç", exact: true }),
   ).toHaveCount(0);
   expect(requests).toBe(0);
