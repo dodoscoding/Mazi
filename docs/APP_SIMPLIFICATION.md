@@ -4,8 +4,10 @@ Prepared on 14 November 2026 from the owner discussion and source inspection.
 [D28](DECISIONS.md#app-simplification-14-november-2026) records the confirmed
 product choices. The [implementation specification](APP_SIMPLIFICATION_SPEC.md)
 is published as [issue #146](https://github.com/dodoscoding/Mazi/issues/146)
-with the `ready-for-agent` label. No application changes have been implemented
-or deployed.
+with the `ready-for-agent` label. Local implementation slices and their evidence
+are tracked in [PR #161](https://github.com/dodoscoding/Mazi/pull/161). Final
+#159 navigation/compatibility acceptance is being integrated; no deployment or
+production milestone acceptance is implied.
 
 ## Confirmed direction
 
@@ -37,7 +39,8 @@ move into this structure. Dates and places can be corrected from memory
 detail. Annual recaps have no story editor, generated narration, or video
 creation workflow.
 
-Past creations retains reading and owner deletion without creation tools.
+Past creations retains reading, export and authorized deletion without creation
+tools, including deletion-only withdrawal of one’s own existing recollection.
 Sealed capsules retain their existing opening dates. Feature retirement does
 not authorize deleting stored content.
 
@@ -49,8 +52,8 @@ without photographs. The owner confirmed these browsing choices.
 
 ## Observed complexity
 
-Code inspection found eleven general navigation destinations in the current
-shell. Home, Timeline, and Memories offer overlapping archive browsing.
+At the planning baseline, source inspection found eleven general navigation
+destinations in the shell. Home, Timeline, and Memories offer overlapping archive browsing.
 Search and Discover share a feature implementation. Places & sources combines
 map exploration with source management. Archive review combines correction
 with rediscovery, contribution management, export, and departure controls.
@@ -105,9 +108,9 @@ These findings come from source inspection, not a live usability test.
 | Repeated navigation | Replace Archive tools and the long More list with Globe, Photos, Add, and Settings access appropriate to screen size. |
 | Repeated group selectors | Use the current circle consistently; keep any necessary circle management in Settings rather than repeating selectors through every surface. |
 
-## Proposed component work
+## Component migration responsibilities
 
-This is a relocation plan, not permission to delete directories containing
+This records the relocation boundary, not permission to delete directories containing
 retained functions. Inspect dependencies before removing shared code.
 
 | Code | Planned treatment |
@@ -132,7 +135,7 @@ continue to enforce access rules.
 
 ## Existing links and content
 
-The following route names are proposed for implementation. Preserve useful
+The following retained-task mappings govern final compatibility implementation. Preserve useful
 query parameters and selected photograph identifiers when translating links.
 
 | Old link | Proposed destination |
@@ -199,11 +202,19 @@ then the relevant build, lint, unit, backend, and integrated app checks. Record
 the revision, commands, fixtures, environment, results, and evidence locations.
 Documentation checks alone do not establish application acceptance.
 
-## Review status
+## Implementation status
 
 The owner confirmed the product choices above, requested publication as a
 specification, and confirmed the existing integrated desktop/phone browser
-tests plus targeted HTTP contracts as the testing boundaries. Issue #146 is
-ready for agent implementation. Application implementation has not started.
-Source inspection is the basis for the component map; dependency analysis
-during implementation determines exact safe file deletions.
+tests plus targeted HTTP contracts as the testing boundaries. Issue #146 is the approved parent specification. The [ticket plan](APP_SIMPLIFICATION_TICKETS_DRAFT.md) and [PR #161](https://github.com/dodoscoding/Mazi/pull/161) track delivery. Existing slice receipts are available below; these are local synthetic checks, not production or physical-device acceptance.
+
+| Retained responsibility | Slice evidence |
+| --- | --- |
+| Direct shared viewer and contextual contribution control | [#147](../work/poteto/app-simplification/ISSUE-147.md), [#153](../work/poteto/app-simplification/ISSUE-153.md) |
+| Individual Photos, integrated photo/source search and capture-year recap | [#148](../work/poteto/app-simplification/ISSUE-148.md), [#149](../work/poteto/app-simplification/ISSUE-149.md), [#150](../work/poteto/app-simplification/ISSUE-150.md) |
+| Add imports, source connections and correction queues | [#151](../work/poteto/app-simplification/ISSUE-151.md), [#152](../work/poteto/app-simplification/ISSUE-152.md), [#154](../work/poteto/app-simplification/ISSUE-154.md) |
+| Settings membership/account, export/departure and discovery preferences | [#155](../work/poteto/app-simplification/ISSUE-155.md), [#156](../work/poteto/app-simplification/ISSUE-156.md) |
+| Past creations reads/deletion and story/capsule/generated-media API retirement | [#157](../work/poteto/app-simplification/ISSUE-157.md) |
+| AI retirement and ordinary evidence reads | [#158](../work/poteto/app-simplification/ISSUE-158.md) |
+
+The final #159 gate owns the shared navigation switch, remaining old-link mappings, unused-composition removal, combined regression/bundle checks and final screenshots. It remains a separate acceptance boundary while that work is in progress. Source inspection and per-slice tests establish retained dependencies; they do not authorize a data purge, storage migration or deployment.

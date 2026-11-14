@@ -136,6 +136,7 @@ export function MemoryView({
         )
       )
         return;
+      event.preventDefault();
       if (canGoBack()) history.back();
       else navigate(backUrl, true);
     };
