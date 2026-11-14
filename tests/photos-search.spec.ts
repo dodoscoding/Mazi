@@ -100,3 +100,101 @@ test("Photos searches photographs first and opens actual text-only Conversation 
   ).toHaveValue("ferry");
   await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
 });
+
+test("Photos clears an open text-only context immediately when its contribution is withdrawn", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Alice", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  const profile = await (await page.request.get("/api/session")).json();
+  const { execFileSync } = await import("node:child_process");
+  const { createHash } = await import("node:crypto");
+  const archive = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; b=io.BytesIO(); z=zipfile.ZipFile(b,'w'); z.writestr('moon-chat.txt','07/01/2024, 19:00 - Nora: Moonstone logistics'); z.close(); sys.stdout.buffer.write(b.getvalue())",
+  ]);
+  const begin = await page.request.post("/api/imports/start", {
+    data: {
+      group: profile.group_id,
+      source: "whatsapp",
+      namespace: `search-${info.project.name}`,
+      size: archive.length,
+      sha256: createHash("sha256").update(archive).digest("hex"),
+      options: { date_order: "DMY" },
+    },
+  });
+  expect(begin.ok()).toBe(true);
+  const { id } = await begin.json();
+  expect(
+    (
+      await page.request.post("/api/imports/chunk", {
+        data: { id, offset: 0, data: archive.toString("base64") },
+      })
+    ).ok(),
+  ).toBe(true);
+  expect(
+    (await page.request.post("/api/imports/finish", { data: { id } })).ok(),
+  ).toBe(true);
+  await expect
+    .poll(
+      async () =>
+        (await (await page.request.get(`/api/imports/${id}`)).json()).state,
+    )
+    .toBe("INVENTORIED");
+  expect(
+    (await page.request.post("/api/imports/confirm", { data: { id } })).ok(),
+  ).toBe(true);
+  await page.goto("/#/add");
+  await page.locator(`#imports [data-run="${id}"]`).click();
+  await expect(
+    page.getByRole("button", {
+      name: "Withdraw this contribution",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.goto("/#/photos?q=Moonstone");
+  await expect(page.locator(".mem-tile")).toHaveCount(0);
+  await page
+    .getByRole("region", { name: "Konuşma sonuçları", exact: true })
+    .getByRole("button", { name: /Moonstone logistics/ })
+    .click();
+  const context = page.getByRole("region", {
+    name: "Kaynak konuşma bağlamı",
+    exact: true,
+  });
+  await expect(context).toContainText("Moonstone logistics");
+  expect(
+    (await page.request.post("/api/imports/withdraw", { data: { id } })).ok(),
+  ).toBe(true);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/atlas?*", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Fotoğrafları yenile", exact: true })
+    .click();
+  try {
+    await expect(context).toBeHidden();
+  } finally {
+    release();
+  }
+  await expect(page.locator("#conversation-list")).toBeEmpty();
+  await expect(page.locator("#conversation-status")).toHaveText(
+    "Eşleşen konuşma yok.",
+  );
+  await expect(
+    page.getByRole("searchbox", {
+      name: "Fotoğraf ve konuşmalarda ara",
+      exact: true,
+    }),
+  ).toHaveValue("Moonstone");
+});
