@@ -88,6 +88,39 @@ test("Past creations retains historical reads and only authorized deletion", asy
     page.getByAltText("Original photograph from this saved story").first(),
   ).toBeVisible();
   await expect(page.locator("#grid")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Remove my recollection", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Remove my recollection", exact: true })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Keep it", exact: true })
+    .click();
+  await expect(
+    page.getByText(`Historical contribution ${info.project.name}`, {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Remove my recollection", exact: true })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete", exact: true })
+    .click();
+  await expect(
+    page.getByText(`Historical contribution ${info.project.name}`, {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(
+      "<img src=x onerror=alert(1)> Historical summer recollection.",
+      { exact: true },
+    ),
+  ).toBeVisible();
   const storyDownload = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "Export story JSON", exact: true })

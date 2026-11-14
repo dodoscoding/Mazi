@@ -21,6 +21,8 @@ def seed_past_creations(store, alice, group):
     for screen in ['desktop', 'phone']:
         profile, token = store.enter_shared(code='synthetic-shared-code', name='Past ' + screen)
         store.complete_introduction(token)
+        shared = store.story(profile['user_id'], group, story['id'])
+        store.write_story(profile['user_id'], group, story['id'], shared['revision'], 'Historical contribution ' + screen)
         own = store.create_story(profile['user_id'], group, event)
         store.write_story(profile['user_id'], group, own['id'], own['revision'], 'Historical own ' + screen)
         store.seal_capsule(profile['user_id'], group, 'Sealed title ' + screen, 'Sealed secret ' + screen, date(now + 3600), photo)
