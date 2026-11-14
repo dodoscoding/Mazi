@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { createLifecycle } from "./lifecycle";
 import { createDiscordReturn, type DiscordReturn } from "./discordReturn";
+import settingsTemplate from "./settings/template.html?raw";
+import { mount as settingsMount } from "./settings/mount";
 import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
@@ -36,8 +38,10 @@ export const featurePaths = Object.keys(featureRegistry);
 export function FeaturePage({
   path,
   discordReturn,
+  settingsControls = false,
 }: {
   path: string;
+  settingsControls?: boolean;
   discordReturn?: DiscordReturn;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -49,9 +53,11 @@ export function FeaturePage({
     const add = pathname === "/add";
     const sources =
       add && new URLSearchParams(query).get("section") === "sources";
-    const feature = sources
-      ? featureRegistry["/places"]
-      : featureRegistry[pathname as keyof typeof featureRegistry];
+    const feature = settingsControls
+      ? { template: settingsTemplate, mount: settingsMount }
+      : sources
+        ? featureRegistry["/places"]
+        : featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
     let mounted = false;
@@ -160,7 +166,7 @@ export function FeaturePage({
       window.removeEventListener("mazi:group", groupChanged);
       window.removeEventListener("mazi:access-lost", accessLost);
     };
-  }, [path, returned]);
+  }, [path, returned, settingsControls]);
   return <div ref={host} className="feature-page" />;
 }
 export default FeaturePage;
