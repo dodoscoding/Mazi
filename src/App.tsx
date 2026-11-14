@@ -195,6 +195,7 @@ export default function App() {
     );
   else if (
     archive.status === "ready" &&
+    route.path !== "/answer-evidence" &&
     new URLSearchParams(route.search).has("group") &&
     new URLSearchParams(route.search).get("group") !== archive.group
   )
