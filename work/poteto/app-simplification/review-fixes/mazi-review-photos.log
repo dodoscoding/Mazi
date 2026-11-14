@@ -1,0 +1,48 @@
+[WebServer] (node:98461) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 26 tests using 1 worker
+
+(node:98464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/ai-retirement.spec.ts:3:1 › old Ask links retain their query in Photos with an honest retirement notice (195ms)
+  ✓   2 [desktop] › tests/ai-retirement.spec.ts:45:1 › old exact photo evidence links retain accessible evidence and reject ambiguous or foreign identifiers (913ms)
+  ✓   3 [desktop] › tests/ai-retirement.spec.ts:93:1 › legacy discovery search has no generated-answer fallback or prompt (113ms)
+  ✓   4 [desktop] › tests/photos-search.spec.ts:3:1 › Globe search opens Photos and preserves keyword filters and the selected photograph (1.4s)
+  ✓   5 [desktop] › tests/photos-search.spec.ts:59:1 › Photos searches photographs first and opens actual text-only Conversation context (387ms)
+
+  ✓   6 [desktop] › tests/photos-search.spec.ts:114:1 › Photos clears an open text-only context immediately when its contribution is withdrawn (1.3s)
+  ✓   7 [desktop] › tests/photos-search.spec.ts:212:1 › Photos conversation search explains loading, retry, filter scope and empty results (339ms)
+  ✓   8 [desktop] › tests/photos-search.spec.ts:286:1 › Photos removes all retained conversation context when the session is lost (320ms)
+
+  ✓   9 [desktop] › tests/photos-search.spec.ts:317:1 › Photos offers honest continuation before reporting no conversation matches (1.5s)
+  ✓  10 [desktop] › tests/photos.spec.ts:3:1 › Photos opens from Globe as individual photographs grouped by newest month (1.9s)
+  ✓  11 [desktop] › tests/photos.spec.ts:69:1 › Photos preserves year and compact filters across the viewer and keeps uncertain dates explicit (1.4s)
+  ✓  12 [desktop] › tests/photos.spec.ts:127:1 › Photos explains loading, failed loads and empty filters with recovery (316ms)
+
+  ✓  13 [desktop] › tests/photos.spec.ts:175:1 › Photos and Globe remove withdrawn contributions and clear media on session loss (2.1s)
+(node:98510) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  14 [phone] › tests/ai-retirement.spec.ts:3:1 › old Ask links retain their query in Photos with an honest retirement notice (1.0s)
+  ✓  15 [phone] › tests/ai-retirement.spec.ts:45:1 › old exact photo evidence links retain accessible evidence and reject ambiguous or foreign identifiers (912ms)
+  ✓  16 [phone] › tests/ai-retirement.spec.ts:93:1 › legacy discovery search has no generated-answer fallback or prompt (169ms)
+  ✓  17 [phone] › tests/photos-search.spec.ts:3:1 › Globe search opens Photos and preserves keyword filters and the selected photograph (1.9s)
+  ✓  18 [phone] › tests/photos-search.spec.ts:59:1 › Photos searches photographs first and opens actual text-only Conversation context (454ms)
+
+  ✓  19 [phone] › tests/photos-search.spec.ts:114:1 › Photos clears an open text-only context immediately when its contribution is withdrawn (1.5s)
+  ✓  20 [phone] › tests/photos-search.spec.ts:212:1 › Photos conversation search explains loading, retry, filter scope and empty results (357ms)
+  ✓  21 [phone] › tests/photos-search.spec.ts:286:1 › Photos removes all retained conversation context when the session is lost (377ms)
+
+  ✓  22 [phone] › tests/photos-search.spec.ts:317:1 › Photos offers honest continuation before reporting no conversation matches (2.0s)
+  ✓  23 [phone] › tests/photos.spec.ts:3:1 › Photos opens from Globe as individual photographs grouped by newest month (2.0s)
+  ✓  24 [phone] › tests/photos.spec.ts:69:1 › Photos preserves year and compact filters across the viewer and keeps uncertain dates explicit (1.5s)
+  ✓  25 [phone] › tests/photos.spec.ts:127:1 › Photos explains loading, failed loads and empty filters with recovery (302ms)
+
+  ✓  26 [phone] › tests/photos.spec.ts:175:1 › Photos and Globe remove withdrawn contributions and clear media on session loss (1.5s)
+
+  26 passed (27.9s)
