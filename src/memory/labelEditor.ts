@@ -155,7 +155,7 @@ export function mountLabelEditor(
         for (const person of item.people) {
           const link = document.createElement("a");
           link.textContent = person.name;
-          link.href = "#/search?person=" + encodeURIComponent(person.id);
+          link.href = "#/photos?person=" + encodeURIComponent(person.id);
           line.append(link, " ");
         }
         detail.append(line);
@@ -163,9 +163,8 @@ export function mountLabelEditor(
       facts.append(detail);
     });
     const manage = document.createElement("a");
-    manage.href = "#/discover?section=people";
-    manage.textContent =
-      "Kişi onayı, ilişki kaldırma ve tekrar etiketlemeyi engelleme";
+    manage.href = "#/settings";
+    manage.textContent = "Kişi ve kimlik ayarlarını aç";
     facts.append(manage);
     enabled();
   }

@@ -155,3 +155,50 @@ for (const prefix of ["/", "/#/"]) {
     assert.equal(h.window.history.length, 1);
   });
 }
+
+for (const [old, canonical] of [
+  [
+    "/timeline?year=2024&q=two%3Fwords&places=%5B%22Doe%2C+City%22%5D&photo=2",
+    "/photos?year=2024&q=two%3Fwords&places=%5B%22Doe%2C+City%22%5D&photo=2&years=2024",
+  ],
+  [
+    "/memories?story=exact-record&group=circle",
+    "/past-creations?story=exact-record&group=circle",
+  ],
+  [
+    "/memories?section=capsules&capsule=sealed",
+    "/past-creations?capsule=sealed",
+  ],
+  [
+    "/review?section=export&asset=original",
+    "/settings?section=export&asset=original",
+  ],
+  [
+    "/review?section=events&cursor=next",
+    "/add?section=suggestions&cursor=next",
+  ],
+  [
+    "/circle?section=plans&plan=actual-plan&group=foreign",
+    "/settings?section=plans&plan=actual-plan&group=foreign&unavailable=plans",
+  ],
+])
+  test(`old ${old} preserves its retained task and exact parameters`, async (t) => {
+    const h = await harness(t, `http://localhost/#${old}`);
+    assert.equal(h.window.location.hash, `#${canonical}`);
+    assert.equal(h.canGoBack(), false);
+  });
+
+test("Discord outer query remains available to its captured controller and never enters canonical hash", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/places?code=private-code&state=private-state",
+  );
+  assert.equal(h.route.path, "/add");
+  assert.equal(h.route.search, "?section=sources");
+  assert.equal(
+    h.window.location.search,
+    "?code=private-code&state=private-state",
+  );
+  assert.equal(h.window.location.hash, "#/add?section=sources");
+  assert.equal(h.canGoBack(), false);
+});

@@ -146,7 +146,7 @@ test("session checks stay neutral and introduction failures remain retryable", a
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
   release();
   await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
+    page.getByRole("heading", { name: "Atlas", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(/#\/$/);
 });
@@ -182,41 +182,22 @@ test("archive access denial clears the authenticated shell", async ({
   }
 });
 
-test("a denied Home read removes scoped content without ending a valid session", async ({
+test("a denied Globe reload clears private content and returns to entry", async ({
   page,
 }) => {
-  expect(
-    (
-      await page.request.post("/api/entry", {
-        data: { name: "Ben", code: "synthetic-shared-code" },
-      })
-    ).ok(),
-  ).toBe(true);
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
   await page.goto("/");
-  await expect(page.locator(".home-featured h2")).toBeVisible();
-  const privateTitle = await page.locator(".home-featured h2").innerText();
-  await page.route("**/api/social/home?*", (route) =>
-    route.fulfill({
-      status: 403,
-      json: { error: "Access withdrawn" },
-    }),
+  await expect(page.locator(".atlas-home")).toBeVisible();
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ status: 403, json: { error: "Access withdrawn" } }),
   );
   await page.evaluate(() =>
     window.dispatchEvent(new Event("mazi:archive-changed")),
   );
-  await expect(
-    page.getByText("Bu grup şu anda açılamıyor. Erişimin değişmiş olabilir.", {
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.locator(".home-featured, .home-plan, .activity-list"),
-  ).toHaveCount(0);
-  await expect(page.getByText(privateTitle, { exact: true })).toHaveCount(0);
-  await expect(
-    page.getByRole("navigation", { name: "Main navigation" }),
-  ).toBeVisible();
-  expect((await page.request.get("/api/session")).ok()).toBe(true);
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator(".atlas-home")).toHaveCount(0);
 });
 
 test("an old Atlas denial cannot clear a newer authorized load", async ({
@@ -280,7 +261,10 @@ test("Settings retains membership, account, About and introduction replay", asyn
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "Hesap", exact: true }).click();
-  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  await page
+    .locator(".account-menu")
+    .getByRole("link", { name: "Settings", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Settings", exact: true }),
   ).toBeVisible();

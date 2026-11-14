@@ -17,10 +17,11 @@ test("About states the privacy promises and replays the introduction", async ({
   const main = page.getByRole("main");
   await expect(
     main.getByRole("heading", {
-      name: "A private atlas for one circle of friends",
+      name: "About",
+      exact: true,
     }),
   ).toBeVisible();
-  const promises = main.getByRole("list").first();
+  const promises = main.locator(".about-promises");
   for (const promise of [
     "Only the circle can see it",
     "What you add is shared at once",
@@ -36,7 +37,7 @@ test("About states the privacy promises and replays the introduction", async ({
   await main.getByRole("link", { name: "Replay introduction" }).click();
   await expect(page).toHaveURL(/#\/introduction/);
   await page.getByRole("button", { name: "Open the Atlas" }).click();
-  await expect(page).toHaveURL(/#\/$/);
+  await expect(page).toHaveURL(/#\/settings$/);
 });
 
 test("Sign out on About asks first; Stay keeps the session and confirming ends it", async ({
@@ -57,9 +58,17 @@ test("Sign out on About asks first; Stay keeps the session and confirming ends i
   // A late press on Sign out while the dialog fades away must not sign out.
   await page.locator(".about-dialog .button--primary").dispatchEvent("click");
   await expect(dialog).toBeHidden();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(500);
+  await page.evaluate(async () => {
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => {})),
+    );
+  });
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
-  await expect(page).toHaveURL(/#\/about/);
+  await expect(page).toHaveURL(/#\/settings/);
   expect((await page.request.get("/api/groups")).status()).toBe(200);
   await main.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.keyboard.press("Escape");
@@ -91,7 +100,7 @@ test("My Imports always says imports are shared at once and offers no publish st
   );
   await expect(page.getByLabel("Source account label")).toBeFocused();
   await expect(
-    page.getByRole("link", { name: "Connect in Places & sources" }),
+    page.getByRole("link", { name: "Connect in Add" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /publish|approve/i }),
@@ -154,7 +163,7 @@ test("Our circle lists members without public or social counts", async ({
   await enter(page);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Grubumuz", level: 1 }),
+    page.getByRole("heading", { name: "Settings", level: 1 }),
   ).toBeVisible();
   const members = page.getByRole("list", { name: "Members" });
   await expect(members.getByRole("listitem")).not.toHaveCount(0);
@@ -171,10 +180,10 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
   const screens: [string, string][] = [
     ["/imports", "#imports"],
     ["/circle", "#members li"],
-    ["/review", "#timeline article"],
-    ["/places", "#origin-counts"],
+    ["/add?section=suggestions", "#events"],
+    ["/add?section=sources", "#source-form"],
     ["/photos", ".mem-tile"],
-    ["/about", ".about-page"],
+    ["/settings", "#members li"],
   ];
   for (const theme of ["night"]) {
     await page.evaluate(
@@ -186,7 +195,17 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
       await page.reload();
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await page.locator(ready).first().waitFor();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
+      await page.evaluate(async () => {
+        await Promise.all(
+          document
+            .getAnimations()
+            .filter(
+              (a) => a.effect?.getComputedTiming().iterations !== Infinity,
+            )
+            .map((a) => a.finished.catch(() => {})),
+        );
+      });
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations, `${route} in ${theme}`).toEqual([]);
     }
@@ -205,134 +224,4 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
       `retained photograph evidence in ${theme}`,
     ).toEqual([]);
   }
-});
-
-test("Search photographs stay usable while included categories load and retry", async ({
-  page,
-}, info) => {
-  await enter(page, "Alice");
-  const session = await (await page.request.get("/api/session")).json();
-  const snapshotResponse = await page.request.get(
-    `/api/discovery/search?group=${encodeURIComponent(session.group_id)}&mode=keyword`,
-  );
-  expect(snapshotResponse.ok()).toBe(true);
-  const snapshot = await snapshotResponse.json();
-  expect(snapshot.next_offset).toBeNull();
-  expect(snapshot.items).toHaveLength(snapshot.total);
-  const tagName = `Startup tag ${info.project.name}`;
-  const personResponse = await page.request.post("/api/discovery/person", {
-    data: { group: session.group_id, name: tagName },
-  });
-  expect(personResponse.ok()).toBe(true);
-  const person = await personResponse.json();
-  let requested = false;
-  let fail = true;
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route("**/api/discovery/state?**", async (route) => {
-    requested = true;
-    await gate;
-    if (fail)
-      await route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "Synthetic context failure" }),
-      });
-    else await route.continue();
-  });
-  await page.goto("/#/search");
-  await expect(page.locator("#results article")).toHaveCount(snapshot.total);
-  const shownIds = await page
-    .locator("#results article img")
-    .evaluateAll((images) =>
-      images
-        .map((image) =>
-          new URL((image as HTMLImageElement).src).pathname.split("/").at(-2),
-        )
-        .sort(),
-    );
-  expect(shownIds).toEqual(
-    snapshot.items.map((item: { id: string }) => item.id).sort(),
-  );
-  expect(requested).toBe(false);
-  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
-  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText("1 fotoğraf");
-  const include = page.getByRole("button", {
-    name: "Anı, sohbet, yer ve kişileri dahil et",
-  });
-  await page.screenshot({
-    path: info.outputPath("search-photographs-ready.png"),
-    fullPage: true,
-  });
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await include.click();
-  await expect.poll(() => requested).toBe(true);
-  await expect(include).toBeDisabled();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  const personFacets = page.locator('[data-photo-filter^="person:"]');
-  await expect(personFacets.first()).toBeAttached();
-  expect(
-    await personFacets.evaluateAll((inputs) =>
-      inputs.every((input) => !(input as HTMLInputElement).disabled),
-    ),
-  ).toBe(true);
-  await expect(page.locator(".photo-filters")).toContainText(
-    `Sayaçların paydası: görünür ${snapshot.total} fotoğrafın tamamı.`,
-  );
-  await expect(page.locator(".disc-tag select")).toBeDisabled();
-  await page
-    .getByText("Yer, kişi, tarih ve etiketle daralt", { exact: true })
-    .click();
-  await page.getByLabel("Yer", { exact: true }).fill("Amsterdam");
-  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  release();
-  await expect(page.locator("#context-status")).toContainText(
-    "Diğer sonuç türleri yüklenemedi",
-  );
-  await expect(include).toBeEnabled();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  fail = false;
-  await include.click();
-  await expect(page.locator("#context-status")).toContainText(
-    "Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır",
-  );
-  await expect(page.locator(".disc-tag select")).toBeDisabled();
-  await page.getByLabel("Yer", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await include.click();
-  await expect(page.locator("#person")).toBeEnabled();
-  await expect(page.getByLabel("Ara", { exact: true })).toHaveValue("bicycle");
-  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue("");
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#people")).toContainText("Ben");
-  await expect(page.locator(".disc-tag select")).toBeEnabled();
-  await expect(page.locator(".disc-tag select option")).not.toHaveCount(1);
-  const confirm = page.getByRole("button", {
-    name: "Etiketi onayla",
-    exact: true,
-  });
-  await expect(confirm).toBeEnabled();
-  await page.locator(".disc-tag select").selectOption(person.id);
-  const tagged = page.waitForResponse("**/api/discovery/tag");
-  await confirm.click();
-  expect((await tagged).ok()).toBe(true);
-  await expect(page.locator("#notice")).toHaveText("Değişiklikler kaydedildi.");
-  await expect(page.locator("#results .disc-person")).toContainText([
-    "Ben",
-    tagName,
-  ]);
-  await page.screenshot({
-    path: info.outputPath("search-context-ready.png"),
-    fullPage: true,
-  });
 });

@@ -14,45 +14,6 @@ function submit({ $, window }, selector) {
   );
 }
 
-const discoveryState = {
-  people: [],
-  memories: [],
-  hidden_memories: [],
-  hidden: [],
-  suppressed: [],
-  identities: [],
-  settings: {
-    model_label: "Local search",
-    model_message: "Synthetic local model",
-    learned: true,
-    model_ready: true,
-    group_enabled: true,
-    contribution_enabled: true,
-  },
-};
-const searchPage = {
-  items: [
-    {
-      id: "synthetic-photo",
-      title: "Lake photograph",
-      date: "2024-06-01",
-      place: "Lake",
-      people: [],
-    },
-  ],
-  total: 1,
-  next_offset: null,
-  mode: "keyword",
-  unindexed: 0,
-};
-function discoveryBase(path) {
-  if (path === "/api/groups") return [group];
-  if (path.startsWith("/api/discovery/state")) return discoveryState;
-  if (path.startsWith("/api/atlas")) return { memories: [] };
-  if (path.startsWith("/api/discovery/search")) return searchPage;
-  throw Error(`Unexpected ${path}`);
-}
-
 const reviewPhoto = {
   id: "synthetic-review-photo",
   title: "Lake photograph",
@@ -214,26 +175,20 @@ for (const status of [401, 403]) {
         t,
         name,
         (path) => {
-          const target =
-            name === "discovery"
-              ? "/api/discovery/search"
-              : "/api/review/timeline";
+          const target = "/api/review/timeline";
           if (denied && path.startsWith(target))
             return Object.assign(new Error("Access revoked"), { status });
-          return name === "discovery" ? discoveryBase(path) : reviewBase(path);
+          return reviewBase(path);
         },
         { realLifecycle: true },
       );
       const { $, root, window } = feature;
       let lost = 0;
       window.addEventListener("mazi:access-lost", () => lost++);
-      await until(
-        () => $(name === "discovery" ? "#results h3" : "#timeline h3"),
-        "private data ready",
-      );
+      await until(() => $("#timeline h3"), "private data ready");
       $("#query").value = "Private query";
       denied = true;
-      submit(feature, name === "discovery" ? "#search-form" : "#search");
+      submit(feature, "#search");
       await until(() => lost === 1, "access lost");
       assert.equal(root.hidden, true);
       assert.equal($("#query").value, "");

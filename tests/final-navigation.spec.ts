@@ -6,6 +6,8 @@ test("returning member uses Globe and Photos with retained old links", async ({
   await page.request.post("/api/entry", {
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator(".atlas-home")).toBeVisible();
   const nav = page
@@ -15,6 +17,7 @@ test("returning member uses Globe and Photos with retained old links", async ({
   for (const name of ["Globe", "Photos", "Add", "Settings"])
     await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
   await expect(nav.getByRole("link")).toHaveCount(4);
+  await expect(page.locator(".atlas-stage")).toBeVisible();
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-globe.png`,
   });
@@ -29,6 +32,8 @@ test("returning member uses Globe and Photos with retained old links", async ({
       exact: true,
     }),
   ).toHaveValue("bicycle");
+  await page.goto("/#/photos?q=bicycle");
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-photos.png`,
   });

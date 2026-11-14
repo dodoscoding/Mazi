@@ -166,30 +166,17 @@ test("event title links open notes alongside imported excerpts and use event IDs
     "aktarılmış alıntılar",
   );
   await page.goto("/#/memories");
-  const galleryTitle = page
-    .locator(".mem-moment-title")
-    .filter({ hasText: event.title });
-  await expect(galleryTitle).toHaveCSS("text-decoration-line", "underline");
-  await expect(
-    page
-      .locator(".mem-moment-head")
-      .filter({ has: galleryTitle })
-      .getByRole("link", { name: "Notları aç", exact: true }),
-  ).toBeVisible();
-  await galleryTitle.click();
-  await page.evaluate(() => document.fonts.ready);
+  const photograph = page
+    .locator(`.mem-tile[href="#/memory/${event.id}"]`)
+    .first();
+  await photograph.click();
+  await page.getByRole("link", { name: "Notları aç", exact: true }).click();
   await expect(page.locator("#notebook-heading")).toBeFocused();
   await expect(page.locator("#notebook-heading")).toBeInViewport();
   await page.goto("/#/review");
   await expect(
     page
       .locator("#reviewed-events h3")
-      .getByRole("link", { name: event.title, exact: true }),
-  ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
-  await followShellLink(page, "Memories");
-  await expect(
-    page
-      .locator("#recap h3")
       .getByRole("link", { name: event.title, exact: true }),
   ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
 });
@@ -248,30 +235,4 @@ test("event notes are discoverable before the photograph viewer", async ({
   await expect(notes).toBeInViewport();
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`/memory/${event.id}$`));
-});
-
-test("Home exposes event notes without opening the Atlas or photograph viewer", async ({
-  page,
-}) => {
-  const { event } = await enter(page);
-  await mockArchive(page, [event]);
-  await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
-  ).toBeVisible();
-  await expect(page.locator(".atlas-stage, .photo-viewer")).toHaveCount(0);
-  const notes = page
-    .locator(".home-featured")
-    .getByRole("link", { name: "Notları aç", exact: true });
-  await expect(notes).toHaveAttribute(
-    "href",
-    `#/memory/${event.id}?notebook=1`,
-  );
-  await notes.click();
-  await expect(page.locator("#notebook-heading")).toBeFocused();
-  await expect(page.locator("#notebook-heading")).toBeInViewport();
-  await expect(page.locator(".photo-viewer")).toHaveCount(0);
-  await page.getByRole("link", { name: "Geri", exact: true }).click();
-  await expect(page.locator(".home-featured")).toContainText(event.title);
-  await expect(page.locator(".atlas-stage")).toHaveCount(0);
 });

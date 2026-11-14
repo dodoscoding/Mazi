@@ -197,11 +197,7 @@ function EmptyAtlas({
           </div>
         )}
         <div className="atlas-empty-actions">
-          <a
-            className="primary-action"
-            href="#/imports"
-            onClick={link("/imports")}
-          >
+          <a className="primary-action" href="#/add" onClick={link("/add")}>
             {archive.group ? "Fotoğraf ekle" : "Grup oluştur veya gruba katıl"}
           </a>
           <a

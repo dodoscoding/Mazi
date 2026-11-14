@@ -103,3 +103,36 @@ test("late Photos matching response cannot replace a newer query", async (t) => 
   assert.equal(f.root.querySelectorAll(".mem-tile").length, 2);
   assert.equal(f.$("#photos-query").value, "newer");
 });
+
+test("Photos preserves legacy place, country and object predicates plus opaque bookmark context", async (t) => {
+  const reads = [];
+  const f = await mountFeature(
+    t,
+    "photos",
+    (path) => {
+      reads.push(path);
+      return ready(path);
+    },
+    {
+      route:
+        "/photos?q=ferry&place=Lake&country=TR&object=boat&bookmark=keep-me",
+    },
+  );
+  await until(() => f.$(".mem-tile"), "restored archive");
+  const params = new URL(
+    reads.find((path) => path.includes("/matches?")),
+    "http://localhost",
+  ).searchParams;
+  assert.equal(params.get("place"), "Lake");
+  assert.equal(params.get("country"), "TR");
+  assert.equal(params.get("object_query"), "boat");
+  const restored = new URLSearchParams(f.window.location.hash.split("?")[1]);
+  for (const [key, value] of Object.entries({
+    place: "Lake",
+    country: "TR",
+    object: "boat",
+    bookmark: "keep-me",
+  }))
+    assert.equal(restored.get(key), value);
+  assert.match(f.$("#memory-filters").textContent, /Lake.*TR.*boat/);
+});
