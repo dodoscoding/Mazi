@@ -866,8 +866,30 @@ test("viewer corrects one photograph and withdraws only its owned contribution",
     await contributions
       .getByRole("button", { name: "Katkıyı kaldır", exact: true })
       .click();
+    let failRemoval = true;
+    await page.route("**/api/review/delete-contribution", async (route) => {
+      if (!failRemoval) return route.continue();
+      failRemoval = false;
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Synthetic removal outage" }),
+      });
+    });
     await contributions
       .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+      .click();
+    await expect(contributions).toContainText("Katkı kaldırılamadı");
+    await expect(contributions).toContainText("proof.jpg");
+    await contributions
+      .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+      .click();
+    await expect
+      .poll(async () => (await (await page.request.get(origins)).json()).total)
+      .toBe(1);
+    await page.reload();
+    await page
+      .getByRole("button", { name: "Katkımı yönet", exact: true })
       .click();
     await expect(contributions).toContainText(
       "Bu fotoğrafta etkin katkınız yok",
