@@ -276,7 +276,9 @@ test("Settings retains membership, account, About and introduction replay", asyn
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/#/settings");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Hesap", exact: true }).click();
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Settings", exact: true }),
   ).toBeVisible();
