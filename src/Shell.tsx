@@ -142,6 +142,16 @@ export function Shell({
                   <p className="account-name">{profileName}</p>
                   <a
                     className="menu-item"
+                    href="#/settings"
+                    onClick={(event) => {
+                      link("/settings")(event);
+                      close();
+                    }}
+                  >
+                    Settings
+                  </a>
+                  <a
+                    className="menu-item"
                     href="#/about"
                     onClick={(event) => {
                       link("/about")(event);
@@ -164,24 +174,26 @@ export function Shell({
                     variant="pill"
                     className="button button--secondary account-sound"
                   />
-                  {!demo && archive.groups.length > 0 && (
-                    <label className="circle-picker">
-                      Grubumuz
-                      <select
-                        aria-label="Grup değiştir"
-                        value={archive.group}
-                        onChange={(event) =>
-                          archive.chooseGroup(event.target.value)
-                        }
-                      >
-                        {archive.groups.map((group) => (
-                          <option key={group.id} value={group.id}>
-                            {group.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
+                  {!demo &&
+                    !path.startsWith("/settings") &&
+                    archive.groups.length > 0 && (
+                      <label className="circle-picker">
+                        Grubumuz
+                        <select
+                          aria-label="Grup değiştir"
+                          value={archive.group}
+                          onChange={(event) =>
+                            archive.chooseGroup(event.target.value)
+                          }
+                        >
+                          {archive.groups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                   {demo && (
                     <a className="menu-item" href="/">
                       Örnek arşivden çık
