@@ -167,3 +167,88 @@ test("Add suggestion queues explain loading, retry failures and clear denied acc
   await expect(page.locator("#duplicates")).toHaveCount(0);
   await expect(page.locator("#events")).toHaveCount(0);
 });
+
+test("Add explains an empty suggestion queue without a publication step", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  const [group] = await (await page.request.get("/api/groups")).json();
+  const pairs = await (
+    await page.request.get(`/api/review/duplicates?group=${group.id}`)
+  ).json();
+  const events = await (
+    await page.request.get(`/api/review/events?group=${group.id}`)
+  ).json();
+  try {
+    for (const pair of pairs) {
+      expect(
+        (
+          await page.request.post("/api/review/pair", {
+            data: {
+              group: group.id,
+              left: pair.left,
+              right: pair.right,
+              action: "dismiss",
+            },
+          })
+        ).ok(),
+      ).toBe(true);
+    }
+    for (const event of events) {
+      expect(
+        (
+          await page.request.post("/api/review/event", {
+            data: {
+              group: group.id,
+              assets: event.assets,
+              title: "",
+              decision: "reject",
+            },
+          })
+        ).ok(),
+      ).toBe(true);
+    }
+    await page.goto("/#/add?section=suggestions");
+    await expect(page.locator("#duplicates")).toContainText(
+      "No unreviewed suggestions.",
+    );
+    await expect(page.locator("#events")).toContainText(
+      "No unreviewed event suggestions.",
+    );
+    await expect(page.locator("#review-sub")).toContainText(
+      "Successful photographs are already shared with your circle.",
+    );
+    await expect(page.getByRole("button", { name: /publish/i })).toHaveCount(0);
+  } finally {
+    for (const pair of pairs) {
+      expect(
+        (
+          await page.request.post("/api/review/pair", {
+            data: {
+              group: group.id,
+              left: pair.left,
+              right: pair.right,
+              action: "undo",
+            },
+          })
+        ).ok(),
+      ).toBe(true);
+    }
+    for (const event of events) {
+      expect(
+        (
+          await page.request.post("/api/review/event", {
+            data: {
+              group: group.id,
+              assets: event.assets,
+              title: "",
+              decision: "undo",
+            },
+          })
+        ).ok(),
+      ).toBe(true);
+    }
+  }
+});
