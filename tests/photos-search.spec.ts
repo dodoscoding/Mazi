@@ -258,6 +258,12 @@ test("Photos conversation search explains loading, retry, filter scope and empty
   await expect(
     page.getByRole("combobox", { name: "Yıl", exact: true }),
   ).toHaveValue("2025");
+  await page
+    .getByRole("combobox", { name: "Yıl", exact: true })
+    .selectOption("undated");
+  await expect(page.locator("#conversation-scope")).toContainText(
+    "fotoğraf etiketleri yalnız fotoğraflara uygulanır",
+  );
   await page.goto("/#/photos?q=unfindableterm");
   await expect(page.locator("#conversation-status")).toHaveText(
     "Eşleşen konuşma yok.",

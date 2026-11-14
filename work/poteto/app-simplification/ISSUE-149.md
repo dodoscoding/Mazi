@@ -77,6 +77,7 @@ Node 24 and Python 3.14 on macOS; browser data/media are synthetic.
   49/49 passed (17.8s), including six new public source-reader contracts.
 - `npm run test:unit`: 23/23 passed. Build/typecheck passed in each integrated launch.
   `npm run lint`, `git diff --check` and the document checker passed.
+- Final focused desktop/phone source-filter/recovery check passed 2/2 after explicitly including Undated in photo-only filter scope.
 - Screenshot inspection found a mobile flex-basis gap in the search form; the scoped
   mobile rule was corrected and the desktop/phone source-context screenshots refreshed.
 
@@ -85,9 +86,9 @@ Node 24 and Python 3.14 on macOS; browser data/media are synthetic.
 `search-context-desktop.png` and `search-context-phone.png` show photo-first results
 and the actual text-only source reference/messages; the phone rendering was inspected.
 
-`npm run check:budgets` reports a temporary total-script overage of 424.3/420 KiB.
+`npm run check:budgets` reports a temporary total-script overage of 424.2/420 KiB.
 Globe (243.0/256), entry (93.2/150) and stylesheet (19.7/40) caps pass. No ceiling was
-raised; the following legacy retirement slice must recover the 4.3 KiB overage.
+raised; the following legacy retirement slice must recover the 4.2 KiB overage.
 
 The source reader searches retained normalized windows, not absent provider history
 or a complete original transcript. It preserves the existing archive's availability
