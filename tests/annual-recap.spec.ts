@@ -144,6 +144,9 @@ test("Annual recap covers the whole capture year and returns to the prior Photos
     .getByRole("link", { name: "Annual recap 2024", exact: true })
     .click();
   await expect(page.locator(".mem-tile")).toHaveCount(5);
+  await expect(
+    page.getByRole("button", { name: "Fotoğraf seç", exact: true }),
+  ).toHaveCount(0);
   await expect(page.locator("#recap-scope")).toContainText(
     "Normal Fotoğraflar filtreleri bu özette uygulanmaz",
   );
