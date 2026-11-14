@@ -194,6 +194,7 @@ export default function App() {
               key={`${profile?.user_id}:settings`}
               path="/settings"
             />
+            <FeaturePage path="/settings" settingsControls />
           </Suspense>
         )}
         <About

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { test, expect } from "@playwright/test";
 import { followShellLink, signOut } from "./helpers/shell";
 
@@ -382,4 +383,324 @@ test("Settings keeps administrator controls and clears members after session los
   await expect(
     page.getByRole("heading", { name: "Account", exact: true }),
   ).toHaveCount(0);
+});
+
+test("Settings explicitly exports the current circle and recovers failed exports", async ({
+  page,
+}, info) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("heading", {
+      name: "Archive and contributions",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.route("**/api/review/export?*", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: "Synthetic export unavailable" },
+    }),
+  );
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Synthetic export unavailable",
+  );
+  await page.unroute("**/api/review/export?*");
+  const download = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  const archive = await download;
+  expect(archive.suggestedFilename()).toBe("mazi-archive.zip");
+  const exported = JSON.parse(
+    execFileSync(
+      ".venv/bin/python",
+      [
+        "-c",
+        "import json,sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); print(json.dumps({'names': z.namelist(), 'manifest': json.loads(z.read('manifest.json'))}))",
+        (await archive.path())!,
+      ],
+      { encoding: "utf8" },
+    ),
+  );
+  expect(exported.manifest.assets).toHaveLength(3);
+  expect(exported.names).toEqual(
+    expect.arrayContaining([
+      "manifest.json",
+      "resources.json",
+      "people.json",
+      "personal-discovery.json",
+    ]),
+  );
+  for (const asset of exported.manifest.assets)
+    expect(exported.names).toContain(`originals/${asset.id}`);
+  await page
+    .getByRole("region", { name: "Archive and contributions", exact: true })
+    .screenshot({
+      path: `work/poteto/app-simplification/screenshots/settings-controls-${info.project.name}.png`,
+      animations: "disabled",
+    });
+  await expect(
+    page.getByText("You have no active source records in this group.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("Settings retains personal discovery consent and member departure", async ({
+  page,
+}, info) => {
+  const name = `Settings departure ${info.project.name}`;
+  const entered = await page.request.post("/api/entry", {
+    data: { name, code: "synthetic-shared-code" },
+  });
+  const profile = await entered.json();
+  await page.request.post("/api/introduction/complete", { data: {} });
+  const state = await (
+    await page.request.get(`/api/discovery/state?group=${profile.group_id}`)
+  ).json();
+  expect(state.settings.contribution_enabled).toBe(false);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  const personal = page.getByRole("checkbox", {
+    name: "Allow local related-search processing of my contributions",
+    exact: true,
+  });
+  await expect(personal).not.toBeChecked();
+  await expect(
+    page.getByText("Face recognition remains off.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Enable optional local processing for this group (admin)",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await personal.check();
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(personal).toBeChecked();
+  await personal.uncheck();
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(personal).not.toBeChecked();
+  await page
+    .getByRole("button", {
+      name: "Leave group and withdraw my contributions",
+      exact: true,
+    })
+    .click();
+  await page.getByRole("button", { name: "Stay", exact: true }).click();
+  await expect(personal).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Leave group and withdraw my contributions",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Leave and withdraw", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  expect(
+    (
+      await page.request.get(`/api/review/export?group=${profile.group_id}`)
+    ).status(),
+  ).toBe(403);
+});
+
+test("Settings keeps identity confirmation private and administrator controls scoped", async ({
+  page,
+  browser,
+}, info) => {
+  const baseURL = String(info.project.use.baseURL);
+  const visitor = await browser.newContext({ baseURL });
+  try {
+    const name = `Settings identity ${info.project.name}`;
+    const profile = await (
+      await visitor.request.post("/api/entry", {
+        data: { name, code: "synthetic-shared-code" },
+      })
+    ).json();
+    await visitor.request.post("/api/introduction/complete", { data: {} });
+    await page.request.post("/api/entry", {
+      data: { name: "Alice", code: "synthetic-shared-code" },
+    });
+    const person = await (
+      await page.request.post("/api/discovery/person", {
+        data: { group: profile.group_id, name },
+      })
+    ).json();
+    const photos = await (
+      await page.request.get(`/api/review/timeline?group=${profile.group_id}`)
+    ).json();
+    await page.request.post("/api/discovery/tag", {
+      data: { person: person.id, asset: photos.items[0].id, confirmed: true },
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/#/settings");
+    const groupProcessing = page.getByRole("checkbox", {
+      name: "Enable optional local processing for this group (admin)",
+      exact: true,
+    });
+    await expect(groupProcessing).toBeChecked();
+    await expect(
+      page.getByRole("button", {
+        name: "Leave group and withdraw my contributions",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await page
+      .getByText("Identity and removal review (admin)", { exact: true })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Person record", exact: true })
+      .selectOption({ label: name });
+    await page
+      .getByRole("combobox", { name: "Member account", exact: true })
+      .selectOption({ label: name });
+    await page
+      .getByRole("button", {
+        name: "Request identity confirmation",
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByText("Preference saved.", { exact: true }),
+    ).toBeVisible();
+    const second = await visitor.newPage();
+    await second.goto("/#/settings");
+    await second
+      .getByRole("button", { name: `Confirm I am ${name}`, exact: true })
+      .click();
+    await expect(
+      second.getByRole("button", { name: `Confirm I am ${name}`, exact: true }),
+    ).toHaveCount(0);
+    const state = await (
+      await visitor.request.get(
+        `/api/discovery/state?group=${profile.group_id}`,
+      )
+    ).json();
+    expect(
+      state.people.find((item: { id: string }) => item.id === person.id).is_me,
+    ).toBe(true);
+  } finally {
+    await visitor.close();
+  }
+});
+
+test("Settings withdraws only the current member’s source record", async ({
+  page,
+}, info) => {
+  await page.request.post("/api/entry", {
+    data: {
+      name: `Settings contributor ${info.project.name}`,
+      code: "synthetic-shared-code",
+    },
+  });
+  await page.request.post("/api/introduction/complete", { data: {} });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/imports");
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(80,60),'magenta').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('settings-contribution.jpg',p.getvalue()); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page
+    .getByLabel("Source account label")
+    .fill("synthetic Settings account");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "settings.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Start importing to group", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("completed");
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("heading", {
+      name: "settings-contribution.jpg",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Remove my source record", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Keep sharing", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "settings-contribution.jpg",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Remove my source record", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Remove source record", exact: true })
+    .click();
+  await expect(
+    page.getByText("You have no active source records in this group.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  const profile = await (await page.request.get("/api/session")).json();
+  const timeline = await (
+    await page.request.get(`/api/review/timeline?group=${profile.group_id}`)
+  ).json();
+  expect(timeline.items.length).toBe(3);
+});
+
+test("Settings cancels exports and clears controls when an export is denied", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/settings");
+  let release!: () => void;
+  const hold = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/review/export?*", async () => {
+    await hold;
+  });
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Cancel export", exact: true })
+    .click();
+  await expect(
+    page.getByText("Export cancelled. You can try again.", { exact: true }),
+  ).toBeVisible();
+  release();
+  await page.unroute("**/api/review/export?*");
+  await page.route("**/api/review/export?*", (route) =>
+    route.fulfill({ status: 403, json: { error: "Access withdrawn" } }),
+  );
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Download archive", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
