@@ -485,9 +485,9 @@ test("shared viewer preserves individual-photo selection and closes to filtered 
     ).ok(),
   ).toBe(true);
   await page.goto("/#/memories?view=all&order=oldest&years=2024");
-  const origin = page.url();
   const photo = page.locator('.mem-tile[href*="photo=1"]').first();
   await photo.scrollIntoViewIfNeeded();
+  const origin = page.url();
   const selected = await photo.getAttribute("href");
   await photo.click();
   await expect(page).toHaveURL(
@@ -500,4 +500,47 @@ test("shared viewer preserves individual-photo selection and closes to filtered 
   await expect(page).toHaveURL(origin);
   await expect(photo).toBeFocused();
   await expect(page.locator(".mem-tile")).toHaveCount(3);
+});
+
+test("shared viewer keeps Conversation context optional and supports keyboard photos", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  await openFullMemory(page);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("“Anyone checked the ferry time?”", { exact: true }),
+  ).toBeHidden();
+  await page
+    .getByRole("button", { name: "Konuşmayı göster", exact: true })
+    .click();
+  await expect(
+    page.getByText("Worth missing the ferry for.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Kaynak bilgileri", exact: true }),
+  ).toBeVisible();
+  await page.locator(".viewer").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByText("3 / 3", { exact: true })).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-context-${info.project.name}.png`,
+    fullPage: true,
+  });
 });
