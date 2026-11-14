@@ -6,7 +6,9 @@ Status: approved and published on 14 November 2026. All 13 tickets are GitHub
 sub-issues of #146, labeled `ready-for-agent`, with 15 verified native blocking
 relationships. The parent body, title, and open state are unchanged. Numbers
 01–13 below identify the approved breakdown order; linked issue numbers are
-GitHub identifiers. Application implementation has not started.
+GitHub identifiers. All thirteen implementations are integrated on
+`codex/app-simplification`; [PR #161](https://github.com/dodoscoding/Mazi/pull/161)
+closes their tracker issues when merged. The [final verification receipt](../work/poteto/app-simplification/FINAL_VERIFICATION.md) records acceptance and resolved review findings.
 
 Initial unblocked tickets: [viewer #147](https://github.com/dodoscoding/Mazi/issues/147),
 [Add #151](https://github.com/dodoscoding/Mazi/issues/151), and
@@ -34,7 +36,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 12, 13, 14, 15, 16, 17, 18, 19.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -55,7 +57,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 2, 3, 6, 7, 8, 9, 10, 11, 50.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -77,7 +79,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 21, 22, 23, 24, 25, 26.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -99,7 +101,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 38, 39, 40, 41.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -120,7 +122,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 27, 28, 29, 30.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -141,7 +143,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 27, 29.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -162,7 +164,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 20, 53.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -183,7 +185,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 31, 32.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -204,7 +206,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 33, 34, 35, 36, 54.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -225,7 +227,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 34, 37, 53.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -246,7 +248,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 42, 43, 44, 45, 46, 47.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -269,7 +271,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 26, 47, 49.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 
@@ -291,7 +293,7 @@ they are still required before the parent specification can be considered done.
 
 **Parent user stories:** 1, 4, 5, 48, 49, 50, 51, 52, 54.
 
-**Status:** ready-for-agent.
+**Status:** Implemented; awaiting PR review/merge.
 
 ### Acceptance criteria
 

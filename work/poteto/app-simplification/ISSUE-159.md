@@ -160,7 +160,9 @@ are distinguished from this worktree's focused assembled-candidate checks:
   brief has no diff; schema, stored archive formats and original data are
   unchanged by this ticket.
 
-The assembled implementation is ready for root review. The root agent's full
-branch review and final one-shot app/default-browser verification, including its
-isolated Firefox environment, are still pending. These local results do not
-claim production acceptance or deployment.
+The assembled implementation completed root review and final combined
+verification. [Final verification](FINAL_VERIFICATION.md) supersedes the
+intermediate receipts above and records the tested revision, complete app and
+Chromium/Firefox runs, backend and domain results, review fixes, limitations and
+sample screenshots. These local results do not claim production acceptance or
+deployment.
