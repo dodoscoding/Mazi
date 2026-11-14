@@ -354,7 +354,14 @@ test("place, people and sources show evidence in plain words", async ({
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeHidden();
-  await expect(page.getByRole("link", { name: "Arşivi incele" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Arşivi incele", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main navigation", exact: true })
+      .getByRole("link", { name: "Add", exact: true }),
+  ).toHaveAttribute("href", "#/add");
   await expect(
     page.getByRole("link", { name: "Ortak bir hikâye yaz" }),
   ).toHaveCount(0);
