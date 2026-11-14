@@ -47,14 +47,12 @@ const terminalStates = ["COMPLETED", "CANCELLED", "FAILED"];
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
-  const settingsMode =
-    location.hash.startsWith("#/settings") || location.pathname === "/settings";
-  const circleMode =
-    settingsMode ||
-    location.hash.startsWith("#/circle") ||
-    location.pathname === "/circle";
-  const addMode =
-    location.hash.startsWith("#/add") || location.pathname === "/add";
+  const currentPath = location.hash.startsWith("#/")
+    ? location.hash.slice(1).split("?")[0]
+    : location.pathname;
+  const settingsMode = currentPath === "/settings";
+  const circleMode = settingsMode;
+  const addMode = currentPath === "/add";
   let group = null;
   let groups = [];
   let selectedRun = null;
@@ -872,13 +870,6 @@ export function mount(root, lifecycle) {
       lifecycle.mountKind === "refresh"
     )
       return;
-    const target =
-      circleMode &&
-      new URLSearchParams(lifecycle.search).get("section") === "settings"
-        ? $("group-settings-heading")
-        : $("page-title");
-    target.focus({ preventScroll: true });
-    if (target.id === "group-settings-heading")
-      target.scrollIntoView({ block: "start" });
+    $("page-title").focus({ preventScroll: true });
   });
 }

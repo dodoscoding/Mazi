@@ -311,8 +311,11 @@ export default function App() {
     content = <ArchiveStatus archive={archive} heading={heading} />;
   else if (
     route.path === "/" &&
-    new URLSearchParams(route.search).has("selected") &&
+    (new URLSearchParams(route.search).has("selected") ||
+      new URLSearchParams(route.search).has("photo")) &&
     (!selected ||
+      (new URLSearchParams(route.search).has("photo") &&
+        !new URLSearchParams(route.search).has("selected")) ||
       (new URLSearchParams(route.search).has("photo") &&
         (!Number.isInteger(route.photo) ||
           route.photo < 0 ||
