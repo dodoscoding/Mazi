@@ -78,6 +78,39 @@ The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shape
 
 Hobby has no always-on process and allows one cron a day. The worker therefore becomes a bounded drain: a signed-in, visible tab calls `POST /api/work`, and a daily cron calls it with `CRON_SECRET`. Imports advance only while someone has the app open, or once a day. The owner accepted that tradeoff. An always-on container host (Fly.io, Render, Railway) would keep the thread worker but costs about $5-7 a month. The local server keeps its worker thread. [Deployment](DEPLOYMENT.md) records setup and limits; [verification](../work/poteto/production-deploy/VERIFICATION.md) records the live journey. Representative real-device latency and M0-M7 milestones remain separate gates.
 
+## App simplification, 14 November 2026
+
+**D21: Relive shared history simply and playfully.** The owner confirmed Globe
+as the opening experience and Photos as its easy conventional alternative,
+with Add and Settings as supporting surfaces. Photos shows individual
+photographs grouped by month with year navigation and an Undated section;
+conversations remain in the viewer and as secondary search results. Search
+becomes an easy-to-reach action in the shared browsing flow. Annual recaps are
+a simple year in photos. AI answers, collaborative-story creation, and
+time-capsule creation leave the active product. Existing stories and capsules
+remain under Settings / Past creations with reading and authorized owner
+deletion; sealed capsules retain their opening dates.
+
+This supersedes D13's separate Home / Timeline / Search navigation and earlier
+current-app scope commitments to the retired destinations and creation
+workflows. Useful source connections, correction, evidence, export, membership,
+and departure functions relocate rather than disappear. Existing access,
+automatic group sharing, ownership, storage, and capsule timing contracts
+remain in force. The choice favors a focused rediscovery experience over
+exposing every implemented capability as its own destination.
+
+The [complete simplification plan](APP_SIMPLIFICATION.md) maps the retired
+surfaces to their retained responsibilities, proposed component work, delivery
+sequence, and acceptance checks. The owner requested conversion into a
+specification and confirmed integrated desktop/phone browser tests with
+targeted HTTP contracts as the testing boundaries. The resulting
+[specification](APP_SIMPLIFICATION_SPEC.md) is published as
+[issue #146](https://github.com/dodoscoding/Mazi/issues/146), labeled
+`ready-for-agent`. This records direction, not completed application changes,
+data deletion, deployment, or milestone acceptance. Earlier planning tables
+remain historical where they conflict with this decision and require
+reconciliation during implementation.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
