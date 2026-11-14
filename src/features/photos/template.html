@@ -102,6 +102,28 @@
         aria-label="Etkin filtreler"
       ></div>
       <div id="grid" class="mem-grid"></div>
+      <section id="conversation-results" aria-label="Konuşma sonuçları" hidden>
+        <h2>Konuşmalar</h2>
+        <p id="conversation-scope"></p>
+        <p id="conversation-status" role="status"></p>
+        <div id="conversation-list"></div>
+        <button id="conversation-more" type="button" hidden>
+          Diğer konuşma sonuçlarını getir
+        </button>
+        <button id="conversation-retry" type="button" hidden>
+          Konuşmaları yeniden dene
+        </button>
+      </section>
+      <section
+        id="source-context"
+        class="photos-source-context"
+        aria-label="Kaynak konuşma bağlamı"
+        tabindex="-1"
+        hidden
+      >
+        <button id="source-close" type="button">Bağlamı kapat</button>
+        <div id="source-content"></div>
+      </section>
     </div>
   </div>
 </div>

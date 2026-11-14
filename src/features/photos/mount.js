@@ -1,3 +1,4 @@
+import { createConversationSearch } from "./search";
 import { createGallery } from "../memories/gallery";
 import "../memories/memories.css";
 import "./photos.css";
@@ -13,7 +14,11 @@ export function mount(root, lifecycle) {
     }
     return value;
   };
-  const gallery = createGallery(root, lifecycle, api, { photos: true });
+  const conversations = createConversationSearch(root, lifecycle, api);
+  const gallery = createGallery(root, lifecycle, api, {
+    photos: true,
+    onSearch: conversations.search,
+  });
   let group = lifecycle.groupId;
   let active = true;
   const load = async () => {

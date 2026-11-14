@@ -56,3 +56,26 @@
   flex: 1 1 300px;
   margin: 0;
 }
+.photos-page #conversation-list {
+  display: grid;
+  gap: 12px;
+}
+.photos-page #conversation-list button {
+  margin: 0;
+  padding: 16px;
+  text-align: left;
+  border-radius: var(--radius-panel);
+  height: auto;
+}
+.photos-page .photos-source-context {
+  scroll-margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.photos-page .photos-source-context li {
+  margin: 18px 0;
+}
+.photos-page .photos-source-context time {
+  display: block;
+  color: var(--text-secondary);
+}

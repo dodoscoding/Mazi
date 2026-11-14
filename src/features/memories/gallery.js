@@ -22,7 +22,12 @@ const focusable =
  * screens and a Filters sheet below 800px. Filters only use fields the Atlas
  * API returns: year, place, people evidence, source and date certainty.
  */
-export function createGallery(root, lifecycle, api, { photos = false } = {}) {
+export function createGallery(
+  root,
+  lifecycle,
+  api,
+  { photos = false, onSearch } = {},
+) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
   let memories = [],
@@ -204,6 +209,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
         params.set(to, params.get(from));
         params.delete(from);
       }
+    if (photos) onSearch?.(new URLSearchParams(params), galleryGroup);
     try {
       const result = await api("/api/discovery/matches?" + params);
       if (generation !== matchRun || current !== run) return;
