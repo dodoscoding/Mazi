@@ -181,6 +181,22 @@ export default function App() {
         }
       />
     );
+  else if (
+    archive.status === "ready" &&
+    new URLSearchParams(route.search).has("group") &&
+    new URLSearchParams(route.search).get("group") !== archive.group
+  )
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Bu bağlantı artık kullanılamıyor
+        </h1>
+        <p>Bağlantı mevcut grubunuza ait değil. Başka bir kayıt açılmadı.</p>
+        <a href="#/settings" onClick={link("/settings")}>
+          Settings
+        </a>
+      </section>
+    );
   else if (demo && !["/", "/photos"].includes(route.path) && !memoryId)
     content = (
       <section className="not-found">
