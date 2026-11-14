@@ -261,6 +261,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   const choose = document.createElement("button");
   choose.textContent = "Fotoğraf seç";
   choose.type = "button";
+  choose.hidden = recap;
   const count = document.createElement("span");
   const edit = document.createElement("button");
   edit.textContent = "Seçili etiketleri düzenle";
@@ -811,8 +812,9 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
       : photos && undated
         ? photographRows(shown).filter((row) => !row.month).length
         : facets?.total || 0;
-    $("grid-summary").textContent =
-      `${total} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
+    $("grid-summary").textContent = recap
+      ? `${total} fotoğraf · ${recapYear || ""} çekim yılı`
+      : `${total} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
     $("filters-apply").textContent = `${total} fotoğrafı göster`;
     remember();
     recapCard();
