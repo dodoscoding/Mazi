@@ -16,20 +16,34 @@ export function useEntry() {
   const generation = useRef(0);
   const accessLost = useRef(false);
   const profile = useRef<Profile | null>(null);
-  const controller = useRef<AbortController | null>(null);
+  const active = useRef<{ path: string; controller: AbortController } | null>(
+    null,
+  );
   const request = useCallback(
     async (path: string, body?: object, retainReady = false) => {
+      if (
+        retainReady &&
+        active.current &&
+        active.current.path !== "/api/session"
+      )
+        return;
       const current = ++generation.current;
-      controller.current?.abort();
+      active.current?.controller.abort();
       const abort = new AbortController();
-      controller.current = abort;
+      active.current = { path, controller: abort };
       if (path === "/api/session" || path === "/api/logout")
         setState((previous) =>
-          retainReady && previous.status === "ready"
+          retainReady && previous.status !== "loading"
             ? previous
             : { status: "loading" },
         );
       else setState((previous) => ({ ...previous, pending: true, error: "" }));
+      const unavailable = (error: string) =>
+        setState((previous) =>
+          retainReady && previous.status !== "loading"
+            ? previous
+            : { status: "error", error },
+        );
       try {
         const response = await fetch(path, {
           signal: abort.signal,
@@ -41,6 +55,21 @@ export function useEntry() {
               }
             : {}),
         });
+        if (current !== generation.current || abort.signal.aborted) return;
+        if (
+          path === "/api/session" &&
+          (response.status === 401 || response.status === 403)
+        ) {
+          if (profile.current)
+            window.dispatchEvent(new Event("mazi:access-lost"));
+          else
+            setState((previous) =>
+              retainReady && previous.status === "signed-out"
+                ? previous
+                : { status: "signed-out", error: "" },
+            );
+          return false;
+        }
         const value = await response.json();
         if (current !== generation.current || abort.signal.aborted) return;
         if (!response.ok) {
@@ -56,7 +85,7 @@ export function useEntry() {
             response.status !== 403 &&
             response.status !== 401
           )
-            setState({ status: "error", error: message });
+            unavailable(message);
           else
             setState({
               status: "signed-out",
@@ -65,6 +94,8 @@ export function useEntry() {
           return false;
         }
         if (path === "/api/logout") {
+          profile.current = null;
+          sessionStorage.removeItem("mazi.group");
           setState({ status: "signed-out", error: "" });
           return true;
         }
@@ -79,7 +110,8 @@ export function useEntry() {
         }
         accessLost.current = false;
         profile.current = value;
-        sessionStorage.setItem("mazi.group", value.group_id);
+        if (!retainReady || !sessionStorage.getItem("mazi.group"))
+          sessionStorage.setItem("mazi.group", value.group_id);
         setState({
           status: value.introduced ? "ready" : "onboarding",
           profile: value,
@@ -93,13 +125,11 @@ export function useEntry() {
               pending: false,
               error: "Mazi could not connect. Please retry.",
             }));
-          else
-            setState({
-              status: "error",
-              error: "Mazi could not connect. Please retry.",
-            });
+          else unavailable("Mazi could not connect. Please retry.");
         }
         return false;
+      } finally {
+        if (active.current?.controller === abort) active.current = null;
       }
     },
     [],
@@ -111,11 +141,13 @@ export function useEntry() {
     refresh();
     const clear = () => {
       generation.current++;
-      controller.current?.abort();
+      active.current?.controller.abort();
       setState({ status: "loading" });
     };
     const lost = () => {
       accessLost.current = true;
+      profile.current = null;
+      sessionStorage.removeItem("mazi.group");
       clear();
       setState({
         status: "signed-out",
@@ -124,12 +156,7 @@ export function useEntry() {
     };
     const visibility = () => {
       if (accessLost.current) return;
-      const path = location.hash.split("?")[0];
-      const retainImport = path === "#/imports" || path === "#/circle";
-      if (document.hidden) {
-        if (!retainImport) clear();
-      } else if (retainImport) void request("/api/session", undefined, true);
-      else refresh();
+      if (!document.hidden) void request("/api/session", undefined, true);
     };
     window.addEventListener("pagehide", clear);
     window.addEventListener("pageshow", refresh);
@@ -138,7 +165,7 @@ export function useEntry() {
     document.addEventListener("visibilitychange", visibility);
     return () => {
       generation.current++;
-      controller.current?.abort();
+      active.current?.controller.abort();
       window.removeEventListener("pagehide", clear);
       window.removeEventListener("pageshow", refresh);
       window.removeEventListener("mazi:session", refresh);
