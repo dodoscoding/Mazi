@@ -29,13 +29,13 @@ test("historical story and capsule links reach Past creations without authoring"
   }
 });
 
-test("retired People links explain unavailability without opening unrelated records", async ({
+test("old People links reach their retained Settings home without unrelated records", async ({
   page,
 }) => {
   await page.goto("/#/discover?section=people&person=unknown");
   await expect(
     page.getByRole("heading", {
-      name: "Bu bağlantı artık kullanılamıyor",
+      name: "Settings",
       exact: true,
     }),
   ).toBeVisible();
@@ -71,17 +71,14 @@ test("old recap year links open the ordinary year in Photos without authoring", 
 });
 
 for (const prefix of ["/", "/#/"]) {
-  test(`${prefix}people preserves Back and explains its retired destination`, async ({
+  test(`${prefix}people preserves Back and reaches Settings people`, async ({
     page,
   }) => {
     await page.goto("/#/photos");
     await page.goto(`${prefix}people`);
-    await expect(page).toHaveURL(/#\/settings\?unavailable=people$/);
+    await expect(page).toHaveURL(/#\/settings\?section=people$/);
     await expect(
-      page.getByRole("heading", {
-        name: "Bu bağlantı artık kullanılamıyor",
-        exact: true,
-      }),
+      page.getByRole("heading", { name: "Settings", exact: true }),
     ).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/#\/photos$/);

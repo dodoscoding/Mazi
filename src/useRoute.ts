@@ -61,7 +61,8 @@ export function readRoute() {
   if (["/search", "/discover"].includes(path)) params.set("search", "1");
   if (path === "/people" || (path === "/discover" && section === "people")) {
     alias = "/settings";
-    params.set("unavailable", "people");
+    params.set("section", "people");
+    if (params.get("unavailable") === "people") params.delete("unavailable");
   }
   if (path === "/imports") alias = "/add";
   if (path === "/circle") {

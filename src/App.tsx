@@ -195,6 +195,7 @@ export default function App() {
     );
   else if (
     archive.status === "ready" &&
+    route.path !== "/answer-evidence" &&
     new URLSearchParams(route.search).has("group") &&
     new URLSearchParams(route.search).get("group") !== archive.group
   )
@@ -310,8 +311,11 @@ export default function App() {
     content = <ArchiveStatus archive={archive} heading={heading} />;
   else if (
     route.path === "/" &&
-    new URLSearchParams(route.search).has("selected") &&
+    (new URLSearchParams(route.search).has("selected") ||
+      new URLSearchParams(route.search).has("photo")) &&
     (!selected ||
+      (new URLSearchParams(route.search).has("photo") &&
+        !new URLSearchParams(route.search).has("selected")) ||
       (new URLSearchParams(route.search).has("photo") &&
         (!Number.isInteger(route.photo) ||
           route.photo < 0 ||

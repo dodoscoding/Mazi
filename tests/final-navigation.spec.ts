@@ -92,9 +92,38 @@ test("invalid explicit memory and photograph selections never open another photo
   await expect(
     page.getByRole("heading", { name: "Fotoğraf kullanılamıyor", exact: true }),
   ).toBeVisible();
+  await page.goto("/#/atlas?photo=999");
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraf kullanılamıyor", exact: true }),
+  ).toBeVisible();
   await page.goto("/?demo=1#/memory/last-ferry?photo=999");
   await expect(page.locator(".viewer-track")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /bulunamadı/i }),
   ).toBeVisible();
+});
+
+test("document Settings links can navigate to Add without retaining the old surface mode", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/settings");
+  await expect(
+    page.getByRole("heading", { name: "Settings", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .filter({ visible: true })
+    .first()
+    .getByRole("link", { name: "Add", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Add", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Export ZIP")).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Members", exact: true }),
+  ).toBeHidden();
 });

@@ -77,7 +77,7 @@ test("atomic selection sends only chosen dimensions and retries an identical rec
   assert.match(ui.host.textContent, /onaylı kişi etiketlerinden/);
   assert.equal(
     ui.host.querySelector("a").getAttribute("href"),
-    "#/search?person=person",
+    "#/photos?person=person",
   );
   choose(ui.host);
   await save(ui.host);
