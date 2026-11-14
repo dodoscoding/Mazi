@@ -497,17 +497,16 @@ test("a broken photo URL shows the retry state", async ({ page }) => {
   await expect(page.getByText("This photo could not load.")).toBeVisible();
 });
 
-for (const [value, shown] of [
-  ["99", "3 / 3"],
-  ["-1", "1 / 3"],
-  ["abc", "1 / 3"],
-  ["1.7", "2 / 3"],
-])
-  test(`?photo=${value} clamps to ${shown}`, async ({ page }) => {
-    await open(page, `/memory/harbour-night?photo=${value}`);
-    await expect(counter(page)).toHaveText(shown);
-    await expect(page.locator(".viewer-caption-title")).not.toBeEmpty();
-    await expect(page.getByText("This photo could not load.")).toHaveCount(0);
+for (const value of ["99", "-1", "abc", "1.7"])
+  test(`?photo=${value} is unavailable rather than opening another photograph`, async ({
+    page,
+  }) => {
+    await page.goto(`/#/memory/harbour-night?photo=${value}`);
+    await expect(
+      page.getByRole("heading", { name: "Anı bulunamadı", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".viewer-track")).toHaveCount(0);
+    await expect(page.locator(".viewer-caption-title")).toHaveCount(0);
   });
 
 for (const theme of ["night"] as const)
