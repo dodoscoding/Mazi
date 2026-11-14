@@ -20,6 +20,9 @@ export async function sampleRead(path: string) {
   const unsupported = [
     "years",
     "places",
+    "place",
+    "country",
+    "object_query",
     "start",
     "end",
     "source",

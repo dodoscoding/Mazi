@@ -46,6 +46,27 @@ export function createGallery(
       ? location.hash.split("?").slice(1).join("?")
       : location.search);
   const entry = new URLSearchParams(searchText);
+  const legacyPredicates = [
+    ["place", "place", "Yer"],
+    ["country", "country", "Ülke"],
+    ["object", "object_query", "Nesne"],
+    ["object_query", "object_query", "Nesne"],
+  ];
+  const legacyChips = document.createElement("div");
+  legacyChips.className = "mem-chips";
+  for (const [key, , label] of legacyPredicates) {
+    if (!entry.get(key)) continue;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = `${label}: ${entry.get(key)} ×`;
+    remove.onclick = () => {
+      entry.delete(key);
+      remove.remove();
+      void refreshMatches();
+    };
+    legacyChips.append(remove);
+  }
+  $("memory-filters").append(legacyChips);
   const recap = photos && entry.has("recap");
   const recapYear =
     /^\d{4}$/.test(entry.get("recap") || "") && Number(entry.get("recap")) > 0
@@ -170,6 +191,8 @@ export function createGallery(
     const params = new URLSearchParams();
     if (recap) return params;
     photoFilters.apply(params);
+    for (const [key, parameter] of legacyPredicates)
+      if (entry.get(key)) params.set(parameter, entry.get(key));
     if (photoQuery?.value) params.set("q", photoQuery.value);
     for (const [key, parameter] of [
       ["years", "years"],
@@ -204,6 +227,35 @@ export function createGallery(
     if (!photos && view === "all") params.set("view", view);
     if (!photos && !newest) params.set("order", "oldest");
     if (entry.get("section")) params.set("section", entry.get("section"));
+    // Retain opaque bookmark/record context without sending it as API filters.
+    const mutable = new Set([
+      "q",
+      "years",
+      "places",
+      "source",
+      "by",
+      "uncertain",
+      "person",
+      "people_present",
+      "screenshot",
+      "ai",
+      "from",
+      "through",
+      "date_basis",
+      "undated",
+      "place",
+      "country",
+      "object",
+      "object_query",
+    ]);
+    entry.forEach((value, key) => {
+      if (!mutable.has(key) && !params.has(key)) params.append(key, value);
+    });
+    for (const [key] of legacyPredicates)
+      if (entry.has(key)) params.set(key, entry.get(key));
+    // The API spelling stays internal; old object bookmarks keep their spelling.
+    if (entry.has("object") && !entry.has("object_query"))
+      params.delete("object_query");
     const query = params.toString();
     window.history.replaceState(
       window.history.state,
@@ -924,6 +976,8 @@ export function createGallery(
   $("filters-apply").onclick = () => closeSheet();
   $("filters-scrim").onclick = () => closeSheet();
   function resetFilters() {
+    for (const [key] of legacyPredicates) entry.delete(key);
+    legacyChips.replaceChildren();
     filters = emptyFilters();
     undated = false;
     if (yearPicker) yearPicker.value = "";
