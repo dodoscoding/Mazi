@@ -28,6 +28,8 @@ def handler_for(store):
                 query = {key: values[0] for key, values in parse_qs(parts.query).items()}
                 group = query.pop('group', '')
                 if parts.path == '/api/discovery/conversations':
+                    if set(query) - {'query', 'cursor', 'limit', 'source', 'shared_by'}:
+                        raise ValueError('Unsupported conversation filter')
                     return self.json(200, conversations(store, user, group, query.get('query', ''), query.get('cursor', ''), int(query.get('limit', '50')), query.get('source', ''), query.get('shared_by', '')))
                 if parts.path == '/api/discovery/context':
                     return self.json(200, context(store, user, group, query.get('record', '')))

@@ -356,6 +356,6 @@ Photos presents photographs first and source messages second. Conversation searc
 uses keyword, recorded source and historical sender filters. Year, capture-date,
 place and photograph-label filters apply only to photographs; when present, the
 interface explicitly states that scope instead of claiming those properties for
-text-only results. Opening context stays within Photos, is dismissible, and restores
+text-only results. Unsupported conversation API filter parameters return 400. Opening context stays within Photos, is dismissible, and restores
 the query/filter/scroll position. Reload, withdrawal or access/session loss clears
 old context before a new read; delayed responses cannot repopulate closed context.

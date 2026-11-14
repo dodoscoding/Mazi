@@ -151,3 +151,4 @@ class ConversationHttpTests(unittest.TestCase):
         self.assertEqual(self.get('conversations', query='lantern', source='apple')[1]['items'], [])
         self.assertEqual(self.get('conversations', query='lantern', shared_by='Missing participant')[1]['items'], [])
         self.assertEqual(self.get('conversations', query='lantern', limit=0)[0], 400)
+        self.assertEqual(self.get('conversations', query='lantern', years='2025')[0], 400)
