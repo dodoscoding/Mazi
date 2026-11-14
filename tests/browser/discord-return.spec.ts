@@ -16,7 +16,7 @@ test("Discord channels do not wait for the archive overview", async ({
   await page.request.post("/api/entry", {
     data: { name: "Alice", code: "synthetic-shared-code" },
   });
-  await page.goto("/places");
+  await page.goto("/#/add?section=sources");
   await expect(page.locator("#workspace")).toBeVisible();
   const [group] = await (await page.request.get("/api/groups")).json();
   const { url } = await (
@@ -63,7 +63,7 @@ for (const scenario of scenarios) {
     await page.request.post("/api/entry", {
       data: { name: "Alice", code: "synthetic-shared-code" },
     });
-    await page.goto("/places");
+    await page.goto("/#/add?section=sources");
     await expect(page.locator("#workspace")).toBeVisible();
     const [group] = await (await page.request.get("/api/groups")).json();
     const { url } = await (
