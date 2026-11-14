@@ -72,10 +72,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(
     page.getByRole("heading", { name: "Our summer", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
-  expect(await page.locator(".photo-frame img").getAttribute("src")).toContain(
-    "/api/",
-  );
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
+  expect(
+    await page.locator(".viewer-track .photo-frame img").getAttribute("src"),
+  ).toContain("/api/");
   await page
     .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
     .click();

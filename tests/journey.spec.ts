@@ -106,7 +106,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
   ).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(
     page.getByText("Atlas düz haritada gösteriliyor."),
