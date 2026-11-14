@@ -101,7 +101,7 @@ test("legacy discovery search has no generated-answer fallback or prompt", async
     ).ok(),
   ).toBe(true);
   await page.goto("/#/discover?q=bicycle");
-  await expect(page.locator("#results article")).toHaveCount(1);
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
   await expect(page.locator("#ask-card")).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: /Ask this|Arşivine sor/ }),

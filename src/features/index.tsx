@@ -6,15 +6,11 @@ import { mount as settingsMount } from "./settings/mount";
 import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
-import discoveryTemplate from "./discovery/template.html?raw";
 import photosTemplate from "./photos/template.html?raw";
 import { mount as photosMount } from "./photos/mount";
-import memoriesTemplate from "./memories/template.html?raw";
 import { mount as importsMount } from "./imports/mount";
 import { mount as archiveMount } from "./archive/mount";
 import { mount as placesMount } from "./places/mount";
-import { mount as discoveryMount } from "./discovery/mount";
-import { mount as memoriesMount } from "./memories/mount";
 import "./features.css";
 import "./workspace.css";
 import "./imports/imports.css";
@@ -22,14 +18,9 @@ import "./imports/imports.css";
 export const featureRegistry = {
   "/photos": { template: photosTemplate, mount: photosMount },
   "/add": { template: importsTemplate, mount: importsMount },
-  "/imports": { template: importsTemplate, mount: importsMount },
-  "/circle": { template: importsTemplate, mount: importsMount },
   "/settings": { template: importsTemplate, mount: importsMount },
   "/review": { template: archiveTemplate, mount: archiveMount },
   "/places": { template: placesTemplate, mount: placesMount },
-  "/discover": { template: discoveryTemplate, mount: discoveryMount },
-  "/search": { template: discoveryTemplate, mount: discoveryMount },
-  "/memories": { template: memoriesTemplate, mount: memoriesMount },
 };
 export const featurePaths = Object.keys(featureRegistry);
 export function FeaturePage({
@@ -114,7 +105,7 @@ export function FeaturePage({
             return;
           }
           if (target === "/" || featurePaths.includes(target))
-            link.setAttribute("href", `#${target === "/" ? "/imports" : href}`);
+            link.setAttribute("href", `#${target === "/" ? "/add" : href}`);
         });
       observer = new MutationObserver(rewriteLinks);
       observer.observe(root, { childList: true, subtree: true });
@@ -146,7 +137,7 @@ export function FeaturePage({
       message.textContent =
         "Your session or access changed. Sign in again to continue.";
       const link = document.createElement("a");
-      link.href = "#/imports";
+      link.href = "#/add";
       link.textContent = "Sign in";
       link.addEventListener("click", () => {
         if (

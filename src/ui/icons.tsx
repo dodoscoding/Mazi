@@ -1,6 +1,26 @@
 import type { ReactNode } from "react";
 
 const glyphs = {
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3 12h18" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="m3 17 6-6 4 4 3-3 5 5" />
+      <circle cx="16" cy="8" r="1" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v4m0 12v4M2 12h4m12 0h4M5 5l3 3m8 8 3 3M5 19l3-3m8-8 3-3" />
+    </>
+  ),
   home: <path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z" />,
   timeline: (
     <>

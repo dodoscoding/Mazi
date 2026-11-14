@@ -9,12 +9,10 @@ import {
 import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
 import { RouteBoundary } from "./RouteBoundary";
-import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
 import { createDiscordReturn } from "./features/discordReturn";
 import { isFeaturePath } from "./featureRoutes";
 import { ArchiveStatus, Atlas } from "./Atlas";
-import { Explore } from "./Explore";
 import { usePlacedMemories } from "./atlas/PlaceMemories";
 import { Shell } from "./Shell";
 import { SoundController } from "./sound/SoundController";
@@ -26,14 +24,9 @@ import { useWorkDrain } from "./useWorkDrain";
 const FeaturePage = lazy(() =>
   import("./features").then(({ FeaturePage }) => ({ default: FeaturePage })),
 );
-const Home = lazy(() =>
-  import("./Home").then(({ Home }) => ({ default: Home })),
-);
-const SocialHome = lazy(() => import("./social/SocialHome"));
 const LegacyEvidence = lazy(() => import("./LegacyEvidence"));
 const SelectedMemory = lazy(() => import("./memory/SelectedMemory"));
 const PastCreations = lazy(() => import("./PastCreations"));
-const Plans = lazy(() => import("./social/Plans"));
 
 export default function App() {
   const discordReturn = useRef(createDiscordReturn(location.search));
@@ -69,8 +62,9 @@ export default function App() {
   );
   const memoryById = (id: string) => memories.find((item) => item.id === id);
   const memoryId = route.path.startsWith("/memory/") ? route.path.slice(8) : "";
-  const selected = memoryById(route.selected) || memories[0];
-  const [query, setQuery] = useState("");
+  const selected = new URLSearchParams(route.search).has("selected")
+    ? memoryById(route.selected)
+    : memories[0];
   const heading = useRef<HTMLHeadingElement>(null);
   const openLink = useRef<HTMLAnchorElement>(null);
   const previousPath = useRef(route.path);
@@ -171,31 +165,8 @@ export default function App() {
       heading.current?.focus({ preventScroll: true });
     }
   }, [route.path]);
-  const legacyCreation =
-    route.path === "/memories" &&
-    (["stories", "capsules"].includes(
-      new URLSearchParams(route.search).get("section") || "",
-    ) ||
-      new URLSearchParams(route.search).has("story") ||
-      new URLSearchParams(route.search).has("capsule"));
-  useEffect(() => {
-    const params = new URLSearchParams(route.search);
-    if (
-      route.path === "/memories" &&
-      (["stories", "capsules"].includes(params.get("section") || "") ||
-        params.has("story") ||
-        params.has("capsule"))
-    ) {
-      params.delete("section");
-      navigate(
-        `/past-creations${params.size ? `?${params}` : ""}`,
-        false,
-        true,
-      );
-    }
-  }, [route.path, route.search, navigate]);
   const chooseMemory = (id: string) =>
-    navigate(`/atlas?selected=${id}`, false, true);
+    navigate(`/?selected=${encodeURIComponent(id)}`, false, true);
   const backUrl = browsingReturn.current?.url || "/";
   let content: ReactNode;
   if (route.path === "/introduction")
@@ -209,6 +180,51 @@ export default function App() {
           )
         }
       />
+    );
+  else if (
+    archive.status === "ready" &&
+    new URLSearchParams(route.search).has("group") &&
+    new URLSearchParams(route.search).get("group") !== archive.group
+  )
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Bu bağlantı artık kullanılamıyor
+        </h1>
+        <p>Bağlantı mevcut grubunuza ait değil. Başka bir kayıt açılmadı.</p>
+        <a href="#/settings" onClick={link("/settings")}>
+          Settings
+        </a>
+      </section>
+    );
+  else if (demo && !["/", "/photos"].includes(route.path) && !memoryId)
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Sample Atlas
+        </h1>
+        <p>
+          Örnek arşivde Globe, Photos ve fotoğraf görüntüleyici kullanılabilir.
+          Canlı arşiv işlemleri örnek modunda açılmaz.
+        </p>
+        <a href="#/photos" onClick={link("/photos")}>
+          Photos
+        </a>
+      </section>
+    );
+  else if (new URLSearchParams(route.search).has("unavailable"))
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Bu bağlantı artık kullanılamıyor
+        </h1>
+        <p>
+          Bu eski hedef kaldırıldı. Kayıt başka bir fotoğrafla eşleştirilmedi.
+        </p>
+        <a href="#/photos" onClick={link("/photos")}>
+          Photos
+        </a>
+      </section>
     );
   else if (route.path === "/about" || route.path === "/settings")
     content = (
@@ -244,7 +260,7 @@ export default function App() {
         />
       </>
     );
-  else if (route.path === "/past-creations" || legacyCreation)
+  else if (route.path === "/past-creations")
     content = (
       <Suspense fallback={<p role="status">Loading Past creations…</p>}>
         <PastCreations
@@ -254,72 +270,6 @@ export default function App() {
         />
       </Suspense>
     );
-  else if (route.path === "/explore")
-    content = <Explore link={link} heading={heading} />;
-  else if (
-    route.path === "/" ||
-    (route.path === "/circle" &&
-      new URLSearchParams(route.search).get("section") === "activity")
-  )
-    content =
-      archive.status !== "ready" ? (
-        <ArchiveStatus archive={archive} heading={heading} />
-      ) : (
-        <Suspense fallback={<p role="status">Ana sayfa açılıyor…</p>}>
-          {demo ? (
-            <Home
-              archive={archive}
-              memories={memories}
-              demo
-              link={link}
-              heading={heading}
-              openLink={openLink}
-              restore={
-                browsingReturn.current?.path === route.path
-                  ? browsingReturn.current
-                  : undefined
-              }
-            />
-          ) : (
-            <SocialHome
-              key={`${profile?.user_id}:${archive.group}:${route.path}:${route.search}`}
-              group={archive.group}
-              circle={
-                archive.groups.find(({ id }) => id === archive.group)?.name ||
-                "Grubumuz"
-              }
-              activity={route.path === "/circle"}
-              search={route.search}
-              sessionKey={profile?.user_id}
-              restore={
-                browsingReturn.current?.path === route.path
-                  ? browsingReturn.current
-                  : undefined
-              }
-              link={link}
-              heading={heading}
-            />
-          )}
-        </Suspense>
-      );
-  else if (
-    route.path === "/circle" &&
-    new URLSearchParams(route.search).get("section") === "plans"
-  )
-    content =
-      archive.status !== "ready" ? (
-        <ArchiveStatus archive={archive} heading={heading} />
-      ) : (
-        <Suspense fallback={<p role="status">Planlar açılıyor…</p>}>
-          <Plans
-            key={`${profile?.user_id}:${archive.group}:${route.search}`}
-            group={archive.group || profile?.group_id || ""}
-            search={route.search}
-            demo={demo}
-            navigate={navigate}
-          />
-        </Suspense>
-      );
   else if (route.path === "/answer-evidence")
     content =
       archive.status !== "ready" ? (
@@ -346,7 +296,27 @@ export default function App() {
     );
   else if (archive.status !== "ready")
     content = <ArchiveStatus archive={archive} heading={heading} />;
-  else if (route.path === "/atlas")
+  else if (
+    route.path === "/" &&
+    new URLSearchParams(route.search).has("selected") &&
+    (!selected ||
+      (new URLSearchParams(route.search).has("photo") &&
+        (!Number.isInteger(route.photo) ||
+          route.photo < 0 ||
+          route.photo >= selected.photos.length)))
+  )
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Fotoğraf kullanılamıyor
+        </h1>
+        <p>Seçilen kayıt bulunamadı veya bu grupta erişilemiyor.</p>
+        <a href="#/" onClick={link("/")}>
+          Globe
+        </a>
+      </section>
+    );
+  else if (route.path === "/")
     content = (
       <Atlas
         archive={archive}
@@ -356,7 +326,7 @@ export default function App() {
         reduced={reduced}
         link={link}
         chooseMemory={chooseMemory}
-        openMemory={(id) => navigateTo(`/memory/${id}?photo=0`)}
+        openMemory={(id) => navigateTo(`/memory/${id}?photo=${route.photo}`)}
         onPlaced={placed}
         heading={heading}
         openLink={openLink}
@@ -382,18 +352,6 @@ export default function App() {
           heading={heading}
         />
       </Suspense>
-    );
-  else if (route.path === "/timeline" || route.path === "/search")
-    content = (
-      <Browse
-        isSearch={route.path === "/search"}
-        memories={memories}
-        demo={demo}
-        query={query}
-        setQuery={setQuery}
-        link={link}
-        heading={heading}
-      />
     );
   else
     content = (

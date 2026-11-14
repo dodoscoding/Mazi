@@ -344,12 +344,12 @@ function AtlasHome({
     if (pushed.current) {
       pushed.current = false;
       history.back();
-    } else go(`/atlas?selected=${selected.id}`, true);
+    } else go(`/?selected=${selected.id}`, true);
   }, [selected.id]);
   const portalIndex = memories.findIndex((memory) => memory.id === selected.id);
   const stepPortal = (direction: -1 | 1) => {
     const next = memories[portalIndex + direction];
-    if (next) go(`/atlas?selected=${next.id}&view=portal`, true);
+    if (next) go(`/?selected=${next.id}&view=portal`, true);
   };
 
   const representative = useCallback(
@@ -453,7 +453,7 @@ function AtlasHome({
         event.altKey
       )
         return;
-      if (readRoute().path !== "/atlas" || isField(event.target)) return;
+      if (readRoute().path !== "/" || isField(event.target)) return;
       if (portalOpen) {
         if (event.key === "Escape") {
           event.preventDefault();

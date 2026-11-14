@@ -1,4 +1,3 @@
-import { groupDestinations } from "../../navigation.ts";
 import {
   confirmAction,
   el,
@@ -83,20 +82,6 @@ export function mount(root, lifecycle) {
     }
     $("page-sub").textContent =
       "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
-    const shortcuts = el("nav");
-    shortcuts.className = "group-destinations";
-    shortcuts.setAttribute("aria-label", "Grup araçları");
-    for (const entry of groupDestinations) {
-      const link = el("a");
-      link.href = `#${entry.path}`;
-      link.setAttribute("aria-label", entry.label);
-      link.append(
-        el("strong", "", entry.label),
-        el("span", "", entry.description),
-      );
-      shortcuts.append(link);
-    }
-    if (!settingsMode) root.querySelector(".fx-head").after(shortcuts);
   }
 
   async function api(path, body) {
