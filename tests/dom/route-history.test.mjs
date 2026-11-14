@@ -108,7 +108,6 @@ test("legacy root selection links retain their Atlas state", async (t) => {
 
 for (const [alias, path, search] of [
   ["people", "/discover", "?section=people"],
-  ["settings", "/circle", "?section=settings"],
 ]) {
   for (const prefix of ["/", "/#/"]) {
     test(`${prefix}${alias} replaces the legacy entry without adding history`, async (t) => {
@@ -144,3 +143,12 @@ test("a People alias preserves search and sample parameters but owns its section
   assert.equal(h.window.location.search, "?demo=1");
   assert.equal(h.window.history.length, 1);
 });
+
+for (const prefix of ["/", "/#/"]) {
+  test(`${prefix}settings is a real route without an alias history entry`, async (t) => {
+    const h = await harness(t, `http://localhost${prefix}settings`);
+    assert.equal(h.route.path, "/settings");
+    assert.equal(h.route.search, "");
+    assert.equal(h.window.history.length, 1);
+  });
+}
