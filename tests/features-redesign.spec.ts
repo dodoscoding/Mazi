@@ -9,14 +9,6 @@ async function enter(page: Page, name = "Ben") {
   expect(response.ok()).toBe(true);
 }
 
-async function ask(page: Page, question: string) {
-  await page.goto("/#/ask");
-  await page.getByLabel("Ask the archive").fill(question);
-  await page
-    .getByRole("button", { name: "Find evidence", exact: true })
-    .click();
-}
-
 test("About states the privacy promises and replays the introduction", async ({
   page,
 }) => {
@@ -34,7 +26,7 @@ test("About states the privacy promises and replays the introduction", async ({
     "What you add is shared at once",
     "No email, no password",
     "You can take things back",
-    "Answers cite their sources",
+    "Sources stay inspectable",
     "Optional AI stays off",
   ])
     await expect(promises).toContainText(promise);
@@ -171,91 +163,6 @@ test("Our circle lists members without public or social counts", async ({
   await expect(page.getByRole("main")).not.toContainText(/follower|share on/i);
 });
 
-test("Ask streams the answer word by word, then cites its evidence", async ({
-  page,
-}) => {
-  await enter(page);
-  const reply = page.waitForResponse("**/api/answers/ask");
-  await ask(page, "When was bicycle?");
-  const result = await (await reply).json();
-  await expect(page.locator("#notice")).toHaveText("Evidence found.");
-  const answer = page.locator("#answer");
-  await expect(answer).toHaveAttribute("aria-busy", "true");
-  expect(
-    await answer.locator(".answer-coverage span[hidden]").count(),
-  ).toBeGreaterThan(10);
-  await expect(answer.locator(".answer-coverage")).not.toContainText(
-    "incomplete",
-    { useInnerText: true },
-  );
-  await expect(answer).not.toHaveAttribute("aria-busy", "true");
-  // Once revealed, the visible text is exactly what the server answered.
-  const visible = (selector: string) =>
-    answer
-      .locator(selector)
-      .evaluateAll((nodes) =>
-        nodes.map((node) =>
-          (node as HTMLElement).innerText.replace(/\s+/g, " ").trim(),
-        ),
-      );
-  expect(await visible(".answer-lede")).toEqual([result.message]);
-  expect(await visible(".answer-text > p:not(.answer-lede)")).toEqual(
-    result.claims.map(
-      (claim: { text: string; evidence_ids: string[] }) =>
-        `${claim.text} ${claim.evidence_ids.map((_, i) => i + 1).join(" ")}`,
-    ),
-  );
-  expect(await visible(".answer-coverage")).toEqual([result.coverage]);
-  await expect(answer).toContainText("2024-01-02");
-  const cite = answer.getByRole("link", {
-    name: "View supporting record",
-    exact: true,
-  });
-  await expect(cite).toHaveText("1");
-  if ((page.viewportSize()?.width ?? 1440) > 800) {
-    const evidence = page.getByRole("complementary", { name: "Evidence" });
-    await expect(evidence).toContainText("Bicycle beside the sea");
-  } else {
-    await answer.getByRole("button", { name: /Evidence · 1 source/ }).click();
-    const sheet = page.getByRole("dialog", {
-      name: "Evidence for this answer",
-    });
-    await expect(sheet).toContainText("Bicycle beside the sea");
-    await page.keyboard.press("Escape");
-    await expect(sheet).toBeHidden();
-  }
-  await cite.click();
-  await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
-});
-
-test("Under reduced motion the answer appears complete", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await enter(page);
-  await ask(page, "When was bicycle?");
-  await expect(page.locator("#notice")).toHaveText("Evidence found.");
-  const answer = page.locator("#answer");
-  await expect(answer.locator("span[hidden], a[hidden]")).toHaveCount(0);
-  expect(await answer.getAttribute("aria-busy")).toBeNull();
-  await expect(answer).toContainText("2024-01-02");
-  await expect(
-    answer.getByRole("link", { name: "View supporting record", exact: true }),
-  ).toBeVisible();
-});
-
-test("Ask says when the archive has no evidence and links nothing", async ({
-  page,
-}) => {
-  await enter(page);
-  await ask(page, "Was bicycle our first trip ever?");
-  await expect(page.locator("#notice")).toHaveText("Not enough evidence.");
-  const answer = page.locator("#answer");
-  await expect(answer).toContainText("No evidence found");
-  await expect(answer).toContainText("so Mazi won’t guess");
-  await expect(answer.locator("a")).toHaveCount(0);
-  await answer.getByRole("button", { name: "Check My Imports" }).click();
-  await expect(page).toHaveURL(/#\/imports/);
-});
-
 test("PR 6 screens have no axe violations", async ({ page }) => {
   test.setTimeout(120000);
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -266,7 +173,7 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
     ["/circle", "#members li"],
     ["/review", "#timeline article"],
     ["/places", "#origin-counts"],
-    ["/ask", "#private:not([hidden])"],
+    ["/photos", ".mem-tile"],
     ["/about", ".about-page"],
   ];
   for (const theme of ["night"]) {
@@ -283,19 +190,20 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations, `${route} in ${theme}`).toEqual([]);
     }
-    await ask(page, "When was bicycle?");
-    await expect(page.locator("#notice")).toHaveText("Evidence found.");
-    await page.waitForTimeout(300);
-    const answered = await new AxeBuilder({ page }).analyze();
-    expect(answered.violations, `answer in ${theme}`).toEqual([]);
-    await page
-      .locator("#answer")
-      .getByRole("link", { name: "View supporting record", exact: true })
-      .click();
-    await expect(page.locator("#record")).toContainText("Bicycle");
-    await page.waitForTimeout(300);
+    const profile = await (await page.request.get("/api/session")).json();
+    const atlas = await (
+      await page.request.get(`/api/atlas?group=${profile.group_id}`)
+    ).json();
+    const asset = atlas.memories[0].photos[0].assetId;
+    await page.goto(
+      `/#/answer-evidence?group=${profile.group_id}&asset=${asset}`,
+    );
+    await expect(page.locator(".viewer")).toBeVisible();
     const record = await new AxeBuilder({ page }).analyze();
-    expect(record.violations, `evidence in ${theme}`).toEqual([]);
+    expect(
+      record.violations,
+      `retained photograph evidence in ${theme}`,
+    ).toEqual([]);
   }
 });
 

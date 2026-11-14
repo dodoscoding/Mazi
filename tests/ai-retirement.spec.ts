@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("old Ask links retain their query in Photos with an honest retirement notice", async ({
   page,
-}) => {
+}, info) => {
   expect(
     (
       await page.request.post("/api/entry", {
@@ -31,6 +31,10 @@ test("old Ask links retain their query in Photos with an honest retirement notic
   ).toBeVisible();
   await expect(page.locator(".mem-tile")).toHaveCount(1);
   await expect(page.locator("#answer, #ask-card, #question")).toHaveCount(0);
+  await page.screenshot({
+    path: `work/poteto/app-simplification/ai-retired-${info.project.name}.png`,
+    fullPage: true,
+  });
   await page.goto("/#/explore");
   await expect(
     page.getByRole("link", { name: "Arşive sor", exact: true }),
