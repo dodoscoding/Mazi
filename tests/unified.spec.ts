@@ -23,7 +23,7 @@ async function navigate(page: Page, name: string, route: string) {
   await shell(page);
 }
 
-test("one authenticated shell connects real Atlas, stories, discovery and evidence", async ({
+test("one authenticated shell connects real Atlas, retained memories, discovery and evidence", async ({
   page,
 }, info) => {
   const errors: string[] = [];
@@ -37,32 +37,6 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     await page.request.get(`/api/archive?group=${profile.group_id}`)
   ).json();
   const initialCount = initialRecords.length;
-  const storiesResponse = await page.request.get(
-    `/api/memories/stories?group=${profile.group_id}`,
-  );
-  expect(storiesResponse.ok()).toBe(true);
-  for (const story of await storiesResponse.json()) {
-    if (!story.can_delete || story.event.title !== "Our summer") continue;
-    expect(
-      (
-        await page.request.post("/api/memories/delete", {
-          data: {
-            group: profile.group_id,
-            story: story.id,
-            revision: story.revision,
-          },
-        })
-      ).ok(),
-    ).toBe(true);
-  }
-  const currentStory = page
-    .locator("#stories > article")
-    .filter({
-      has: page.getByRole("heading", { name: "Our summer", exact: true }),
-    })
-    .filter({
-      has: page.getByRole("button", { name: "Delete story", exact: true }),
-    });
   await page.goto("/#/atlas");
   await shell(page);
   await page
@@ -82,56 +56,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await navigate(page, "Fotoğraflar", "memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
-  await page
-    .getByRole("button", { name: "Start a story", exact: true })
-    .click();
-  await currentStory
-    .getByRole("textbox", { name: "Your recollection", exact: true })
-    .fill("<img src=x onerror=alert(1)> A beautiful day.");
-  await currentStory
-    .getByRole("button", { name: "Save my recollection", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("You: <img");
-  await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
-  await currentStory.getByLabel("Sub-event title").fill("Morning");
-  await currentStory
-    .getByRole("checkbox", { name: "Photo 1", exact: true })
-    .check();
-  await currentStory
-    .getByRole("button", { name: "Add sub-event", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
-  await currentStory
-    .getByRole("button", { name: "Show slideshow", exact: true })
-    .click();
-  await currentStory
-    .getByRole("button", { name: "Next photo", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
-  for (const [label, filename] of [
-    ["Download video (AVI)", "mazi-memory.avi"],
-    ["Export story JSON", "mazi-story.json"],
-  ]) {
-    const downloading = page.waitForEvent("download");
-    await currentStory
-      .getByRole("button", { name: label, exact: true })
-      .click();
-    const download = await downloading;
-    expect(download.suggestedFilename()).toBe(filename);
-    expect(await download.failure()).toBeNull();
-  }
-  await page
-    .getByLabel("Capsule title", { exact: true })
-    .fill("Hidden surprise");
-  await page.getByLabel("Note for the future").fill("These words stay sealed");
-  await page.getByLabel("Opening time").fill("2030-01-01T12:00");
-  await page.getByRole("button", { name: "Seal capsule", exact: true }).click();
-  await expect(page.locator("#capsules")).toContainText("Sealed capsule");
-  await expect(page.locator("#capsules")).not.toContainText(
-    "These words stay sealed",
-  );
-  await page.getByLabel("Show in-app capsule notifications").check();
-  await expect(page.locator("#notifications")).toBeEmpty();
+  await expect(
+    page.getByRole("button", { name: "Start a story", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
   await navigate(page, "Search", "search");
   await expect(page.locator("#results article")).toHaveCount(initialCount);
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
@@ -173,44 +101,12 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(page.locator("#timeline article")).toHaveCount(initialCount);
   for (let i = 0; i < 2; i++) {
     await navigate(page, "Fotoğraflar", "memories");
-    await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
+    await expect(page.locator("#grid")).not.toBeEmpty();
+    await expect(
+      page.getByRole("textbox", { name: "Your recollection", exact: true }),
+    ).toHaveCount(0);
     await navigate(page, "Home", "");
   }
-  await navigate(page, "Fotoğraflar", "memories");
-  let saves = 0;
-  page.on("request", (request) => {
-    if (
-      request.method() === "POST" &&
-      request.url().includes("/api/memories/write")
-    )
-      saves++;
-  });
-  await currentStory
-    .getByRole("textbox", { name: "Your recollection", exact: true })
-    .fill("Edited after navigation");
-  await currentStory
-    .getByRole("button", { name: "Save my recollection", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText(
-    "Edited after navigation",
-  );
-  expect(saves).toBe(1);
-  await page
-    .getByRole("heading", { name: "Fotoğraflar", exact: true, level: 1 })
-    .click();
-  await page.evaluate(() =>
-    (document.activeElement as HTMLElement | null)?.blur(),
-  );
-  await page.screenshot({
-    path: `work/poteto/unified-app/browser-${info.project.name}.png`,
-    fullPage: true,
-  });
-  await page
-    .getByRole("button", { name: "Delete capsule", exact: true })
-    .click();
-  await currentStory
-    .getByRole("button", { name: "Delete story", exact: true })
-    .click();
   await navigate(page, "My Imports", "imports");
   await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
@@ -284,13 +180,12 @@ test("named profile imports and logout discard delayed private Atlas responses",
   });
   expect(eventResponse.ok()).toBe(true);
   const event = await eventResponse.json();
-  const storyResponse = await page.request.post("/api/memories/create", {
+  const retired = await page.request.post("/api/memories/create", {
     data: { group: firstGroup, event: event.id },
   });
-  expect(storyResponse.ok()).toBe(true);
-  const story = await storyResponse.json();
+  expect(retired.status()).toBe(410);
   await navigate(page, "Fotoğraflar", "memories");
-  await expect(page.locator("#stories")).toContainText(title);
+  await expect(page.locator("#grid")).toContainText(title);
   let releaseLogout!: () => void;
   let heldLogout!: () => void;
   const capturedLogout = new Promise<void>((resolve) => {
@@ -335,13 +230,6 @@ test("named profile imports and logout discard delayed private Atlas responses",
   ).toBeFocused();
   expect(
     (
-      await page.request.post("/api/memories/delete", {
-        data: { group: firstGroup, story: story.id, revision: story.revision },
-      })
-    ).ok(),
-  ).toBe(true);
-  expect(
-    (
       await page.request.post("/api/review/event", {
         data: {
           group: firstGroup,
@@ -371,7 +259,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });
 
-test("access loss clears private drafts and supporting records", async ({
+test("access loss clears retained archive controls and supporting records", async ({
   page,
 }, info) => {
   expect(
@@ -391,25 +279,21 @@ test("access loss clears private drafts and supporting records", async ({
     .click();
   await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
   await navigate(page, "Fotoğraflar", "memories");
-  await page
-    .getByLabel("Note for the future")
-    .fill("Private unsaved capsule draft");
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("button", { name: "Download archive", exact: true }),
+  ).toBeVisible();
   expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
     true,
   );
   await page
-    .getByRole("button", { name: "Refresh stories", exact: true })
+    .getByRole("button", { name: "Download archive", exact: true })
     .click();
-  await expect(page.locator("#capsule-text")).toHaveCount(0);
-  await expect(page.locator("#recap")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Download archive", exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByLabel("Shared code")).toBeVisible();
-  expect(
-    await page
-      .locator("textarea")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => (node as HTMLTextAreaElement).value),
-      ),
-  ).not.toContain("Private unsaved capsule draft");
+  await expect(page.locator("textarea")).toHaveCount(0);
 });
 
 test("shared viewer opens directly and restores Globe and browse state", async ({

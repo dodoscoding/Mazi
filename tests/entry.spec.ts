@@ -704,3 +704,26 @@ test("Settings cancels exports and clears controls when an export is denied", as
   ).toHaveCount(0);
   await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
+
+test("Settings omits Past creations when no eligible saved content exists", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/past-creations");
+  await expect(
+    page.getByText("No Past creations are currently available.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Back to Settings", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Settings", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Past creations", exact: true }),
+  ).toHaveCount(0);
+});

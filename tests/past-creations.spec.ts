@@ -57,7 +57,10 @@ test("Past creations retains historical reads and only authorized deletion", asy
     await page.request.get(`/api/memories/stories?group=${profile.group_id}`)
   ).json();
   const historical = stories.find(
-    (item: { can_delete: boolean }) => !item.can_delete,
+    (item: { contributions: { text: string }[] }) =>
+      item.contributions.some((entry) =>
+        entry.text.includes("Historical summer recollection"),
+      ),
   );
   await page.goto(`/#/memories?section=stories&story=${historical.id}`);
   await expect(page).toHaveURL(
