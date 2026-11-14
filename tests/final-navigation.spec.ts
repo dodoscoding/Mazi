@@ -41,3 +41,43 @@ test("returning member uses Globe and Photos with retained old links", async ({
   await expect(page).toHaveURL(/#\/past-creations\?story=unknown-story/);
   await expect(page.getByText(/unavailable/i).first()).toBeVisible();
 });
+
+test("explicit sample Photos shares fictional photographs without live archive requests", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  const reads: string[] = [];
+  page.on("request", (request) => {
+    if (/\/api\/(atlas|discovery|archive|sources)/.test(request.url()))
+      reads.push(request.url());
+  });
+  await page.goto("/?demo=1#/photos");
+  await expect(page.locator(".mem-tile").first()).toBeVisible();
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer-track img").first()).toHaveAttribute(
+    "src",
+    /\/media\//,
+  );
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/#\/photos/);
+  expect(reads).toEqual([]);
+});
+
+test("invalid explicit memory and photograph selections never open another photograph", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/atlas?selected=unknown-memory");
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraf kullanılamıyor", exact: true }),
+  ).toBeVisible();
+  await page.goto("/?demo=1#/memory/last-ferry?photo=999");
+  await expect(page.locator(".viewer-track")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: /bulunamadı/i }),
+  ).toBeVisible();
+});
