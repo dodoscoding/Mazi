@@ -411,3 +411,145 @@ test("access loss clears private drafts and supporting records", async ({
       ),
   ).not.toContain("Private unsaved capsule draft");
 });
+
+test("Add imports, recovers failures and shares successful photographs automatically", async ({
+  page,
+}, info) => {
+  const login = await page.request.post("/api/entry", {
+    data: {
+      name: "Ben",
+      code: "synthetic-shared-code",
+    },
+  });
+  expect(login.ok()).toBe(true);
+  await page.goto("/#/add");
+  await expect(
+    page.getByRole("heading", { name: "Add", exact: true, level: 1 }),
+  ).toBeVisible();
+  const filename = `add-${info.project.name}-${Date.now()}.jpg`;
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(83,61),(51,78,121)).save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr(sys.argv[1],p.getvalue()); z.writestr('broken.jpg',b'not a photograph'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    filename,
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page.getByLabel("Source account label").fill("Add synthetic archive");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "add.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Start importing to group", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("completed");
+  await expect(page.locator("#report-summary")).toContainText(
+    "1 available to group",
+  );
+  await expect(page.locator("#items")).toContainText("invalid media");
+  const retrying = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/imports/retry") &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Retry item", exact: true }).click();
+  const retry = await retrying;
+  expect(retry.ok()).toBe(true);
+  const retriedRun = retry.request().postDataJSON().id;
+  await expect
+    .poll(async () => {
+      const report = await (
+        await page.request.get(`/api/imports/${retriedRun}`)
+      ).json();
+      return report.state;
+    })
+    .toBe("COMPLETED");
+  await expect(page.locator("#report-title")).toContainText("completed");
+  await expect(
+    page.getByRole("button", { name: "Retry item", exact: true }),
+  ).toBeVisible();
+  const downloading = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download outcome report", exact: true })
+    .click();
+  expect((await downloading).suggestedFilename()).toBe(
+    "mazi-import-report.json",
+  );
+  const profile = await login.json();
+  const records = await (
+    await page.request.get(`/api/archive?group=${profile.group_id}`)
+  ).json();
+  const imported = records.find(
+    (record: { origins: { original_filename: string }[] }) =>
+      record.origins.some((origin) => origin.original_filename === filename),
+  );
+  expect(imported).toBeTruthy();
+  await page.goto("/#/atlas");
+  await expect(
+    page
+      .getByRole("button", {
+        name: "Untitled photograph anısını seç",
+        exact: true,
+      })
+      .filter({ has: page.locator(`img[src$="/${imported.id}"]`) }),
+  ).toBeVisible();
+  await page.goto("/#/add");
+  await expect(page.locator("#imports")).toContainText("Done");
+  await page.screenshot({
+    path: `work/poteto/app-simplification/add-${info.project.name}.png`,
+    animations: "disabled",
+    fullPage: true,
+  });
+});
+
+test("Add preserves inventory cancellation, history and session-loss clearing", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page.getByRole("button", { name: "Ekle", exact: true }).click();
+  await page.getByRole("link", { name: "Add", exact: true }).click();
+  await expect(page).toHaveURL(/#\/add$/);
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('cancelled.jpg',b'cancel before processing'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page
+    .getByLabel("Source account label")
+    .fill("cancelled synthetic archive");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "cancel.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Cancel remaining work", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("cancelled");
+  await expect(page.locator("#report-summary")).toContainText(
+    "0 unique photos",
+  );
+  await page.reload();
+  await expect(page.locator("#imports")).toContainText("Cancelled");
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.reload();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator("#imports")).toHaveCount(0);
+});
