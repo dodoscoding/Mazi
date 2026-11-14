@@ -74,30 +74,73 @@ export default function App() {
   const previousPath = useRef(route.path);
   const browsingReturn = useRef<{
     path: string;
+    url: string;
     scroll: number;
     openerId: string;
   } | null>(null);
+  const retainedBrowse = useRef<ReactNode>(null);
+  const [, invalidateBrowse] = useState(0);
+  useEffect(() => {
+    const clear = () => {
+      retainedBrowse.current = null;
+      browsingReturn.current = null;
+      invalidateBrowse((value) => value + 1);
+    };
+    const events = [
+      "mazi:access-lost",
+      "mazi:session",
+      "mazi:group",
+      "mazi:archive-changed",
+    ];
+    events.forEach((event) => window.addEventListener(event, clear));
+    return () =>
+      events.forEach((event) => window.removeEventListener(event, clear));
+  }, []);
   const navigateTo = (
     url: string,
     animate = false,
     replace = false,
     openerId = "",
   ) => {
-    if (
-      (route.path === "/" ||
-        route.path === "/atlas" ||
-        (route.path === "/circle" &&
-          new URLSearchParams(route.search).get("section") === "activity")) &&
-      url.startsWith("/memory/")
-    )
+    if (!route.path.startsWith("/memory/") && url.startsWith("/memory/"))
       browsingReturn.current = {
         path: route.path,
+        url: location.hash.slice(1) || route.path + route.search,
         scroll: window.scrollY,
-        openerId,
+        openerId: openerId || browsingReturn.current?.openerId || "",
       };
-    else if (!url.startsWith("/memory/")) browsingReturn.current = null;
+    else if (!url.startsWith("/memory/") && url !== browsingReturn.current?.url)
+      browsingReturn.current = null;
     navigate(url, animate, replace);
   };
+  // Feature galleries use ordinary hash links; capture their origin before routing.
+  useEffect(() => {
+    const remember = (event: globalThis.MouseEvent) => {
+      if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        route.path.startsWith("/memory/")
+      )
+        return;
+      const anchor =
+        event.target instanceof Element
+          ? event.target.closest<HTMLAnchorElement>('a[href^="#/memory/"]')
+          : null;
+      if (!anchor) return;
+      anchor.id ||= "viewer-origin";
+      browsingReturn.current = {
+        path: route.path,
+        url: location.hash.slice(1) || route.path + route.search,
+        scroll: window.scrollY,
+        openerId: anchor.id,
+      };
+    };
+    document.addEventListener("click", remember, true);
+    return () => document.removeEventListener("click", remember, true);
+  }, [route.path, route.search]);
   function link(url: string, animate = false, replace = false) {
     return (event: MouseEvent<HTMLAnchorElement>) => {
       if (
@@ -128,7 +171,7 @@ export default function App() {
   }, [route.path]);
   const chooseMemory = (id: string) =>
     navigate(`/atlas?selected=${id}`, false, true);
-  const backUrl = "/";
+  const backUrl = browsingReturn.current?.url || "/";
   let content: ReactNode;
   if (route.path === "/introduction")
     content = (
@@ -258,6 +301,7 @@ export default function App() {
         reduced={reduced}
         link={link}
         chooseMemory={chooseMemory}
+        openMemory={(id) => navigateTo(`/memory/${id}?photo=0`)}
         onPlaced={placed}
         heading={heading}
         openLink={openLink}
@@ -307,6 +351,15 @@ export default function App() {
         </a>
       </section>
     );
+  if (
+    !memoryId &&
+    !(
+      retainedBrowse.current &&
+      browsingReturn.current?.url === route.path + route.search
+    )
+  )
+    retainedBrowse.current = content;
+  const viewerOpen = !!memoryId;
   let screen: ReactNode;
   if (entry.state.status === "onboarding")
     screen = (
@@ -341,9 +394,18 @@ export default function App() {
           void entry.logout();
         }}
       >
-        <RouteBoundary key={`${profile?.user_id}:${route.path}`}>
-          {content}
-        </RouteBoundary>
+        <div key={`${profile?.user_id}:${archive.group}`} hidden={viewerOpen}>
+          <RouteBoundary
+            key={viewerOpen ? browsingReturn.current?.path : route.path}
+          >
+            {retainedBrowse.current}
+          </RouteBoundary>
+        </div>
+        {viewerOpen && (
+          <RouteBoundary key={`${profile?.user_id}:${route.path}`}>
+            {content}
+          </RouteBoundary>
+        )}
       </Shell>
     );
   return (
