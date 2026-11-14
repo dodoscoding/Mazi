@@ -852,6 +852,17 @@ test("viewer corrects one photograph and withdraws only its owned contribution",
     expect(await (await page.request.get(origins)).json()).toEqual(
       originalAssertions,
     );
+    await page.goto("/#/photos");
+    await page
+      .getByRole("combobox", { name: "Yıl", exact: true })
+      .selectOption("2021");
+    await expect(
+      page.getByRole("region", { name: "Mayıs 2021", exact: true }),
+    ).toBeVisible();
+    await page.locator(`.mem-tile[href*="/memory/${memory.id}"]`).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "Synthetic uncertain garden",
+    );
     await expect(
       page.getByRole("button", { name: "Katkımı yönet", exact: true }),
     ).toBeVisible();
@@ -923,6 +934,11 @@ test("viewer corrects one photograph and withdraws only its owned contribution",
     await expect(
       page.getByRole("heading", { name: "Anı bulunamadı", exact: true }),
     ).toBeVisible();
+    await page.goto("/#/photos");
+    await expect(page.locator(".mem-tile").first()).toBeVisible();
+    await expect(
+      page.locator(`.mem-tile[href*="/memory/${memory.id}"]`),
+    ).toHaveCount(0);
   } finally {
     for (const item of imported)
       await item.request.post(
@@ -932,4 +948,57 @@ test("viewer corrects one photograph and withdraws only its owned contribution",
       );
     await other.close();
   }
+});
+
+test("viewer contribution controls recover a failed read and clear on session loss", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  const profile = await login.json();
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${profile.group_id}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { title: string }) => item.title === "Our summer",
+  );
+  expect(memory).toBeTruthy();
+  let fail = true;
+  await page.route(/\/api\/review\/my-contributions\?/, async (route) => {
+    if (!fail) return route.continue();
+    fail = false;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Synthetic contribution read outage" }),
+    });
+  });
+  await page.goto(`/#/memory/${memory.id}`);
+  await page
+    .getByRole("button", { name: "Katkımı yönet", exact: true })
+    .click();
+  const panel = page.getByRole("region", {
+    name: "Seçili fotoğrafa katkılarım",
+    exact: true,
+  });
+  await expect(panel).toContainText("Katkılarınız yüklenemedi");
+  await panel
+    .getByRole("button", { name: "Yeniden dene", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("button", { name: "Katkıyı kaldır", exact: true }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Katkıyı kaldır", exact: true })
+    .click();
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await panel
+    .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator(".photo-frame img")).toHaveCount(0);
 });

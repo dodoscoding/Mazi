@@ -65,7 +65,16 @@ class ReviewHttpTests(unittest.TestCase):
         owned = json.loads(body)
         self.assertEqual(len(owned), 1)
         self.assertEqual(owned[0]["asset"], self.asset)
+        self.assertEqual(len(json.loads(self.request(path)[1])), 1)
+        ben = self.store.register("ben-owner-test@example.test", "correct horse battery")
+        self.store.accept(ben, self.store.invite(self.alice, self.group))
+        ben_token = self.store.login("ben-owner-test@example.test", "correct horse battery")
+        self.assertEqual(json.loads(self.request(path + "&asset=" + self.asset, token=ben_token)[1]), [])
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
+                                      token=ben_token)[0], 403)
         self.assertEqual(json.loads(self.request(path + "&asset=unavailable-photo")[1]), [])
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201)[0], 400)
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201, token=self.outsider_token)[0], 403)
         self.assertEqual(self.request(path + "&asset=" + self.asset, token=self.outsider_token)[0], 403)
         self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
                                       token=self.outsider_token)[0], 403)
