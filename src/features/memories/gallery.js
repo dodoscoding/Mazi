@@ -22,7 +22,7 @@ const focusable =
  * screens and a Filters sheet below 800px. Filters only use fields the Atlas
  * API returns: year, place, people evidence, source and date certainty.
  */
-export function createGallery(root, lifecycle, api) {
+export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
   let memories = [],
@@ -41,6 +41,7 @@ export function createGallery(root, lifecycle, api) {
       ? location.hash.split("?").slice(1).join("?")
       : location.search);
   const entry = new URLSearchParams(searchText);
+  let undated = photos && entry.get("undated") === "1";
   const invalidFilters = new Map();
   for (const [key, parameter] of [
     ["years", "years"],
@@ -80,7 +81,7 @@ export function createGallery(root, lifecycle, api) {
   const searchForm = document.createElement("form");
   searchForm.className = "photo-date-filters";
   for (const [key, text, type] of [
-    ["q", "Sözcük", "search"],
+    ...(!photos ? [["q", "Sözcük", "search"]] : []),
     ["from", "Başlangıç", "date"],
     ["through", "Bitiş", "date"],
   ]) {
@@ -151,14 +152,15 @@ export function createGallery(root, lifecycle, api) {
     const params = parameters();
     if (!params.get("from") && !params.get("through"))
       params.delete("date_basis");
-    if (view === "all") params.set("view", view);
-    if (!newest) params.set("order", "oldest");
+    if (undated) params.set("undated", "1");
+    if (!photos && view === "all") params.set("view", view);
+    if (!photos && !newest) params.set("order", "oldest");
     if (entry.get("section")) params.set("section", entry.get("section"));
     const query = params.toString();
     window.history.replaceState(
       window.history.state,
       "",
-      "#/memories" + (query ? "?" + query : ""),
+      (photos ? "#/photos" : "#/memories") + (query ? "?" + query : ""),
     );
   }
   async function refreshMatches() {
@@ -424,6 +426,7 @@ export function createGallery(root, lifecycle, api) {
   }
   function renderActive() {
     const labels = activeLabels();
+    if (undated) labels.push(["undated", "Undated"]);
     $("active-filters").replaceChildren(
       ...labels.map(([kind, label, value]) => {
         const button = node("button", label, "br-chip mem-active-chip");
@@ -431,8 +434,13 @@ export function createGallery(root, lifecycle, api) {
         button.setAttribute("aria-label", `Filtreyi kaldır: ${label}`);
         button.insertAdjacentHTML("beforeend", closeIcon);
         button.onclick = () => {
-          if (kind === "years") filters.years.clear();
-          else if (kind === "uncertain") filters.uncertain = false;
+          if (kind === "undated") {
+            undated = false;
+            yearPicker.value = "";
+          } else if (kind === "years") {
+            filters.years.clear();
+            if (yearPicker) yearPicker.value = "";
+          } else if (kind === "uncertain") filters.uncertain = false;
           else filters[kind].delete(value);
           void refreshMatches();
           $("active-filters").querySelector("button")?.focus();
@@ -495,12 +503,16 @@ export function createGallery(root, lifecycle, api) {
     const frames = node("div", undefined, "mem-empty-frames");
     frames.setAttribute("aria-hidden", "true");
     frames.append(node("i"), node("i"), node("i"));
-    const link = node("a", "İçe aktarımlarım", "primary-action");
-    link.href = "/imports";
+    const link = node(
+      "a",
+      photos ? "Fotoğraf ekle" : "İçe aktarımlarım",
+      "primary-action",
+    );
+    link.href = photos ? "#/add" : "/imports";
     box.append(
       frames,
       node("h2", "Henüz fotoğraf yok"),
-      node("p", "Grubunuza fotoğraf eklendiğinde burada anılara göre görünür."),
+      node("p", "Grubunuza eklenen fotoğraflar burada görünür."),
       link,
     );
     return box;
@@ -517,10 +529,112 @@ export function createGallery(root, lifecycle, api) {
     );
     return box;
   }
+  function period(photo) {
+    const date = photo.evidence?.chronology;
+    return date?.start &&
+      !["conflict", "ambiguous", "unknown"].includes(date.status) &&
+      date.start.slice(0, 7) === date.through?.slice(0, 7)
+      ? date.start.slice(0, 7)
+      : null;
+  }
+  function photographRows(list) {
+    const seen = new Set();
+    return list.flatMap((memory) =>
+      memory.photos.flatMap((photo, index) => {
+        const id = photo.assetId || photo.src;
+        if (seen.has(id) || !matched.has(photo.assetId)) return [];
+        seen.add(id);
+        return [{ memory, photo, index, month: period(photo) }];
+      }),
+    );
+  }
+  function renderMonths(shown) {
+    const rows = photographRows(shown).filter((row) => !undated || !row.month);
+    rows.sort(
+      (a, b) =>
+        (b.photo.evidence?.chronology.start || "").localeCompare(
+          a.photo.evidence?.chronology.start || "",
+        ) || a.photo.assetId.localeCompare(b.photo.assetId),
+    );
+    const months = new Map();
+    for (const row of rows) {
+      const key = row.month || "undated";
+      if (!months.has(key)) months.set(key, []);
+      months.get(key).push(row);
+    }
+    const sections = [...months]
+      .sort(([a], [b]) =>
+        a === "undated" ? 1 : b === "undated" ? -1 : b.localeCompare(a),
+      )
+      .map(([month, items]) => {
+        const section = node("section", undefined, "photo-month");
+        const label =
+          month === "undated"
+            ? "Undated"
+            : new Intl.DateTimeFormat("tr-TR", {
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC",
+              }).format(new Date(`${month}-01T00:00:00Z`));
+        section.setAttribute("aria-label", label);
+        section.append(node("h2", label));
+        if (month === "undated")
+          section.append(
+            node(
+              "p",
+              "Tarihi bilinmeyen veya ayı güvenle belirlenemeyen fotoğraflar.",
+            ),
+          );
+        const tiles = node("div", undefined, "mem-tiles");
+        items.forEach((row, index) =>
+          tiles.append(tile(row.memory, row.photo, row.index, index)),
+        );
+        section.append(tiles);
+        return section;
+      });
+    $("grid").replaceChildren(...(sections.length ? sections : [noMatch()]));
+  }
+  const yearPicker = $("photos-year");
+  if (yearPicker)
+    yearPicker.onchange = () => {
+      filters.years.clear();
+      undated = yearPicker.value === "undated";
+      if (yearPicker.value && !undated)
+        filters.years.add(Number(yearPicker.value));
+      void refreshMatches();
+    };
+  function yearOptions() {
+    if (!yearPicker) return;
+    const years = [
+      ...new Set(
+        memories.flatMap((memory) =>
+          memory.photos
+            .map(period)
+            .filter(Boolean)
+            .map((month) => month.slice(0, 4)),
+        ),
+      ),
+    ]
+      .sort()
+      .reverse();
+    yearPicker.replaceChildren(
+      ...[
+        ["", "Tüm yıllar"],
+        ...years.map((year) => [year, year]),
+        ["undated", "Undated"],
+      ].map(([value, label]) => {
+        const option = node("option", label);
+        option.value = value;
+        return option;
+      }),
+    );
+    yearPicker.value = undated ? "undated" : [...filters.years].join(",");
+  }
   function renderGrid(shown) {
     const grid = $("grid");
     if (!memories.length) return grid.replaceChildren(emptyState());
     if (!shown.length) return grid.replaceChildren(noMatch());
+    if (photos) return renderMonths(shown);
     let position = 0;
     const tiles = (list) => {
       const box = node("div", undefined, "mem-tiles br-grid-stagger");
@@ -585,9 +699,10 @@ export function createGallery(root, lifecycle, api) {
           String(button.dataset.view === view),
         ),
       );
-    $("grid-order-label").textContent = newest
-      ? "Önce en yeni"
-      : "Önce en eski";
+    if ($("grid-order-label"))
+      $("grid-order-label").textContent = newest
+        ? "Önce en yeni"
+        : "Önce en eski";
     renderActive();
     if (matching || !facets) {
       remember();
@@ -687,6 +802,8 @@ export function createGallery(root, lifecycle, api) {
   $("filters-scrim").onclick = () => closeSheet();
   function resetFilters() {
     filters = emptyFilters();
+    undated = false;
+    if (yearPicker) yearPicker.value = "";
     photoFilters.reset(false);
     for (const input of searchForm.querySelectorAll("input")) input.value = "";
     basis.value = "chronology";
@@ -694,13 +811,14 @@ export function createGallery(root, lifecycle, api) {
   }
   $("filters-reset").onclick = resetFilters;
   $("filter-uncertain").onclick = () => toggle("uncertain");
-  $("grid-order").onclick = () => {
-    newest = !newest;
-    $("grid-order-label").textContent = newest
-      ? "Önce en yeni"
-      : "Önce en eski";
-    update();
-  };
+  if ($("grid-order"))
+    $("grid-order").onclick = () => {
+      newest = !newest;
+      $("grid-order-label").textContent = newest
+        ? "Önce en yeni"
+        : "Önce en eski";
+      update();
+    };
   root.querySelectorAll("#grid-view button").forEach((button) => {
     button.onclick = () => {
       view = button.dataset.view;
@@ -736,6 +854,7 @@ export function createGallery(root, lifecycle, api) {
       const result = await api("/api/atlas?" + new URLSearchParams({ group }));
       if (current !== run) return;
       memories = result.memories;
+      yearOptions();
     } catch (error) {
       if (current !== run) return;
       const box = node("div", undefined, "mem-empty");

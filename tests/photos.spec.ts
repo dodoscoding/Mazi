@@ -31,7 +31,10 @@ test("Photos opens from Globe as individual photographs grouped by newest month"
     page.getByRole("combobox", { name: "Yıl", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("group", { name: "Etkin filtreler" }),
+    page.getByRole("button", {
+      name: /Diğer filtreler|Filtreler/,
+      exact: false,
+    }),
   ).toBeVisible();
   const selected = page.locator('.mem-tile[href*="photo=1"]').first();
   await selected.click();
