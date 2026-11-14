@@ -737,3 +737,7 @@
   padding-left: 0;
   border-left: 0;
 }
+
+.feature-content .fx-review.queues-only .review-layout {
+  grid-template-columns: minmax(0, 1fr);
+}

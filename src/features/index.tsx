@@ -49,9 +49,13 @@ export function FeaturePage({
     const add = pathname === "/add";
     const sources =
       add && new URLSearchParams(query).get("section") === "sources";
-    const feature = sources
-      ? featureRegistry["/places"]
-      : featureRegistry[pathname as keyof typeof featureRegistry];
+    const suggestions =
+      add && new URLSearchParams(query).get("section") === "suggestions";
+    const feature = suggestions
+      ? featureRegistry["/review"]
+      : sources
+        ? featureRegistry["/places"]
+        : featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
     let mounted = false;
@@ -71,8 +75,9 @@ export function FeaturePage({
         navigation.className = "add-sections";
         navigation.setAttribute("aria-label", "Add sections");
         for (const [label, href, current] of [
-          ["Imports", "#/add", !sources],
+          ["Imports", "#/add", !sources && !suggestions],
           ["Source connections", "#/add?section=sources", sources],
+          ["Suggestions", "#/add?section=suggestions", suggestions],
         ] as const) {
           const link = document.createElement("a");
           link.textContent = label;

@@ -11,6 +11,19 @@ import {
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
+  const queuesOnly = root.dataset.surface === "add";
+  if (queuesOnly) {
+    root.querySelector(".fx-review").classList.add("queues-only");
+    root.querySelector("h1").textContent = "Add";
+    root.querySelector(".review-rail").hidden = true;
+    for (const id of [
+      "timeline-title",
+      "today-title",
+      "mine-title",
+      "export-title",
+    ])
+      $(id).closest("section").hidden = true;
+  }
   let group = null;
   let offset = 0;
   let query = "";
@@ -130,6 +143,12 @@ export function mount(root, lifecycle) {
   // undated items sort last, so the date-and-place count only covers the
   // photographs loaded so far and says so until every page is loaded.
   function updateSummary() {
+    if (queuesOnly) {
+      $("review-sub").textContent =
+        "Review duplicate and event suggestions after import. Successful photographs are already shared with your circle. Decisions can be revisited.";
+      $("done").hidden = true;
+      return;
+    }
     const partial = counts.loaded < counts.total;
     $("count-items").textContent = counts.needs
       ? `${counts.needs}${partial ? "+" : ""}`
@@ -209,7 +228,11 @@ export function mount(root, lifecycle) {
     query = $("query").value;
     $("leave-group").hidden = groupRoles.get(group) !== "member";
     $("export").href = `/api/review/export?${params()}`;
-    await Promise.all([timeline(), duplicates(), events(), today(), mine()]);
+    await Promise.all(
+      queuesOnly
+        ? [duplicates(), events()]
+        : [timeline(), duplicates(), events(), today(), mine()],
+    );
     updateSummary();
   }
 
@@ -436,7 +459,7 @@ export function mount(root, lifecycle) {
                 "success",
               );
               await duplicates();
-              await timeline();
+              if (!queuesOnly) await timeline();
               updateSummary();
             }),
           "fx-button fx-button--primary",
@@ -483,7 +506,7 @@ export function mount(root, lifecycle) {
               await api("/api/review/rendition", { group, asset, selected });
               notice("Preferred rendition saved for the group.", "success");
               await duplicates();
-              await timeline();
+              if (!queuesOnly) await timeline();
               updateSummary();
             }),
           );
@@ -501,7 +524,7 @@ export function mount(root, lifecycle) {
             });
             notice("Review decision undone.");
             await duplicates();
-            await timeline();
+            if (!queuesOnly) await timeline();
             updateSummary();
           },
         ),
@@ -731,7 +754,7 @@ export function mount(root, lifecycle) {
     event.preventDefault();
     act(async () => {
       query = $("query").value;
-      await timeline();
+      if (!queuesOnly) await timeline();
       updateSummary();
     });
   });
