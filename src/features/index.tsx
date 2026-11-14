@@ -37,7 +37,9 @@ export function FeaturePage({
   const returned = discordReturn || localReturn.current;
   useEffect(() => {
     const container = host.current!;
-    const [pathname, query] = path.split("?");
+    const separator = path.indexOf("?");
+    const pathname = separator < 0 ? path : path.slice(0, separator);
+    const query = separator < 0 ? "" : path.slice(separator + 1);
     const add = pathname === "/add";
     const sources =
       add && new URLSearchParams(query).get("section") === "sources";

@@ -109,6 +109,9 @@ export function createConversationSearch(root, lifecycle, api) {
       [
         "years",
         "places",
+        "place",
+        "country",
+        "object_query",
         "uncertain",
         "people_present",
         "screenshot",

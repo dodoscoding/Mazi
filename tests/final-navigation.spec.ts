@@ -18,6 +18,17 @@ test("returning member uses Globe and Photos with retained old links", async ({
     await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
   await expect(nav.getByRole("link")).toHaveCount(4);
   await expect(page.locator(".atlas-stage")).toBeVisible();
+  await expect(page.locator(".scene-loading")).toHaveCount(0, {
+    timeout: 30000,
+  });
+  await page.evaluate(async () => {
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => {})),
+    );
+  });
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-globe.png`,
   });
@@ -36,6 +47,7 @@ test("returning member uses Globe and Photos with retained old links", async ({
   await expect(page.locator(".mem-tile")).toHaveCount(1);
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-photos.png`,
+    fullPage: true,
   });
   await page.goto("/#/circle?section=plans&plan=unknown-plan");
   await expect(
@@ -80,9 +92,38 @@ test("invalid explicit memory and photograph selections never open another photo
   await expect(
     page.getByRole("heading", { name: "Fotoğraf kullanılamıyor", exact: true }),
   ).toBeVisible();
+  await page.goto("/#/atlas?photo=999");
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraf kullanılamıyor", exact: true }),
+  ).toBeVisible();
   await page.goto("/?demo=1#/memory/last-ferry?photo=999");
   await expect(page.locator(".viewer-track")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /bulunamadı/i }),
   ).toBeVisible();
+});
+
+test("document Settings links can navigate to Add without retaining the old surface mode", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.goto("/settings");
+  await expect(
+    page.getByRole("heading", { name: "Settings", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .filter({ visible: true })
+    .first()
+    .getByRole("link", { name: "Add", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Add", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Export ZIP")).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Members", exact: true }),
+  ).toBeHidden();
 });
