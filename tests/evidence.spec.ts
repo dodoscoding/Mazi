@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
   ).toBe(true);
 });
 
-test("capture stable Home and memory at the required review sizes", async ({
+test("capture stable Globe and memory at the required review sizes", async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -26,15 +26,15 @@ test("capture stable Home and memory at the required review sizes", async ({
   await page.goto("/?demo=1");
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
-  await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
-    /is-loaded/,
-  );
+  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
   await page.screenshot({
     path: testInfo.outputPath(`${name}.png`),
     fullPage: true,
   });
   await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
-  await expect(page.locator(".gallery .photo-frame")).toHaveClass(/is-loaded/);
+  await expect(page.locator(".viewer-track .photo-frame")).toHaveClass(
+    /is-loaded/,
+  );
   await page.screenshot({
     path: testInfo.outputPath(`${name}-detail.png`),
     fullPage: true,

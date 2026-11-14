@@ -79,54 +79,53 @@ test("arrow keys on the year scrubber step through the years", async ({
   await expect(year).toBeFocused();
 });
 
-test("the portal opens with the dossier, Esc closes it and focus returns", async ({
+test("Globe opens the shared viewer directly and Escape restores its opener", async ({
   page,
 }) => {
   await skipIntro(page);
   await openAtlas(page);
   const open = page.getByRole("link", { name: "Anıyı aç", exact: true });
   await open.click();
-  await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
+  await expect(page).toHaveURL(/#\/memory\/last-ferry/);
   const title = page.getByRole("heading", {
     name: "The night we missed the last ferry",
-    level: 2,
+    level: 1,
   });
   await expect(title).toBeFocused();
-  const dossier = page.getByRole("region", {
-    name: "The night we missed the last ferry",
-  });
-  await expect(dossier).toContainText("About Summer 2024");
-  await expect(dossier).toContainText("Naxos, Greece");
-  await expect(dossier).toContainText("37.10° N · 25.38° E");
-  await expect(dossier).toContainText("Paylaşan Deniz");
-  await expect(dossier).toContainText("Konuşmada: Alex, Deniz, and Maya");
+  await expect(
+    page.getByRole("region", { name: "Ne zaman", exact: true }),
+  ).toContainText("About Summer 2024");
+  await expect(
+    page.getByRole("region", { name: "Nerede", exact: true }),
+  ).toContainText("Naxos, Greece");
   await page.keyboard.press("Escape");
-  await expect(page).not.toHaveURL(/view=portal/);
-  await expect(dossier).toHaveCount(0);
+  await expect(page.locator(".memory-detail")).toHaveCount(0);
   await expect(open).toBeFocused();
-
-  // Enter on the current index row dives too, and Back returns to that row.
   await showSheet(page);
   const row = places(page).getByRole("button", { name: /^Naxos/ });
   await row.focus();
   await page.keyboard.press("Enter");
   await expect(title).toBeVisible();
   await page.goBack();
-  await expect(dossier).toHaveCount(0);
+  await expect(page.locator(".memory-detail")).toHaveCount(0);
   await expect(row).toBeFocused();
 });
 
-test("Anıyı aç in the dossier reaches the full memory", async ({ page }) => {
+test("a legacy dossier link retains access to the shared viewer", async ({
+  page,
+}) => {
   await skipIntro(page);
-  await openAtlas(page);
-  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await openAtlas(page, "/?demo=1#/?selected=last-ferry&view=portal");
   await page
-    .getByRole("region", { name: "The night we missed the last ferry" })
+    .locator(".dossier")
     .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
   await expect(page).toHaveURL(/#\/memory\/last-ferry/);
   await expect(
-    page.getByRole("heading", { name: "The night we missed the last ferry" }),
+    page.getByRole("heading", {
+      name: "The night we missed the last ferry",
+      level: 1,
+    }),
   ).toBeVisible();
 });
 
@@ -242,7 +241,7 @@ test("slash opens search and arrow keys walk places from the page", async ({
   await page.keyboard.press("ArrowRight");
   await expect(page).toHaveURL(/selected=last-ferry/);
   await page.keyboard.press("/");
-  await expect(page).toHaveURL(/#\/search/);
+  await expect(page).toHaveURL(/#\/photos/);
 });
 
 test("the atlas, flat map and portal have no axe violations", async ({
@@ -285,7 +284,7 @@ test("the atlas, flat map and portal have no axe violations", async ({
     await expect(
       page.getByRole("heading", {
         name: "The night we missed the last ferry",
-        level: 2,
+        level: 1,
       }),
     ).toBeFocused();
     await settleAnimations();
@@ -296,59 +295,34 @@ test("the atlas, flat map and portal have no axe violations", async ({
   }
 });
 
-test("the Timeline shows the globe for the year in view, flat when 3D is off", async ({
+test("legacy Timeline links reach Photos without rebuilding a second globe", async ({
   page,
 }) => {
   await skipIntro(page);
   await page.goto("/?demo=1#/timeline");
-  const panel = page.locator(".timeline-globe");
-  // Headless Firefox on CI has no WebGL2; there the panel must lay flat instead.
-  const webgl2 = await page.evaluate(
-    () => !!document.createElement("canvas").getContext("webgl2"),
-  );
-  const expectScene = async () => {
-    if (webgl2) await expect(panel.locator("canvas")).toHaveCount(1);
-    else
-      await expect(
-        panel.getByText(
-          "3D kullanılamıyor. Zaman çizelgesi düz haritada gösteriliyor.",
-        ),
-      ).toBeVisible();
-  };
-  await expectScene();
-  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
-  await expect(panel).toHaveAttribute("data-year", "2022");
-  await expect(panel).toContainText("Nicosia, Cyprus");
-  if (isPhone(page))
-    await page.getByRole("button", { name: "Sonraki yıl, 2023" }).click();
-  else {
-    await page.getByRole("slider", { name: "Yıl" }).focus();
-    await page.keyboard.press("ArrowRight");
-  }
-  await expect(panel).toHaveAttribute("data-year", "2023");
-  await expect(panel).toContainText("Nicosia → Bohinj");
-  await expectScene();
-
-  await page.goto("/?demo=1&scene=off#/timeline");
+  await expect(page).toHaveURL(/#\/photos/);
   await expect(
-    page.getByRole("img", { name: /Flat map .* Nicosia 2022 selected/ }),
+    page.getByRole("heading", { name: "Fotoğraflar", level: 1 }),
   ).toBeVisible();
+  await expect(page.locator(".mem-tile").first()).toBeVisible();
+  await expect(page.locator(".timeline-globe, .atlas-stage")).toHaveCount(0);
+  await page.goto("/?demo=1&scene=off#/");
   await expect(
-    page.getByText(
-      "3D kullanılamıyor. Zaman çizelgesi düz haritada gösteriliyor.",
-    ),
+    page.getByRole("img", { name: /Flat map .* Naxos 2024 selected/ }),
   ).toBeVisible();
 });
 
-test("reduced motion keeps the still year card in the Timeline", async ({
+test("reduced-motion Photos keeps sample chronology explicitly undated", async ({
   page,
 }) => {
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1#/timeline");
-  const panel = page.locator(".timeline-globe");
-  await expect(panel).toContainText("Nicosia, Cyprus");
-  await expect(panel.locator("canvas")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Undated", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await expect(page.locator(".mem-tile").first()).toBeVisible();
 });
 
 test("sharing-only same-year memories replay independently with explicit date basis", async ({
