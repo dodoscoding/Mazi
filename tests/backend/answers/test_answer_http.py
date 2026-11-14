@@ -40,8 +40,16 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(after, before)
             for invalid in [[], {}, {'group': [], 'question':'x'}]:
                 self.assertEqual(request('POST', '/api/answers/ask', invalid)[0], 400)
+            link = f'/api/answers/evidence?group={self.group}&asset={self.asset}'
+            self.store.answer_processing(self.alice, self.group, False, group_wide=True)
+            status, data, _ = request('GET', link)
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(data)['photo']['assetId'], self.asset)
+            self.store.hide(self.ben, self.asset, True)
+            self.assertEqual(request('GET', link)[0], 403)
             token = self.store.login('outsider@example.test', 'correct horse battery')
             self.assertEqual(request('POST', '/api/answers/ask', body)[0], 403)
+            self.assertEqual(request('GET', link)[0], 403)
         finally:
             server.shutdown()
             thread.join()
