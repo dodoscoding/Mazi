@@ -52,6 +52,9 @@
 .photos-page #photos-search {
   margin: 0;
 }
+.photos-page .photos-search-actions {
+  display: contents;
+}
 .photos-page #photos-search label {
   flex: 1 1 300px;
   margin: 0;
@@ -97,6 +100,17 @@
 @media (max-width: 600px) {
   .photos-page #photos-search label {
     flex: none;
+  }
+  .photos-page .photos-search-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .photos-page .photos-search-actions button {
+    flex: 1;
+    min-height: var(--target);
+    width: auto;
+    margin: 0;
   }
 }
 
