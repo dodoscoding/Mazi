@@ -6,7 +6,7 @@ type Story = {
   revision: number;
   can_delete: boolean;
   event: { id: string; title: string; assets: string[] };
-  contributions: { author: string; text: string }[];
+  contributions: { author: string; text: string; editable: boolean }[];
   subevents: { title: string; assets: string[] }[];
   notice: string;
 };
@@ -126,7 +126,7 @@ export default function PastCreations({
   const [opened, setOpened] = useState<Record<string, OpenedCapsule>>({});
   const [notice, setNotice] = useState("");
   const [deleting, setDeleting] = useState<{
-    kind: "story" | "capsule";
+    kind: "story" | "capsule" | "recollection";
     id: string;
     revision?: number;
   } | null>(null);
@@ -287,7 +287,23 @@ export default function PastCreations({
           <p>{story.notice}</p>
           <section aria-label="Saved recollections">
             {story.contributions.map((entry) => (
-              <p key={entry.author}>{entry.text}</p>
+              <div key={entry.author}>
+                <p>{entry.text}</p>
+                {entry.editable && (
+                  <button
+                    disabled={pending}
+                    onClick={() =>
+                      setDeleting({
+                        kind: "recollection",
+                        id: story.id,
+                        revision: story.revision,
+                      })
+                    }
+                  >
+                    Remove my recollection
+                  </button>
+                )}
+              </div>
             ))}
           </section>
           {story.subevents.map((section, index) => (
@@ -385,7 +401,9 @@ export default function PastCreations({
       >
         <h2 id="past-delete-title">Delete this {deleting?.kind}?</h2>
         <p>
-          This removes the saved creation. Original archive photographs remain.
+          {deleting?.kind === "recollection"
+            ? "This removes only your saved recollection. Other members’ recollections remain."
+            : "This removes the saved creation. Original archive photographs remain."}
         </p>
         <button
           disabled={pending}
@@ -393,12 +411,13 @@ export default function PastCreations({
             void act(async () => {
               if (!deleting) return;
               await request(
-                `/api/memories/${deleting.kind === "story" ? "delete" : "delete-capsule"}`,
+                `/api/memories/${deleting.kind === "capsule" ? "delete-capsule" : deleting.kind === "recollection" ? "delete-recollection" : "delete"}`,
                 controller.current.signal,
                 {
                   group,
-                  [deleting.kind]: deleting.id,
-                  ...(deleting.kind === "story"
+                  [deleting.kind === "capsule" ? "capsule" : "story"]:
+                    deleting.id,
+                  ...(deleting.kind !== "capsule"
                     ? { revision: deleting.revision }
                     : {}),
                 },

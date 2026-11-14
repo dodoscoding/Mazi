@@ -190,6 +190,16 @@ class MemoryStore(AdvancedMixin, AnswerStore):
             self._write_contribution(user, story, content)
             return self._event_notebook(user, group, event)
 
+    def delete_recollection(self, user, group, story, revision):
+        """Withdraw only an existing own contribution; never create or edit text."""
+        with self.transaction():
+            row, _ = self._story(user, group, story)
+            self._revision(row, revision)
+            if not self.db.execute('SELECT 1 FROM story_contributions WHERE story=? AND author=?', (story, user)).fetchone():
+                raise Denied('Recollection unavailable')
+            self._write_contribution(user, story, '')
+            return self._story_view(user, group, story)
+
     def delete_story(self, user, group, story, revision):
         with self.transaction():
             row, _ = self._story(user, group, story)

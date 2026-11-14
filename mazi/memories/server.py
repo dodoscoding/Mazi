@@ -75,6 +75,10 @@ def handler_for(store):
                 if path == '/api/memories/notifications':
                     store.notification_opt_in(user, body['group'], body['enabled'])
                     return self.json(200, {'ok': True})
+                if path == '/api/memories/delete-recollection':
+                    if set(body) != {'group', 'story', 'revision'}:
+                        raise ValueError('Deletion accepts only group, story and revision')
+                    return self.json(200, store.delete_recollection(user, body['group'], body['story'], body['revision']))
                 if path == '/api/memories/delete':
                     store.delete_story(user, body['group'], body['story'], body['revision'])
                     return self.json(200, {'ok': True})
