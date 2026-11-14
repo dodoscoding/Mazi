@@ -1,0 +1,86 @@
+[WebServer] (node:1683) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 36 tests using 1 worker
+
+(node:1704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/entry.spec.ts:5:1 › every signed-out route is gated and named profiles resume across browsers (3.7s)
+  ✓   2 [desktop] › tests/entry.spec.ts:100:1 › session checks stay neutral and introduction failures remain retryable (501ms)
+  ✓   3 [desktop] › tests/entry.spec.ts:154:1 › archive access denial clears the authenticated shell (152ms)
+  ✓   4 [desktop] › tests/entry.spec.ts:185:1 › a denied Globe reload clears private content and returns to entry (153ms)
+  ✓   5 [desktop] › tests/entry.spec.ts:203:1 › an old Atlas denial cannot clear a newer authorized load (163ms)
+  ✓   6 [desktop] › tests/entry.spec.ts:255:1 › Settings retains membership, account, About and introduction replay (1.2s)
+  ✓   7 [desktop] › tests/entry.spec.ts:312:1 › Settings keeps administrator controls and clears members after session loss (2.1s)
+  ✓   8 [desktop] › tests/entry.spec.ts:377:1 › Settings explicitly exports the current circle and recovers failed exports (1.2s)
+  ✓   9 [desktop] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (3.3s)
+  ✓  10 [desktop] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (2.0s)
+
+  ✓  11 [desktop] › tests/entry.spec.ts:605:1 › Settings withdraws only the current member’s source record (4.9s)
+  ✓  12 [desktop] › tests/entry.spec.ts:679:1 › Settings cancels exports and clears controls when an export is denied (1.0s)
+  ✓  13 [desktop] › tests/entry.spec.ts:717:1 › Settings omits Past creations when no eligible saved content exists (928ms)
+  ✓  14 [desktop] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (2.7s)
+  ✓  15 [desktop] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.7s)
+  ✓  16 [desktop] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (939ms)
+  ✓  17 [desktop] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓  18 [desktop] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.3s)
+(node:1834) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] ----------------------------------------
+[WebServer] Exception occurred during processing of request from ('127.0.0.1', 61059)
+[WebServer] Traceback (most recent call last):
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 697, in process_request_thread
+[WebServer]     self.finish_request(request, client_address)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 362, in finish_request
+[WebServer]     self.RequestHandlerClass(request, client_address, self)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 766, in __init__
+[WebServer]     self.handle()
+[WebServer]     ~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 500, in handle
+[WebServer]     self.handle_one_request()
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 488, in handle_one_request
+[WebServer]     method()
+[WebServer]     ~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-review-fixes/mazi/server.py", line 34, in do_GET
+[WebServer]     return super().do_GET()
+[WebServer]            ~~~~~~~~~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-review-fixes/mazi/server.py", line 181, in do_GET
+[WebServer]     return self.send(200, target.read_bytes(), mime)
+[WebServer]            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/private/tmp/mazi-simplification-review-fixes/mazi/identity/server.py", line 38, in send
+[WebServer]     self.wfile.write(body)
+[WebServer]     ~~~~~~~~~~~~~~~~^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 845, in write
+[WebServer]     self._sock.sendall(b)
+[WebServer]     ~~~~~~~~~~~~~~~~~~^^^
+[WebServer] ConnectionResetError: [Errno 54] Connection reset by peer
+[WebServer] ----------------------------------------
+  ✓  19 [phone] › tests/entry.spec.ts:5:1 › every signed-out route is gated and named profiles resume across browsers (2.3s)
+  ✓  20 [phone] › tests/entry.spec.ts:100:1 › session checks stay neutral and introduction failures remain retryable (437ms)
+  ✓  21 [phone] › tests/entry.spec.ts:154:1 › archive access denial clears the authenticated shell (101ms)
+  ✓  22 [phone] › tests/entry.spec.ts:185:1 › a denied Globe reload clears private content and returns to entry (134ms)
+  ✓  23 [phone] › tests/entry.spec.ts:203:1 › an old Atlas denial cannot clear a newer authorized load (147ms)
+  ✓  24 [phone] › tests/entry.spec.ts:255:1 › Settings retains membership, account, About and introduction replay (1.3s)
+  ✓  25 [phone] › tests/entry.spec.ts:312:1 › Settings keeps administrator controls and clears members after session loss (2.1s)
+  ✓  26 [phone] › tests/entry.spec.ts:377:1 › Settings explicitly exports the current circle and recovers failed exports (1.2s)
+  ✓  27 [phone] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (3.3s)
+  ✓  28 [phone] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (2.0s)
+
+  ✓  29 [phone] › tests/entry.spec.ts:605:1 › Settings withdraws only the current member’s source record (4.9s)
+  ✓  30 [phone] › tests/entry.spec.ts:679:1 › Settings cancels exports and clears controls when an export is denied (998ms)
+  ✓  31 [phone] › tests/entry.spec.ts:717:1 › Settings omits Past creations when no eligible saved content exists (931ms)
+  ✓  32 [phone] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (2.7s)
+  ✓  33 [phone] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.7s)
+  ✓  34 [phone] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (941ms)
+  ✓  35 [phone] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓  36 [phone] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.2s)
+
+  36 passed (58.5s)

@@ -50,3 +50,19 @@ Root reported one archive-hook failure followed by a nonterminating full DOM run
 - `node --test --test-timeout=30000 tests/dom/*.test.mjs`: **158 passed**, natural process exit 0, 5446.50 ms. No failures, cancellations or skips.
 
 Exact receipts: [hook run](review-fixes/mazi-review-hook-isolated.log), [full DOM run](review-fixes/mazi-review-dom-full-isolated.log). The reported failure did not reproduce in either isolated run. Concurrent load is a possible explanation, but its causal role is unproven; no assertion or product change is justified by the available evidence. Root can rerun the full DOM suite alone after browser suites stop.
+
+## Settings feedback regression and archive invalidation seam
+
+The first Settings event fix exposed a real interaction regression: `mazi:archive-changed` called the hook's full circle reload, temporarily clearing the current circle and remounting Settings. Saved notices and local interaction state disappeared. Existing entry contracts reproduced **4 failures** (consent and identity confirmation on desktop and phone), without weakening their success feedback assertions.
+
+`useArchive` now handles archive-change events separately: clear cached Atlas memories and mark Atlas unread while retaining the authenticated circle context. An Atlas generation counter restarts/cancels an in-flight Atlas request even when it was already loading. Session/group/full retry paths keep their previous full context reload; access loss and Atlas denial still clear private context. Sample mode ignores live archive invalidations. Settings still dispatches the event after a successful mutation and before its own refresh.
+
+Verification receipts are in `review-fixes/`:
+
+- Red: `MAZI_UNIFIED_PORT=8130 npx playwright test --config playwright.unified.config.ts tests/entry.spec.ts --grep 'Settings.*(consent|identity)|identity confirmation|personal consent'`: 4 failures at `Preference saved.` assertions.
+- Hook red/green: `node --test --test-timeout=30000 tests/dom/archive-hook.test.mjs`: new feature-context contract failed before the fix; after it, **13 passed**, natural exit. Added in-flight cancellation, ignored stale response, fresh replacement and denied-access clearing coverage.
+- `node --test --test-timeout=30000 tests/dom/*.test.mjs`: **160 passed**, natural exit, 5344.21 ms.
+- `MAZI_UNIFIED_PORT=8130 npx playwright test --config playwright.unified.config.ts tests/entry.spec.ts tests/final-navigation.spec.ts`: **36 passed** (58.5s), including all entry contracts and the two prior cached-Globe hide/restore journeys.
+- Added a public Settings journey that keeps a draft and expanded administrator controls through saved preference feedback, a synthetic follow-up state reload failure, and subsequent recovery. The mutation error and success assertions remain explicit.
+- Final expanded entry rerun: `MAZI_UNIFIED_PORT=8130 npx playwright test --config playwright.unified.config.ts tests/entry.spec.ts`: **28 passed** (43.1s), including the new draft and reload-failure/recovery journey on both projects.
+- Build (browser config), lint, budgets and whitespace checks passed. No backend/schema/provider changes. Current integration merge again reported already up to date.
