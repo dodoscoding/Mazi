@@ -97,7 +97,7 @@ export function readRoute() {
     new URLSearchParams(defaults).forEach((value, key) =>
       params.set(key, value),
     );
-    const canonical = `${target}?${params}`;
+    const canonical = target + (params.size ? `?${params}` : "");
     history.replaceState(history.state, "", `#${canonical}`);
     return readRoute();
   }

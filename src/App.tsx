@@ -98,14 +98,26 @@ export default function App() {
     replace = false,
     openerId = "",
   ) => {
-    if (!route.path.startsWith("/memory/") && url.startsWith("/memory/"))
+    if (!route.path.startsWith("/memory/") && url.startsWith("/memory/")) {
+      const active = document.activeElement;
+      if (
+        !openerId &&
+        active instanceof HTMLElement &&
+        active !== document.body
+      ) {
+        active.id ||= "globe-viewer-origin";
+        openerId = active.id;
+      }
       browsingReturn.current = {
         path: route.path,
         url: location.hash.slice(1) || route.path + route.search,
         scroll: window.scrollY,
         openerId: openerId || browsingReturn.current?.openerId || "",
       };
-    else if (!url.startsWith("/memory/") && url !== browsingReturn.current?.url)
+    } else if (
+      !url.startsWith("/memory/") &&
+      url !== browsingReturn.current?.url
+    )
       browsingReturn.current = null;
     navigate(url, animate, replace);
   };
@@ -180,6 +192,22 @@ export default function App() {
           )
         }
       />
+    );
+  else if (
+    archive.status === "ready" &&
+    new URLSearchParams(route.search).has("group") &&
+    new URLSearchParams(route.search).get("group") !== archive.group
+  )
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Bu bağlantı artık kullanılamıyor
+        </h1>
+        <p>Bağlantı mevcut grubunuza ait değil. Başka bir kayıt açılmadı.</p>
+        <a href="#/settings" onClick={link("/settings")}>
+          Settings
+        </a>
+      </section>
     );
   else if (demo && !["/", "/photos"].includes(route.path) && !memoryId)
     content = (

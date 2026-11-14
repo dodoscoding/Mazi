@@ -7,38 +7,22 @@ export async function openArchiveTools(page: Page) {
     await account.click();
 }
 
-const exploreNames: Record<string, string> = {
-  Timeline: "Zaman çizelgesi",
-  Memories: "Fotoğraflar",
-  Discover: "Yeniden keşfet",
-  "Ask your archive": "Arşive sor",
-  "Archive review": "Düzelt ve düzenle",
-  "Places & sources": "Yerler",
-};
-
 export async function followShellLink(page: Page, name: string) {
-  const main = page.getByRole("navigation", {
-    name: "Main navigation",
-    exact: true,
-  });
-  if (name === "Home" || name === "Our circle") {
-    await main
-      .getByRole("link", {
-        name: name === "Home" ? "Ana sayfa" : "Grubumuz",
-        exact: true,
-      })
-      .click();
-    return;
-  }
-  if (name === "My Imports") {
-    const add = page.getByRole("button", { name: "Ekle", exact: true });
-    if ((await add.getAttribute("aria-expanded")) !== "true") await add.click();
-    await page
-      .getByRole("navigation", { name: "Ekle seçenekleri" })
-      .getByRole("link", { name: "Fotoğraf veya arşiv", exact: true })
-      .click();
-    return;
-  }
+  const nav = page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .filter({ visible: true })
+    .first();
+  const labels: Record<string, string> = {
+    Home: "Globe",
+    Atlas: "Globe",
+    Timeline: "Photos",
+    Memories: "Photos",
+    Fotoğraflar: "Photos",
+    Discover: "Photos",
+    "Our circle": "Settings",
+    "My Imports": "Add",
+    About: "Settings",
+  };
   if (name === "Search") {
     await page
       .locator(".site-header")
@@ -46,21 +30,27 @@ export async function followShellLink(page: Page, name: string) {
       .click();
     return;
   }
-  if (name === "About" || name === "Replay introduction") {
-    await openArchiveTools(page);
+  if (name === "Places & sources" || name === "Archive review") {
+    await nav.getByRole("link", { name: "Add", exact: true }).click();
     await page
-      .locator(".account-menu .menu-popover")
+      .getByRole("navigation", { name: "Add sections" })
       .getByRole("link", {
-        name: name === "About" ? "Yardım ve gizlilik" : "Tanıtımı izle",
+        name:
+          name === "Places & sources" ? "Source connections" : "Suggestions",
         exact: true,
       })
       .click();
     return;
   }
-  await main.getByRole("link", { name: "Keşfet", exact: true }).click();
-  await page
-    .getByRole("main")
-    .getByRole("link", { name: exploreNames[name] || name, exact: true })
+  if (name === "Replay introduction") {
+    await nav.getByRole("link", { name: "Settings", exact: true }).click();
+    await page
+      .getByRole("link", { name: "Replay introduction", exact: true })
+      .click();
+    return;
+  }
+  await nav
+    .getByRole("link", { name: labels[name] || name, exact: true })
     .click();
 }
 
