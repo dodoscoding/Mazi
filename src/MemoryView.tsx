@@ -359,63 +359,7 @@ export function MemoryView({
                       Fotoğraf üzerine konuş
                     </a>
                   )}
-                  {memory.kind === "memory" && (
-                    <a
-                      className="button button--secondary"
-                      href={`#/memory/${memory.id}?discussion=memory`}
-                      onClick={link(`/memory/${memory.id}?discussion=memory`)}
-                    >
-                      Anı üzerine konuş
-                    </a>
-                  )}
-                </nav>
-                {discussion &&
-                  (discussion === "photo"
-                    ? memory.photos[photoIndex]?.assetId
-                    : memory.kind === "memory") && (
-                    <Suspense
-                      fallback={<p role="status">Sohbet yükleniyor…</p>}
-                    >
-                      <ConversationPanel
-                        key={`${sessionKey}:${group}:${discussion}:${discussion === "photo" ? memory.photos[photoIndex].assetId : memory.id}`}
-                        group={group}
-                        target={{
-                          kind: discussion,
-                          id:
-                            discussion === "photo"
-                              ? memory.photos[photoIndex].assetId!
-                              : memory.id,
-                        }}
-                        focus
-                      />
-                    </Suspense>
-                  )}
-              </>
-            )}
-            <EventNotebook
-              key={`${group}:${memory.id}`}
-              group={group}
-              event={!demo && memory.kind === "memory" ? memory.id : null}
-              heading={notebookHeading}
-            />
-            {!demo && (
-              <div className="memory-tools">
-                <a
-                  className="button button--secondary"
-                  href="#/add?section=suggestions"
-                  onClick={link("/add?section=suggestions")}
-                >
-                  Arşivi incele
-                </a>
-                {memory.kind === "memory" && (
-                  <a
-                    className="button button--ghost"
-                    href="#/photos"
-                    onClick={link("/photos")}
-                  >
-                    Ortak bir hikâye yaz
-                  </a>
-                )}
+  
               </div>
             )}
           </div>
@@ -440,14 +384,7 @@ export function MemoryView({
                       </>
                     )}
                   </p>
-                  {!demo && (
-                    <a
-                      href="#/add?section=suggestions"
-                      onClick={link("/add?section=suggestions")}
-                    >
-                      Arşiv incelemesinde tarihi düzelt
-                    </a>
-                  )}
+
                 </div>
               ) : (
                 basis && <p className="fact-detail">{basis}</p>
