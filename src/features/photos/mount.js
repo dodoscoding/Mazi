@@ -4,6 +4,8 @@ import "../memories/memories.css";
 import "./photos.css";
 
 export function mount(root, lifecycle) {
+  root.querySelector("#retired-answers").hidden =
+    new URLSearchParams(lifecycle.search).get("retired") !== "answers";
   root.querySelector("#photos-search").hidden = new URLSearchParams(
     lifecycle.search,
   ).has("recap");

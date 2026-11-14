@@ -7,8 +7,6 @@ import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
 import discoveryTemplate from "./discovery/template.html?raw";
-import answersTemplate from "./answers/template.html?raw";
-import evidenceTemplate from "./evidence/template.html?raw";
 import photosTemplate from "./photos/template.html?raw";
 import { mount as photosMount } from "./photos/mount";
 import memoriesTemplate from "./memories/template.html?raw";
@@ -16,8 +14,6 @@ import { mount as importsMount } from "./imports/mount";
 import { mount as archiveMount } from "./archive/mount";
 import { mount as placesMount } from "./places/mount";
 import { mount as discoveryMount } from "./discovery/mount";
-import { mount as answersMount } from "./answers/mount";
-import { mount as evidenceMount } from "./evidence/mount";
 import { mount as memoriesMount } from "./memories/mount";
 import "./features.css";
 import "./workspace.css";
@@ -33,8 +29,6 @@ export const featureRegistry = {
   "/places": { template: placesTemplate, mount: placesMount },
   "/discover": { template: discoveryTemplate, mount: discoveryMount },
   "/search": { template: discoveryTemplate, mount: discoveryMount },
-  "/ask": { template: answersTemplate, mount: answersMount },
-  "/answer-evidence": { template: evidenceTemplate, mount: evidenceMount },
   "/memories": { template: memoriesTemplate, mount: memoriesMount },
 };
 export const featurePaths = Object.keys(featureRegistry);

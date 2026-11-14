@@ -71,16 +71,8 @@ test("one authenticated shell connects real Atlas, retained memories, discovery 
     .fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator(".mem-tile")).toHaveCount(1);
-  await navigate(page, "Ask your archive", "ask");
-  await page.getByLabel("Ask the archive").fill("When was bicycle?");
-  await page
-    .getByRole("button", { name: "Find evidence", exact: true })
-    .click();
-  await expect(page.locator("#answer")).toContainText("2024-01-02");
-  await page
-    .getByRole("link", { name: "View supporting record", exact: true })
-    .click();
-  await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
+  await page.locator(".mem-tile").click();
+  await expect(page.locator(".viewer")).toContainText("Bicycle beside the sea");
   await shell(page);
   await navigate(page, "My Imports", "imports");
   await expect(
@@ -275,15 +267,9 @@ test("access loss clears retained archive controls and supporting records", asyn
       })
     ).ok(),
   ).toBe(true);
-  await page.goto("/#/ask");
-  await page.getByLabel("Ask the archive").fill("When was bicycle?");
-  await page
-    .getByRole("button", { name: "Find evidence", exact: true })
-    .click();
-  await page
-    .getByRole("link", { name: "View supporting record", exact: true })
-    .click();
-  await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
+  await page.goto("/#/photos?q=bicycle");
+  await page.locator(".mem-tile").click();
+  await expect(page.locator(".viewer")).toContainText("Bicycle beside the sea");
   await navigate(page, "Fotoğraflar", "memories");
   await page.goto("/#/settings");
   await expect(

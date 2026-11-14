@@ -652,39 +652,6 @@
   padding: 0 14px;
   font-size: 13px;
 }
-.discovery-page .disc-ask {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 20px;
-  border-radius: var(--radius-panel);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-.discovery-page .disc-ask-label {
-  margin: 0;
-  font: 400 var(--type-label) / 1.4 var(--font-mono);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--accent-node);
-}
-.discovery-page .disc-ask-quote {
-  font: 400 24px / 1.15 var(--font-display);
-  overflow-wrap: anywhere;
-}
-.discovery-page .disc-ask-help {
-  color: var(--text-body);
-  font-size: 13px;
-  line-height: 1.5;
-}
-.discovery-page .disc-ask .primary-action {
-  min-height: var(--target);
-  padding: 0 18px;
-  color: var(--on-accent);
-  font-size: var(--type-ui);
-  text-decoration: none;
-}
 .discovery-page .disc-manage {
   margin-top: var(--space-7);
 }

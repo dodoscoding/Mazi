@@ -24,12 +24,12 @@ const promises: [string, string][] = [
     "Withdraw a contribution and it stops being shared for everyone at once. Files someone already downloaded cannot be recalled.",
   ],
   [
-    "Answers cite their sources",
-    "Ask your archive answers only from recorded archive metadata and links each claim to the record it came from.",
+    "Sources stay inspectable",
+    "Photographs and imported conversations retain their recorded source evidence.",
   ],
   [
     "Optional AI stays off",
-    "Face recognition and external AI providers are off. Memory answers run locally, and no question, photograph or message goes to a provider.",
+    "Face recognition and external AI providers are off. Search retrieves archived photographs and recorded source context without generating an answer.",
   ],
 ];
 

@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlsplit
 from mazi.identity.core import Conflict, Denied
 from mazi.discovery.server import handler_for as discovery_handler, worker
 from .answers import AnswerStore
+from mazi.atlas import memory_view
 
 
 
@@ -28,7 +29,14 @@ def handler_for(store):
                 if parts.path == '/api/answers/state':
                     return self.json(200, store.answer_settings(user, query['group']))
                 if parts.path == '/api/answers/evidence':
-                    return self.json(200, store.evidence(user, query['group'], query['asset']))
+                    asset = query['asset']
+                    memory = memory_view(store, user, query['group'], 'photo-' + asset)['memory']
+                    photo = memory['photos'][0]
+                    capture = photo['evidence']['capture']
+                    return self.json(200, dict(id=asset, title=memory['title'],
+                        date=capture['start'] if capture['start'] == capture['through'] else None,
+                        dates=capture['days'], place=photo['evidence']['place']['text'],
+                        date_basis=capture['status'], photo=photo, messages=memory['messages']))
                 return self.json(404, {'error': 'Not found'})
             except CapacityExceeded as exc:
                 return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
@@ -54,11 +62,9 @@ def handler_for(store):
                 if not isinstance(body, dict) or not isinstance(body.get('group'), str) or len(body['group']) > 200:
                     raise ValueError('Invalid request')
                 user = self.user()
-                if path == '/api/answers/ask':
-                    return self.json(200, store.answer(user, body['group'], body['question']))
-                if path == '/api/answers/processing':
-                    store.answer_processing(user, body['group'], body['enabled'], body.get('group_wide', False))
-                    return self.json(200, {'ok': True})
+                if path in {'/api/answers/ask', '/api/answers/processing'}:
+                    store._member(user, body['group'])
+                    return self.json(410, {'error': 'AI answers are retired. Search the archive instead.'})
                 return self.json(404, {'error': 'Not found'})
             except CapacityExceeded as exc:
                 return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})

@@ -27,6 +27,15 @@ export function readRoute() {
       : location.pathname + location.search
   ).split("?");
   const params = new URLSearchParams(query);
+  if (path === "/ask") {
+    if (!params.has("q") && params.has("question"))
+      params.set("q", params.get("question")!);
+    params.delete("question");
+    params.delete("recap");
+    params.set("retired", "answers");
+    history.replaceState(history.state, "", `#/photos?${params}`);
+    return readRoute();
+  }
   const alias = routeAliases[path];
   if (alias) {
     const [target, defaults] = alias.split("?");

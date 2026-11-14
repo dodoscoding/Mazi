@@ -30,6 +30,7 @@ const Home = lazy(() =>
   import("./Home").then(({ Home }) => ({ default: Home })),
 );
 const SocialHome = lazy(() => import("./social/SocialHome"));
+const LegacyEvidence = lazy(() => import("./LegacyEvidence"));
 const SelectedMemory = lazy(() => import("./memory/SelectedMemory"));
 const PastCreations = lazy(() => import("./PastCreations"));
 const Plans = lazy(() => import("./social/Plans"));
@@ -316,6 +317,20 @@ export default function App() {
             search={route.search}
             demo={demo}
             navigate={navigate}
+          />
+        </Suspense>
+      );
+  else if (route.path === "/answer-evidence")
+    content =
+      archive.status !== "ready" ? (
+        <ArchiveStatus archive={archive} heading={heading} />
+      ) : (
+        <Suspense fallback={<p role="status">Kaynak kontrol ediliyor…</p>}>
+          <LegacyEvidence
+            group={archive.group}
+            search={route.search}
+            navigate={navigate}
+            link={link}
           />
         </Suspense>
       );
