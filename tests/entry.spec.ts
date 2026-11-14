@@ -736,3 +736,60 @@ test("Settings omits Past creations when no eligible saved content exists", asyn
     page.getByRole("link", { name: "Past creations", exact: true }),
   ).toHaveCount(0);
 });
+
+test("Settings preserves draft and open controls through saved preferences and reload failure", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  await page.goto("/#/settings");
+  const draft = page.getByRole("textbox", {
+    name: "Person’s name",
+    exact: true,
+  });
+  await draft.fill("Unsubmitted person");
+  await page
+    .getByText("Identity and removal review (admin)", { exact: true })
+    .click();
+  const control = page.getByRole("combobox", {
+    name: "Person record",
+    exact: true,
+  });
+  const personal = page.getByRole("checkbox", {
+    name: "Allow local related-search processing of my contributions",
+    exact: true,
+  });
+  const original = await personal.isChecked();
+  await personal.setChecked(!original);
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await expect(draft).toHaveValue("Unsubmitted person");
+  await expect(control).toBeVisible();
+  let fail = true;
+  await page.route("**/api/discovery/state?*", async (route) => {
+    if (!fail) return route.continue();
+    fail = false;
+    await route.fulfill({
+      status: 503,
+      json: { error: "Synthetic preference reload failed" },
+    });
+  });
+  await personal.setChecked(original);
+  await expect(
+    page.getByText("Synthetic preference reload failed", { exact: true }),
+  ).toBeVisible();
+  await expect(personal).toBeChecked({ checked: original });
+  await expect(draft).toHaveValue("Unsubmitted person");
+  await expect(control).toBeVisible();
+  await personal.setChecked(!original);
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await expect(draft).toHaveValue("Unsubmitted person");
+  await personal.setChecked(original);
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+});
