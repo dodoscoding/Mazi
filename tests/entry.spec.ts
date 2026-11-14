@@ -383,3 +383,42 @@ test("Settings keeps administrator controls and clears members after session los
     page.getByRole("heading", { name: "Account", exact: true }),
   ).toHaveCount(0);
 });
+
+test("Settings explicitly exports the current circle and recovers failed exports", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("heading", {
+      name: "Archive and contributions",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.route("**/api/review/export?*", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { error: "Synthetic export unavailable" },
+    }),
+  );
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Synthetic export unavailable",
+  );
+  await page.unroute("**/api/review/export?*");
+  const download = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download archive", exact: true })
+    .click();
+  expect((await download).suggestedFilename()).toBe("mazi-archive.zip");
+  await expect(
+    page.getByText("You have no active source records in this group.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
