@@ -50,6 +50,14 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
             ('Shared at the reunion', 'cyan', [], '2026-04-12T10:00:00+00:00'),
             ('Conflicting years', 'navy', ['2022-06-01', '2023-07-01'], None),
         ]
+        if os.environ.get('MAZI_RECAP_FIXTURE') == '1':
+            examples.extend([
+                ('February morning', 'pink', ['2024-02-03'], None),
+                ('June evening', 'lime', ['2024-06-20'], None),
+                ('Shared-only 2024', 'teal', [], '2024-04-12T10:00:00+00:00'),
+                ('Conflicting capture 2024', 'silver', ['2024-03-01', '2024-04-01'], None),
+                ('Conflicting capture years', 'brown', ['2024-09-01', '2025-01-01'], None),
+            ])
         for title, color, captures, shared in examples:
             image = io.BytesIO()
             Image.new('RGB', (90, 60), color).save(image, 'JPEG')
