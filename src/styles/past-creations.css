@@ -33,7 +33,7 @@
   border-radius: var(--radius-panel);
 }
 .past-creations dialog {
-  background: var(--bg-panel);
+  background: var(--bg-raised);
   color: var(--text-body);
   padding: 28px;
   max-width: min(90vw, 480px);

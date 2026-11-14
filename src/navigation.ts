@@ -65,19 +65,19 @@ export const exploreDestinations: readonly ExploreDestination[] = [
     path: "/memories?section=stories",
     group: "remember",
     label: "Hikâyeler",
-    description: "Ortak anılardaki notları oku ve kendi hatırladıklarını ekle.",
+    description: "Önceden kaydedilmiş ortak hikâyeleri ve notları oku.",
   },
   {
     path: "/memories?section=recap",
     group: "remember",
     label: "Yıllık özet",
-    description: "Bir yılın anılarına dön ve birlikte bir hikâye başlat.",
+    description: "Bir yılın anılarına ve fotoğraflarına dön.",
   },
   {
     path: "/memories?section=capsules",
     group: "remember",
     label: "Zaman kapsülleri",
-    description: "Gelecekte açılacak bir not ve fotoğraf bırak.",
+    description: "Kaydedilmiş kapsülleri ve açılma zamanlarını gör.",
   },
   {
     path: "/ask",
