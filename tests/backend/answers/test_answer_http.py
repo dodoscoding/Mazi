@@ -13,7 +13,7 @@ class ApiTests(unittest.TestCase):
     submit = test_answers.AnswerTests.submit
     process = test_answers.AnswerTests.process
 
-    def test_authenticated_api_validation_origin_and_live_citation(self):
+    def test_generation_and_processing_are_retired_without_usage_or_consent_mutation(self):
         server = HTTPServer(('127.0.0.1', 0), handler_for(self.store))
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -29,19 +29,19 @@ class ApiTests(unittest.TestCase):
             return result
         try:
             body = {'group':self.group, 'question':'When was bicycle?'}
-            status, data, headers = request('POST', '/api/answers/ask', body)
-            self.assertEqual(status, 200)
-            self.assertIn('no-store', headers['Cache-Control'])
-            link = json.loads(data)['evidence'][0]['url']
-            self.assertEqual(request('GET', link)[0], 200)
-            self.assertEqual(request('POST', '/api/answers/ask', body, Origin='https://evil.test')[0], 403)
-            for invalid in [[], {}, {'group': [], 'question':'x'}, {'group':self.group, 'question':[]}]:
+            before = json.loads(request('GET', '/api/answers/state?group=' + self.group)[1])
+            for path in ('/api/answers/ask', '/api/answers/processing'):
+                status, data, headers = request('POST', path, {**body, 'enabled': True})
+                self.assertEqual(status, 410)
+                self.assertIn('retired', json.loads(data)['error'])
+                self.assertIn('no-store', headers['Cache-Control'])
+                self.assertEqual(request('POST', path, body, Origin='https://evil.test')[0], 403)
+            after = json.loads(request('GET', '/api/answers/state?group=' + self.group)[1])
+            self.assertEqual(after, before)
+            for invalid in [[], {}, {'group': [], 'question':'x'}]:
                 self.assertEqual(request('POST', '/api/answers/ask', invalid)[0], 400)
-            self.store.hide(self.ben, self.asset, True)
-            self.assertEqual(request('GET', link)[0], 403)
             token = self.store.login('outsider@example.test', 'correct horse battery')
             self.assertEqual(request('POST', '/api/answers/ask', body)[0], 403)
-            self.assertEqual(request('GET', '/api/answers/state?group=' + self.group)[0], 403)
         finally:
             server.shutdown()
             thread.join()
