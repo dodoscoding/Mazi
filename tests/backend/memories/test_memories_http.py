@@ -13,7 +13,10 @@ class ApiTests(unittest.TestCase):
     submit = test_memories.MemoryTests.submit
     process = test_memories.MemoryTests.process
 
-    def test_access_validation_conflicts_and_export(self):
+    def test_retired_writes_preserve_reads_ownership_and_export(self):
+        # Domain seeding represents content persisted before the app retired writes.
+        story = self.store.create_story(self.ben, self.group, self.event)
+        story = self.store.write_story(self.ben, self.group, story['id'], story['revision'], 'Remember this')
         server = HTTPServer(('127.0.0.1', 0), handler_for(self.store))
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -28,35 +31,67 @@ class ApiTests(unittest.TestCase):
             connection.close()
             return result
         try:
-            status, story, headers = request('POST', '/api/memories/create', {'group':self.group, 'event':self.event})
-            self.assertEqual(status, 200)
-            self.assertIn('no-store', headers['Cache-Control'])
-            body = dict(group=self.group, story=story['id'], revision=1, text='Remember this')
-            self.assertEqual(request('POST', '/api/memories/write', body)[0], 200)
-            self.assertEqual(request('POST', '/api/memories/write', body)[0], 409)
+            body = dict(group=self.group, event=self.event, story=story['id'], revision=story['revision'], text='Changed', target={'kind':'new'}, sections=[], title='New', unlock_at='2030-01-01T00:00:00Z')
+            for operation in ['create', 'write', 'note', 'seal', 'subevents', 'video']:
+                status, result, headers = request('POST', '/api/memories/' + operation, body)
+                self.assertEqual(status, 410, operation)
+                self.assertIn('no-store', headers['Cache-Control'])
             self.assertEqual(request('POST', '/api/memories/write', body, Origin='https://evil.test')[0], 403)
-            for invalid in [[], {}, dict(body, story=[]), dict(body, text=[]), dict(body, revision=True)]:
-                self.assertEqual(request('POST', '/api/memories/write', invalid)[0], 400)
             url = '/api/memories/export?group=' + self.group + '&story=' + story['id']
-            self.assertEqual(request('GET', url)[0], 200)
+            self.assertEqual(request('GET', url)[1]['contributions'][0]['text'], 'Remember this')
+            self.assertEqual(request('GET', '/api/memories/frame?group='+self.group+'&story='+story['id']+'&asset='+self.assets[0])[0], 410)
             notebook_url = '/api/memories/notebook?group=' + self.group + '&event=' + self.event
-            status, notebook, headers = request('GET', notebook_url)
-            self.assertEqual(status, 200)
-            self.assertIn('no-store', headers['Cache-Control'])
-            note = notebook['sections'][0]['notes'][0]
-            self.assertEqual(note['text'], 'Remember this')
-            note_body = dict(group=self.group, event=self.event, target=note['ownership']['target'], text='Updated notebook')
-            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 200)
-            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 409)
-            self.assertEqual(request('POST', '/api/memories/note', dict(note_body, target=[]))[0], 400)
-            self.assertEqual(request('POST', '/api/memories/note', note_body, Origin='https://evil.test')[0], 403)
-            self.store.hide(self.ben, self.assets[0], True)
+            self.assertEqual(request('GET', notebook_url)[1]['sections'][0]['notes'][0]['text'], 'Remember this')
+            original = '/api/archive/' + self.assets[0] + '/original'
+            connection = http.client.HTTPConnection('127.0.0.1', server.server_port)
+            connection.request('GET', original, headers={'Cookie':'mazi_session='+token})
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertTrue(response.read())
+            connection.close()
+            token = self.store.login('alice@example.test', 'correct horse battery')
+            self.assertEqual(request('POST', '/api/memories/delete', body)[0], 403)
+            token = self.store.login('ben@example.test', 'correct horse battery')
+            self.assertEqual(request('POST', '/api/memories/delete', dict(body, revision=1))[0], 409)
+            self.assertEqual(request('POST', '/api/memories/delete', body)[0], 200)
             self.assertEqual(request('GET', url)[0], 403)
-            self.assertEqual(request('GET', notebook_url)[0], 403)
-            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 403)
             token = self.store.login('outsider@example.test', 'correct horse battery')
-            self.assertEqual(request('GET', url)[0], 403)
-            self.assertEqual(request('GET', '/api/memories/recap?group=' + self.group + '&year=2020')[0], 403)
+            self.assertEqual(request('GET', notebook_url)[0], 403)
+        finally:
+            server.shutdown()
+            thread.join()
+            server.server_close()
+
+    def test_recollection_deletion_is_only_the_current_users_existing_record(self):
+        story = self.store.create_story(self.alice, self.group, self.event)
+        story = self.store.write_story(self.alice, self.group, story['id'], story['revision'], 'Alice stays')
+        story = self.store.write_story(self.ben, self.group, story['id'], story['revision'], 'Ben withdraws')
+        server = HTTPServer(('127.0.0.1', 0), handler_for(self.store))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        token = self.store.login('ben@example.test', 'correct horse battery')
+        def remove(body):
+            connection = http.client.HTTPConnection('127.0.0.1', server.server_port)
+            connection.request('POST', '/api/memories/delete-recollection', json.dumps(body), {'Cookie':'mazi_session='+token, 'Content-Type':'application/json'})
+            response = connection.getresponse()
+            result = response.status, json.loads(response.read())
+            connection.close()
+            return result
+        body = dict(group=self.group, story=story['id'], revision=story['revision'])
+        try:
+            self.assertEqual(remove(dict(body, revision=1))[0], 409)
+            for extra in [{'text':'replace'}, {'author':self.alice}, {'user':self.alice}]:
+                self.assertEqual(remove(dict(body, **extra))[0], 400)
+            self.assertEqual(self.store.story(self.ben, self.group, story['id'])['revision'], story['revision'])
+            status, result = remove(body)
+            self.assertEqual(status, 200)
+            self.assertEqual([(entry['author'], entry['text']) for entry in result['contributions']], [(self.alice, 'Alice stays')])
+            current = dict(body, revision=result['revision'])
+            self.assertEqual(remove(current)[0], 403)
+            self.assertEqual(self.store.story(self.ben, self.group, story['id'])['revision'], result['revision'])
+            self.assertEqual(len(self.store.stories(self.ben, self.group)), 1)
+            token = self.store.login('outsider@example.test', 'correct horse battery')
+            self.assertEqual(remove(current)[0], 403)
         finally:
             server.shutdown()
             thread.join()

@@ -31,6 +31,7 @@ const Home = lazy(() =>
 );
 const SocialHome = lazy(() => import("./social/SocialHome"));
 const SelectedMemory = lazy(() => import("./memory/SelectedMemory"));
+const PastCreations = lazy(() => import("./PastCreations"));
 const Plans = lazy(() => import("./social/Plans"));
 
 export default function App() {
@@ -169,6 +170,29 @@ export default function App() {
       heading.current?.focus({ preventScroll: true });
     }
   }, [route.path]);
+  const legacyCreation =
+    route.path === "/memories" &&
+    (["stories", "capsules"].includes(
+      new URLSearchParams(route.search).get("section") || "",
+    ) ||
+      new URLSearchParams(route.search).has("story") ||
+      new URLSearchParams(route.search).has("capsule"));
+  useEffect(() => {
+    const params = new URLSearchParams(route.search);
+    if (
+      route.path === "/memories" &&
+      (["stories", "capsules"].includes(params.get("section") || "") ||
+        params.has("story") ||
+        params.has("capsule"))
+    ) {
+      params.delete("section");
+      navigate(
+        `/past-creations${params.size ? `?${params}` : ""}`,
+        false,
+        true,
+      );
+    }
+  }, [route.path, route.search, navigate]);
   const chooseMemory = (id: string) =>
     navigate(`/atlas?selected=${id}`, false, true);
   const backUrl = browsingReturn.current?.url || "/";
@@ -195,6 +219,11 @@ export default function App() {
               path="/settings"
             />
             <FeaturePage path="/settings" settingsControls />
+            <PastCreations
+              key={`${profile?.user_id}:${archive.group}:past-link`}
+              group={archive.group}
+              preview
+            />
           </Suspense>
         )}
         <About
@@ -213,6 +242,16 @@ export default function App() {
           }}
         />
       </>
+    );
+  else if (route.path === "/past-creations" || legacyCreation)
+    content = (
+      <Suspense fallback={<p role="status">Loading Past creations…</p>}>
+        <PastCreations
+          key={`${profile?.user_id}:${archive.group}:${route.search}`}
+          group={archive.group}
+          search={route.search}
+        />
+      </Suspense>
     );
   else if (route.path === "/explore")
     content = <Explore link={link} heading={heading} />;
