@@ -827,7 +827,12 @@ function AtlasHome({
       data-flat={flat || undefined}
       aria-labelledby="atlas-title"
     >
-      <h1 id="atlas-title" className="visually-hidden">
+      <h1
+        id="atlas-title"
+        ref={heading}
+        tabIndex={-1}
+        className="visually-hidden"
+      >
         Atlas
       </h1>
       <AtlasStage
