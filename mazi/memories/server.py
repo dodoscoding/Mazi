@@ -35,7 +35,7 @@ def handler_for(store):
                 if parts.path == '/api/memories/notifications':
                     return self.json(200, store.notifications(user, query['group']))
                 if parts.path == '/api/memories/frame':
-                    return self.send(200, store.story_frame(user, query['group'], query['story'], query['asset']), 'image/jpeg')
+                    return self.json(410, {'error': 'Generated story media is retired. Original photographs remain available in the archive.'})
                 if parts.path == '/api/memories/recap':
                     return self.json(200, store.recap(user, query['group'], int(query['year'])))
                 if parts.path == '/api/memories/notebook':
@@ -67,24 +67,14 @@ def handler_for(store):
                 if not isinstance(body, dict) or not isinstance(body.get('group'), str) or len(body['group']) > 200:
                     raise ValueError('Invalid request')
                 user = self.user()
-                if path == '/api/memories/seal':
-                    return self.json(200, store.seal_capsule(user, body['group'], body['title'], body['text'], body['unlock_at'], body.get('photo', '')))
+                if path in {'/api/memories/create', '/api/memories/write', '/api/memories/note', '/api/memories/seal', '/api/memories/subevents', '/api/memories/video'}:
+                    return self.json(410, {'error': 'Story and capsule writing and generated media are retired. Existing creations remain readable.'})
                 if path == '/api/memories/delete-capsule':
                     store.delete_capsule(user, body['group'], body['capsule'])
                     return self.json(200, {'ok': True})
                 if path == '/api/memories/notifications':
                     store.notification_opt_in(user, body['group'], body['enabled'])
                     return self.json(200, {'ok': True})
-                if path == '/api/memories/subevents':
-                    return self.json(200, store.save_subevents(user, body['group'], body['story'], body['revision'], body['sections']))
-                if path == '/api/memories/video':
-                    return self.send(200, store.story_video(user, body['group'], body['story']), 'video/x-msvideo')
-                if path == '/api/memories/note':
-                    return self.json(200, store.write_event_note(user, body['group'], body['event'], body['target'], body['text']))
-                if path == '/api/memories/create':
-                    return self.json(200, store.create_story(user, body['group'], body['event']))
-                if path == '/api/memories/write':
-                    return self.json(200, store.write_story(user, body['group'], body['story'], body['revision'], body['text']))
                 if path == '/api/memories/delete':
                     store.delete_story(user, body['group'], body['story'], body['revision'])
                     return self.json(200, {'ok': True})
