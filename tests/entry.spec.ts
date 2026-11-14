@@ -422,3 +422,63 @@ test("Settings explicitly exports the current circle and recovers failed exports
     }),
   ).toBeVisible();
 });
+
+test("Settings retains personal discovery consent and member departure", async ({
+  page,
+}, info) => {
+  const name = `Settings departure ${info.project.name}`;
+  const entered = await page.request.post("/api/entry", {
+    data: { name, code: "synthetic-shared-code" },
+  });
+  const profile = await entered.json();
+  await page.request.post("/api/introduction/complete", { data: {} });
+  const state = await (
+    await page.request.get(`/api/discovery/state?group=${profile.group_id}`)
+  ).json();
+  expect(state.settings.contribution_enabled).toBe(false);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  const personal = page.getByRole("checkbox", {
+    name: "Allow local related-search processing of my contributions",
+    exact: true,
+  });
+  await expect(personal).not.toBeChecked();
+  await expect(
+    page.getByText("Face recognition remains off.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Enable optional local processing for this group (admin)",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await personal.check();
+  await page.reload();
+  await expect(personal).toBeChecked();
+  await personal.uncheck();
+  await page.reload();
+  await expect(personal).not.toBeChecked();
+  await page
+    .getByRole("button", {
+      name: "Leave group and withdraw my contributions",
+      exact: true,
+    })
+    .click();
+  await page.getByRole("button", { name: "Stay", exact: true }).click();
+  await expect(personal).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Leave group and withdraw my contributions",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Leave and withdraw", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  expect(
+    (
+      await page.request.get(`/api/review/export?group=${profile.group_id}`)
+    ).status(),
+  ).toBe(403);
+});
