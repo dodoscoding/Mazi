@@ -159,7 +159,9 @@ export function MemoryView({
     history.back();
   };
   const go = (index: number) => {
-    const params = new URLSearchParams(location.hash.split("?")[1]);
+    const params = new URLSearchParams(
+      location.hash.split("?").slice(1).join("?"),
+    );
     params.set("photo", String(index));
     navigate(`/memory/${encodeURIComponent(memory.id)}?${params}`, false, true);
   };
