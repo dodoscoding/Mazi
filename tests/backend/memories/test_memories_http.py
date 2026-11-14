@@ -89,6 +89,7 @@ class ApiTests(unittest.TestCase):
             current = dict(body, revision=result['revision'])
             self.assertEqual(remove(current)[0], 403)
             self.assertEqual(self.store.story(self.ben, self.group, story['id'])['revision'], result['revision'])
+            self.assertEqual(len(self.store.stories(self.ben, self.group)), 1)
             token = self.store.login('outsider@example.test', 'correct horse battery')
             self.assertEqual(remove(current)[0], 403)
         finally:
