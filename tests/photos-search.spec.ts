@@ -31,8 +31,18 @@ test("Globe search opens Photos and preserves keyword filters and the selected p
   await expect(page.locator(".mem-tile")).toHaveCount(1);
   await expect(page).toHaveURL(/q=Dinner/);
   const origin = page.url();
+  const href = await page.locator(".mem-tile").getAttribute("href");
+  const selectedIndex = Number(
+    new URLSearchParams(href!.split("?")[1]).get("photo") || 0,
+  );
   await page.locator(".mem-tile").click();
-  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(page.locator(".viewer-track img")).toHaveAttribute(
+    "alt",
+    "Dinner with friends",
+  );
+  await expect(page.locator(".viewer-count")).toHaveText(
+    `${selectedIndex + 1} / 3`,
+  );
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(origin);
   await expect(query).toHaveValue("Dinner");
@@ -393,8 +403,14 @@ test("Photos offers honest continuation before reporting no conversation matches
     await expect(more).toBeHidden();
     await expect(page.locator("#conversation-list button")).toHaveCount(300);
   } finally {
+    await page.goto("/#/add");
+    await page.locator(`#imports [data-run="${id}"]`).click();
+    await page
+      .getByRole("button", { name: "Withdraw this contribution", exact: true })
+      .click();
+    await expect(page.locator("#report-state")).toHaveText("Withdrawn");
     expect(
-      (await page.request.post("/api/imports/withdraw", { data: { id } })).ok(),
+      (await (await page.request.get(`/api/imports/${id}`)).json()).withdrawn,
     ).toBe(true);
   }
 });
