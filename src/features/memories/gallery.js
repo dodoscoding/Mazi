@@ -41,6 +41,28 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
       ? location.hash.split("?").slice(1).join("?")
       : location.search);
   const entry = new URLSearchParams(searchText);
+  const recap = photos && entry.has("recap");
+  const recapYear =
+    /^\d{4}$/.test(entry.get("recap") || "") && Number(entry.get("recap")) > 0
+      ? entry.get("recap")
+      : null;
+  const previousPhotos = entry.get("return") || "";
+  const recapReturn =
+    (previousPhotos === "/photos" || previousPhotos.startsWith("/photos?")) &&
+    !new URLSearchParams(previousPhotos.split("?")[1]).has("recap")
+      ? previousPhotos
+      : "/photos";
+  if (recap) {
+    root.querySelector("h1").textContent = recapYear
+      ? `Annual recap ${recapYear}`
+      : "Annual recap";
+    $("photos-year").closest("label").hidden = true;
+    $("filters-open").hidden = true;
+    $("active-filters").hidden = true;
+    $("recap-scope").hidden = false;
+    $("recap-back").hidden = false;
+    $("recap-back").href = `#${recapReturn}`;
+  }
   let undated = photos && entry.get("undated") === "1";
   const invalidFilters = new Map();
   for (const [key, parameter] of [
@@ -127,6 +149,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   );
   function parameters() {
     const params = new URLSearchParams();
+    if (recap) return params;
     photoFilters.apply(params);
     for (const [key, parameter] of [
       ["years", "years"],
@@ -150,9 +173,13 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   }
   function remember() {
     const params = parameters();
+    if (recap) {
+      params.set("recap", entry.get("recap") || "");
+      if (previousPhotos) params.set("return", recapReturn);
+    }
     if (!params.get("from") && !params.get("through"))
       params.delete("date_basis");
-    if (undated) params.set("undated", "1");
+    if (undated && !recap) params.set("undated", "1");
     if (!photos && view === "all") params.set("view", view);
     if (!photos && !newest) params.set("order", "oldest");
     if (entry.get("section")) params.set("section", entry.get("section"));
@@ -530,8 +557,17 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
     );
     return box;
   }
+  function captureDate(photo) {
+    const date = photo.evidence?.capture;
+    return date?.basis === "capture" &&
+      date.status === "exact" &&
+      date.start &&
+      date.start === date.through
+      ? date.start
+      : null;
+  }
   function period(photo) {
-    const date = photo.evidence?.chronology;
+    const date = recap ? photo.evidence?.capture : photo.evidence?.chronology;
     return date?.start &&
       !["conflict", "ambiguous", "unknown"].includes(date.status) &&
       date.start.slice(0, 7) === date.through?.slice(0, 7)
@@ -544,18 +580,29 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
       memory.photos.flatMap((photo, index) => {
         const id = photo.assetId || photo.src;
         if (seen.has(id) || !matched.has(photo.assetId)) return [];
+        if (
+          recap &&
+          (!recapYear || captureDate(photo)?.slice(0, 4) !== recapYear)
+        )
+          return [];
         seen.add(id);
         return [{ memory, photo, index, month: period(photo) }];
       }),
     );
   }
   function renderMonths(shown) {
-    const rows = photographRows(shown).filter((row) => !undated || !row.month);
+    const rows = photographRows(shown).filter(
+      (row) => recap || !undated || !row.month,
+    );
     rows.sort(
       (a, b) =>
-        (b.photo.evidence?.chronology.start || "").localeCompare(
-          a.photo.evidence?.chronology.start || "",
-        ) || a.photo.assetId.localeCompare(b.photo.assetId),
+        (recap
+          ? (captureDate(a.photo) || "").localeCompare(
+              captureDate(b.photo) || "",
+            )
+          : (b.photo.evidence?.chronology.start || "").localeCompare(
+              a.photo.evidence?.chronology.start || "",
+            )) || a.photo.assetId.localeCompare(b.photo.assetId),
     );
     const months = new Map();
     for (const row of rows) {
@@ -565,7 +612,13 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
     }
     const sections = [...months]
       .sort(([a], [b]) =>
-        a === "undated" ? 1 : b === "undated" ? -1 : b.localeCompare(a),
+        a === "undated"
+          ? 1
+          : b === "undated"
+            ? -1
+            : recap
+              ? a.localeCompare(b)
+              : b.localeCompare(a),
       )
       .map(([month, items]) => {
         const section = node("section", undefined, "photo-month");
@@ -593,7 +646,21 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
         section.append(tiles);
         return section;
       });
-    $("grid").replaceChildren(...(sections.length ? sections : [noMatch()]));
+    const empty = recap ? node("div", undefined, "mem-empty") : noMatch();
+    if (recap)
+      empty.append(
+        node(
+          "h2",
+          recapYear
+            ? `${recapYear} için güvenilir çekim tarihli fotoğraf yok`
+            : "Geçerli bir yıl seçin",
+        ),
+        node(
+          "p",
+          "Tarihi bilinmeyen veya çelişkili fotoğrafları normal Fotoğraflar görünümünde bulabilirsiniz.",
+        ),
+      );
+    $("grid").replaceChildren(...(sections.length ? sections : [empty]));
   }
   const yearPicker = $("photos-year");
   if (yearPicker)
@@ -631,8 +698,33 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
     );
     yearPicker.value = undated ? "undated" : [...filters.years].join(",");
   }
+  function recapCard() {
+    if (!photos || recap) return;
+    const card = $("annual-recap");
+    const year =
+      filters.years.size === 1 && !undated ? [...filters.years][0] : null;
+    card.hidden = !year;
+    card.replaceChildren();
+    if (!year) return;
+    const link = node("a", `Annual recap ${year}`, "mem-pill");
+    link.href =
+      "#/photos?" +
+      new URLSearchParams({
+        recap: String(year),
+        return: location.hash.slice(1) || "/photos",
+      });
+    card.append(
+      node("h2", `${year} · Annual recap`),
+      node(
+        "p",
+        "Bu yılın güvenilir çekim tarihli tüm fotoğraflarını ay ay yeniden görün. Normal filtreler uygulanmaz.",
+      ),
+      link,
+    );
+  }
   function renderGrid(shown) {
     const grid = $("grid");
+    if (recap) return renderMonths(shown);
     if (!memories.length) return grid.replaceChildren(emptyState());
     if (!shown.length) return grid.replaceChildren(noMatch());
     if (photos) return renderMonths(shown);
@@ -714,14 +806,16 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
         memory.photos.some((photo) => matched.has(photo.assetId)),
       ),
     );
-    const total =
-      photos && undated
+    const total = recap
+      ? photographRows(shown).length
+      : photos && undated
         ? photographRows(shown).filter((row) => !row.month).length
         : facets?.total || 0;
     $("grid-summary").textContent =
       `${total} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
     $("filters-apply").textContent = `${total} fotoğrafı göster`;
     remember();
+    recapCard();
     renderGrid(shown);
   }
   function loading() {

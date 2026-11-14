@@ -49,8 +49,13 @@
         <div class="mem-heading">
           <h1 class="mem-title">Fotoğraflar</h1>
           <p id="grid-summary" class="mem-summary"></p>
+          <p id="recap-scope" class="mem-summary" hidden>
+            Seçili yılın güvenilir çekim tarihli tüm fotoğrafları. Normal
+            Fotoğraflar filtreleri bu özette uygulanmaz.
+          </p>
         </div>
         <div class="mem-controls">
+          <a id="recap-back" class="mem-pill" hidden>Fotoğraflara dön</a>
           <label
             >Yıl<select id="photos-year">
               <option value="">Tüm yıllar</option>
@@ -91,6 +96,12 @@
         role="group"
         aria-label="Etkin filtreler"
       ></div>
+      <section
+        id="annual-recap"
+        class="annual-recap-card"
+        aria-label="Annual recap"
+        hidden
+      ></section>
       <div id="grid" class="mem-grid"></div>
     </div>
   </div>
