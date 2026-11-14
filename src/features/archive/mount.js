@@ -15,6 +15,18 @@ export function mount(root, lifecycle) {
   if (queuesOnly) {
     root.querySelector(".fx-review").classList.add("queues-only");
     root.querySelector("h1").textContent = "Add";
+    $("review-sub").textContent =
+      "Review suggestions after import. Successful photographs are already shared with your circle.";
+    root.querySelector(".fx-head").after(
+      button("Refresh suggestions", async (refreshButton) => {
+        refreshButton.disabled = true;
+        try {
+          await refresh();
+        } finally {
+          refreshButton.disabled = false;
+        }
+      }),
+    );
     root.querySelector(".review-rail").hidden = true;
     for (const id of [
       "timeline-title",
@@ -76,7 +88,9 @@ export function mount(root, lifecycle) {
     container.append(
       element(
         "p",
-        "Suggestions support up to 10,000 visible photographs within processing and metadata limits. This request exceeded a limit. The timeline and reviewed decisions remain available.",
+        queuesOnly
+          ? "Suggestions support up to 10,000 visible photographs within processing and metadata limits. This request exceeded a limit. Reviewed decisions remain available."
+          : "Suggestions support up to 10,000 visible photographs within processing and metadata limits. This request exceeded a limit. The timeline and reviewed decisions remain available.",
         "fx-small",
       ),
       button("Retry suggestions", async (retryButton) => {
@@ -199,9 +213,17 @@ export function mount(root, lifecycle) {
     let groups;
     try {
       groups = await api("/api/groups");
-    } catch {
-      $("signed-out").hidden = false;
-      $("workspace").hidden = true;
+    } catch (error) {
+      if (queuesOnly) {
+        if (root.isConnected && !root.hidden)
+          notice(
+            "Suggestions could not load. Refresh suggestions to retry.",
+            "error",
+          );
+      } else {
+        $("signed-out").hidden = false;
+        $("workspace").hidden = true;
+      }
       return;
     }
     $("signed-out").hidden = true;
@@ -412,7 +434,42 @@ export function mount(root, lifecycle) {
     }
     return side;
   }
+  async function loadQueue(id, label, load) {
+    const container = $(id);
+    container.setAttribute("aria-busy", "true");
+    const status = element(
+      "p",
+      `Loading ${label.toLowerCase()} suggestions…`,
+      "fx-small",
+    );
+    status.setAttribute("role", "status");
+    container.replaceChildren(status);
+    try {
+      await load();
+    } catch (error) {
+      if (!root.isConnected || root.hidden || error.name === "AbortError")
+        return;
+      const message = element(
+        "p",
+        `${label} suggestions could not load. Retry to check the queue.`,
+        "fx-small",
+      );
+      message.setAttribute("role", "status");
+      container.replaceChildren(
+        message,
+        button(`Retry ${label.toLowerCase()} suggestions`, () =>
+          loadQueue(id, label, load),
+        ),
+      );
+    } finally {
+      container.removeAttribute("aria-busy");
+    }
+  }
   async function duplicates() {
+    if (queuesOnly) return loadQueue("duplicates", "Duplicate", loadDuplicates);
+    return loadDuplicates();
+  }
+  async function loadDuplicates() {
     const [pairs, reviewed] = await Promise.all([
       suggestionList(`/api/review/duplicates?${params()}`),
       api(`/api/review/reviewed-pairs?${params()}`),
@@ -536,6 +593,10 @@ export function mount(root, lifecycle) {
   }
 
   async function events() {
+    if (queuesOnly) return loadQueue("events", "Event", loadEvents);
+    return loadEvents();
+  }
+  async function loadEvents() {
     const [candidates, reviewed] = await Promise.all([
       suggestionList(`/api/review/events?${params()}`),
       api(`/api/review/reviewed-events?${params()}`),
