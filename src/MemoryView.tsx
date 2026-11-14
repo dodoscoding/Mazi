@@ -85,7 +85,7 @@ export function MemoryView({
     "capture_date" | "place" | "labels" | "contributions" | null
   >(null);
   useEffect(() => setEditing(null), [group, memory.id, photo]);
-  const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
+  const atlasUrl = `/?selected=${encodeURIComponent(memory.id)}&photo=${photo}`;
   const reduced = useReducedMotion();
   const notebookHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -157,12 +157,11 @@ export function MemoryView({
     event.preventDefault();
     history.back();
   };
-  const go = (index: number) =>
-    navigate(
-      `/memory/${memory.id}?photo=${index}${discussion ? `&discussion=${discussion}` : ""}`,
-      false,
-      true,
-    );
+  const go = (index: number) => {
+    const params = new URLSearchParams(location.hash.split("?")[1]);
+    params.set("photo", String(index));
+    navigate(`/memory/${encodeURIComponent(memory.id)}?${params}`, false, true);
+  };
   const momentLink = (
     item: Memory | undefined,
     label: string,
@@ -403,16 +402,16 @@ export function MemoryView({
               <div className="memory-tools">
                 <a
                   className="button button--secondary"
-                  href="#/review"
-                  onClick={link("/review")}
+                  href="#/add?section=suggestions"
+                  onClick={link("/add?section=suggestions")}
                 >
                   Arşivi incele
                 </a>
                 {memory.kind === "memory" && (
                   <a
                     className="button button--ghost"
-                    href="#/memories"
-                    onClick={link("/memories")}
+                    href="#/photos"
+                    onClick={link("/photos")}
                   >
                     Ortak bir hikâye yaz
                   </a>
@@ -442,7 +441,10 @@ export function MemoryView({
                     )}
                   </p>
                   {!demo && (
-                    <a href="#/review" onClick={link("/review")}>
+                    <a
+                      href="#/add?section=suggestions"
+                      onClick={link("/add?section=suggestions")}
+                    >
                       Arşiv incelemesinde tarihi düzelt
                     </a>
                   )}
@@ -703,8 +705,8 @@ export function MemoryNotFound({
         </a>
         <a
           className="button button--ghost"
-          href="#/timeline"
-          onClick={link("/timeline")}
+          href="#/photos"
+          onClick={link("/photos")}
         >
           Zaman çizelgesini aç
         </a>

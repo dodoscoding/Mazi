@@ -283,7 +283,11 @@ export default function App() {
   else if (
     route.path === "/" &&
     new URLSearchParams(route.search).has("selected") &&
-    !selected
+    (!selected ||
+      (new URLSearchParams(route.search).has("photo") &&
+        (!Number.isInteger(route.photo) ||
+          route.photo < 0 ||
+          route.photo >= selected.photos.length)))
   )
     content = (
       <section className="not-found">
@@ -306,7 +310,7 @@ export default function App() {
         reduced={reduced}
         link={link}
         chooseMemory={chooseMemory}
-        openMemory={(id) => navigateTo(`/memory/${id}?photo=0`)}
+        openMemory={(id) => navigateTo(`/memory/${id}?photo=${route.photo}`)}
         onPlaced={placed}
         heading={heading}
         openLink={openLink}
