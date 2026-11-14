@@ -127,3 +127,45 @@ test("document Settings links can navigate to Add without retaining the old surf
     page.getByRole("list", { name: "Members", exact: true }),
   ).toBeHidden();
 });
+
+test("Settings hide and restore refresh the previously visited Globe", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Ben", code: "synthetic-shared-code" },
+  });
+  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/atlas");
+  const memory = page.getByRole("button", {
+    name: "Our summer anısını seç",
+    exact: true,
+  });
+  await expect(memory).toBeVisible();
+  const nav = page
+    .getByRole("navigation", { name: "Main navigation" })
+    .filter({ visible: true })
+    .first();
+  await nav.getByRole("link", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Hide memory: Our summer", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Restore memory: Our summer",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await nav.getByRole("link", { name: "Globe", exact: true }).click();
+  await expect(page.locator(".atlas-home")).toBeVisible();
+  await expect(memory).toHaveCount(0);
+  await nav.getByRole("link", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Restore memory: Our summer", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Hide memory: Our summer", exact: true }),
+  ).toBeVisible();
+  await nav.getByRole("link", { name: "Globe", exact: true }).click();
+  await expect(memory).toBeVisible();
+});
