@@ -31,7 +31,7 @@
     "setup": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt",
     "test:postgres": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'unittest', 'tests.backend.test_postgres'], {stdio:'inherit', env:{...process.env, MAZI_TEST_POSTGRES:'1'}}).status ?? 1)\"",
     "test:backend": ".venv/bin/python -m unittest discover -s tests/backend -t .",
-    "test:app": "playwright test --config playwright.unified.config.ts && playwright test --config playwright.social.config.ts && playwright test --config playwright.conversations.config.ts && playwright test --config playwright.home.config.ts && playwright test --config playwright.add-sources.config.ts",
+    "test:app": "playwright test --config playwright.unified.config.ts && playwright test --config playwright.social.config.ts && playwright test --config playwright.conversations.config.ts && playwright test --config playwright.home.config.ts && playwright test --config playwright.add-sources.config.ts && playwright test --config playwright.add-queues.config.ts",
     "test:domains": "playwright test --config tests/browser/playwright.config.ts",
     "dev:local": "node scripts/run-app.mjs --local",
     "start:local": "npm run build && node scripts/run-app.mjs --built --local",
