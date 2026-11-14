@@ -40,5 +40,5 @@
   margin: auto;
 }
 .past-creations dialog::backdrop {
-  background: #0009;
+  background: var(--overlay-sheet);
 }

@@ -242,12 +242,14 @@ export default function PastCreations({
   const storyId = params.get("story"),
     capsuleId = params.get("capsule");
   const stories =
-    state.kind === "ready" && !capsuleId
-      ? state.stories.filter((item) => !storyId || storyId === item.id)
+    state.kind === "ready" && capsuleId === null
+      ? state.stories.filter((item) => storyId === null || storyId === item.id)
       : [];
   const capsules =
-    state.kind === "ready" && !storyId
-      ? state.capsules.filter((item) => !capsuleId || capsuleId === item.id)
+    state.kind === "ready" && storyId === null
+      ? state.capsules.filter(
+          (item) => capsuleId === null || capsuleId === item.id,
+        )
       : [];
   return (
     <section className="past-creations" aria-labelledby="past-title">
@@ -272,7 +274,7 @@ export default function PastCreations({
       )}
       {state.kind === "ready" && !stories.length && !capsules.length && (
         <p>
-          {storyId || capsuleId
+          {storyId !== null || capsuleId !== null
             ? "This creation is unavailable."
             : "No Past creations are currently available."}
         </p>

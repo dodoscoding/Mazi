@@ -1,0 +1,20 @@
+[WebServer] (node:98784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 4 tests using 1 worker
+
+(node:98787) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/past-creations.spec.ts:3:1 › Past creations retains historical reads and only authorized deletion (1.7s)
+  ✓  2 [desktop] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (215ms)
+(node:98794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [phone] › tests/past-creations.spec.ts:3:1 › Past creations retains historical reads and only authorized deletion (1.6s)
+  ✓  4 [phone] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (215ms)
+
+  4 passed (5.2s)

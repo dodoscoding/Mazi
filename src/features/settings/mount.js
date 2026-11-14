@@ -50,6 +50,7 @@ export function mount(root, lifecycle) {
   async function mutate(path, body) {
     try {
       await api(`/api/discovery/${path}`, body);
+      window.dispatchEvent(new Event("mazi:archive-changed"));
       await refresh();
       notice("Preference saved.");
     } catch (error) {

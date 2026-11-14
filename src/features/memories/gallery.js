@@ -1,16 +1,13 @@
 import { createPhotoFilters } from "../photoFilters";
 import { labelBadges } from "../../memory/labels";
 import {
-  dateLabel,
   emptyFilters,
   initials,
   plural,
-  sharedLine,
   sourceLabel,
   yearsLabel,
 } from "../../browse/model";
 import { photoDateLabel, photoPlaceLabel } from "../../memory/evidence";
-import { placeLine } from "../../memory/facts";
 
 const closeIcon =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -18,7 +15,7 @@ const focusable =
   'button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
 
 /**
- * The Memories photo grid: moments from /api/atlas with a filter rail on wide
+ * The Photos gallery: photographs from /api/atlas with a filter rail on wide
  * screens and a Filters sheet below 800px. Filters only use fields the Atlas
  * API returns: year, place, people evidence, source and date certainty.
  */
@@ -26,14 +23,12 @@ export function createGallery(
   root,
   lifecycle,
   api,
-  { photos = false, readOnly = false, onSearch, onReset } = {},
+  { readOnly = false, onSearch, onReset } = {},
 ) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
   let memories = [],
     filters = emptyFilters(),
-    view = "moment",
-    newest = true,
     run = 0,
     opener = null;
   let matched = new Set(),
@@ -67,7 +62,7 @@ export function createGallery(
     legacyChips.append(remove);
   }
   $("memory-filters").append(legacyChips);
-  const recap = photos && entry.has("recap");
+  const recap = entry.has("recap");
   const recapYear =
     /^\d{4}$/.test(entry.get("recap") || "") && Number(entry.get("recap")) > 0
       ? entry.get("recap")
@@ -89,7 +84,7 @@ export function createGallery(
     $("recap-back").hidden = false;
     $("recap-back").href = `#${recapReturn}`;
   }
-  let undated = photos && entry.get("undated") === "1";
+  let undated = entry.get("undated") === "1";
   const photoQuery = $("photos-query");
   if (photoQuery) {
     photoQuery.value = entry.get("q") || "";
@@ -133,8 +128,6 @@ export function createGallery(
     filters[key] = new Set(key === "years" ? values.map(Number) : values);
   }
   filters.uncertain = entry.get("uncertain") === "true";
-  view = entry.get("view") === "all" ? "all" : "moment";
-  newest = entry.get("order") !== "oldest";
   const photoFilters = createPhotoFilters(
     $("memory-filters"),
     searchText,
@@ -143,7 +136,6 @@ export function createGallery(
   const searchForm = document.createElement("form");
   searchForm.className = "photo-date-filters";
   for (const [key, text, type] of [
-    ...(!photos ? [["q", "Sözcük", "search"]] : []),
     ["from", "Başlangıç", "date"],
     ["through", "Bitiş", "date"],
   ]) {
@@ -224,8 +216,6 @@ export function createGallery(
     if (!params.get("from") && !params.get("through"))
       params.delete("date_basis");
     if (undated && !recap) params.set("undated", "1");
-    if (!photos && view === "all") params.set("view", view);
-    if (!photos && !newest) params.set("order", "oldest");
     if (entry.get("section")) params.set("section", entry.get("section"));
     // Retain opaque bookmark/record context without sending it as API filters.
     const mutable = new Set([
@@ -260,7 +250,7 @@ export function createGallery(
     window.history.replaceState(
       window.history.state,
       "",
-      (photos ? "#/photos" : "#/memories") + (query ? "?" + query : ""),
+      "#/photos" + (query ? "?" + query : ""),
     );
   }
   async function refreshMatches() {
@@ -289,7 +279,7 @@ export function createGallery(
         params.set(to, params.get(from));
         params.delete(from);
       }
-    if (photos) onSearch?.(new URLSearchParams(params), galleryGroup);
+    onSearch?.(new URLSearchParams(params), galleryGroup);
     try {
       const result = await api("/api/discovery/matches?" + params);
       if (generation !== matchRun || current !== run) return;
@@ -358,7 +348,7 @@ export function createGallery(
   }
   function selectionState() {
     count.textContent = `${selection.size} fotoğraf seçildi · En fazla 50`;
-    count.hidden = photos && !selecting;
+    count.hidden = !selecting;
     edit.disabled = !selection.size;
     edit.hidden = cancel.hidden = !selecting;
     choose.setAttribute("aria-pressed", String(selecting));
@@ -513,9 +503,6 @@ export function createGallery(
     );
     $("filter-uncertain").disabled = !options.uncertain;
   }
-  function sorted(list) {
-    return newest ? list : [...list].reverse();
-  }
   function activeLabels() {
     const labels = [];
     if (filters.years.size)
@@ -606,12 +593,8 @@ export function createGallery(
     const frames = node("div", undefined, "mem-empty-frames");
     frames.setAttribute("aria-hidden", "true");
     frames.append(node("i"), node("i"), node("i"));
-    const link = node(
-      "a",
-      photos ? "Fotoğraf ekle" : "İçe aktarımlarım",
-      "primary-action",
-    );
-    link.href = photos ? "#/add" : "/imports";
+    const link = node("a", "Fotoğraf ekle", "primary-action");
+    link.href = "#/add";
     box.append(
       frames,
       node("h2", "Henüz fotoğraf yok"),
@@ -774,7 +757,7 @@ export function createGallery(
     yearPicker.value = undated ? "undated" : [...filters.years].join(",");
   }
   function recapCard() {
-    if (!photos || recap) return;
+    if (recap) return;
     const card = $("annual-recap");
     const year =
       filters.years.size === 1 && !undated ? [...filters.years][0] : null;
@@ -802,53 +785,9 @@ export function createGallery(
     if (recap) return renderMonths(shown);
     if (!memories.length) return grid.replaceChildren(emptyState());
     if (!shown.length) return grid.replaceChildren(noMatch());
-    if (photos) return renderMonths(shown);
-    let position = 0;
-    const tiles = (list) => {
-      const box = node("div", undefined, "mem-tiles br-grid-stagger");
-      for (const memory of list)
-        memory.photos.forEach(
-          (photo, index) =>
-            matched.has(photo.assetId) &&
-            box.append(tile(memory, photo, index, position++)),
-        );
-      return box;
-    };
-    if (view === "all") return grid.replaceChildren(tiles(shown));
-    grid.replaceChildren(
-      ...shown.map((memory) => {
-        const section = node("section", undefined, "mem-moment");
-        const head = node("div", undefined, "mem-moment-head");
-        const title = node("a", memory.title, "mem-moment-title");
-        title.href = `#/memory/${encodeURIComponent(memory.id)}${memory.kind === "memory" ? "?notebook=1" : ""}`;
-        const meta = node(
-          "span",
-          [
-            dateLabel(memory),
-            placeLine(memory),
-            `${memory.photos.filter((photo) => matched.has(photo.assetId)).length} eşleşen / ${memory.photos.length} fotoğraf`,
-            sharedLine(memory)
-              .replace(/^Shared by /, "Paylaşan: ")
-              .replace(/^Added by /, "Ekleyen: "),
-          ]
-            .filter(Boolean)
-            .join(" · "),
-          memory.approximate ? "mem-moment-meta is-about" : "mem-moment-meta",
-        );
-        const id = `moment-${memories.indexOf(memory)}`;
-        title.id = id;
-        section.setAttribute("aria-labelledby", id);
-        head.append(title, meta);
-        if (memory.kind === "memory") {
-          const notes = node("a", "Notları aç", "notes-link");
-          notes.href = `#/memory/${encodeURIComponent(memory.id)}?notebook=1`;
-          head.append(notes);
-        }
-        section.append(head, tiles([memory]));
-        return section;
-      }),
-    );
+    return renderMonths(shown);
   }
+
   function update() {
     root.querySelectorAll(".mem-layout [data-filter]").forEach((control) => {
       const on = isOn(control.dataset.filter, control.dataset.value);
@@ -859,31 +798,17 @@ export function createGallery(
       "aria-checked",
       String(filters.uncertain),
     );
-    root
-      .querySelectorAll("#grid-view button")
-      .forEach((button) =>
-        button.setAttribute(
-          "aria-pressed",
-          String(button.dataset.view === view),
-        ),
-      );
-    if ($("grid-order-label"))
-      $("grid-order-label").textContent = newest
-        ? "Önce en yeni"
-        : "Önce en eski";
     renderActive();
     if (matching || !facets) {
       remember();
       return;
     }
-    const shown = sorted(
-      memories.filter((memory) =>
-        memory.photos.some((photo) => matched.has(photo.assetId)),
-      ),
+    const shown = memories.filter((memory) =>
+      memory.photos.some((photo) => matched.has(photo.assetId)),
     );
     const total = recap
       ? photographRows(shown).length
-      : photos && undated
+      : undated
         ? photographRows(shown).filter((row) => !row.month).length
         : facets?.total || 0;
     $("grid-summary").textContent = recap
@@ -988,25 +913,6 @@ export function createGallery(
   }
   $("filters-reset").onclick = resetFilters;
   $("filter-uncertain").onclick = () => toggle("uncertain");
-  if ($("grid-order"))
-    $("grid-order").onclick = () => {
-      newest = !newest;
-      $("grid-order-label").textContent = newest
-        ? "Önce en yeni"
-        : "Önce en eski";
-      update();
-    };
-  root.querySelectorAll("#grid-view button").forEach((button) => {
-    button.onclick = () => {
-      view = button.dataset.view;
-      root
-        .querySelectorAll("#grid-view button")
-        .forEach((item) =>
-          item.setAttribute("aria-pressed", String(item === button)),
-        );
-      update();
-    };
-  });
 
   async function load(group) {
     const current = ++run;

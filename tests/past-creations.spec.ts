@@ -176,3 +176,42 @@ test("Past creations retains historical reads and only authorized deletion", asy
     page.getByAltText("Photograph inside the opened capsule"),
   ).toHaveCount(0);
 });
+
+test("Past creations rejects empty and conflicting explicit selections on direct and legacy links", async ({
+  page,
+}, info) => {
+  await page.request.post("/api/entry", {
+    data: {
+      name: `Past ${info.project.name}`,
+      code: "synthetic-shared-code",
+    },
+  });
+  await page.goto("/#/past-creations");
+  await expect(page.locator(".past-card").first()).toBeVisible();
+  const profile = await (await page.request.get("/api/session")).json();
+  const stories = await (
+    await page.request.get(`/api/memories/stories?group=${profile.group_id}`)
+  ).json();
+  const capsules = await (
+    await page.request.get(`/api/memories/capsules?group=${profile.group_id}`)
+  ).json();
+  for (const route of ["past-creations", "memories"]) {
+    for (const query of [
+      "story=",
+      "capsule=",
+      "story=&capsule=",
+      "story=missing&capsule=",
+      "story=&capsule=missing",
+      `story=${stories[0].id}&capsule=`,
+      `story=&capsule=${capsules[0].id}`,
+      `story=${stories[0].id}&capsule=${capsules[0].id}`,
+    ]) {
+      await page.goto(`/#/${route}?${query}`);
+      await expect(page).toHaveURL(/#\/past-creations\?/);
+      await expect(
+        page.getByText("This creation is unavailable.", { exact: true }),
+      ).toBeVisible();
+      await expect(page.locator(".past-card")).toHaveCount(0);
+    }
+  }
+});

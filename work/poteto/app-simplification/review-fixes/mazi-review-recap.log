@@ -1,0 +1,26 @@
+[WebServer] (node:98666) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 8 tests using 1 worker
+
+(node:98681) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/annual-recap.spec.ts:5:1 › Annual recap opens from a Photos year card in capture order and restores its viewer origin (1.2s)
+  ✓  2 [desktop] › tests/annual-recap.spec.ts:72:1 › Annual recap excludes uncertain and sharing-only chronology without hiding it from Photos (240ms)
+  ✓  3 [desktop] › tests/annual-recap.spec.ts:125:1 › Annual recap covers the whole capture year and returns to the prior Photos filters (676ms)
+
+  ✓  4 [desktop] › tests/annual-recap.spec.ts:169:1 › Annual recap rechecks withdrawn photographs and session access (1.2s)
+(node:98692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  5 [phone] › tests/annual-recap.spec.ts:5:1 › Annual recap opens from a Photos year card in capture order and restores its viewer origin (1.2s)
+  ✓  6 [phone] › tests/annual-recap.spec.ts:72:1 › Annual recap excludes uncertain and sharing-only chronology without hiding it from Photos (256ms)
+  ✓  7 [phone] › tests/annual-recap.spec.ts:125:1 › Annual recap covers the whole capture year and returns to the prior Photos filters (927ms)
+
+  ✓  8 [phone] › tests/annual-recap.spec.ts:169:1 › Annual recap rechecks withdrawn photographs and session access (401ms)
+
+  8 passed (7.6s)
