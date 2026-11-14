@@ -21,11 +21,12 @@ export function useReducedMotion() {
   return reduced;
 }
 export function readRoute() {
-  const [path, query] = (
-    location.hash.startsWith("#/")
-      ? location.hash.slice(1)
-      : location.pathname + location.search
-  ).split("?");
+  const address = location.hash.startsWith("#/")
+    ? location.hash.slice(1)
+    : location.pathname + location.search;
+  const separator = address.indexOf("?");
+  const path = separator < 0 ? address : address.slice(0, separator);
+  const query = separator < 0 ? "" : address.slice(separator + 1);
   const params = new URLSearchParams(query);
   if (path === "/ask") {
     if (!params.has("q") && params.has("question"))

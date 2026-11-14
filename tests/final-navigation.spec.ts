@@ -18,6 +18,17 @@ test("returning member uses Globe and Photos with retained old links", async ({
     await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
   await expect(nav.getByRole("link")).toHaveCount(4);
   await expect(page.locator(".atlas-stage")).toBeVisible();
+  await expect(page.locator(".scene-loading")).toHaveCount(0, {
+    timeout: 30000,
+  });
+  await page.evaluate(async () => {
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => {})),
+    );
+  });
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-globe.png`,
   });
@@ -36,6 +47,7 @@ test("returning member uses Globe and Photos with retained old links", async ({
   await expect(page.locator(".mem-tile")).toHaveCount(1);
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/159-${info.project.name}-photos.png`,
+    fullPage: true,
   });
   await page.goto("/#/circle?section=plans&plan=unknown-plan");
   await expect(
