@@ -472,3 +472,32 @@ test("shared viewer opens directly and restores Globe and browse state", async (
     path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
   });
 });
+
+test("shared viewer preserves individual-photo selection and closes to filtered gallery", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all&order=oldest&years=2024");
+  const origin = page.url();
+  const photo = page.locator('.mem-tile[href*="photo=1"]').first();
+  await photo.scrollIntoViewIfNeeded();
+  const selected = await photo.getAttribute("href");
+  await photo.click();
+  await expect(page).toHaveURL(
+    new RegExp(selected!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"),
+  );
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page
+    .getByRole("link", { name: "Fotoğrafı kapat", exact: true })
+    .click();
+  await expect(page).toHaveURL(origin);
+  await expect(photo).toBeFocused();
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
+});
