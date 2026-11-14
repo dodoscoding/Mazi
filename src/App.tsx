@@ -174,23 +174,44 @@ export default function App() {
   const backUrl = browsingReturn.current?.url || "/";
   let content: ReactNode;
   if (route.path === "/introduction")
-    content = <Introduction onContinue={() => navigate("/")} />;
-  else if (route.path === "/about")
     content = (
-      <About
-        profileName={profile?.display_name || ""}
-        circle={
-          demo
-            ? "Örnek Atlas"
-            : archive.groups.find((group) => group.id === archive.group)
-                ?.name || "grubumuz"
+      <Introduction
+        onContinue={() =>
+          navigate(
+            new URLSearchParams(route.search).get("return") === "settings"
+              ? "/settings"
+              : "/",
+          )
         }
-        link={link}
-        heading={heading}
-        onSignOut={() => {
-          void entry.logout();
-        }}
       />
+    );
+  else if (route.path === "/about" || route.path === "/settings")
+    content = (
+      <>
+        {route.path === "/settings" && (
+          <Suspense fallback={<p role="status">Settings açılıyor…</p>}>
+            <FeaturePage
+              key={`${profile?.user_id}:settings`}
+              path="/settings"
+            />
+          </Suspense>
+        )}
+        <About
+          settings={route.path === "/settings"}
+          profileName={profile?.display_name || ""}
+          circle={
+            demo
+              ? "Örnek Atlas"
+              : archive.groups.find((group) => group.id === archive.group)
+                  ?.name || "grubumuz"
+          }
+          link={link}
+          heading={heading}
+          onSignOut={() => {
+            void entry.logout();
+          }}
+        />
+      </>
     );
   else if (route.path === "/explore")
     content = <Explore link={link} heading={heading} />;

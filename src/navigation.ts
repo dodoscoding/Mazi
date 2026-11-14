@@ -114,7 +114,6 @@ export const exploreGroups = [
 
 export const routeAliases: Readonly<Record<string, string>> = {
   "/people": "/discover?section=people",
-  "/settings": "/circle?section=settings",
 };
 
 export const groupDestinations: readonly Destination[] = [
@@ -170,6 +169,7 @@ const sectionPaths: Record<string, MainSection> = {
   "/places": "explore",
   "/review": "explore",
   "/circle": "circle",
+  "/settings": "circle",
   "/imports": "circle",
   "/about": "circle",
   "/introduction": "circle",

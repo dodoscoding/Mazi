@@ -48,8 +48,14 @@ const terminalStates = ["COMPLETED", "CANCELLED", "FAILED"];
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
+  const settingsMode =
+    location.hash.startsWith("#/settings") || location.pathname === "/settings";
   const circleMode =
-    location.hash.startsWith("#/circle") || location.pathname === "/circle";
+    settingsMode ||
+    location.hash.startsWith("#/circle") ||
+    location.pathname === "/circle";
+  const addMode =
+    location.hash.startsWith("#/add") || location.pathname === "/add";
   let group = null;
   let groups = [];
   let selectedRun = null;
@@ -68,8 +74,13 @@ export function mount(root, lifecycle) {
   });
   toastNotice($("notice"), lifecycle);
   root.querySelector(".fx").dataset.mode = circleMode ? "circle" : "imports";
+  if (addMode) $("page-title").textContent = "Add";
   if (circleMode) {
-    $("page-title").textContent = "Grubumuz";
+    $("page-title").textContent = settingsMode ? "Settings" : "Grubumuz";
+    if (settingsMode) {
+      $("circle-title").textContent = "Members";
+      $("group-settings-heading").closest("section").hidden = true;
+    }
     $("page-sub").textContent =
       "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
     const shortcuts = el("nav");
@@ -85,7 +96,7 @@ export function mount(root, lifecycle) {
       );
       shortcuts.append(link);
     }
-    root.querySelector(".fx-head").after(shortcuts);
+    if (!settingsMode) root.querySelector(".fx-head").after(shortcuts);
   }
 
   async function api(path, body) {
