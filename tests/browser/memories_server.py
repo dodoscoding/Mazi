@@ -19,6 +19,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     person = store.create_person(alice, group, 'Ben')
     store.propose_identity(alice, person, ben)
     store.confirm_identity(ben, person)
+    original_assets = []
     for index, color in enumerate(['red', 'blue', 'green']):
         image = io.BytesIO()
         Image.new('RGB', (80, 80), color).save(image, 'JPEG')
@@ -30,6 +31,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
         asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
         store.correct_asset(alice, asset, title=['Bicycle beside the sea','Dinner with friends','Garden in the morning'][index], capture_date='2024-01-02', place=['Amsterdam','Istanbul','Amsterdam'][index])
         store.tag(alice, person, asset, True)
+        original_assets.append(asset)
     store.processing(alice, group, True, group_wide=True)
     store.processing(alice, group, True)
     store.processing(ben, group, True)
@@ -39,6 +41,8 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.review_event(alice, group, store._visible_ids(alice, group), 'Our summer', 'accept')
     if os.environ.get('MAZI_PHOTOS_FIXTURE') == '1':
         # Extra chronology examples are isolated from the existing unified contracts.
+        store.correct_asset(alice, original_assets[1], title='Dinner with friends', capture_date='2024-01-09', place='Istanbul')
+        store.correct_asset(alice, original_assets[2], title='Garden in the morning', capture_date='2024-01-05', place='Amsterdam')
         examples = [
             ('Winter walk', 'yellow', ['2025-02-20'], None),
             ('Spring picnic', 'purple', ['2023-03-10'], None),

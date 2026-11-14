@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("Photos opens from Globe as individual photographs grouped by newest month", async ({
   page,
-}) => {
+}, info) => {
   expect(
     (
       await page.request.post("/api/entry", {
@@ -30,6 +30,18 @@ test("Photos opens from Globe as individual photographs grouped by newest month"
     "Mart 2023",
     "Undated",
   ]);
+  expect(
+    await page
+      .getByRole("region", { name: "Ocak 2024", exact: true })
+      .getByRole("img")
+      .evaluateAll((images) =>
+        images.map((image) => image.getAttribute("alt")),
+      ),
+  ).toEqual([
+    "Dinner with friends",
+    "Garden in the morning",
+    "Bicycle beside the sea",
+  ]);
   await expect(
     page.getByRole("group", { name: "Görünüm", exact: true }),
   ).toHaveCount(0);
@@ -42,6 +54,10 @@ test("Photos opens from Globe as individual photographs grouped by newest month"
       exact: false,
     }),
   ).toBeVisible();
+  await page.screenshot({
+    path: `work/poteto/app-simplification/photos-months-${info.project.name}.png`,
+    fullPage: true,
+  });
   const selected = page.locator('.mem-tile[href*="photo=1"]').first();
   await selected.click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
