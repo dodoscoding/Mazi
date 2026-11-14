@@ -17,17 +17,30 @@ export async function sampleRead(path: string) {
   if (url.pathname !== "/api/discovery/matches")
     throw Error("Sample mode only reads fictional photographs.");
   const query = (url.searchParams.get("query") || "").toLocaleLowerCase();
-  const matched = samples.filter((memory) =>
-    [
-      memory.title,
-      memory.description,
-      memory.by,
-      ...memory.photos.map((photo) => photo.alt),
-    ]
-      .join(" ")
-      .toLocaleLowerCase()
-      .includes(query),
-  );
+  const unsupported = [
+    "years",
+    "places",
+    "start",
+    "end",
+    "source",
+    "person",
+    "people_present",
+    "screenshot",
+    "ai",
+  ].some((key) => url.searchParams.has(key));
+  const matched = unsupported
+    ? []
+    : samples.filter((memory) =>
+        [
+          memory.title,
+          memory.description,
+          memory.by,
+          ...memory.photos.map((photo) => photo.alt),
+        ]
+          .join(" ")
+          .toLocaleLowerCase()
+          .includes(query),
+      );
   const ids = matched.flatMap((memory) =>
     memory.photos.map((photo) => photo.assetId),
   );

@@ -20,7 +20,7 @@ async function shell(page: Page) {
 }
 async function navigate(page: Page, name: string, route: string) {
   await followShellLink(page, name);
-  await expect(page).toHaveURL(new RegExp(`#/${route}`));
+  await expect(page).toHaveURL(new RegExp(`#/${route.replaceAll("?", "\\?")}`));
   await shell(page);
 }
 
@@ -55,12 +55,8 @@ test("one authenticated shell connects real Atlas, retained memories, discovery 
     .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
     .click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
-  await navigate(page, "Fotoğraflar", "memories");
-  await expect(page.locator("#recap")).toContainText("Our summer");
-  await expect(
-    page.getByRole("button", { name: "Start a story", exact: true }),
-  ).toHaveCount(0);
-  await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
+  await navigate(page, "Photos", "photos");
+  await expect(page.locator(".mem-tile")).toHaveCount(initialCount);
   await navigate(page, "Search", "photos");
   await expect(page.locator(".mem-tile")).toHaveCount(initialCount);
   await page
@@ -74,11 +70,11 @@ test("one authenticated shell connects real Atlas, retained memories, discovery 
   await page.locator(".mem-tile").click();
   await expect(page.locator(".viewer")).toContainText("Bicycle beside the sea");
   await shell(page);
-  await navigate(page, "My Imports", "imports");
+  await navigate(page, "My Imports", "add");
   await expect(
-    page.getByRole("heading", { name: "Add a chapter" }),
+    page.getByRole("heading", { name: "Add", exact: true }),
   ).toBeVisible();
-  await navigate(page, "Places & sources", "places");
+  await navigate(page, "Places & sources", "add?section=sources");
   await expect(
     page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
   ).toBeVisible();
@@ -95,17 +91,17 @@ test("one authenticated shell connects real Atlas, retained memories, discovery 
     `Synthetic browser source ${info.project.name}`,
   );
   await expect(page.locator("#sources")).toContainText("Paused");
-  await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(initialCount);
+  await navigate(page, "Archive review", "add?section=suggestions");
+  await expect(page.locator("#events")).toBeVisible();
   for (let i = 0; i < 2; i++) {
-    await navigate(page, "Fotoğraflar", "memories");
+    await navigate(page, "Fotoğraflar", "photos");
     await expect(page.locator("#grid")).not.toBeEmpty();
     await expect(
       page.getByRole("textbox", { name: "Your recollection", exact: true }),
     ).toHaveCount(0);
     await navigate(page, "Home", "");
   }
-  await navigate(page, "My Imports", "imports");
+  await navigate(page, "My Imports", "add");
   await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(page.locator("#stories")).toHaveCount(0);
@@ -125,7 +121,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
   await page
     .getByRole("button", { name: "Open the Atlas", exact: true })
     .click();
-  await navigate(page, "My Imports", "imports");
+  await navigate(page, "My Imports", "add");
   const fixture = execFileSync(".venv/bin/python", [
     "-c",
     "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(80,60),'red').save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('photo.jpg',p.getvalue()); p2=io.BytesIO(); Image.new('RGB',(80,60),'blue').save(p2,'JPEG'); z.writestr('second.jpg',p2.getvalue()); z.close(); sys.stdout.buffer.write(a.getvalue())",
@@ -159,11 +155,11 @@ test("named profile imports and logout discard delayed private Atlas responses",
   await expect(page.locator("#gallery article")).toHaveCount(
     importedRecords.length,
   );
-  await navigate(page, "Archive review", "review");
-  await expect(page.locator("#timeline article")).toHaveCount(
-    importedRecords.length,
+  await navigate(page, "Archive review", "add?section=suggestions");
+  await expect(page.locator("#events")).toBeVisible();
+  const firstGroup = await page.evaluate(
+    () => sessionStorage.getItem("mazi.group") || "",
   );
-  const firstGroup = await page.locator("#groups").inputValue();
   const timeline = await (
     await page.request.get(`/api/review/timeline?group=${firstGroup}`)
   ).json();
@@ -182,8 +178,10 @@ test("named profile imports and logout discard delayed private Atlas responses",
     data: { group: firstGroup, event: event.id },
   });
   expect(retired.status()).toBe(410);
-  await navigate(page, "Fotoğraflar", "memories");
-  await expect(page.locator("#grid")).toContainText(title);
+  await navigate(page, "Fotoğraflar", "photos");
+  await expect(
+    page.locator(`.mem-tile[href^="#/memory/${event.id}"]`).first(),
+  ).toBeVisible();
   let releaseLogout!: () => void;
   let heldLogout!: () => void;
   const capturedLogout = new Promise<void>((resolve) => {
@@ -198,15 +196,12 @@ test("named profile imports and logout discard delayed private Atlas responses",
   });
   let intercepted = false;
   let privatePreviewTitle = "";
-  await page.route("**/api/social/home?*", async (route) => {
+  await page.route("**/api/atlas?*", async (route) => {
     if (intercepted) return route.continue();
     intercepted = true;
     const response = await route.fetch();
     const payload = await response.json();
-    privatePreviewTitle =
-      payload.featured?.memory?.title ||
-      payload.featured?.preview?.title ||
-      payload.featured?.plan?.title;
+    privatePreviewTitle = payload.memories?.[0]?.title;
     expect(privatePreviewTitle).toBeTruthy();
     heldLogout();
     await logoutGate;
@@ -214,14 +209,17 @@ test("named profile imports and logout discard delayed private Atlas responses",
     deliveredLogout();
   });
   await navigate(page, "Home", "");
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
   await capturedLogout;
   await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım", exact: true }),
+    page.getByRole("heading", { name: "Atlas", exact: true }),
   ).toBeVisible();
-  await navigate(page, "My Imports", "imports");
+  await navigate(page, "My Imports", "add");
   await expect(
     page.getByRole("heading", {
-      name: "İçe aktarmalar",
+      name: "Add",
       exact: true,
       level: 1,
     }),
@@ -270,7 +268,7 @@ test("access loss clears retained archive controls and supporting records", asyn
   await page.goto("/#/photos?q=bicycle");
   await page.locator(".mem-tile").click();
   await expect(page.locator(".viewer")).toContainText("Bicycle beside the sea");
-  await navigate(page, "Fotoğraflar", "memories");
+  await navigate(page, "Fotoğraflar", "photos");
   await page.goto("/#/settings");
   await expect(
     page.getByRole("button", { name: "Download archive", exact: true }),
@@ -320,30 +318,21 @@ test("shared viewer opens directly and restores Globe and browse state", async (
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(origin);
   await expect(page.locator("#featured-title")).toContainText("Our summer");
-  await page.goto("/#/timeline");
-  if (info.project.name === "desktop")
-    await page
-      .getByRole("button", { name: "Önce en yeniler", exact: true })
-      .click();
-  const card = page.locator(".tl-card").filter({ hasText: "Our summer" });
+  await page.goto("/#/photos?years=2024");
+  const card = page.locator(".mem-tile").first();
   await card.scrollIntoViewIfNeeded();
   const scroll = await page.evaluate(() => scrollY);
+  const browseOrigin = page.url();
   await card.click();
   await expect(page.locator(".viewer")).toBeVisible();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
-  await expect(page).toHaveURL(/#\/timeline$/);
-  if (info.project.name === "desktop")
-    await expect(
-      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(browseOrigin);
+  await expect(card).toBeFocused();
   await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
   await card.click();
   await expect(page.locator(".viewer")).toBeVisible();
   await page.goBack();
-  if (info.project.name === "desktop")
-    await expect(
-      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(browseOrigin);
   await page.screenshot({
     path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
   });
@@ -556,8 +545,8 @@ test("Add preserves inventory cancellation, history and session-loss clearing", 
     ).ok(),
   ).toBe(true);
   await page.goto("/#/atlas");
-  await page.getByRole("button", { name: "Ekle", exact: true }).click();
-  await page.getByRole("link", { name: "Add", exact: true }).click();
+
+  await followShellLink(page, "Add");
   await expect(page).toHaveURL(/#\/add$/);
   const fixture = execFileSync(".venv/bin/python", [
     "-c",
