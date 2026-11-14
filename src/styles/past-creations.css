@@ -6,7 +6,7 @@
   gap: 20px;
 }
 .past-creations h1 {
-  font-size: var(--type-display-lg);
+  font-size: var(--type-display-l);
 }
 .past-card {
   padding: 24px;
