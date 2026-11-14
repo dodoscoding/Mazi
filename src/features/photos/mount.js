@@ -18,6 +18,7 @@ export function mount(root, lifecycle) {
   const gallery = createGallery(root, lifecycle, api, {
     photos: true,
     onSearch: conversations.search,
+    onReset: conversations.clear,
   });
   let group = lifecycle.groupId;
   let active = true;

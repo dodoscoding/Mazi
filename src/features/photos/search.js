@@ -109,5 +109,12 @@ export function createConversationSearch(root, lifecycle, api) {
       "Konuşmalar sözcük, kaynak ve paylaşan filtreleriyle aranır. Yıl, çekim tarihi, yer ve fotoğraf etiketleri yalnız fotoğraflara uygulanır.";
     void load();
   };
-  return { search };
+  const clear = () => {
+    revision++;
+    close(false);
+    $("conversation-list").replaceChildren();
+    $("conversation-status").textContent = "";
+    $("conversation-results").hidden = true;
+  };
+  return { search, clear };
 }

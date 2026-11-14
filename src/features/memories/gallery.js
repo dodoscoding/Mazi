@@ -26,7 +26,7 @@ export function createGallery(
   root,
   lifecycle,
   api,
-  { photos = false, onSearch } = {},
+  { photos = false, onSearch, onReset } = {},
 ) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
@@ -859,6 +859,7 @@ export function createGallery(
 
   async function load(group) {
     const current = ++run;
+    onReset?.();
     if (galleryGroup && galleryGroup !== group) {
       filters = emptyFilters();
       photoFilters.reset(false);
