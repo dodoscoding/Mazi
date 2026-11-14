@@ -105,8 +105,21 @@ export function createConversationSearch(root, lifecycle, api) {
     currentParams = new URLSearchParams({ group, query: params.get("query") });
     for (const key of ["source", "shared_by"])
       if (params.has(key)) currentParams.set(key, params.get(key));
-    $("conversation-scope").textContent =
-      "Konuşmalar sözcük, kaynak ve paylaşan filtreleriyle aranır. Yıl, çekim tarihi, yer ve fotoğraf etiketleri yalnız fotoğraflara uygulanır.";
+    const photoOnly = [
+      "years",
+      "places",
+      "uncertain",
+      "people_present",
+      "screenshot",
+      "ai",
+      "person",
+      "start",
+      "end",
+      "undated",
+    ].some((key) => params.has(key));
+    $("conversation-scope").textContent = photoOnly
+      ? "Konuşmalar sözcük, kaynak ve paylaşan filtreleriyle aranır. Yıl, çekim tarihi, yer ve fotoğraf etiketleri yalnız fotoğraflara uygulanır."
+      : "Erişilebilir kaynak mesajları; sözcük, kaynak ve paylaşan filtreleri uygulanır.";
     void load();
   };
   const clear = () => {

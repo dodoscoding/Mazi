@@ -1,3 +1,5 @@
+import { sourceLabel } from "../browse/model";
+
 /** Recorded source strings only; safe to retain when AI answer presentation retires. */
 export function sourceContext(value) {
   const body = document.createElement("div");
@@ -8,7 +10,7 @@ export function sourceContext(value) {
   };
   body.append(
     line("h2", value.conversation),
-    line("p", `${value.source} · Kaynak konuşma`),
+    line("p", `${sourceLabel(value.source)} · Kaynak konuşma`),
     line("p", value.sourceRef),
     line(
       "p",

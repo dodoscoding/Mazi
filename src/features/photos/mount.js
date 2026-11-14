@@ -4,6 +4,9 @@ import "../memories/memories.css";
 import "./photos.css";
 
 export function mount(root, lifecycle) {
+  root.querySelector("#photos-search").hidden = new URLSearchParams(
+    lifecycle.search,
+  ).has("recap");
   const api = async (path) => {
     const response = await lifecycle.fetch(path);
     const value = await response.json();
