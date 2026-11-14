@@ -9,6 +9,8 @@ import placesTemplate from "./places/template.html?raw";
 import discoveryTemplate from "./discovery/template.html?raw";
 import answersTemplate from "./answers/template.html?raw";
 import evidenceTemplate from "./evidence/template.html?raw";
+import photosTemplate from "./photos/template.html?raw";
+import { mount as photosMount } from "./photos/mount";
 import memoriesTemplate from "./memories/template.html?raw";
 import { mount as importsMount } from "./imports/mount";
 import { mount as archiveMount } from "./archive/mount";
@@ -22,6 +24,7 @@ import "./workspace.css";
 import "./imports/imports.css";
 
 export const featureRegistry = {
+  "/photos": { template: photosTemplate, mount: photosMount },
   "/add": { template: importsTemplate, mount: importsMount },
   "/imports": { template: importsTemplate, mount: importsMount },
   "/circle": { template: importsTemplate, mount: importsMount },
@@ -53,11 +56,15 @@ export function FeaturePage({
     const add = pathname === "/add";
     const sources =
       add && new URLSearchParams(query).get("section") === "sources";
+    const suggestions =
+      add && new URLSearchParams(query).get("section") === "suggestions";
     const feature = settingsControls
       ? { template: settingsTemplate, mount: settingsMount }
-      : sources
-        ? featureRegistry["/places"]
-        : featureRegistry[pathname as keyof typeof featureRegistry];
+      : suggestions
+        ? featureRegistry["/review"]
+        : sources
+          ? featureRegistry["/places"]
+          : featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
     let mounted = false;
@@ -77,8 +84,9 @@ export function FeaturePage({
         navigation.className = "add-sections";
         navigation.setAttribute("aria-label", "Add sections");
         for (const [label, href, current] of [
-          ["Imports", "#/add", !sources],
+          ["Imports", "#/add", !sources && !suggestions],
           ["Source connections", "#/add?section=sources", sources],
+          ["Suggestions", "#/add?section=suggestions", suggestions],
         ] as const) {
           const link = document.createElement("a");
           link.textContent = label;

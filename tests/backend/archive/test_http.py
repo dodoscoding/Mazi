@@ -73,6 +73,23 @@ class ReviewHttpTests(unittest.TestCase):
         self.assertEqual(json.loads(self.request(f"/api/review/timeline?group={self.group}", token=token)[1])["items"][0]["place"], "nowhereville")
         self.assertEqual(correct(""), {"ok": True, "place_match": "empty", "place": None, "candidates": []})
 
+    def test_suggestion_reads_and_decisions_require_circle_membership(self):
+        for queue in ("duplicates", "reviewed-pairs", "events", "reviewed-events"):
+            with self.subTest(queue=queue):
+                self.assertEqual(self.request(f"/api/review/{queue}?group={self.group}",
+                                              token=self.outsider_token)[0], 403)
+        for action in ("merge", "dismiss", "undo"):
+            with self.subTest(pair_action=action):
+                self.assertEqual(self.request("/api/review/pair", {
+                    "group": self.group, "left": self.asset, "right": "unavailable-asset", "action": action,
+                }, token=self.outsider_token)[0], 403)
+        for decision in ("accept", "reject", "undo"):
+            with self.subTest(event_decision=decision):
+                self.assertEqual(self.request("/api/review/event", {
+                    "group": self.group, "assets": [self.asset, "unavailable-asset"],
+                    "title": "Unavailable event", "decision": decision,
+                }, token=self.outsider_token)[0], 403)
+
     def test_review_endpoints_authorization_and_withdrawal(self):
         timeline = f"/api/review/timeline?group={self.group}"
         self.assertEqual(self.request("/health")[0], 200)

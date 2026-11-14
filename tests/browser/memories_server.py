@@ -19,6 +19,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     person = store.create_person(alice, group, 'Ben')
     store.propose_identity(alice, person, ben)
     store.confirm_identity(ben, person)
+    original_assets = []
     for index, color in enumerate(['red', 'blue', 'green']):
         image = io.BytesIO()
         Image.new('RGB', (80, 80), color).save(image, 'JPEG')
@@ -30,6 +31,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
         asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
         store.correct_asset(alice, asset, title=['Bicycle beside the sea','Dinner with friends','Garden in the morning'][index], capture_date='2024-01-02', place=['Amsterdam','Istanbul','Amsterdam'][index])
         store.tag(alice, person, asset, True)
+        original_assets.append(asset)
     store.processing(alice, group, True, group_wide=True)
     store.processing(alice, group, True)
     store.processing(ben, group, True)
@@ -37,6 +39,34 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.answer_processing(alice, group, True)
     store.answer_processing(ben, group, True)
     store.review_event(alice, group, store._visible_ids(alice, group), 'Our summer', 'accept')
+    if os.environ.get('MAZI_PHOTOS_FIXTURE') == '1':
+        # Extra chronology examples are isolated from the existing unified contracts.
+        store.correct_asset(alice, original_assets[1], title='Dinner with friends', capture_date='2024-01-09', place='Istanbul')
+        store.correct_asset(alice, original_assets[2], title='Garden in the morning', capture_date='2024-01-05', place='Amsterdam')
+        examples = [
+            ('Winter walk', 'yellow', ['2025-02-20'], None),
+            ('Spring picnic', 'purple', ['2023-03-10'], None),
+            ('Unlabelled photograph', 'orange', [], None),
+            ('Shared at the reunion', 'cyan', [], '2026-04-12T10:00:00+00:00'),
+            ('Conflicting years', 'navy', ['2022-06-01', '2023-07-01'], None),
+        ]
+        for title, color, captures, shared in examples:
+            image = io.BytesIO()
+            Image.new('RGB', (90, 60), color).save(image, 'JPEG')
+            data = image.getvalue()
+            for version, capture in enumerate(captures or [None]):
+                metadata = dict(item=f'photos-{color}-{version}', component='photo', version='original', filename=f'{color}.jpg', date='2024-01-02', kind='image', albums=[])
+                if capture:
+                    metadata['capture_date'] = capture
+                if shared:
+                    metadata['shared_at'] = shared
+                resource = store.begin_resource(alice, source, metadata, len(data), hashlib.sha256(data).hexdigest())
+                store.resource_chunk(alice, resource['id'], 0, data)
+                store.finish_resource(alice, resource['id'])
+                while store.work_once():
+                    pass
+            asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
+            store.correct_asset(alice, asset, title=title, capture_date=None, place='')
     configure_shared(store, group, {"Alice": alice, "Ben": ben})
     if os.environ.get("MAZI_PAST_CREATIONS_FIXTURE") == "1":
         from .past_fixture import seed_past_creations
