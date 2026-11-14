@@ -35,6 +35,11 @@ test("Past creations retains historical reads and only authorized deletion", asy
   await expect(
     page.getByAltText("Photograph inside the opened capsule"),
   ).toBeVisible();
+  const capsuleDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Export capsule", exact: true })
+    .click();
+  expect((await capsuleDownload).suggestedFilename()).toBe("mazi-capsule.json");
   await expect(
     page.getByText(`Sealed secret ${info.project.name}`, { exact: false }),
   ).toHaveCount(0);
@@ -83,6 +88,11 @@ test("Past creations retains historical reads and only authorized deletion", asy
     page.getByAltText("Original photograph from this saved story").first(),
   ).toBeVisible();
   await expect(page.locator("#grid")).toHaveCount(0);
+  const storyDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Export story JSON", exact: true })
+    .click();
+  expect((await storyDownload).suggestedFilename()).toBe("mazi-story.json");
   expect(
     (
       await page.request.post("/api/memories/delete", {

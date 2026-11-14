@@ -12,6 +12,7 @@ test("every signed-out route is gated and named profiles resume across browsers"
     "/about",
     "/circle",
     "/settings",
+    "/past-creations",
     "/search",
     "/imports",
     "/review",
