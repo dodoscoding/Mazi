@@ -10,6 +10,7 @@ test("every signed-out route is gated and named profiles resume across browsers"
     "/welcome",
     "/about",
     "/circle",
+    "/settings",
     "/search",
     "/imports",
     "/review",
@@ -274,6 +275,7 @@ test("Settings retains membership, account, About and introduction replay", asyn
   await page.request.post("/api/entry", {
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/settings");
   await expect(
     page.getByRole("heading", { name: "Settings", exact: true }),
@@ -300,6 +302,7 @@ test("Settings retains membership, account, About and introduction replay", asyn
   await page.screenshot({
     path: `work/poteto/app-simplification/screenshots/settings-${info.project.name}.png`,
     fullPage: true,
+    animations: "disabled",
   });
   await page
     .getByRole("main")
@@ -312,4 +315,69 @@ test("Settings retains membership, account, About and introduction replay", asyn
   await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(page.getByRole("list", { name: "Members" })).toHaveCount(0);
   expect((await page.request.get("/api/groups")).status()).toBe(403);
+});
+
+test("Settings keeps administrator controls and clears members after session loss", async ({
+  page,
+  browser,
+}, info) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("button", { name: "Remove Ben", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Remove Ben", exact: true }).click();
+  await expect(page.getByRole("alertdialog")).toContainText(
+    "Remove Ben from Our small circle?",
+  );
+  await page.getByRole("button", { name: "Keep them" }).click();
+  await expect(page.getByRole("list", { name: "Members" })).toContainText(
+    "Ben",
+  );
+  const visitor = await browser.newContext({
+    baseURL: String(info.project.use.baseURL),
+  });
+  try {
+    const name = `Settings visitor ${info.project.name}`;
+    const entry = await visitor.request.post("/api/entry", {
+      data: { name, code: "synthetic-shared-code" },
+    });
+    expect(entry.ok()).toBe(true);
+    const profile = await entry.json();
+    const session = await (await page.request.get("/api/session")).json();
+    expect(
+      (
+        await visitor.request.post("/api/member/remove", {
+          data: { group: profile.group_id, user: session.user_id },
+        })
+      ).status(),
+    ).toBe(403);
+    await page.reload();
+    await page
+      .getByRole("button", { name: `Remove ${name}`, exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Remove member", exact: true })
+      .click();
+    await expect(page.getByRole("list", { name: "Members" })).not.toContainText(
+      name,
+    );
+    expect((await visitor.request.get("/api/groups")).status()).toBe(403);
+  } finally {
+    await visitor.close();
+  }
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Members" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Account", exact: true }),
+  ).toHaveCount(0);
 });
