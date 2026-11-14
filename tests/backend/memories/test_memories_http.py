@@ -62,6 +62,40 @@ class ApiTests(unittest.TestCase):
             thread.join()
             server.server_close()
 
+    def test_recollection_deletion_is_only_the_current_users_existing_record(self):
+        story = self.store.create_story(self.alice, self.group, self.event)
+        story = self.store.write_story(self.alice, self.group, story['id'], story['revision'], 'Alice stays')
+        story = self.store.write_story(self.ben, self.group, story['id'], story['revision'], 'Ben withdraws')
+        server = HTTPServer(('127.0.0.1', 0), handler_for(self.store))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        token = self.store.login('ben@example.test', 'correct horse battery')
+        def remove(body):
+            connection = http.client.HTTPConnection('127.0.0.1', server.server_port)
+            connection.request('POST', '/api/memories/delete-recollection', json.dumps(body), {'Cookie':'mazi_session='+token, 'Content-Type':'application/json'})
+            response = connection.getresponse()
+            result = response.status, json.loads(response.read())
+            connection.close()
+            return result
+        body = dict(group=self.group, story=story['id'], revision=story['revision'])
+        try:
+            self.assertEqual(remove(dict(body, revision=1))[0], 409)
+            for extra in [{'text':'replace'}, {'author':self.alice}, {'user':self.alice}]:
+                self.assertEqual(remove(dict(body, **extra))[0], 400)
+            self.assertEqual(self.store.story(self.ben, self.group, story['id'])['revision'], story['revision'])
+            status, result = remove(body)
+            self.assertEqual(status, 200)
+            self.assertEqual([(entry['author'], entry['text']) for entry in result['contributions']], [(self.alice, 'Alice stays')])
+            current = dict(body, revision=result['revision'])
+            self.assertEqual(remove(current)[0], 403)
+            self.assertEqual(self.store.story(self.ben, self.group, story['id'])['revision'], result['revision'])
+            token = self.store.login('outsider@example.test', 'correct horse battery')
+            self.assertEqual(remove(current)[0], 403)
+        finally:
+            server.shutdown()
+            thread.join()
+            server.server_close()
+
     def test_t15_capsule_direct_paths_ignore_client_time(self):
         import base64
         self.store._now = lambda: 1800000000
