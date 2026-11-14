@@ -193,6 +193,7 @@ export function createGallery(
   }
   function remember() {
     const params = parameters();
+    if (entry.get("retired") === "answers") params.set("retired", "answers");
     if (recap) {
       params.set("recap", entry.get("recap") || "");
       if (previousPhotos) params.set("return", recapReturn);

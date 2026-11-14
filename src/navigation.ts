@@ -80,13 +80,6 @@ export const exploreDestinations: readonly ExploreDestination[] = [
     description: "Kaydedilmiş kapsülleri ve açılma zamanlarını gör.",
   },
   {
-    path: "/ask",
-    group: "remember",
-    label: "Arşive sor",
-    description:
-      "Kaynakları gösteren yanıtlarla geçmişi hatırla. İsteğe bağlı işlemeyi yönet.",
-  },
-  {
     path: "/places",
     group: "browse",
     label: "Yerler",

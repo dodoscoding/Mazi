@@ -54,11 +54,9 @@ def handler_for(store):
                 if not isinstance(body, dict) or not isinstance(body.get('group'), str) or len(body['group']) > 200:
                     raise ValueError('Invalid request')
                 user = self.user()
-                if path == '/api/answers/ask':
-                    return self.json(200, store.answer(user, body['group'], body['question']))
-                if path == '/api/answers/processing':
-                    store.answer_processing(user, body['group'], body['enabled'], body.get('group_wide', False))
-                    return self.json(200, {'ok': True})
+                if path in {'/api/answers/ask', '/api/answers/processing'}:
+                    store._member(user, body['group'])
+                    return self.json(410, {'error': 'AI answers are retired. Search the archive instead.'})
                 return self.json(404, {'error': 'Not found'})
             except CapacityExceeded as exc:
                 return self.json(400, {"error": str(exc), "code": "capacity_exceeded"})
