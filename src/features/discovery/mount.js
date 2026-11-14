@@ -290,7 +290,6 @@ export function mount(root, lifecycle) {
     $("#photo-results").hidden = !(
       resultType === "all" || resultType === "photos"
     );
-    $("#ask-card").hidden = !counts.term || resultType !== "all";
     root
       .querySelectorAll("#result-types button")
       .forEach((button) =>
@@ -310,7 +309,6 @@ export function mount(root, lifecycle) {
         "#chat-results",
         "#place-results",
         "#people-results",
-        "#ask-card",
       ])
         $(id).hidden = true;
       $("#photo-results").hidden = false;
@@ -362,9 +360,6 @@ export function mount(root, lifecycle) {
         }),
       );
     }
-    $("#ask-quote").textContent = counts.term
-      ? `“${completedQuery.trim()}”`
-      : "";
     showGroups();
   }
   async function search(offset = 0) {

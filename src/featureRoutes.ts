@@ -7,7 +7,6 @@ const featurePaths = [
   "/review",
   "/places",
   "/discover",
-  "/ask",
   "/answer-evidence",
   "/memories",
 ];
