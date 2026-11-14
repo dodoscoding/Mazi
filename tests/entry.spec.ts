@@ -289,7 +289,11 @@ test("Settings retains membership, account, About and introduction replay", asyn
   await expect(page.getByRole("list", { name: "Members" })).toContainText(
     "Ben",
   );
-  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("list", { name: "Members" })
+      .getByRole("button", { name: /^Remove / }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Account", exact: true }),
   ).toBeVisible();
@@ -389,8 +393,12 @@ test("Settings explicitly exports the current circle and recovers failed exports
   page,
 }, info) => {
   await page.request.post("/api/entry", {
-    data: { name: "Ben", code: "synthetic-shared-code" },
+    data: {
+      name: `Settings export ${info.project.name}`,
+      code: "synthetic-shared-code",
+    },
   });
+  await page.request.post("/api/introduction/complete", { data: {} });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/settings");
   await expect(
@@ -429,7 +437,17 @@ test("Settings explicitly exports the current circle and recovers failed exports
       { encoding: "utf8" },
     ),
   );
-  expect(exported.manifest.assets).toHaveLength(3);
+  expect(
+    exported.manifest.assets.map(
+      (asset: { annotation: { title?: string } }) => asset.annotation.title,
+    ),
+  ).toEqual(
+    expect.arrayContaining([
+      "Bicycle beside the sea",
+      "Dinner with friends",
+      "Garden in the morning",
+    ]),
+  );
   expect(exported.names).toEqual(
     expect.arrayContaining([
       "manifest.json",
@@ -610,6 +628,10 @@ test("Settings withdraws only the current member’s source record", async ({
   });
   await page.request.post("/api/introduction/complete", { data: {} });
   await page.emulateMedia({ reducedMotion: "reduce" });
+  const contributor = await (await page.request.get("/api/session")).json();
+  const before = await (
+    await page.request.get(`/api/review/timeline?group=${contributor.group_id}`)
+  ).json();
   await page.goto("/#/imports");
   const fixture = execFileSync(".venv/bin/python", [
     "-c",
@@ -664,7 +686,9 @@ test("Settings withdraws only the current member’s source record", async ({
   const timeline = await (
     await page.request.get(`/api/review/timeline?group=${profile.group_id}`)
   ).json();
-  expect(timeline.items.length).toBe(3);
+  expect(timeline.items.map((item: { id: string }) => item.id).sort()).toEqual(
+    before.items.map((item: { id: string }) => item.id).sort(),
+  );
 });
 
 test("Settings cancels exports and clears controls when an export is denied", async ({

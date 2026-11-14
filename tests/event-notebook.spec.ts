@@ -1,3 +1,4 @@
+import { followShellLink } from "./helpers/shell";
 import { mockArchive } from "./helpers/archive";
 import { test, expect } from "@playwright/test";
 
@@ -185,7 +186,7 @@ test("event title links open notes alongside imported excerpts and use event IDs
       .locator("#reviewed-events h3")
       .getByRole("link", { name: event.title, exact: true }),
   ).toHaveAttribute("href", `#/memory/${event.id}?notebook=1`);
-  await page.goto("/#/memories");
+  await followShellLink(page, "Memories");
   await expect(
     page
       .locator("#recap h3")
