@@ -93,3 +93,9 @@
   color: var(--text-secondary);
   margin-bottom: 20px;
 }
+
+@media (max-width: 600px) {
+  .photos-page #photos-search label {
+    flex: none;
+  }
+}
