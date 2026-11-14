@@ -99,3 +99,8 @@
     flex: none;
   }
 }
+
+/* Recap eligibility is essential context on compact screens too. */
+.photos-page #recap-scope:not([hidden]) {
+  display: block;
+}
