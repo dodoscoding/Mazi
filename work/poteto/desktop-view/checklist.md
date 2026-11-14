@@ -7,7 +7,7 @@
 - [x] Apply local retention with quiet foreground access checks.
 - [x] Verify browser reproduction, privacy cleanup, denial and stale-response safety.
 - [x] Review and run relevant checks.
-- [ ] Create a focused PR.
+- [x] Create [PR #160](https://github.com/dodoscoding/Mazi/pull/160) against the affected workstream.
 
 ## Scope and throughput
 
