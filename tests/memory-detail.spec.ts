@@ -315,7 +315,7 @@ test("an approximate date reads About with the uncertainty chip and basis", asyn
   );
   await expect(
     when.getByRole("link", { name: "Arşiv incelemesinde tarihi düzelt" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
   await open(page, "/memory/naxos-morning");
   await expect(page.locator(".date-chip")).not.toHaveText(/About/);
@@ -357,7 +357,7 @@ test("place, people and sources show evidence in plain words", async ({
   await expect(page.getByRole("link", { name: "Arşivi incele" })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Ortak bir hikâye yaz" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
 });
 
 test("related memories put the same place first and open that memory", async ({
@@ -391,8 +391,7 @@ for (const backAction of ["pill", "Escape"]) {
     await page.addInitScript(() =>
       sessionStorage.setItem("mazi.intro", "seen"),
     );
-    await page.goto("/#/?selected=harbour-night");
-    await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+    await page.goto("/#/?selected=harbour-night&view=portal");
     await expect(page.locator(".dossier-title h2 a")).toHaveCSS(
       "text-decoration-line",
       "underline",
@@ -477,13 +476,11 @@ test("earlier and later follow the dates, with approximate memories in place", a
   await expect(nav.getByRole("link", { name: /^Sonraki anı/ })).toHaveCount(0);
 });
 
-test("Escape from a direct memory returns to Home", async ({ page }) => {
+test("Escape from a direct memory returns to Globe", async ({ page }) => {
   await open(page, "/memory/city-spring");
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/#\/$/);
-  await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Atlas" })).toBeVisible();
 });
 
 test("a broken photo URL shows the retry state", async ({ page }) => {
@@ -671,7 +668,7 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".featured")).not.toContainText(
     "Date not recorded",
   );
-  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await page.goto("/#/?selected=source-photo&view=portal");
   await expect(page.locator(".dossier")).toContainText("Shared by Ana and Ben");
   await expect(page.locator(".dossier")).toContainText(
     "Arşive ekleyen Uploader",
@@ -705,13 +702,42 @@ test("source sharing is visible on cards, portal and detail without a capture da
     path: testInfo.outputPath("source-sharing.png"),
     fullPage: true,
   });
+  const { unknownDate } = await import("./helpers/photo-evidence");
+  sourcePhoto.photos[0] = {
+    ...sourcePhoto.photos[0],
+    assetId: "synthetic-source",
+    evidence: {
+      capture: unknownDate,
+      shared: [
+        {
+          basis: "shared",
+          status: "exact",
+          days: ["2024-04-23"],
+          start: "2024-04-23",
+          through: "2024-04-23",
+          timezone: null,
+        },
+      ],
+      chronology: {
+        basis: "shared",
+        status: "exact",
+        days: ["2024-04-23"],
+        start: "2024-04-23",
+        through: "2024-04-23",
+        timezone: null,
+      },
+      place: { status: "unknown", text: null, pin: null },
+    },
+  } as (typeof sourcePhoto.photos)[0];
+  await mockArchive(page, [sourcePhoto]);
+  await page.route("**/api/discovery/matches?*", (route) =>
+    route.fulfill({ json: photoMatches(["synthetic-source"]) }),
+  );
   await page.goto("/#/timeline");
-  await expect(page.locator(".tl-card")).toContainText("Shared by Ana and Ben");
-  await expect(page.locator(".tl-date")).toContainText("Shared on");
-  await expect(
-    page.locator(".timeline-page").getByText("2024", { exact: true }),
-  ).not.toHaveCount(0);
-  await expect(page.locator(".tl-date")).toContainText("Capture date unknown");
+  await expect(page).toHaveURL(/#\/photos/);
+  await expect(page.locator(".mem-photo-facts")).toContainText(
+    "23 Nis 2024 · Paylaşıldı · Çekim tarihi bilinmiyor",
+  );
 });
 
 test("opened photographs preserve portrait and panoramic edges", async ({
@@ -739,11 +765,7 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   ];
   await mockArchive(page, memories);
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
-  await page.goto("/#/?selected=harbour-night");
-  await page
-    .getByRole("link", { name: "Anıyı aç", exact: true })
-    .first()
-    .click();
+  await page.goto("/#/?selected=harbour-night&view=portal");
   const verify = async (selector: string) => {
     const result = await page
       .locator(selector)
@@ -834,37 +856,87 @@ test("photo facts stay visible and follow the selected photo across archive view
   );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(
-    page.locator(".home-featured .memory-meta").first(),
-  ).toContainText("Çekim ve paylaşım tarihleri");
-  await expect(
-    page.locator(".home-featured .memory-meta").first(),
-  ).toContainText("Bazı yerler bilinmiyor");
+  await expect(page.locator(".featured").first()).toContainText(
+    "Çekim ve paylaşım tarihleri",
+  );
+  await expect(page.locator(".featured").first()).toContainText(
+    "Bazı yerler bilinmiyor",
+  );
   await page.goto("/#/memories");
   await expect(page.locator(".mem-photo-facts")).toHaveCount(2);
-  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
-    "2 Oca 2020 · Çekildi",
-  );
-  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
-    "Istanbul, TR",
-  );
-  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
-    "2 Oca 2024 · Paylaşıldı · UTC",
-  );
-  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
-    "Yer bilinmiyor",
-  );
-  await page.locator('[data-view="all"]').click();
-  await expect(page.locator(".mem-photo-facts").nth(1)).not.toContainText(
-    "Istanbul",
-  );
+  await expect(
+    page
+      .locator(".mem-tile")
+      .filter({
+        has: page.getByRole("img", {
+          name: "Synthetic capture photo",
+          exact: true,
+        }),
+      })
+      .locator(".mem-photo-facts"),
+  ).toContainText("2 Oca 2020 · Çekildi");
+  await expect(
+    page
+      .locator(".mem-tile")
+      .filter({
+        has: page.getByRole("img", {
+          name: "Synthetic capture photo",
+          exact: true,
+        }),
+      })
+      .locator(".mem-photo-facts"),
+  ).toContainText("Istanbul, TR");
+  await expect(
+    page
+      .locator(".mem-tile")
+      .filter({
+        has: page.getByRole("img", {
+          name: "Synthetic sharing photo",
+          exact: true,
+        }),
+      })
+      .locator(".mem-photo-facts"),
+  ).toContainText("2 Oca 2024 · Paylaşıldı · UTC");
+  await expect(
+    page
+      .locator(".mem-tile")
+      .filter({
+        has: page.getByRole("img", {
+          name: "Synthetic sharing photo",
+          exact: true,
+        }),
+      })
+      .locator(".mem-photo-facts"),
+  ).toContainText("Yer bilinmiyor");
+  await expect(
+    page.getByRole("group", { name: "Görünüm", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .locator(".mem-tile")
+      .filter({
+        has: page.getByRole("img", {
+          name: "Synthetic sharing photo",
+          exact: true,
+        }),
+      })
+      .locator(".mem-photo-facts"),
+  ).not.toContainText("Istanbul");
   const directory = "work/poteto/photo-evidence/screenshots";
   mkdirSync(directory, { recursive: true });
   await settled(page);
   await page.locator(".mem-layout").screenshot({
     path: `${directory}/${testInfo.project.name}-gallery.png`,
   });
-  await page.locator(".mem-tile").first().click();
+  await page
+    .locator(".mem-tile")
+    .filter({
+      has: page.getByRole("img", {
+        name: "Synthetic capture photo",
+        exact: true,
+      }),
+    })
+    .click();
   await expect(page.locator(".viewer-caption-meta").first()).toHaveText(
     "2 Oca 2020 · Çekildi",
   );
@@ -880,12 +952,11 @@ test("photo facts stay visible and follow the selected photo across archive view
     path: `${directory}/${testInfo.project.name}-viewer.png`,
   });
   await page.goto("/#/timeline");
-  await expect(page.locator(".tl-date")).toContainText(
-    "Çekim ve paylaşım tarihleri",
-  );
-  await expect(page.locator(".tl-meta")).toContainText(
-    "Bazı yerler bilinmiyor",
-  );
+  await expect(page).toHaveURL(/#\/photos/);
+  await expect(page.locator(".photo-month h2")).toHaveText([
+    "Ocak 2024",
+    "Ocak 2020",
+  ]);
   await page.goto("/#/atlas");
   await expect(page.locator(".place-tray-toggle")).toBeVisible();
   await page.locator(".place-tray-toggle").click();
