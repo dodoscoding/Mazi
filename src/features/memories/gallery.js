@@ -256,6 +256,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   }
   function selectionState() {
     count.textContent = `${selection.size} fotoğraf seçildi · En fazla 50`;
+    count.hidden = photos && !selecting;
     edit.disabled = !selection.size;
     edit.hidden = cancel.hidden = !selecting;
     choose.setAttribute("aria-pressed", String(selecting));
