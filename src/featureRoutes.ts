@@ -1,4 +1,5 @@
 const featurePaths = [
+  "/photos",
   "/add",
   "/imports",
   "/circle",
