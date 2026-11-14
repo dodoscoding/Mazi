@@ -23,6 +23,7 @@ export const featureRegistry = {
   "/add": { template: importsTemplate, mount: importsMount },
   "/imports": { template: importsTemplate, mount: importsMount },
   "/circle": { template: importsTemplate, mount: importsMount },
+  "/settings": { template: importsTemplate, mount: importsMount },
   "/review": { template: archiveTemplate, mount: archiveMount },
   "/places": { template: placesTemplate, mount: placesMount },
   "/discover": { template: discoveryTemplate, mount: discoveryMount },
