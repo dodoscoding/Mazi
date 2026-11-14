@@ -38,6 +38,9 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
     store.answer_processing(ben, group, True)
     store.review_event(alice, group, store._visible_ids(alice, group), 'Our summer', 'accept')
     configure_shared(store, group, {"Alice": alice, "Ben": ben})
+    if os.environ.get("MAZI_PAST_CREATIONS_FIXTURE") == "1":
+        from .past_fixture import seed_past_creations
+        seed_past_creations(store, alice, group)
     store.close()
     os.environ['MAZI_IMPORT_DATA_DIR'] = root
     main()
