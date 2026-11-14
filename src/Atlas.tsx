@@ -221,6 +221,7 @@ function AtlasHome({
   openMemory,
   onPlaced,
   openLink,
+  heading,
 }: {
   archive: Archive;
   memories: Memory[];
