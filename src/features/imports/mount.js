@@ -78,7 +78,6 @@ export function mount(root, lifecycle) {
     $("page-title").textContent = settingsMode ? "Settings" : "Grubumuz";
     if (settingsMode) {
       $("circle-title").textContent = "Members";
-      $("group-settings-heading").closest("section").hidden = true;
     }
     $("page-sub").textContent =
       "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
@@ -168,8 +167,8 @@ export function mount(root, lifecycle) {
     const apple = el("div", "source-card source-card--link");
     const badge = el("span", "source-badge");
     badge.append(icon("photo"));
-    const connect = el("a", "fx-text-link", "Connect in Places & sources");
-    connect.href = "/places";
+    const connect = el("a", "fx-text-link", "Connect in Add");
+    connect.href = "#/add?section=sources";
     apple.append(
       badge,
       el("b", "", "Apple Photos"),
