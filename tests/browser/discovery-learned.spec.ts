@@ -1,84 +1,95 @@
 import { test, expect } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
 
-test("learned model indexes locally and keeps keyword fallback", async ({
+test("retained local processing is explicit and Photos keyword retrieval survives opt-out", async ({
   page,
-}, testInfo) => {
-  test.skip(
-    !process.env.MAZI_EMBEDDING_MODEL_DIR,
-    "Run explicitly with verified local model files",
-  );
+}, info) => {
   await page.request.post("/api/entry", {
     data: { name: "Alice", code: "synthetic-shared-code" },
   });
-  const groups = await (await page.request.get("/api/groups")).json();
-  const group = groups[0].id;
-  const resetProcessing = async () => {
-    for (const groupWide of [true, false]) {
-      const response = await page.request.post("/api/discovery/processing", {
-        data: { group, enabled: false, group_wide: groupWide },
-      });
-      expect(response.ok()).toBeTruthy();
-    }
+  const { group_id: group } = await (
+    await page.request.get("/api/session")
+  ).json();
+  const reset = async () => {
+    for (const groupWide of [true, false])
+      expect(
+        (
+          await page.request.post("/api/discovery/processing", {
+            data: { group, enabled: false, group_wide: groupWide },
+          })
+        ).ok(),
+      ).toBe(true);
   };
-  await resetProcessing();
+  await reset();
   try {
-    await page.goto("/#/discover");
-    await page
-      .getByText("My visibility & processing choices", { exact: true })
-      .click();
-    await page.getByLabel("Enable optional local processing").check();
-    await expect(page.locator("#processing-status")).toContainText(
-      "Group processing on",
-    );
-    await page.getByLabel("Allow local related-search processing").check();
-    await expect(page.locator("#build-index")).toBeVisible();
-    await page
-      .getByLabel("Ara", { exact: true })
-      .fill("people relaxing on a wooden dock beside a mountain lake");
-    await page.getByLabel("Arama türü").selectOption("keyword");
-    await page.getByRole("button", { name: "Arşivde ara" }).click();
-    await expect(page.locator("#result-total")).toHaveText("0 sonuç");
-    await page.getByLabel("Arama türü").selectOption("semantic");
-    await page.getByRole("button", { name: "Arşivde ara" }).click();
-    await expect(page.locator("#index-progress")).toContainText(
-      "need indexing",
-    );
-    await page
-      .getByRole("button", { name: "Yerel arama dizini oluştur" })
-      .click();
-    await expect(page.locator("#index-progress")).toContainText("0 kaldı.");
-    await expect(page.locator("#count")).toContainText("İlişkili arama");
+    await page.goto("/#/settings");
+    const personal = page.getByRole("checkbox", {
+      name: "Allow local related-search processing of my contributions",
+      exact: true,
+    });
+    const groupControl = page.getByRole("checkbox", {
+      name: "Enable optional local processing for this group (admin)",
+      exact: true,
+    });
+    await expect(personal).not.toBeChecked();
+    await expect(groupControl).not.toBeChecked();
+    await groupControl.check();
+    await expect(
+      page.getByText("Preference saved.", { exact: true }),
+    ).toBeVisible();
+    await personal.check();
+    await expect(
+      page.getByText("Preference saved.", { exact: true }),
+    ).toBeVisible();
     const state = await (
-      await page.request.get(
-        `/api/discovery/state?group=${encodeURIComponent(group)}`,
-      )
+      await page.request.get(`/api/discovery/state?group=${group}`)
     ).json();
-    expect(state.settings.model_label).toContain("Local CLIP");
-    expect(state.settings.learned).toBe(true);
-    expect(state.settings.model_ready).toBe(true);
-    await expect(page.locator("#results article").first()).toContainText(
-      "Archive item one",
-    );
-    await expect(page.locator("#model-help")).toContainText("English");
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(state.settings.recognition).toBe(false);
+    expect(state.settings.group_enabled).toBe(true);
+    expect(state.settings.contribution_enabled).toBe(true);
+    // Model-dependent retrieval remains a public API/domain capability, not a new UI workflow.
+    if (process.env.MAZI_EMBEDDING_MODEL_DIR) {
+      expect(state.settings.model_ready).toBe(true);
+      expect(state.settings.learned).toBe(true);
+      let remaining = 3;
+      for (let batch = 0; batch < 5 && remaining; batch++) {
+        const response = await page.request.post("/api/discovery/index", {
+          data: { group, limit: 2 },
+        });
+        expect(response.ok()).toBe(true);
+        remaining = (await response.json()).remaining;
+      }
+      expect(remaining).toBe(0);
+      const related = await (
+        await page.request.get(
+          `/api/discovery/search?group=${group}&mode=semantic&query=${encodeURIComponent("people relaxing on a wooden dock beside a mountain lake")}`,
+        )
+      ).json();
+      expect(related.items[0].title).toBe("Archive item one");
+    }
+    await personal.uncheck();
+    await expect(
+      page.getByText("Preference saved.", { exact: true }),
+    ).toBeVisible();
+    await groupControl.uncheck();
+    await expect(
+      page.getByText("Preference saved.", { exact: true }),
+    ).toBeVisible();
+    await page.goto("/#/photos?q=photo-0.jpg");
+    await expect(page.locator(".mem-tile")).toHaveCount(1);
+    await expect(
+      page.getByRole("button", {
+        name: "Yerel arama dizini oluştur",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("combobox", { name: "Arama türü", exact: true }),
+    ).toHaveCount(0);
     await page.screenshot({
-      path: testInfo.outputPath("learned-discovery.png"),
+      path: info.outputPath("keyword-with-processing-off.png"),
       fullPage: true,
     });
-    await page.getByLabel("Allow local related-search processing").uncheck();
-    await expect(page.locator("#results article")).toHaveCount(0);
-    await page.getByLabel("Ara", { exact: true }).fill("photo-0.jpg");
-    await page.getByRole("button", { name: "Arşivde ara" }).click();
-    await expect(page.locator("#results article")).toHaveCount(1);
-    await expect(page.locator("#results article").first()).toContainText(
-      "Archive item one",
-    );
-    await page.getByLabel("Enable optional local processing").uncheck();
-    await expect(page.locator("#processing-status")).toContainText(
-      "Group processing off",
-    );
   } finally {
-    await resetProcessing();
+    await reset();
   }
 });

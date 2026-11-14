@@ -43,6 +43,24 @@
         ><input id="settings-group-processing" type="checkbox" />Enable optional
         local processing for this group (admin)</label
       >
+      <h3>People</h3>
+      <p>
+        Manual person records do not verify an identity or enable recognition.
+      </p>
+      <form id="settings-person-create">
+        <label
+          >Person’s name<input
+            id="settings-new-person"
+            required
+            maxlength="100"
+        /></label>
+        <button class="fx-button">Create person</button>
+      </form>
+      <div
+        id="settings-people"
+        role="group"
+        aria-label="Manual person records"
+      ></div>
       <h3>Visibility and identity</h3>
       <p>Hiding affects your discovery views. Other members retain access.</p>
       <div id="settings-visibility"></div>
