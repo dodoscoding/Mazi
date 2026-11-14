@@ -79,3 +79,17 @@
   display: block;
   color: var(--text-secondary);
 }
+
+.photos-page .annual-recap-card {
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+}
+.photos-page .annual-recap-card h2 {
+  margin: 0 0 12px;
+}
+.photos-page .annual-recap-card p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}

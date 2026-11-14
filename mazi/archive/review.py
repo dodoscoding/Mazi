@@ -180,13 +180,17 @@ class ReviewStore(ImportStore):
                 for row in self.db.execute("SELECT left_id,right_id,status FROM review_pairs WHERE group_id=? ORDER BY updated_at DESC", (group,))
                 if row[0] in visible and row[1] in visible]
 
-    def owned_origins(self, user, group):
+    def owned_origins(self, user, group, asset=None):
         self._member(user, group)
+        if asset is not None and (not isinstance(asset, str) or not asset or len(asset) > 200):
+            raise ValueError("Invalid photograph")
+        selected = " AND asset_id=?" if asset is not None else ""
+        params = (user, group, asset) if asset is not None else (user, group)
         return [{"id": row["id"], "asset": row["asset_id"],
                  "filename": json.loads(row["payload"]).get("original_filename") or "Unnamed photograph"}
                 for row in self.db.execute("SELECT id,asset_id,payload FROM archive_origins "
-                                           'WHERE owner_id=? AND group_id=? AND withdrawn=0 ORDER BY ' + insertion_order(self.db, '') + ' DESC LIMIT 1000',
-                                           (user, group))]
+                                           'WHERE owner_id=? AND group_id=? AND withdrawn=0' + selected + ' ORDER BY ' + insertion_order(self.db, '') + ' DESC LIMIT 1000',
+                                           params)]
 
     def group_metrics(self, user, group):
         self._member(user, group, admin=True)

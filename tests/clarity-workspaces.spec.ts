@@ -11,56 +11,21 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("named feature links land on their actual section and survive refresh failure", async ({
+test("historical story and capsule links reach Past creations without authoring", async ({
   page,
 }) => {
-  await page.route("**/api/memories/recap?*", (route) =>
-    route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ error: "Synthetic recap unavailable" }),
-    }),
-  );
-  const sections = [
-    ["Hikâyeler", "stories", "Stories we share"],
-    ["Yıllık özet", "recap", "Annual recap"],
-    ["Zaman kapsülleri", "capsules", "Time capsules"],
-  ];
-  for (const [label, section, heading] of sections) {
-    await page.goto("/#/explore");
-    await page
-      .getByRole("navigation", { name: "Keşfet araçları" })
-      .getByRole("link", { name: label, exact: true })
-      .click();
-    await expect(page).toHaveURL(
-      new RegExp(`#/memories\\?section=${section}$`),
-    );
+  for (const section of ["stories", "capsules"]) {
+    await page.goto(`/#/memories?section=${section}`);
+    await expect(page).toHaveURL(/#\/past-creations$/);
     await expect(
-      page.getByRole("heading", { name: heading, exact: true }),
+      page.getByRole("heading", { name: "Past creations", exact: true }),
     ).toBeFocused();
-    await expect(page.locator("#notice")).toContainText(
-      "Synthetic recap unavailable",
-    );
-    const title = page.getByRole("textbox", {
-      name: "Capsule title",
-      exact: true,
-    });
-    await title.fill("Unsent synthetic draft");
-    await page.evaluate(() => {
-      document.dispatchEvent(new Event("visibilitychange"));
-      window.dispatchEvent(new Event("pageshow"));
-    });
-    await expect(title).toBeFocused();
-    await expect(title).toHaveValue("Unsent synthetic draft");
-    await page
-      .getByRole("button", { name: "Refresh stories", exact: true })
-      .click();
     await expect(
-      page.getByRole("button", { name: "Refresh stories", exact: true }),
-    ).toBeFocused();
-    await expect(page).toHaveURL(
-      new RegExp(`#/memories\\?section=${section}$`),
-    );
+      page.getByText("No Past creations are currently available.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox")).toHaveCount(0);
   }
 });
 
@@ -97,24 +62,21 @@ test("unknown section names keep the normal workspace available", async ({
   expect(errors).toEqual([]);
 });
 
-test("a group refresh does not repeat the requested section focus", async ({
+test("recap refresh keeps the photo gallery available without creation prompts", async ({
   page,
 }) => {
-  await page.goto("/#/memories?section=capsules");
-  const heading = page.getByRole("heading", {
-    name: "Time capsules",
-    exact: true,
-  });
-  await expect(heading).toBeFocused();
-  await page.locator("#capsule-title").focus();
+  await page.goto("/#/memories?section=recap");
+  await expect(
+    page.getByRole("heading", { name: "Annual recap", exact: true }),
+  ).toBeFocused();
   await page
-    .locator(".feature-content")
-    .evaluate((root) => root.setAttribute("data-previous-mount", "true"));
-  await page.evaluate(() => window.dispatchEvent(new Event("mazi:group")));
-  await expect(page.locator('[data-previous-mount="true"]')).toHaveCount(0);
+    .getByRole("button", { name: "Refresh recap", exact: true })
+    .click();
+  await expect(page.locator("#recap")).toContainText("Our summer");
   await expect(page.locator("#grid")).not.toBeEmpty();
-  await expect(heading).not.toBeFocused();
-  await expect(page).toHaveURL(/#\/memories\?section=capsules$/);
+  await expect(
+    page.getByRole("button", { name: "Start a story", exact: true }),
+  ).toHaveCount(0);
 });
 
 for (const prefix of ["/", "/#/"]) {
@@ -130,18 +92,18 @@ for (const prefix of ["/", "/#/"]) {
     await page.goBack();
     await expect(page).toHaveURL(/#\/explore$/);
   });
-  test(`${prefix}settings opens the visible group settings and keeps Back usable`, async ({
+  test(`${prefix}settings opens account and membership controls and keeps Back usable`, async ({
     page,
   }) => {
     await page.goto("/#/explore");
     await page.goto(`${prefix}settings`);
-    await expect(page).toHaveURL(/#\/circle\?section=settings$/);
+    await expect(page).toHaveURL(/(?:#\/|\/)settings$/);
     await expect(
-      page.getByRole("heading", { name: "Grup ayarları", exact: true }),
+      page.getByRole("heading", { name: "Settings", exact: true }),
     ).toBeFocused();
     await expect(
       page.getByRole("link", {
-        name: "Hesap, yardım ve gizlilik",
+        name: "Replay introduction",
         exact: true,
       }),
     ).toBeVisible();

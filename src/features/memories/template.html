@@ -1,9 +1,7 @@
 <div class="memories-page">
   <nav class="feature-sections" aria-label="Anı bölümleri">
     <a href="#/memories">Fotoğraflar</a>
-    <a href="#/memories?section=stories">Hikâyeler</a>
     <a href="#/memories?section=recap">Yıllık özet</a>
-    <a href="#/memories?section=capsules">Zaman kapsülleri</a>
   </nav>
   <div class="mem-layout">
     <div id="filters-scrim" class="mem-scrim" hidden></div>
@@ -119,74 +117,23 @@
     </div>
   </div>
 
-  <section class="mem-stories" aria-labelledby="stories-heading">
-    <div class="mem-section-head">
-      <div>
-        <h2 id="stories-heading" tabindex="-1">Stories we share</h2>
-        <p>
-          Each member can edit or remove their own recollection. The creator can
-          delete the story. Exports contain currently accessible text and
-          references; downloaded copies cannot be recalled.
-        </p>
-      </div>
-      <form id="year-form" class="mem-year-form">
-        <label
-          >Year<input
-            id="year"
-            type="number"
-            min="1"
-            max="9999"
-            value="2024"
-            required /></label
-        ><button>Show year</button>
-      </form>
-    </div>
+  <section class="mem-stories" aria-labelledby="recap-heading">
+    <h2 id="recap-heading" tabindex="-1">Annual recap</h2>
+    <form id="year-form" class="mem-year-form">
+      <label
+        >Year<input
+          id="year"
+          type="number"
+          min="1"
+          max="9999"
+          value="2024"
+          required /></label
+      ><button>Show year</button>
+    </form>
     <p id="notice" role="status"></p>
-    <h3 id="recap-heading" tabindex="-1">Annual recap</h3>
     <section id="recap" aria-label="Annual recap"></section>
     <button id="refresh" type="button" class="mem-refresh">
-      Refresh stories
+      Refresh recap
     </button>
-    <section id="stories" aria-label="Collaborative stories"></section>
   </section>
-
-  <div class="mem-capsules">
-    <h2 id="capsules-heading" tabindex="-1">Time capsules</h2>
-    <p>
-      Seal a new note and optional photograph. Nobody, including you, can read
-      or edit it before the server opening time. You can delete it. Existing
-      archive photographs stay shared; this upload is stored separately.
-    </p>
-    <form id="capsule-form" class="panel">
-      <label
-        >Capsule title<input id="capsule-title" required maxlength="200"
-      /></label>
-      <label
-        >Note for the future<textarea
-          id="capsule-text"
-          required
-          maxlength="4000"
-        ></textarea>
-      </label>
-      <label
-        >Opening time (your local time)<input
-          id="capsule-date"
-          type="datetime-local"
-          required
-      /></label>
-      <label
-        >Optional photo (JPEG/PNG, up to 2 MiB)<input
-          id="capsule-photo"
-          type="file"
-          accept="image/jpeg,image/png"
-      /></label>
-      <button>Seal capsule</button>
-    </form>
-    <label class="check"
-      ><input id="notifications-enabled" type="checkbox" />Show in-app capsule
-      notifications</label
-    >
-    <p id="notifications" role="status"></p>
-    <section id="capsules" aria-label="Time capsules"></section>
-  </div>
 </div>

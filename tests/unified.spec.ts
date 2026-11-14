@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { openFullMemory } from "./helpers/atlas";
 import { followShellLink, signOut } from "./helpers/shell";
 
@@ -23,7 +24,7 @@ async function navigate(page: Page, name: string, route: string) {
   await shell(page);
 }
 
-test("one authenticated shell connects real Atlas, stories, discovery and evidence", async ({
+test("one authenticated shell connects real Atlas, retained memories, discovery and evidence", async ({
   page,
 }, info) => {
   const errors: string[] = [];
@@ -37,32 +38,6 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
     await page.request.get(`/api/archive?group=${profile.group_id}`)
   ).json();
   const initialCount = initialRecords.length;
-  const storiesResponse = await page.request.get(
-    `/api/memories/stories?group=${profile.group_id}`,
-  );
-  expect(storiesResponse.ok()).toBe(true);
-  for (const story of await storiesResponse.json()) {
-    if (!story.can_delete || story.event.title !== "Our summer") continue;
-    expect(
-      (
-        await page.request.post("/api/memories/delete", {
-          data: {
-            group: profile.group_id,
-            story: story.id,
-            revision: story.revision,
-          },
-        })
-      ).ok(),
-    ).toBe(true);
-  }
-  const currentStory = page
-    .locator("#stories > article")
-    .filter({
-      has: page.getByRole("heading", { name: "Our summer", exact: true }),
-    })
-    .filter({
-      has: page.getByRole("button", { name: "Delete story", exact: true }),
-    });
   await page.goto("/#/atlas");
   await shell(page);
   await page
@@ -82,56 +57,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await navigate(page, "Fotoğraflar", "memories");
   await expect(page.locator("#recap")).toContainText("Our summer");
-  await page
-    .getByRole("button", { name: "Start a story", exact: true })
-    .click();
-  await currentStory
-    .getByRole("textbox", { name: "Your recollection", exact: true })
-    .fill("<img src=x onerror=alert(1)> A beautiful day.");
-  await currentStory
-    .getByRole("button", { name: "Save my recollection", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("You: <img");
-  await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
-  await currentStory.getByLabel("Sub-event title").fill("Morning");
-  await currentStory
-    .getByRole("checkbox", { name: "Photo 1", exact: true })
-    .check();
-  await currentStory
-    .getByRole("button", { name: "Add sub-event", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
-  await currentStory
-    .getByRole("button", { name: "Show slideshow", exact: true })
-    .click();
-  await currentStory
-    .getByRole("button", { name: "Next photo", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
-  for (const [label, filename] of [
-    ["Download video (AVI)", "mazi-memory.avi"],
-    ["Export story JSON", "mazi-story.json"],
-  ]) {
-    const downloading = page.waitForEvent("download");
-    await currentStory
-      .getByRole("button", { name: label, exact: true })
-      .click();
-    const download = await downloading;
-    expect(download.suggestedFilename()).toBe(filename);
-    expect(await download.failure()).toBeNull();
-  }
-  await page
-    .getByLabel("Capsule title", { exact: true })
-    .fill("Hidden surprise");
-  await page.getByLabel("Note for the future").fill("These words stay sealed");
-  await page.getByLabel("Opening time").fill("2030-01-01T12:00");
-  await page.getByRole("button", { name: "Seal capsule", exact: true }).click();
-  await expect(page.locator("#capsules")).toContainText("Sealed capsule");
-  await expect(page.locator("#capsules")).not.toContainText(
-    "These words stay sealed",
-  );
-  await page.getByLabel("Show in-app capsule notifications").check();
-  await expect(page.locator("#notifications")).toBeEmpty();
+  await expect(
+    page.getByRole("button", { name: "Start a story", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
   await navigate(page, "Search", "search");
   await expect(page.locator("#results article")).toHaveCount(initialCount);
   await page.getByLabel("Ara", { exact: true }).fill("bicycle");
@@ -173,44 +102,12 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(page.locator("#timeline article")).toHaveCount(initialCount);
   for (let i = 0; i < 2; i++) {
     await navigate(page, "Fotoğraflar", "memories");
-    await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
+    await expect(page.locator("#grid")).not.toBeEmpty();
+    await expect(
+      page.getByRole("textbox", { name: "Your recollection", exact: true }),
+    ).toHaveCount(0);
     await navigate(page, "Home", "");
   }
-  await navigate(page, "Fotoğraflar", "memories");
-  let saves = 0;
-  page.on("request", (request) => {
-    if (
-      request.method() === "POST" &&
-      request.url().includes("/api/memories/write")
-    )
-      saves++;
-  });
-  await currentStory
-    .getByRole("textbox", { name: "Your recollection", exact: true })
-    .fill("Edited after navigation");
-  await currentStory
-    .getByRole("button", { name: "Save my recollection", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText(
-    "Edited after navigation",
-  );
-  expect(saves).toBe(1);
-  await page
-    .getByRole("heading", { name: "Fotoğraflar", exact: true, level: 1 })
-    .click();
-  await page.evaluate(() =>
-    (document.activeElement as HTMLElement | null)?.blur(),
-  );
-  await page.screenshot({
-    path: `work/poteto/unified-app/browser-${info.project.name}.png`,
-    fullPage: true,
-  });
-  await page
-    .getByRole("button", { name: "Delete capsule", exact: true })
-    .click();
-  await currentStory
-    .getByRole("button", { name: "Delete story", exact: true })
-    .click();
   await navigate(page, "My Imports", "imports");
   await signOut(page);
   await expect(page.getByLabel("Shared code")).toBeVisible();
@@ -284,13 +181,12 @@ test("named profile imports and logout discard delayed private Atlas responses",
   });
   expect(eventResponse.ok()).toBe(true);
   const event = await eventResponse.json();
-  const storyResponse = await page.request.post("/api/memories/create", {
+  const retired = await page.request.post("/api/memories/create", {
     data: { group: firstGroup, event: event.id },
   });
-  expect(storyResponse.ok()).toBe(true);
-  const story = await storyResponse.json();
+  expect(retired.status()).toBe(410);
   await navigate(page, "Fotoğraflar", "memories");
-  await expect(page.locator("#stories")).toContainText(title);
+  await expect(page.locator("#grid")).toContainText(title);
   let releaseLogout!: () => void;
   let heldLogout!: () => void;
   const capturedLogout = new Promise<void>((resolve) => {
@@ -335,13 +231,6 @@ test("named profile imports and logout discard delayed private Atlas responses",
   ).toBeFocused();
   expect(
     (
-      await page.request.post("/api/memories/delete", {
-        data: { group: firstGroup, story: story.id, revision: story.revision },
-      })
-    ).ok(),
-  ).toBe(true);
-  expect(
-    (
       await page.request.post("/api/review/event", {
         data: {
           group: firstGroup,
@@ -371,7 +260,7 @@ test("named profile imports and logout discard delayed private Atlas responses",
   expect((await page.request.get("/api/groups")).status()).toBe(403);
 });
 
-test("access loss clears private drafts and supporting records", async ({
+test("access loss clears retained archive controls and supporting records", async ({
   page,
 }, info) => {
   expect(
@@ -391,25 +280,21 @@ test("access loss clears private drafts and supporting records", async ({
     .click();
   await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
   await navigate(page, "Fotoğraflar", "memories");
-  await page
-    .getByLabel("Note for the future")
-    .fill("Private unsaved capsule draft");
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("button", { name: "Download archive", exact: true }),
+  ).toBeVisible();
   expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
     true,
   );
   await page
-    .getByRole("button", { name: "Refresh stories", exact: true })
+    .getByRole("button", { name: "Download archive", exact: true })
     .click();
-  await expect(page.locator("#capsule-text")).toHaveCount(0);
-  await expect(page.locator("#recap")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Download archive", exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByLabel("Shared code")).toBeVisible();
-  expect(
-    await page
-      .locator("textarea")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => (node as HTMLTextAreaElement).value),
-      ),
-  ).not.toContain("Private unsaved capsule draft");
+  await expect(page.locator("textarea")).toHaveCount(0);
 });
 
 test("shared viewer opens directly and restores Globe and browse state", async ({
@@ -715,4 +600,289 @@ test("Add preserves inventory cancellation, history and session-loss clearing", 
   await page.reload();
   await expect(page.getByLabel("Shared code")).toBeVisible();
   await expect(page.locator("#imports")).toHaveCount(0);
+});
+
+test("viewer corrects one photograph and withdraws only its owned contribution", async ({
+  page,
+  browser,
+}, info) => {
+  const other = await browser.newContext();
+  const nonce = `${info.project.name}-${Date.now()}`;
+  const login = await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  expect(login.ok()).toBe(true);
+  const profile = await login.json();
+  expect(
+    (
+      await other.request.post(
+        new URL("/api/entry", info.project.use.baseURL as string).href,
+        { data: { name: "Ben", code: "synthetic-shared-code" } },
+      )
+    ).ok(),
+  ).toBe(true);
+  const imported: { request: typeof page.request; id: string }[] = [];
+  try {
+    for (const [request, owner] of [
+      [page.request, "Alice"],
+      [other.request, "Ben"],
+    ] as const) {
+      const fixture = execFileSync(".venv/bin/python", [
+        "-c",
+        "import hashlib,io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(91,59),tuple(hashlib.sha256(sys.argv[2].encode()).digest()[:3])).save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('proof.jpg',p.getvalue()); z.writestr('_chat.txt','01/02/2020, 12:00 - '+sys.argv[1]+': proof.jpg (file attached)\\n01/02/2020, 12:01 - '+sys.argv[1]+': '+sys.argv[1]+' private context '+sys.argv[2]+'\\n'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+        owner,
+        nonce,
+      ]);
+      const base = info.project.use.baseURL as string;
+      const url = (path: string) => new URL(path, base).href;
+      const start = await request.post(url("/api/imports/start"), {
+        data: {
+          group: profile.group_id,
+          source: "whatsapp",
+          namespace: `viewer-${owner}-${nonce}`,
+          size: fixture.length,
+          sha256: createHash("sha256").update(fixture).digest("hex"),
+          options: {},
+        },
+      });
+      expect(start.ok()).toBe(true);
+      const { id } = await start.json();
+      imported.push({ request, id });
+      expect(
+        (
+          await request.post(url("/api/imports/chunk"), {
+            data: { id, offset: 0, data: fixture.toString("base64") },
+          })
+        ).ok(),
+      ).toBe(true);
+      expect(
+        (await request.post(url("/api/imports/finish"), { data: { id } })).ok(),
+      ).toBe(true);
+      await expect
+        .poll(
+          async () =>
+            (await (await request.get(url(`/api/imports/${id}`))).json()).state,
+        )
+        .toBe("INVENTORIED");
+      expect(
+        (
+          await request.post(url("/api/imports/confirm"), { data: { id } })
+        ).ok(),
+      ).toBe(true);
+      await expect
+        .poll(
+          async () =>
+            (await (await request.get(url(`/api/imports/${id}`))).json()).state,
+        )
+        .toBe("COMPLETED");
+    }
+    const archive = await (
+      await page.request.get(`/api/archive?group=${profile.group_id}`)
+    ).json();
+    const photograph = archive.find(
+      (item: { origins: { source_account_namespace: string }[] }) =>
+        item.origins.some(
+          (origin) =>
+            origin.source_account_namespace === `viewer-Alice-${nonce}`,
+        ),
+    );
+    expect(photograph).toBeTruthy();
+    const asset = photograph.id;
+    const origins = `/api/archive/${asset}/origins`;
+    const originalAssertions = await (await page.request.get(origins)).json();
+    const atlas = await (
+      await page.request.get(`/api/atlas?group=${profile.group_id}`)
+    ).json();
+    const memory = atlas.memories.find(
+      (item: { photos: { assetId: string }[] }) =>
+        item.photos.some((photo) => photo.assetId === asset),
+    );
+    await page.goto(`/#/memory/${memory.id}`);
+    await page
+      .getByRole("button", { name: "Tarihi düzelt", exact: true })
+      .click();
+    const editor = page.getByRole("form", {
+      name: "Seçili fotoğrafı düzelt",
+      exact: true,
+    });
+    await editor.getByLabel("Çekim tarihi", { exact: true }).fill("2021-05-06");
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "6 May 2021",
+    );
+    await page.getByRole("button", { name: "Yer ekle", exact: true }).click();
+    await editor
+      .getByLabel("Yer", { exact: true })
+      .fill("Synthetic uncertain garden");
+    let fail = true;
+    await page.route("**/api/atlas/photo", async (route) => {
+      if (route.request().method() !== "POST" || !fail) return route.continue();
+      fail = false;
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Synthetic write outage" }),
+      });
+    });
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(editor).toContainText("Taslağınız korundu");
+    await expect(editor.getByLabel("Yer", { exact: true })).toHaveValue(
+      "Synthetic uncertain garden",
+    );
+    await editor.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "Synthetic uncertain garden",
+    );
+    expect(await (await page.request.get(origins)).json()).toEqual(
+      originalAssertions,
+    );
+    await page.goto("/#/photos");
+    await page
+      .getByRole("combobox", { name: "Yıl", exact: true })
+      .selectOption("2021");
+    await expect(
+      page.getByRole("region", { name: "Mayıs 2021", exact: true }),
+    ).toBeVisible();
+    await page.locator(`.mem-tile[href*="/memory/${memory.id}"]`).click();
+    await expect(page.locator(".viewer-caption-text")).toContainText(
+      "Synthetic uncertain garden",
+    );
+    await expect(
+      page.getByRole("button", { name: "Katkımı yönet", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Katkımı yönet", exact: true })
+      .click();
+    const contributions = page.getByRole("region", {
+      name: "Seçili fotoğrafa katkılarım",
+      exact: true,
+    });
+    await expect(contributions).toContainText("proof.jpg");
+    await contributions
+      .getByRole("button", { name: "Katkıyı kaldır", exact: true })
+      .click();
+    let failRemoval = true;
+    await page.route("**/api/review/delete-contribution", async (route) => {
+      if (!failRemoval) return route.continue();
+      failRemoval = false;
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Synthetic removal outage" }),
+      });
+    });
+    await contributions
+      .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+      .click();
+    await expect(contributions).toContainText("Katkı kaldırılamadı");
+    await expect(contributions).toContainText("proof.jpg");
+    await contributions
+      .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+      .click();
+    await expect
+      .poll(async () => (await (await page.request.get(origins)).json()).total)
+      .toBe(1);
+    await page.reload();
+    await page
+      .getByRole("button", { name: "Katkımı yönet", exact: true })
+      .click();
+    await expect(contributions).toContainText(
+      "Bu fotoğrafta etkin katkınız yok",
+    );
+    await expect(page.locator(".photo-frame img")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Konuşmayı göster", exact: true })
+      .click();
+    await expect(
+      page.getByText(`Ben private context ${nonce}`, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(`Alice private context ${nonce}`, { exact: true }),
+    ).toHaveCount(0);
+    expect((await (await page.request.get(origins)).json()).total).toBe(1);
+    await page.screenshot({
+      path: `work/poteto/app-simplification/contribution-${info.project.name}.png`,
+      animations: "disabled",
+      fullPage: true,
+    });
+    expect(
+      (
+        await other.request.post(
+          new URL("/api/imports/withdraw", info.project.use.baseURL as string)
+            .href,
+          { data: { id: imported[1].id } },
+        )
+      ).ok(),
+    ).toBe(true);
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "Anı bulunamadı", exact: true }),
+    ).toBeVisible();
+    await page.goto("/#/photos");
+    await expect(page.locator(".mem-tile").first()).toBeVisible();
+    await expect(
+      page.locator(`.mem-tile[href*="/memory/${memory.id}"]`),
+    ).toHaveCount(0);
+  } finally {
+    for (const item of imported)
+      await item.request.post(
+        new URL("/api/imports/withdraw", info.project.use.baseURL as string)
+          .href,
+        { data: { id: item.id } },
+      );
+    await other.close();
+  }
+});
+
+test("viewer contribution controls recover a failed read and clear on session loss", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  const profile = await login.json();
+  const atlas = await (
+    await page.request.get(`/api/atlas?group=${profile.group_id}`)
+  ).json();
+  const memory = atlas.memories.find(
+    (item: { title: string }) => item.title === "Our summer",
+  );
+  expect(memory).toBeTruthy();
+  let fail = true;
+  await page.route(/\/api\/review\/my-contributions\?/, async (route) => {
+    if (!fail) return route.continue();
+    fail = false;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Synthetic contribution read outage" }),
+    });
+  });
+  await page.goto(`/#/memory/${memory.id}`);
+  await page
+    .getByRole("button", { name: "Katkımı yönet", exact: true })
+    .click();
+  const panel = page.getByRole("region", {
+    name: "Seçili fotoğrafa katkılarım",
+    exact: true,
+  });
+  await expect(panel).toContainText("Katkılarınız yüklenemedi");
+  await panel
+    .getByRole("button", { name: "Yeniden dene", exact: true })
+    .click();
+  await expect(
+    panel.getByRole("button", { name: "Katkıyı kaldır", exact: true }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Katkıyı kaldır", exact: true })
+    .click();
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await panel
+    .getByRole("button", { name: "Paylaşımı kaldır", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator(".photo-frame img")).toHaveCount(0);
 });

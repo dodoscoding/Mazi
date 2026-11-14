@@ -43,6 +43,7 @@ const ConversationPanel = lazy(() => import("./social/ConversationPanel"));
 
 const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
 const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
+const PhotoContributions = lazy(() => import("./memory/PhotoContributions"));
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
 
@@ -81,7 +82,7 @@ export function MemoryView({
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
   const [editing, setEditing] = useState<
-    "capture_date" | "place" | "labels" | null
+    "capture_date" | "place" | "labels" | "contributions" | null
   >(null);
   useEffect(() => setEditing(null), [group, memory.id, photo]);
   const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
@@ -288,6 +289,23 @@ export function MemoryView({
             >
               Etiketleri düzenle
             </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("contributions")}
+            >
+              Katkımı yönet
+            </button>
+            {editing === "contributions" && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoContributions
+                  key={`${group}:${memory.photos[photoIndex].assetId}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
             {editing === "labels" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoLabels
@@ -298,7 +316,7 @@ export function MemoryView({
                 />
               </Suspense>
             )}
-            {editing && editing !== "labels" && (
+            {editing && editing !== "labels" && editing !== "contributions" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoCorrection
                   key={`${group}:${memory.photos[photoIndex].assetId}:${editing}`}
