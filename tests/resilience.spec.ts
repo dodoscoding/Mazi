@@ -26,10 +26,6 @@ test("live reduced-motion change, unsupported transitions and keyboard navigatio
   await page
     .getByRole("link", { name: "Anıyı aç", exact: true })
     .press("Enter");
-  await page
-    .getByRole("region", { name: "Lake days" })
-    .getByRole("link", { name: "Anıyı aç", exact: true })
-    .press("Enter");
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeFocused();
@@ -108,11 +104,13 @@ test("narrow widths and long content do not overflow; search and empty result ar
 }) => {
   await page.goto("/?demo=1#/search");
   await page.getByRole("searchbox").fill("no such moment");
-  await expect(page.getByRole("status")).toContainText(
-    "No demo memories match",
-  );
-  await page.getByRole("searchbox").fill("2024");
-  await page.getByRole("link", { name: /The night we missed/ }).click();
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Bu filtrelerle eşleşen fotoğraf yok" }),
+  ).toBeVisible();
+  await page.getByRole("searchbox").fill("ferry");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await page.locator(".mem-tile").first().click();
   for (const width of [320, 390, 768, 1280, 1600]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
