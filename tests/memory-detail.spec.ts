@@ -365,6 +365,7 @@ test("related memories put the same place first and open that memory", async ({
 }) => {
   await page.goto("/#/atlas");
   await expect(page.locator(".featured")).toBeVisible();
+  const origin = page.url();
   await open(page, "/memory/harbour-night");
   const related = page.getByRole("region", { name: "İlgili anılar" });
   const links = related.getByRole("link");
@@ -379,7 +380,7 @@ test("related memories put the same place first and open that memory", async ({
     page.getByRole("heading", { name: "Morning swim below the old port" }),
   ).toBeFocused();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
-  await expect(page).toHaveURL(/#\/atlas$/);
+  await expect(page).toHaveURL(origin);
   await expect(page.locator(".atlas-stage")).toBeVisible();
 });
 

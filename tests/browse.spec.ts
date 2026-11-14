@@ -150,22 +150,22 @@ test("Globe replays every sharing-only memory within one year and supports pause
   await page.route("**/api/atlas?*", (route) =>
     route.fulfill({ json: { memories } }),
   );
-  await page.goto("/#/");
+  await page.goto("/#/?selected=shared-3");
   const replay = page.getByRole("button", {
     name: "Yeniden oynat",
     exact: true,
   });
   await replay.click();
   await expect(page).toHaveURL(/selected=shared-1/);
-  await page.clock.runFor(1400);
+  await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=shared-2/);
   await page.getByRole("button", { name: "Duraklat", exact: true }).click();
   await page.clock.runFor(1600);
   await expect(page).toHaveURL(/selected=shared-2/);
   await replay.click();
-  await page.clock.runFor(1400);
+  await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=shared-3/);
-  await page.clock.runFor(1400);
+  await page.clock.runFor(1500);
   await expect(replay).toBeVisible();
   await replay.click();
   await expect(page).toHaveURL(/selected=shared-1/);
@@ -213,6 +213,6 @@ test("manual Globe navigation resets the paused replay cursor and keeps approxim
   await page
     .getByRole("button", { name: "Yeniden oynat", exact: true })
     .click();
-  await page.clock.runFor(1400);
+  await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=year-2026/);
 });
