@@ -185,6 +185,14 @@ export function MemoryView({
   return (
     <article className="memory-detail">
       <div className="detail-bar">
+        <a
+          className="round-link"
+          href={`#${backUrl}`}
+          onClick={back}
+          aria-label="Fotoğrafı kapat"
+        >
+          <Glyph name="close" size={18} />
+        </a>
         <div className="detail-bar-start">
           <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />

@@ -453,7 +453,7 @@ function AtlasHome({
         event.altKey
       )
         return;
-      if (isField(event.target)) return;
+      if (readRoute().path !== "/atlas" || isField(event.target)) return;
       if (portalOpen) {
         if (event.key === "Escape") {
           event.preventDefault();
