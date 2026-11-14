@@ -479,17 +479,77 @@ test("Add imports, recovers failures and shares successful photographs automatic
   expect((await downloading).suggestedFilename()).toBe(
     "mazi-import-report.json",
   );
+  const profile = await login.json();
+  const records = await (
+    await page.request.get(`/api/archive?group=${profile.group_id}`)
+  ).json();
+  const imported = records.find(
+    (record: { origins: { original_filename: string }[] }) =>
+      record.origins.some((origin) => origin.original_filename === filename),
+  );
+  expect(imported).toBeTruthy();
   await page.goto("/#/atlas");
   await expect(
-    page.getByRole("button", {
-      name: "Untitled photograph anısını seç",
-      exact: true,
-    }),
+    page
+      .getByRole("button", {
+        name: "Untitled photograph anısını seç",
+        exact: true,
+      })
+      .filter({ has: page.locator(`img[src$="/${imported.id}"]`) }),
   ).toBeVisible();
   await page.goto("/#/add");
   await expect(page.locator("#imports")).toContainText("Done");
   await page.screenshot({
     path: `work/poteto/app-simplification/add-${info.project.name}.png`,
+    animations: "disabled",
     fullPage: true,
   });
+});
+
+test("Add preserves inventory cancellation, history and session-loss clearing", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page.getByRole("button", { name: "Ekle", exact: true }).click();
+  await page.getByRole("link", { name: "Add", exact: true }).click();
+  await expect(page).toHaveURL(/#\/add$/);
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('cancelled.jpg',b'cancel before processing'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page
+    .getByLabel("Source account label")
+    .fill("cancelled synthetic archive");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "cancel.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Cancel remaining work", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("cancelled");
+  await expect(page.locator("#report-summary")).toContainText(
+    "0 unique photos",
+  );
+  await page.reload();
+  await expect(page.locator("#imports")).toContainText("Cancelled");
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.reload();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator("#imports")).toHaveCount(0);
 });
