@@ -14,13 +14,11 @@ test("Add resolves duplicate and event suggestions with evidence and retained un
   ]);
   await page.locator("#upload select[name=source]").selectOption("manual");
   await page.getByLabel("Source account label").fill("Add queue fixture");
-  await page
-    .getByLabel("Export ZIP")
-    .setInputFiles({
-      name: "queues.zip",
-      mimeType: "application/zip",
-      buffer: fixture,
-    });
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "queues.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
   await page
     .getByRole("button", { name: "Upload and inspect inventory", exact: true })
     .click();
@@ -115,4 +113,57 @@ test("Add resolves duplicate and event suggestions with evidence and retained un
     fullPage: true,
     animations: "disabled",
   });
+});
+
+test("Add suggestion queues explain loading, retry failures and clear denied access", async ({
+  page,
+}) => {
+  await page.request.post("/api/entry", {
+    data: { name: "Alice", code: "synthetic-shared-code" },
+  });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let first = true;
+  await page.route(/\/api\/review\/duplicates\?/, async (route) => {
+    if (!first) return route.continue();
+    first = false;
+    await gate;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Synthetic suggestion outage" }),
+    });
+  });
+  await page.goto("/#/add?section=suggestions");
+  try {
+    await expect(page.locator("#duplicates")).toContainText(
+      "Loading duplicate suggestions",
+    );
+  } finally {
+    release();
+  }
+  await expect(page.locator("#duplicates")).toContainText(
+    "Duplicate suggestions could not load",
+  );
+  await page
+    .getByRole("button", { name: "Retry duplicate suggestions", exact: true })
+    .click();
+  await expect(page.locator("#duplicates")).not.toContainText("could not load");
+  await expect(
+    page.getByRole("button", {
+      name: "Retry duplicate suggestions",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page
+    .getByRole("button", { name: "Refresh suggestions", exact: true })
+    .click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator("#duplicates")).toHaveCount(0);
+  await expect(page.locator("#events")).toHaveCount(0);
 });
