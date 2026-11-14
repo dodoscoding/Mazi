@@ -1,6 +1,13 @@
 import { buildChronology } from "./memory/chronology";
 import { sourceSharedLine } from "./memory/provenance";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -235,6 +242,9 @@ function AtlasHome({
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
+  useLayoutEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [heading]);
   const layout = useLayout();
   const phone = layout === "phone";
   const compact = phone || layout === "tablet";
