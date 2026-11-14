@@ -10,7 +10,15 @@ test("photo browsing and retained recap offer no story or capsule writing", asyn
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/memories");
   await expect(page.locator("#grid .mem-tile")).toHaveCount(3);
-  await expect(page.locator("#recap")).toContainText("Our summer");
+  await page
+    .getByRole("combobox", { name: "Yıl", exact: true })
+    .selectOption("2024");
+  await page
+    .getByRole("link", { name: /2024.*Annual recap|Annual recap.*2024/ })
+    .click();
+  await expect(page).toHaveURL(/recap=2024/);
+  await expect(page.locator("#recap-scope")).toBeVisible();
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
   await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Start a story", exact: true }),
