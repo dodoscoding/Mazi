@@ -90,6 +90,8 @@ export function readRoute() {
     }
   }
 
+  if (alias === "/photos" && params.has("year") && !params.has("years"))
+    params.set("years", params.get("year")!);
   if (alias) {
     if (path === "/places")
       for (const key of ["code", "state", "error"]) params.delete(key);
@@ -104,9 +106,13 @@ export function readRoute() {
   return {
     path: path || "/",
     search: query ? `?${query}` : "",
-    selected: params.get("selected") || "last-ferry",
+    selected: params.has("selected") ? params.get("selected")! : "last-ferry",
     notebook: params.get("notebook") === "1",
-    photo: params.has("photo") ? Number(params.get("photo")) : 0,
+    photo: params.has("photo")
+      ? params.get("photo")?.trim()
+        ? Number(params.get("photo"))
+        : NaN
+      : 0,
   };
 }
 let activeTransition: ViewTransition | undefined;
