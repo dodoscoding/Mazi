@@ -1,3 +1,4 @@
+import "./settings.css";
 import { confirmAction, el } from "../ui.js";
 
 export function mount(root, lifecycle) {
