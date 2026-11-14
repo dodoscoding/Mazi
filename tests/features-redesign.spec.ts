@@ -38,7 +38,9 @@ test("About states the privacy promises and replays the introduction", async ({
     "Optional AI stays off",
   ])
     await expect(promises).toContainText(promise);
-  await expect(main).toContainText("There is no feed, no public profile");
+  await expect(main).toContainText(
+    "There is no public feed or public profile.",
+  );
   await main.getByRole("link", { name: "Replay introduction" }).click();
   await expect(page).toHaveURL(/#\/introduction/);
   await page.getByRole("button", { name: "Open the Atlas" }).click();
@@ -160,7 +162,7 @@ test("Our circle lists members without public or social counts", async ({
   await enter(page);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Our circle", level: 1 }),
+    page.getByRole("heading", { name: "Grubumuz", level: 1 }),
   ).toBeVisible();
   const members = page.getByRole("list", { name: "Members" });
   await expect(members.getByRole("listitem")).not.toHaveCount(0);
@@ -347,14 +349,12 @@ test("Search photographs stay usable while included categories load and retry", 
     snapshot.items.map((item: { id: string }) => item.id).sort(),
   );
   expect(requested).toBe(false);
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page
-    .getByRole("button", { name: "Search archive", exact: true })
-    .click();
+  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText("1 photograph");
+  await expect(page.locator("#result-total")).toHaveText("1 fotoğraf");
   const include = page.getByRole("button", {
-    name: "Include memories, chats, places and people",
+    name: "Anı, sohbet, yer ve kişileri dahil et",
   });
   await page.screenshot({
     path: info.outputPath("search-photographs-ready.png"),
@@ -369,34 +369,48 @@ test("Search photographs stay usable while included categories load and retry", 
   await expect.poll(() => requested).toBe(true);
   await expect(include).toBeDisabled();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#person")).toBeDisabled();
+  const personFacets = page.locator('[data-photo-filter^="person:"]');
+  await expect(personFacets.first()).toBeAttached();
+  expect(
+    await personFacets.evaluateAll((inputs) =>
+      inputs.every((input) => !(input as HTMLInputElement).disabled),
+    ),
+  ).toBe(true);
+  await expect(page.locator(".photo-filters")).toContainText(
+    `Sayaçların paydası: görünür ${snapshot.total} fotoğrafın tamamı.`,
+  );
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
   await page
-    .getByText("Refine by place, person, date or source", { exact: true })
+    .getByText("Yer, kişi, tarih ve etiketle daralt", { exact: true })
     .click();
-  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
-  await page
-    .getByRole("button", { name: "Search archive", exact: true })
-    .click();
+  await page.getByLabel("Yer", { exact: true }).fill("Amsterdam");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
   release();
-  await expect(page.locator("#context-status")).toContainText("unavailable");
+  await expect(page.locator("#context-status")).toContainText(
+    "Diğer sonuç türleri yüklenemedi",
+  );
   await expect(include).toBeEnabled();
   await expect(page.locator("#results article")).toHaveCount(1);
   fail = false;
   await include.click();
+  await expect(page.locator("#context-status")).toContainText(
+    "Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır",
+  );
+  await expect(page.locator(".disc-tag select")).toBeDisabled();
+  await page.getByLabel("Yer", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(page.locator("#results article")).toHaveCount(1);
+  await include.click();
   await expect(page.locator("#person")).toBeEnabled();
-  await expect(page.getByLabel("Search", { exact: true })).toHaveValue(
-    "bicycle",
-  );
-  await expect(page.getByLabel("Place", { exact: true })).toHaveValue(
-    "Amsterdam",
-  );
+  await expect(page.getByLabel("Ara", { exact: true })).toHaveValue("bicycle");
+  await expect(page.getByLabel("Yer", { exact: true })).toHaveValue("");
   await expect(page.locator("#results article")).toHaveCount(1);
   await expect(page.locator("#people")).toContainText("Ben");
   await expect(page.locator(".disc-tag select")).toBeEnabled();
   await expect(page.locator(".disc-tag select option")).not.toHaveCount(1);
   const confirm = page.getByRole("button", {
-    name: "Confirm tag",
+    name: "Etiketi onayla",
     exact: true,
   });
   await expect(confirm).toBeEnabled();
@@ -404,7 +418,7 @@ test("Search photographs stay usable while included categories load and retry", 
   const tagged = page.waitForResponse("**/api/discovery/tag");
   await confirm.click();
   expect((await tagged).ok()).toBe(true);
-  await expect(page.locator("#notice")).toHaveText("Changes saved.");
+  await expect(page.locator("#notice")).toHaveText("Değişiklikler kaydedildi.");
   await expect(page.locator("#results .disc-person")).toContainText([
     "Ben",
     tagName,

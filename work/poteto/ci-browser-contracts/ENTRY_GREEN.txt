@@ -1,0 +1,19 @@
+
+Running 10 tests using 1 worker
+
+(node:40639) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (2.5s)
+  ✓   2 [desktop] › tests/entry.spec.ts:97:1 › session checks stay neutral and introduction failures remain retryable (1.2s)
+  ✓   3 [desktop] › tests/entry.spec.ts:151:1 › archive access denial clears the authenticated shell (122ms)
+  ✓   4 [desktop] › tests/entry.spec.ts:182:1 › a denied Home read removes scoped content without ending a valid session (909ms)
+  ✓   5 [desktop] › tests/entry.spec.ts:217:1 › an old Atlas denial cannot clear a newer authorized load (159ms)
+(node:40687) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [phone] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (2.7s)
+  ✓   7 [phone] › tests/entry.spec.ts:97:1 › session checks stay neutral and introduction failures remain retryable (1.2s)
+  ✓   8 [phone] › tests/entry.spec.ts:151:1 › archive access denial clears the authenticated shell (135ms)
+  ✓   9 [phone] › tests/entry.spec.ts:182:1 › a denied Home read removes scoped content without ending a valid session (918ms)
+  ✓  10 [phone] › tests/entry.spec.ts:217:1 › an old Atlas denial cannot clear a newer authorized load (153ms)
+
+  10 passed (11.0s)

@@ -10,6 +10,7 @@ import {
   rediscover,
   searchArchive,
   sharedLine,
+  sharersOf,
   sourceLabel,
   sourcesOf,
   suggestions,
@@ -65,10 +66,88 @@ export function skeletonRows(count = 4) {
   });
 }
 
-/** Client-side groups for memories, chats, places and people from /api/atlas. */
-export function renderGroups(root, atlas, query, people) {
+const noFacets = { sources: [], shared_by: [] };
+
+/** Source chips and Shared by choices, offered only from the server's authorized facets. */
+export function renderFilters(root, facets = noFacets, filters) {
   const $ = (id) => root.querySelector(`#${id}`);
-  const results = searchArchive(atlas, query);
+  const selectedSources = new Set(filters.source.split(",").filter(Boolean));
+  let selectedNames;
+  try {
+    selectedNames = new Set(
+      filters.sharedBy.startsWith("[")
+        ? JSON.parse(filters.sharedBy)
+        : filters.sharedBy
+          ? [filters.sharedBy]
+          : [],
+    );
+  } catch {
+    selectedNames = new Set();
+  }
+  const sources = [
+    ...new Set([
+      ...facets.sources.map((option) => option.value),
+      ...selectedSources,
+    ]),
+  ];
+  const names = [
+    ...new Set([
+      ...facets.shared_by.map((option) => option.value),
+      ...selectedNames,
+    ]),
+  ];
+  $("source-filter").replaceChildren(
+    ...[["", "Tümü"], ...sources.map((code) => [code, sourceLabel(code)])].map(
+      ([code, label]) => {
+        const button = node("button", label);
+        button.type = "button";
+        button.dataset.source = code;
+        button.setAttribute(
+          "aria-pressed",
+          String(code ? selectedSources.has(code) : !selectedSources.size),
+        );
+        return button;
+      },
+    ),
+  );
+  const select = $("shared-by");
+  select.replaceChildren(
+    ...[["", "Herkes"], ...names.map((name) => [name, name])].map(
+      ([value, label]) => {
+        const option = node("option", label);
+        option.value = value;
+        return option;
+      },
+    ),
+  );
+  select.multiple = true;
+  select.size = Math.min(5, names.length + 1);
+  for (const option of select.options)
+    option.selected = selectedNames.has(option.value);
+  $("search-filters").hidden = !sources.length && !names.length;
+}
+
+export function sharedByLine(item) {
+  return [
+    item.shared_by?.length ? `Paylaşan: ${item.shared_by.join(", ")}` : "",
+    (item.sources || []).map(sourceLabel).join(", "),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Client-side groups for memories, chats, places and people from /api/atlas. */
+export function renderGroups(root, atlas, query, people, filters) {
+  const $ = (id) => root.querySelector(`#${id}`);
+  const filtered = filters.source || filters.sharedBy;
+  const results = searchArchive(
+    atlas.filter(
+      (memory) =>
+        (!filters.source || sourcesOf(memory).includes(filters.source)) &&
+        (!filters.sharedBy || sharersOf(memory).includes(filters.sharedBy)),
+    ),
+    query,
+  );
   const term = results.query;
   const memories = term ? results.memories : [];
   $("memory-list").replaceChildren(
@@ -146,7 +225,7 @@ export function renderGroups(root, atlas, query, people) {
   const byName = new Map(
     results.people.map((person) => [person.name, personLine(person)]),
   );
-  if (term)
+  if (term && !filtered)
     for (const person of people)
       if (person.name.toLowerCase().includes(term)) {
         const line = `${plural(person.count, "photo")}${person.memories.length ? ` · in ${person.memories.map((m) => m.title || "Untitled").join(", ")}` : ""}`;

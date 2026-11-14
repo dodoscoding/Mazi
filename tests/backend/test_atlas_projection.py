@@ -65,10 +65,19 @@ def serving(fixture):
 def photo(asset, title='Untitled photograph'):
     return dict(id='photo-' + asset, kind='photo', shortTitle=title, title=title,
                 date='Date not recorded', year=None, approximate=True, by='Your circle',
-                description='A photograph from your shared archive.', source='archive',
+                description='A photograph from your shared archive.', source='manual',
                 photos=[dict(src='/api/review/rendition/' + asset, alt=title, caption=title)],
                 messages=[], place=None, people=dict(shared=['Alice'], conversation=[]),
                 dateBasis='undated')
+
+
+def legacy_body(body):
+    result = json.loads(body)
+    for card in result['memories']:
+        for photo in card['photos']:
+            photo.pop('assetId')
+            photo.pop('evidence')
+    return json.dumps(result).encode()
 
 
 class AtlasProjectionTests(unittest.TestCase):
@@ -84,7 +93,7 @@ class AtlasProjectionTests(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertEqual(headers['Cache-Control'], 'no-store')
         self.assertEqual(int(headers['Content-Length']), len(body))
-        self.assertEqual(body, json.dumps({'memories': cards}).encode())
+        self.assertEqual(legacy_body(body), json.dumps({'memories': cards}).encode())
 
     def test_1001_imported_photos_keep_exact_http_body_with_constant_query_budget(self):
         imported(self.fixture, 1001)
@@ -135,7 +144,7 @@ class AtlasProjectionTests(unittest.TestCase):
                     self.assertEqual(len(rows), count)
                     for index, row in enumerate(rows[previous:], previous):
                         payload = json.loads(row['payload'])
-                        payload['source'] = ('manual', 'whatsapp', '')[index % 3]
+                        payload['source_type'] = ('manual', 'whatsapp', '')[index % 3]
                         payload['context'] = [
                             dict(text=f'Occurrence {index:03d}', sender=dict(label='Participant'),
                                  shared_at=(0, None, False, 12.5, '12:00')[index % 5]),
@@ -188,9 +197,10 @@ class AtlasProjectionTests(unittest.TestCase):
         self.store.db.execute('UPDATE review_events SET asset_ids=? WHERE id=?', (json.dumps([c, b, a]), first))
         self.store.db.commit()
 
-        def expected(identifier, title, members, date, year, basis, kind='memory'):
+        def expected(identifier, title, members, date, year, basis, kind='memory', approximate=None):
             result = photo(members[0], title)
-            result.update(id=identifier, kind=kind, date=date, year=year, approximate=year is None, dateBasis=basis)
+            result.update(id=identifier, kind=kind, date=date, year=year,
+                          approximate=year is None if approximate is None else approximate, dateBasis=basis)
             if kind == 'memory':
                 result['description'] = 'An approved shared memory.'
             result['photos'] = [dict(src='/api/review/rendition/' + asset, alt=titles[asset], caption=titles[asset])
@@ -203,8 +213,8 @@ class AtlasProjectionTests(unittest.TestCase):
         fifth = expected('photo-' + e, 'Five', [e], '2024-01-02', 2024, 'source capture evidence', 'photo')
         fourth = expected('photo-' + d, 'Four', [d], '2022-01-02', 2022, 'source capture evidence', 'photo')
         third = expected('photo-' + c, 'Three', [c], 'Date not recorded', None, 'undated', 'photo')
-        first_card = expected(first, 'First', [c, b, a], '2020-01-02 · some dates unknown', None,
-                              'conflicting source evidence, source capture evidence, undated')
+        first_card = expected(first, 'First', [c, b, a], '2020-01-02 to 2021-01-02', 2020,
+                              'conflicting source evidence, source capture evidence, undated', approximate=True)
         overlap_card = expected(overlap, 'Overlap', [a, d], '2020-01-02 to 2022-01-02', 2020, 'source capture evidence')
         with serving(self.fixture) as request:
             self.assert_body(request(), [fifth, overlap_card, first_card])
@@ -217,9 +227,9 @@ class AtlasProjectionTests(unittest.TestCase):
             self.store.hide(self.ben, b, False)
             self.assert_body(request(), [fifth, overlap_card, first_card])
             self.store.correct_asset(self.alice, c, title='Three', capture_date='2025-02-03', place='')
-            first_card['date'] = '2020-01-02 to 2025-02-03 · some dates unknown'
+            first_card['date'] = '2020-01-02 to 2025-02-03'
             first_card['dateBasis'] = 'conflicting source evidence, reviewed correction, source capture evidence'
-            self.assert_body(request(), [fifth, overlap_card, first_card])
+            self.assert_body(request(), [fifth, first_card, overlap_card])
 
     def test_two_circles_session_and_removed_reader_keep_sources_protected(self):
         imported(self.fixture, 1)
@@ -413,14 +423,14 @@ class AtlasConcurrencyTests(unittest.TestCase):
                             expected['messages'] = [dict(name='Ben', time='', text='Ben context')]
                             expected['people'] = dict(shared=['Ben'], conversation=['Ben'])
                             expected['place'] = dict(name='Utrecht', country='NL', latitude=52.0, longitude=5.0)
-                            self.assertEqual(after[2], json.dumps({'memories': [expected]}).encode())
+                            self.assertEqual(legacy_body(after[2]), json.dumps({'memories': [expected]}).encode())
                         elif mutation == 'hide':
                             self.assertEqual([card['id'] for card in cards], ['photo-' + assets[2], 'photo-' + assets[1]])
                         elif mutation == 'hide_event':
                             self.assertEqual([card['id'] for card in cards], ['photo-' + assets[2]])
                         elif mutation == 'correction':
                             memory = next(card for card in cards if card['id'] == event)
-                            self.assertEqual(memory['date'], '2025-04-06 · some dates unknown')
+                            self.assertEqual((memory['date'], memory['year'], memory['approximate']), ('2025-04-06', 2025, True))
                             self.assertEqual(memory['dateBasis'], 'reviewed correction, undated')
                             self.assertEqual(memory['photos'][0]['caption'], 'Updated title')
             finally:

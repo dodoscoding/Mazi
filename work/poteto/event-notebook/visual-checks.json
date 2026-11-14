@@ -1,0 +1,17 @@
+{
+  "fixture": "Synthetic Atlas text/photos with real synthetic event note persistence",
+  "reports": [
+    {
+      "viewport": "desktop",
+      "overflow": false,
+      "pageErrors": [],
+      "violations": []
+    },
+    {
+      "viewport": "mobile",
+      "overflow": false,
+      "pageErrors": [],
+      "violations": []
+    }
+  ]
+}

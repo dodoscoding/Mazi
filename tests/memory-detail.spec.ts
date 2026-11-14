@@ -1,3 +1,5 @@
+import { photoMatches } from "./helpers/photo-match";
+import { mockArchive } from "./helpers/archive";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdirSync } from "node:fs";
@@ -123,9 +125,15 @@ async function enter(page: Page) {
       json: [{ id: group, name: "Synthetic circle", role: "member" }],
     }),
   );
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories: archive } }),
+  await page.route("**/api/memories/notebook?*", (route) =>
+    route.fulfill({
+      json: {
+        eventId: new URL(route.request().url()).searchParams.get("event"),
+        sections: [],
+      },
+    }),
   );
+  await mockArchive(page, archive);
 }
 
 /**
@@ -155,19 +163,19 @@ test("buttons and arrow keys move between photos and keep ?photo=n", async ({
   await open(page, "/memory/harbour-night");
   await expect(counter(page)).toHaveText("1 / 3");
   await expect(
-    page.getByRole("button", { name: "Previous photo" }),
+    page.getByRole("button", { name: "Önceki fotoğraf" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/#\/memory\/harbour-night\?photo=1$/);
   await expect(page.locator(".viewer-caption-title")).toHaveText(
     "The ferry leaving",
   );
-  await page.getByRole("button", { name: "Previous photo" }).click();
+  await page.getByRole("button", { name: "Önceki fotoğraf" }).click();
   await expect(counter(page)).toHaveText("1 / 3");
   await expect(page).toHaveURL(/photo=0$/);
 
-  await page.getByRole("region", { name: "Memory photographs" }).focus();
+  await page.getByRole("region", { name: "Anının fotoğrafları" }).focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(counter(page)).toHaveText("3 / 3");
@@ -186,8 +194,8 @@ test("keyboard focus stays put at the ends and after Retry", async ({
   page,
 }) => {
   await open(page, "/memory/harbour-night");
-  const next = page.getByRole("button", { name: "Next photo" });
-  const previous = page.getByRole("button", { name: "Previous photo" });
+  const next = page.getByRole("button", { name: "Sonraki fotoğraf" });
+  const previous = page.getByRole("button", { name: "Önceki fotoğraf" });
   await next.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
@@ -217,11 +225,11 @@ test("the filmstrip chooses a photo on wider screens", async ({
   );
   await open(page, "/memory/harbour-night");
   await page
-    .getByRole("button", { name: "Photo 3: The table afterwards" })
+    .getByRole("button", { name: "Fotoğraf 3: The table afterwards" })
     .click();
   await expect(counter(page)).toHaveText("3 / 3");
   await expect(
-    page.getByRole("button", { name: "Photo 3: The table afterwards" }),
+    page.getByRole("button", { name: "Fotoğraf 3: The table afterwards" }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -299,21 +307,21 @@ test("an approximate date reads About with the uncertainty chip and basis", asyn
   const chip = page.locator(".date-chip");
   await expect(chip).toHaveText(/^About /);
   await expect(chip).toHaveClass(/is-uncertain/);
-  const when = page.getByRole("region", { name: "When" });
+  const when = page.getByRole("region", { name: "Ne zaman" });
   await expect(when).toContainText("About");
-  await expect(when.getByRole("note")).toContainText("Date uncertain.");
+  await expect(when.getByRole("note")).toContainText("Tarih belirsiz.");
   await expect(when.getByRole("note")).toContainText(
     "Some photos have no capture date.",
   );
   await expect(
-    when.getByRole("link", { name: "Fix the date in Archive review" }),
+    when.getByRole("link", { name: "Arşiv incelemesinde tarihi düzelt" }),
   ).toBeVisible();
 
   await open(page, "/memory/naxos-morning");
   await expect(page.locator(".date-chip")).not.toHaveText(/About/);
   await expect(page.locator(".date-chip")).not.toHaveClass(/is-uncertain/);
   await expect(page.getByRole("note")).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "When" })).toContainText(
+  await expect(page.getByRole("region", { name: "Ne zaman" })).toContainText(
     "Someone in the circle corrected the date in review.",
   );
 });
@@ -322,43 +330,43 @@ test("place, people and sources show evidence in plain words", async ({
   page,
 }) => {
   await open(page, "/memory/harbour-night");
-  const where = page.getByRole("region", { name: "Where" });
+  const where = page.getByRole("region", { name: "Nerede" });
   await expect(where).toContainText("Naxos, Greece");
   await expect(where).not.toContainText("GR");
-  const people = page.getByRole("region", { name: "People in the evidence" });
-  await expect(people).toContainText("Shared by");
+  const people = page.getByRole("region", { name: "Kaynaklarda adı geçenler" });
+  await expect(people).toContainText("Paylaşanlar");
   await expect(people).toContainText("Maya");
-  await expect(people).toContainText("In the conversation");
+  await expect(people).toContainText("Konuşmada adı geçenler");
   await expect(people).toContainText("Alex");
   await expect(page.locator("body")).not.toContainText(/were there|was there/i);
-  const sources = page.getByRole("region", { name: "Source evidence" });
+  const sources = page.getByRole("region", { name: "Kaynak bilgileri" });
   await expect(sources).toContainText("WhatsApp export");
   await expect(sources).toContainText("3 photos");
   await expect(sources).toContainText(
     "Dates: source capture evidence, undated",
   );
 
-  await page.getByRole("button", { name: "Show conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı göster" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Hide conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı gizle" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeHidden();
+  await expect(page.getByRole("link", { name: "Arşivi incele" })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Review this archive" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Write a shared story" }),
+    page.getByRole("link", { name: "Ortak bir hikâye yaz" }),
   ).toBeVisible();
 });
 
 test("related memories put the same place first and open that memory", async ({
   page,
 }) => {
+  await page.goto("/#/atlas");
+  await expect(page.locator(".featured")).toBeVisible();
   await open(page, "/memory/harbour-night");
-  const related = page.getByRole("region", { name: "Related memories" });
+  const related = page.getByRole("region", { name: "İlgili anılar" });
   const links = related.getByRole("link");
   await expect(links).toHaveCount(2);
   await expect(links.nth(0)).toContainText("Same place");
@@ -370,9 +378,45 @@ test("related memories put the same place first and open that memory", async ({
   await expect(
     page.getByRole("heading", { name: "Morning swim below the old port" }),
   ).toBeFocused();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
-  await expect(page).toHaveURL(/selected=naxos-morning/);
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page).toHaveURL(/#\/atlas$/);
+  await expect(page.locator(".atlas-stage")).toBeVisible();
 });
+
+for (const backAction of ["pill", "Escape"]) {
+  test(`portal event title opens the notebook and ${backAction} returns past the portal`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.addInitScript(() =>
+      sessionStorage.setItem("mazi.intro", "seen"),
+    );
+    await page.goto("/#/?selected=harbour-night");
+    await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+    await expect(page.locator(".dossier-title h2 a")).toHaveCSS(
+      "text-decoration-line",
+      "underline",
+    );
+    await expect(
+      page
+        .locator(".dossier")
+        .getByRole("link", { name: "Notları aç", exact: true }),
+    ).toBeVisible();
+    await page.locator(".dossier-title h2 a").click();
+    await expect(page).toHaveURL(/#\/memory\/harbour-night\?notebook=1$/);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("#notebook-heading")).toBeFocused();
+    await expect(page.locator("#notebook-heading")).toBeInViewport();
+    if (backAction === "pill")
+      await page.getByRole("link", { name: "Geri", exact: true }).click();
+    else await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/#\/\?selected=harbour-night$/);
+    await expect(page.locator(".featured")).toContainText(
+      "The harbour after the last ferry",
+    );
+    await expect(page.locator(".dossier")).toHaveCount(0);
+  });
+}
 
 test("earlier and later follow the dates, with approximate memories in place", async ({
   page,
@@ -404,51 +448,50 @@ test("earlier and later follow the dates, with approximate memories in place", a
       null,
     ),
   ];
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories: mixed } }),
-  );
-  const nav = page.getByRole("navigation", { name: "Other memories" });
+  await mockArchive(page, mixed);
+  const nav = page.getByRole("navigation", { name: "Diğer anılar" });
+  await page.goto("/#/atlas");
+  await expect(page.locator(".featured")).toBeVisible();
   await open(page, "/memory/dated-2019");
-  await expect(nav).toContainText("Memory 1 of 4");
-  await expect(nav.getByRole("link", { name: /^Earlier memory/ })).toHaveCount(
-    0,
-  );
+  await expect(nav).toContainText("Anı 1 / 4");
+  await expect(nav.getByRole("link", { name: /^Önceki anı/ })).toHaveCount(0);
   await expect(
-    nav.getByRole("link", { name: /^Later memory/ }),
+    nav.getByRole("link", { name: /^Sonraki anı/ }),
   ).toHaveAccessibleName(/Dated in 2023/);
-  await nav.getByRole("link", { name: /^Later memory/ }).click();
+  await nav.getByRole("link", { name: /^Sonraki anı/ }).click();
   await expect(page).toHaveURL(/#\/memory\/dated-2023$/);
-  await expect(nav).toContainText("Memory 2 of 4");
+  await expect(nav).toContainText("Anı 2 / 4");
   await expect(
-    nav.getByRole("link", { name: /^Later memory/ }),
+    nav.getByRole("link", { name: /^Sonraki anı/ }),
   ).toHaveAccessibleName(/About in 2024/);
   await open(page, "/memory/about-2024");
-  await expect(nav).toContainText("Memory 3 of 4");
+  await expect(nav).toContainText("Anı 3 / 4");
   await expect(
-    nav.getByRole("link", { name: /^Earlier memory/ }),
+    nav.getByRole("link", { name: /^Önceki anı/ }),
   ).toHaveAccessibleName(/Dated in 2023/);
   await expect(
-    nav.getByRole("link", { name: /^Later memory/ }),
+    nav.getByRole("link", { name: /^Sonraki anı/ }),
   ).toHaveAccessibleName(/Never dated/);
   await open(page, "/memory/undated");
-  await expect(nav).toContainText("Memory 4 of 4");
-  await expect(nav.getByRole("link", { name: /^Later memory/ })).toHaveCount(0);
+  await expect(nav).toContainText("Anı 4 / 4");
+  await expect(nav.getByRole("link", { name: /^Sonraki anı/ })).toHaveCount(0);
 });
 
-test("Escape goes back to the atlas with the memory selected", async ({
-  page,
-}) => {
+test("Escape from a direct memory returns to Home", async ({ page }) => {
   await open(page, "/memory/city-spring");
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/#\/\?selected=city-spring$/);
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
+  ).toBeVisible();
 });
 
 test("a broken photo URL shows the retry state", async ({ page }) => {
   await open(page, "/memory/photo-broken");
   await expect(page.getByText("This photo could not load.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry photo" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Where" })).toContainText(
-    "No place recorded",
+  await expect(page.getByRole("region", { name: "Nerede" })).toContainText(
+    "Yer kaydedilmemiş",
   );
   await expect(page.locator(".date-chip")).toHaveText("Capture date unknown");
   const retried = page.waitForRequest("**/media/does-not-exist.webp*");
@@ -616,12 +659,10 @@ test("source sharing is visible on cards, portal and detail without a capture da
     messages: [],
     place: null,
   };
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories: [sourcePhoto] } }),
-  );
+  await mockArchive(page, [sourcePhoto]);
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#/atlas");
   await expect(page.locator(".featured")).toContainText("Photo shared by Ana");
   await expect(page.locator(".featured")).toContainText(
     "Shared by Ana and Ben",
@@ -630,10 +671,10 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".featured")).not.toContainText(
     "Date not recorded",
   );
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page.locator(".dossier")).toContainText("Shared by Ana and Ben");
   await expect(page.locator(".dossier")).toContainText(
-    "Added to archive by Uploader",
+    "Arşive ekleyen Uploader",
   );
   await expect(page.locator(".dossier")).toContainText(
     "04/05/2024, 21:00 · date order unclear",
@@ -641,7 +682,7 @@ test("source sharing is visible on cards, portal and detail without a capture da
 
   const openMemory = page
     .locator(".dossier")
-    .getByRole("link", { name: "Open memory", exact: true });
+    .getByRole("link", { name: "Anıyı aç", exact: true });
   await openMemory.scrollIntoViewIfNeeded();
   if ((page.viewportSize()?.width || 1440) <= 600) {
     const action = await openMemory.boundingBox();
@@ -652,13 +693,13 @@ test("source sharing is visible on cards, portal and detail without a capture da
   await expect(page.locator(".memory-detail h1")).toHaveText(
     "Photo shared by Ana",
   );
-  await expect(page.locator(".sources")).toContainText("Shared by Ana");
-  await expect(page.locator(".sources")).toContainText("Shared by Ben");
+  await expect(page.locator(".sources")).toContainText("Paylaşanlar Ana");
+  await expect(page.locator(".sources")).toContainText("Paylaşanlar Ben");
   await expect(page.locator(".sources")).toContainText(
     "04/05/2024, 21:00 · date order unclear",
   );
   await expect(page.locator(".date-chip")).not.toContainText("About");
-  await expect(page.locator(".people")).toContainText("Added to archive by");
+  await expect(page.locator(".people")).toContainText("Arşive ekleyenler");
   await expect(page.locator(".people")).toContainText("Uploader");
   await page.screenshot({
     path: testInfo.outputPath("source-sharing.png"),
@@ -696,13 +737,11 @@ test("opened photographs preserve portrait and panoramic edges", async ({
       ],
     },
   ];
-  await page.route("**/api/atlas?*", (route) =>
-    route.fulfill({ json: { memories } }),
-  );
+  await mockArchive(page, memories);
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
   await page.goto("/#/?selected=harbour-night");
   await page
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .first()
     .click();
   const verify = async (selector: string) => {
@@ -751,13 +790,12 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   };
   await page.waitForTimeout(1200);
   await verify(".portal-window img");
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/portal-portrait-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("portal-portrait.png"),
   });
   await page
     .locator(".portal-layer")
-    .getByRole("link", { name: "Open memory", exact: true })
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
   await expect(page.locator(".viewer-track .photo-frame")).toHaveClass(
     /is-loaded/,
@@ -765,20 +803,98 @@ test("opened photographs preserve portrait and panoramic edges", async ({
   await verify(".viewer-track img");
   await page.waitForTimeout(700);
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/viewer-portrait-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("viewer-portrait.png"),
   });
-  await page.getByRole("button", { name: "Next photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
   await expect(page.locator(".viewer-track img")).toHaveAttribute(
     "alt",
     "Synthetic panorama edges",
   );
   await verify(".viewer-track img");
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/transition-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("transition.png"),
   });
   await page.waitForTimeout(700);
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/uncropped-${testInfo.project.name}.png`,
+    path: testInfo.outputPath("uncropped.png"),
   });
+});
+
+test("photo facts stay visible and follow the selected photo across archive views", async ({
+  page,
+}, testInfo) => {
+  const { photoEvidenceMemory } = await import("./helpers/photo-evidence");
+  await mockArchive(page, [photoEvidenceMemory]);
+  await page.route("**/api/discovery/matches?*", (route) =>
+    route.fulfill({
+      json: photoMatches(["synthetic-capture", "synthetic-share"]),
+    }),
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(
+    page.locator(".home-featured .memory-meta").first(),
+  ).toContainText("Çekim ve paylaşım tarihleri");
+  await expect(
+    page.locator(".home-featured .memory-meta").first(),
+  ).toContainText("Bazı yerler bilinmiyor");
+  await page.goto("/#/memories");
+  await expect(page.locator(".mem-photo-facts")).toHaveCount(2);
+  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+    "2 Oca 2020 · Çekildi",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(0)).toContainText(
+    "Istanbul, TR",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
+    "2 Oca 2024 · Paylaşıldı · UTC",
+  );
+  await expect(page.locator(".mem-photo-facts").nth(1)).toContainText(
+    "Yer bilinmiyor",
+  );
+  await page.locator('[data-view="all"]').click();
+  await expect(page.locator(".mem-photo-facts").nth(1)).not.toContainText(
+    "Istanbul",
+  );
+  const directory = "work/poteto/photo-evidence/screenshots";
+  mkdirSync(directory, { recursive: true });
+  await settled(page);
+  await page.locator(".mem-layout").screenshot({
+    path: `${directory}/${testInfo.project.name}-gallery.png`,
+  });
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer-caption-meta").first()).toHaveText(
+    "2 Oca 2020 · Çekildi",
+  );
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await expect(page.locator(".viewer-caption-meta").first()).toContainText(
+    "2 Oca 2024 · Paylaşıldı · UTC",
+  );
+  await expect(page.locator(".viewer-caption-meta").last()).toHaveText(
+    "Yer bilinmiyor",
+  );
+  await settled(page);
+  await page.locator(".viewer").screenshot({
+    path: `${directory}/${testInfo.project.name}-viewer.png`,
+  });
+  await page.goto("/#/timeline");
+  await expect(page.locator(".tl-date")).toContainText(
+    "Çekim ve paylaşım tarihleri",
+  );
+  await expect(page.locator(".tl-meta")).toContainText(
+    "Bazı yerler bilinmiyor",
+  );
+  await page.goto("/#/atlas");
+  await expect(page.locator(".place-tray-toggle")).toBeVisible();
+  await page.locator(".place-tray-toggle").click();
+  await expect(page.locator(".place-tray-meta")).toContainText(
+    "Bazı yerler bilinmiyor",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

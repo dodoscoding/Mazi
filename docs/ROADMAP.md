@@ -4,6 +4,16 @@ Build a private archive that a small team can operate in production. Deliver aut
 
 Status on 14 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, the initial website-only scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](history/identity/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](history/imports/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open. Local Phase 3, Phase 4 and Phase 5 implementations are recorded below; M3-M6 production acceptance and M7 remain open. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
+## Evolve toward the private social space
+
+On 1 November 2026 the owner selected a private group experience with shared memories, comments, reactions and events under [D25](DECISIONS.md#private-social-space-direction-1-november-2026). The [feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) proposes four increments: simplify Home/navigation and feature discovery (2/5), reconcile date/place visibility and Search semantics (3/5), add independent People/screenshot/AI filters (3/5), then deliver social interactions in small slices (4/5 overall).
+
+These increments reuse M3 correction, M4 places, M5 People/filtering and M7 stories without declaring those milestones accepted. Native social reactions, comments/activity and future events extend the existing archive scope and need explicit domain and acceptance contracts before implementation. The original M0-M7 program and release gates below remain intact; there is no new production or scheduling commitment in this investigation.
+
+The owner requested the clarity increment first under [D26](DECISIONS.md#interface-clarity-1-november-2026). It separates Home from Atlas, shares Home/Keşfet/Grubumuz navigation across screen sizes and gives existing capabilities named destinations. [Clarity verification](../work/poteto/interface-clarity/VERIFICATION.md) distinguishes local implementation from production and physical-device acceptance. Metadata semantics, content labels and social domains remain separate increments.
+
+The 3 November plan starts with photo-level metadata and navigation on the merged D26 interface. Group plans and attendance can reach a circle with an empty archive while work on content filters proceeds. Comments, reactions and the social Home each have a separate acceptance gate. [Implementation sequence and owners](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Baseline measurements](../work/poteto/social-space-plan/BASELINE.md)
+
 ## Use the planning assumptions
 
 Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.

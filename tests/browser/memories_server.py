@@ -32,6 +32,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
         store.tag(alice, person, asset, True)
     store.processing(alice, group, True, group_wide=True)
     store.processing(alice, group, True)
+    store.processing(ben, group, True)
     store.answer_processing(alice, group, True, group_wide=True)
     store.answer_processing(alice, group, True)
     store.answer_processing(ben, group, True)

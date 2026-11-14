@@ -1,0 +1,36 @@
+[
+  {
+    "antipattern": "layout-transition",
+    "name": "Layout property animation",
+    "description": "Animating width, height, padding, or margin causes layout thrash and janky performance. Use transform and opacity instead, or grid-template-rows for height animations.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "/private/tmp/mazi-notebook-discovery/src/styles/memory.css",
+    "line": 987,
+    "snippet": "transition: width"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/private/tmp/mazi-notebook-discovery/src/styles/memory.css",
+    "line": 300,
+    "snippet": "Undocumented color rgba(255, 255, 255, 0.45) is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "rgba(255, 255, 255, 0.45)"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/private/tmp/mazi-notebook-discovery/src/styles/memory.css",
+    "line": 986,
+    "snippet": "Undocumented color rgba(255, 255, 255, 0.5) is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "rgba(255, 255, 255, 0.5)"
+  }
+]

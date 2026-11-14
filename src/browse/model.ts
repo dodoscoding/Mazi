@@ -1,6 +1,11 @@
 import { chronologyDate } from "../memory/chronology";
-import { sourceSharedLine, provenanceOf } from "../memory/provenance";
+import {
+  sourceSenders,
+  sourceSharedLine,
+  provenanceOf,
+} from "../memory/provenance";
 import type { Memory, Photo, Place } from "../memories";
+import { evidenceChronology } from "../memory/evidence";
 
 let regions: Intl.DisplayNames | undefined;
 export function countryName(code: string) {
@@ -35,6 +40,12 @@ export function sharedLine(memory: Memory) {
       ? `${provenanceOf(memory).length ? "Added" : "Shared"} by ${listNames(memory.people.shared)}`
       : "")
   );
+}
+
+/** Who shared a memory, as its card says: chat senders, else the members who added it. */
+export function sharersOf(memory: Memory) {
+  const senders = sourceSenders(memory);
+  return senders.length ? senders : memory.people.shared;
 }
 
 export function initials(name: string) {
@@ -81,6 +92,8 @@ export function monthYear(date: Date) {
 
 /** A memory's date as the Components sheet writes it: exact, or "About". */
 export function dateLabel(memory: Memory) {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence.label;
   if (memory.year === null) return chronologyDate(memory).label;
   const date = firstDate(memory);
   const text = date

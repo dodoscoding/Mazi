@@ -12,7 +12,7 @@ Use the existing Python environment with [Phase 1 requirements](../../../mazi/re
 .venv/bin/python -m mazi
 ```
 
-This default starts the dependency-light concept/color baseline. For the learned model, use the installation below. Open http://127.0.0.1:8003/discover. Sign in through Imports, choose your group, and search. All existing import, review and places routes are available on this server. It uses `.mazi-imports` by default; set `MAZI_IMPORT_DATA_DIR` to choose a different local archive. Stop other servers before using the same archive. To keep the macOS companion's default port, set `MAZI_IMPORT_PORT=8002` and run only this server. Discord keeps the explicit operator allowlist and token requirements in the [Phase 4 guide](../sources/README.md).
+This default starts the dependency-light concept/color baseline. For the learned model, use the installation below. Open http://127.0.0.1:8003/discover. Sign in through Imports, choose your group, and search. All existing import, review and places routes are available on this server. It uses `.mazi-imports` by default; set `MAZI_IMPORT_DATA_DIR` to choose a different local archive. Stop other servers before using the same archive. To keep the macOS companion's default port, set `MAZI_IMPORT_PORT=8002` and run only this server. Discord setup and server linking are described in the [Phase 4 guide](../sources/README.md).
 
 Run the Phase 5 server for these controls: older standalone servers do not implement personal discovery filtering. Database triggers still invalidate derivatives on departure/withdrawal through older writers. The separate synthetic Atlas and legacy Phase 1 staging experiment are not this archive's UI.
 

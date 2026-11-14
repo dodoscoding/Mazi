@@ -1,0 +1,46 @@
+[WebServer] (node:94817) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 30 tests using 1 worker
+
+(node:94819) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/event-notebook.spec.ts:21:1 › event notebook saves, reloads, edits and removes only your note (628ms)
+  ✓   2 [desktop] › tests/event-notebook.spec.ts:119:1 › all legacy notes remain readable and conflict recovery targets the selected story (445ms)
+  ✓   3 [desktop] › tests/event-notebook.spec.ts:184:1 › lost first-save response refreshes the saved target and keeps the draft (391ms)
+  ✓   4 [desktop] › tests/event-notebook.spec.ts:233:1 › backgrounding retains notes, newer drafts and pending saves through authorized restore (212ms)
+  ✓   5 [desktop] › tests/event-notebook.spec.ts:313:3 › foreground session denial 401 clears notebook and suppresses a late save (297ms)
+  ✓   6 [desktop] › tests/event-notebook.spec.ts:313:3 › foreground session denial 403 clears notebook and suppresses a late save (322ms)
+  ✓   7 [desktop] › tests/event-notebook.spec.ts:367:1 › event title links open notes alongside imported excerpts and use event IDs (421ms)
+  ✓   8 [desktop] › tests/event-notebook.spec.ts:451:1 › standalone photographs and sample mode never load private recollections (280ms)
+  ✓   9 [desktop] › tests/event-notebook.spec.ts:486:1 › pending saves block duplicates, keep newer typing and clear on access loss (238ms)
+  ✓  10 [desktop] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after conflict refresh without another own note (321ms)
+  ✓  11 [desktop] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after successful removal without another own note (272ms)
+  ✓  12 [desktop] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after conflict refresh with another own note (331ms)
+  ✓  13 [desktop] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after successful removal with another own note (281ms)
+  ✓  14 [desktop] › tests/event-notebook.spec.ts:639:1 › event notes are discoverable before the photograph viewer (297ms)
+  ✓  15 [desktop] › tests/event-notebook.spec.ts:662:1 › Home exposes event notes without opening the Atlas or photograph viewer (200ms)
+(node:94880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  16 [phone] › tests/event-notebook.spec.ts:21:1 › event notebook saves, reloads, edits and removes only your note (570ms)
+  ✓  17 [phone] › tests/event-notebook.spec.ts:119:1 › all legacy notes remain readable and conflict recovery targets the selected story (412ms)
+  ✓  18 [phone] › tests/event-notebook.spec.ts:184:1 › lost first-save response refreshes the saved target and keeps the draft (441ms)
+  ✓  19 [phone] › tests/event-notebook.spec.ts:233:1 › backgrounding retains notes, newer drafts and pending saves through authorized restore (191ms)
+  ✓  20 [phone] › tests/event-notebook.spec.ts:313:3 › foreground session denial 401 clears notebook and suppresses a late save (325ms)
+  ✓  21 [phone] › tests/event-notebook.spec.ts:313:3 › foreground session denial 403 clears notebook and suppresses a late save (323ms)
+  ✓  22 [phone] › tests/event-notebook.spec.ts:367:1 › event title links open notes alongside imported excerpts and use event IDs (374ms)
+  ✓  23 [phone] › tests/event-notebook.spec.ts:451:1 › standalone photographs and sample mode never load private recollections (283ms)
+  ✓  24 [phone] › tests/event-notebook.spec.ts:486:1 › pending saves block duplicates, keep newer typing and clear on access loss (254ms)
+  ✓  25 [phone] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after conflict refresh without another own note (407ms)
+  ✓  26 [phone] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after successful removal without another own note (357ms)
+  ✓  27 [phone] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after conflict refresh with another own note (418ms)
+  ✓  28 [phone] › tests/event-notebook.spec.ts:546:5 › removed saved recollection retains its draft after successful removal with another own note (372ms)
+  ✓  29 [phone] › tests/event-notebook.spec.ts:639:1 › event notes are discoverable before the photograph viewer (285ms)
+  ✓  30 [phone] › tests/event-notebook.spec.ts:662:1 › Home exposes event notes without opening the Atlas or photograph viewer (199ms)
+
+  30 passed (11.7s)

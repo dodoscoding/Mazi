@@ -1,0 +1,15 @@
+
+Running 4 tests using 1 worker
+
+(node:44648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/features-redesign.spec.ts:300:1 › Search photographs stay usable while included categories load and retry (1.6s)
+
+  ✓  2 [desktop] › tests/unified.spec.ts:222:1 › named profile imports and logout discard delayed private Atlas responses (5.6s)
+(node:44691) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [phone] › tests/features-redesign.spec.ts:300:1 › Search photographs stay usable while included categories load and retry (2.0s)
+
+  ✓  4 [phone] › tests/unified.spec.ts:222:1 › named profile imports and logout discard delayed private Atlas responses (5.7s)
+
+  4 passed (16.0s)

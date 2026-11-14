@@ -25,42 +25,40 @@ test("Memories filters the photo grid by year with removable chips", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/memories");
   await expect(
-    page.getByRole("heading", { name: "Memories", level: 1 }),
+    page.getByRole("heading", { name: "Fotoğraflar", level: 1 }),
   ).toBeVisible();
   const grid = page.locator("#grid");
   await expect(grid.locator(".mem-tile img")).toHaveCount(3);
   await expect(grid.getByRole("link", { name: "Our summer" })).toBeVisible();
   await expect(page.locator("#grid-summary")).toHaveText(
-    "3 of 3 photos · 1 moment · 2024 · all sources",
+    "3 eşleşen fotoğraf · 3 görünür fotoğraf",
   );
-  await expect(page.getByText("No places are recorded")).toBeVisible({
-    visible: !isPhone(page),
-  });
+  await expect(page.locator("#filter-places label")).toHaveCount(2);
 
   if (isPhone(page)) {
-    const open = page.getByRole("button", { name: "Filters", exact: true });
+    const open = page.getByRole("button", { name: "Filtreler", exact: true });
     await open.click();
-    const sheet = page.getByRole("dialog", { name: "Filters" });
+    const sheet = page.getByRole("dialog", { name: "Filtreler" });
     await expect(sheet).toBeVisible();
     await sheet.getByRole("button", { name: "2024" }).click();
     await expect(sheet.getByRole("button", { name: "2024" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await sheet.getByRole("button", { name: "Show 3 photos" }).click();
+    await sheet.getByRole("button", { name: "3 fotoğrafı göster" }).click();
     await expect(sheet).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Filters · 1", exact: true }),
+      page.getByRole("button", { name: "Filtreler · 1", exact: true }),
     ).toBeFocused();
   } else {
-    const rail = page.getByRole("complementary", { name: "Filters" });
+    const rail = page.getByRole("complementary", { name: "Filtreler" });
     await rail.getByRole("button", { name: "2024" }).click();
     await expect(rail.getByRole("button", { name: "2024" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
   }
-  const chip = page.getByRole("button", { name: "Remove filter 2024" });
+  const chip = page.getByRole("button", { name: "Filtreyi kaldır: 2024" });
   await expect(chip).toBeVisible();
   await expect(grid.locator(".mem-tile")).toHaveCount(3);
   await chip.click();
@@ -68,23 +66,23 @@ test("Memories filters the photo grid by year with removable chips", async ({
 
   // Filters with nothing to show say so, and Reset brings every photo back.
   if (isPhone(page)) {
-    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    await page.getByRole("button", { name: "Filtreler", exact: true }).click();
     await page
-      .getByRole("dialog", { name: "Filters" })
+      .getByRole("dialog", { name: "Filtreler" })
       .getByRole("button", { name: "Alice" })
       .click();
     await page.keyboard.press("Escape");
   } else
     await page
-      .getByRole("complementary", { name: "Filters" })
+      .getByRole("complementary", { name: "Filtreler" })
       .getByRole("button", { name: "Alice" })
       .click();
   await expect(
-    page.getByRole("button", { name: "Remove filter Alice" }),
+    page.getByRole("button", { name: "Filtreyi kaldır: Alice" }),
   ).toBeVisible();
   await expect(grid.locator(".mem-tile")).toHaveCount(3);
   await axeInBothThemes(page);
-  await page.getByRole("button", { name: "Remove filter Alice" }).click();
+  await page.getByRole("button", { name: "Filtreyi kaldır: Alice" }).click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -98,37 +96,35 @@ test("archive Search groups a memory with its thumbnail and shows no results", a
   await page.goto("/#/search");
   await expect(page.locator("#results article")).toHaveCount(3);
   await page
-    .getByRole("button", { name: "Include memories, chats, places and people" })
+    .getByRole("button", { name: "Anı, sohbet, yer ve kişileri dahil et" })
     .click();
   await expect(page.locator("#person")).toBeEnabled();
-  await page.getByLabel("Search", { exact: true }).fill("summer");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByLabel("Ara", { exact: true }).fill("summer");
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   const memories = page.getByRole("region", { name: "Memories · 1" });
   await expect(memories).toBeVisible();
   const result = memories.getByRole("link", { name: /Our summer/ });
   await expect(result.locator("img").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: /All 1/ })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: /Tümü 1/ })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await expect(page.getByRole("link", { name: "Ask this" })).toBeVisible();
 
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(page.locator("#results article")).toHaveCount(1);
-  await page.getByRole("button", { name: /Photographs 1/ }).click();
+  await page.getByRole("button", { name: /Fotoğraflar 1/ }).click();
   await expect(page.locator("#results article")).toBeVisible();
 
-  await page.getByLabel("Search", { exact: true }).fill("snorkel");
-  await page.getByRole("button", { name: "Search archive" }).click();
+  await page.getByLabel("Ara", { exact: true }).fill("snorkel");
+  await page.getByRole("button", { name: "Arşivde ara" }).click();
   await expect(
-    page.getByRole("heading", { name: "Nothing for “snorkel”" }),
+    page.getByRole("heading", { name: "“snorkel” için sonuç yok" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Ask your archive instead" }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Arşivine sor" })).toBeVisible();
   await axeInBothThemes(page);
-  await page.getByRole("button", { name: "Clear search" }).click();
+  await page.getByRole("button", { name: "Aramayı temizle" }).click();
   await expect(page.locator("#results article")).toHaveCount(3);
   expect(
     await page.evaluate(

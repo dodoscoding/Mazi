@@ -1,6 +1,6 @@
 <div class="fx fx-places">
   <header class="fx-head">
-    <h1>Places &amp; sources</h1>
+    <h1>Yerler ve kaynaklar</h1>
     <p class="fx-sub">
       Where the circle’s memories happened, and where every item came from.
     </p>
@@ -18,18 +18,18 @@
     Try again
   </button>
   <div id="workspace" hidden>
-    <nav class="places-switch" aria-label="Places and sources sections">
+    <nav class="places-switch" aria-label="Yer ve kaynak bölümleri">
       <button type="button" data-jump="map-title" aria-current="true">
-        Places <span id="jump-places"></span>
+        Yerler <span id="jump-places"></span>
       </button>
       <button type="button" data-jump="source-title">
-        Sources <span id="jump-sources"></span>
+        Kaynaklar <span id="jump-sources"></span>
       </button>
     </nav>
     <div class="places-layout">
       <section aria-labelledby="map-title" class="places-main">
         <div class="fx-section-row">
-          <h2 id="map-title" class="fx-section-title">Shared places</h2>
+          <h2 id="map-title" class="fx-section-title">Paylaşılan yerler</h2>
           <label class="fx-field places-group"
             >Group
             <select id="groups"></select
@@ -138,7 +138,7 @@
         </details>
       </section>
       <section aria-labelledby="source-title" class="places-sources">
-        <h2 id="source-title" class="fx-section-title">Your sources</h2>
+        <h2 id="source-title" class="fx-section-title">Kaynak bağlantıları</h2>
         <p id="origin-sub" class="fx-sub">Where every shared item came from.</p>
         <div id="origin-counts" class="origin-counts"></div>
         <a href="/imports" class="fx-text-link">Manage imports in My Imports</a>
@@ -179,14 +179,33 @@
               >
             </div>
             <div id="discord-fields" class="fx-fields" hidden>
+              <div class="fx-actions">
+                <button
+                  id="discord-connect"
+                  type="button"
+                  class="fx-button fx-button--quiet"
+                >
+                  Connect a Discord server
+                </button>
+              </div>
               <label class="fx-field"
-                >Server ID <input name="guild" inputmode="numeric" /></label
-              ><label class="fx-field"
-                >Channel IDs (comma separated) <input name="channels"
-              /></label>
+                >Server
+                <select name="guild" id="guild" disabled></select
+              ></label>
+              <p id="guild-status" class="fx-small"></p>
+              <div>
+                <fieldset id="channels" class="fix-group">
+                  <legend class="fx-label">Channels</legend>
+                  <p id="channels-status" class="fx-small" role="status">
+                    Choose a server to see its channels.
+                  </p>
+                  <div id="channel-list"></div>
+                </fieldset>
+              </div>
               <p class="fx-small">
-                A server operator must connect the bot before intake can run.
-                Only selected text channels are read.
+                Adding the bot needs Manage Server on that Discord server. Only
+                the channels you choose are read. Photos and videos become
+                memories; nearby messages are kept as their context.
               </p>
             </div>
             <div class="fx-actions">

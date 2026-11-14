@@ -1,0 +1,50 @@
+✔ Ekle exposes separate photo and meeting actions without changing the three destinations (88.910459ms)
+✔ empty plans work under StrictMode without loading Atlas (35.531541ms)
+✔ demo and another group's plan never request private social data (30.546542ms)
+✔ a deep link for another group is denied before reading (30.106792ms)
+✔ an uncertain save retains the draft and retries exactly the same command (47.239125ms)
+✔ a stale edit can reload the current revision without replacing its draft (44.690875ms)
+✔ late plan reads cannot restore content after access loss (28.809333ms)
+✔ plan wall times distinguish gaps, repeated hours and quarter-hour offsets (5.482208ms)
+✔ profile changes clear a pending write draft and discard its late response (34.8715ms)
+✔ a failed next page retains the list and retries its exact cursor (33.3645ms)
+✔ a denied write prevents an already-running read from restoring private content (32.062917ms)
+✖ unrelated edits preserve a hidden memory and visible links can be explicitly removed (39.019583ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 722.407542
+
+✖ failing tests:
+
+test at tests/dom/social-plans.test.mjs:386:1
+✖ unrelated edits preserve a hidden memory and visible links can be explicitly removed (39.019583ms)
+  AssertionError [ERR_ASSERTION]: an unchanged hidden projection must not unlink the stored memory
+  + actual - expected
+
+  + {
+  +   description: 'Birlikte yürüyelim.',
+  +   end_local: null,
+  +   memory: null,
+  +   place: 'Liman',
+  +   start_local: '2030-06-01T18:00:00',
+  +   start_offset: '+02:00',
+  +   timezone: 'Europe/Copenhagen',
+  +   title: 'Cumartesi birlikte'
+  + }
+  - {}
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-plans-ui/tests/dom/social-plans.test.mjs:394:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { title: 'Cumartesi birlikte', start_local: '2030-06-01T18:00:00', start_offset: '+02:00', end_local: null, timezone: 'Europe/Copenhagen', place: 'Liman', description: 'Birlikte yürüyelim.', memory: null },
+    expected: {},
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

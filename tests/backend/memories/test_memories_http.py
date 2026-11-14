@@ -39,8 +39,21 @@ class ApiTests(unittest.TestCase):
                 self.assertEqual(request('POST', '/api/memories/write', invalid)[0], 400)
             url = '/api/memories/export?group=' + self.group + '&story=' + story['id']
             self.assertEqual(request('GET', url)[0], 200)
+            notebook_url = '/api/memories/notebook?group=' + self.group + '&event=' + self.event
+            status, notebook, headers = request('GET', notebook_url)
+            self.assertEqual(status, 200)
+            self.assertIn('no-store', headers['Cache-Control'])
+            note = notebook['sections'][0]['notes'][0]
+            self.assertEqual(note['text'], 'Remember this')
+            note_body = dict(group=self.group, event=self.event, target=note['ownership']['target'], text='Updated notebook')
+            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 200)
+            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 409)
+            self.assertEqual(request('POST', '/api/memories/note', dict(note_body, target=[]))[0], 400)
+            self.assertEqual(request('POST', '/api/memories/note', note_body, Origin='https://evil.test')[0], 403)
             self.store.hide(self.ben, self.assets[0], True)
             self.assertEqual(request('GET', url)[0], 403)
+            self.assertEqual(request('GET', notebook_url)[0], 403)
+            self.assertEqual(request('POST', '/api/memories/note', note_body)[0], 403)
             token = self.store.login('outsider@example.test', 'correct horse battery')
             self.assertEqual(request('GET', url)[0], 403)
             self.assertEqual(request('GET', '/api/memories/recap?group=' + self.group + '&year=2020')[0], 403)

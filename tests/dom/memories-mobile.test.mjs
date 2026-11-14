@@ -1,3 +1,4 @@
+import { photoMatches } from "../helpers/photo-match.ts";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -12,10 +13,12 @@ const memory = (id, year) => ({
   source: "manual",
   place: null,
   people: { shared: [], conversation: [] },
-  photos: [{ src: `/synthetic/${id}.jpg`, alt: id }],
+  photos: [{ assetId: id, src: `/synthetic/${id}.jpg`, alt: id }],
 });
 function response(path) {
   if (path === "/api/groups") return [group];
+  if (path.startsWith("/api/discovery/matches"))
+    return photoMatches(["Newer", "Older"]);
   if (path.startsWith("/api/atlas"))
     return { memories: [memory("Newer", 2025), memory("Older", 2024)] };
   if (path.startsWith("/api/memories/recap"))
@@ -61,7 +64,7 @@ test("phone gallery keeps native view and ordering controls visible, selected an
   $("#grid-order").focus();
   $("#grid-order").click();
   assert.equal(window.document.activeElement, $("#grid-order"));
-  assert.equal($("#grid-order-label").textContent, "Oldest first");
+  assert.equal($("#grid-order-label").textContent, "Önce en eski");
   assert.deepEqual(titles(), ["Older", "Newer"]);
   const all = $('[data-view="all"]');
   all.focus();

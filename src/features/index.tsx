@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createLifecycle } from "./lifecycle";
+import { createDiscordReturn, type DiscordReturn } from "./discordReturn";
 import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
@@ -30,30 +31,42 @@ export const featureRegistry = {
   "/memories": { template: memoriesTemplate, mount: memoriesMount },
 };
 export const featurePaths = Object.keys(featureRegistry);
-export function FeaturePage({ path }: { path: string }) {
+export function FeaturePage({
+  path,
+  discordReturn,
+}: {
+  path: string;
+  discordReturn?: DiscordReturn;
+}) {
   const host = useRef<HTMLDivElement>(null);
+  const localReturn = useRef(createDiscordReturn(location.search));
+  const returned = discordReturn || localReturn.current;
   useEffect(() => {
     const container = host.current!;
     const [pathname, query] = path.split("?");
     const feature = featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
-    const retainWhenHidden = pathname === "/imports" || pathname === "/circle";
     let disposed = false;
-    let accessDenied = false;
+    let mounted = false;
     let lifecycle: ReturnType<typeof createLifecycle> | undefined;
     let observer: MutationObserver | undefined;
     const mount = () => {
       if (disposed) return;
-      accessDenied = false;
       observer?.disconnect();
       lifecycle?.dispose();
       container.replaceChildren();
-      if (document.hidden && !retainWhenHidden) return;
       const root = document.createElement("section");
       root.className = "feature-content";
       root.innerHTML = feature.template;
       container.append(root);
-      lifecycle = createLifecycle(root, query ? `?${query}` : "", mount);
+      lifecycle = createLifecycle(
+        root,
+        query ? `?${query}` : "",
+        mount,
+        returned,
+        mounted ? "refresh" : "entry",
+      );
+      mounted = true;
       const rewriteLinks = () =>
         root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const href = link.getAttribute("href")!;
@@ -84,7 +97,7 @@ export function FeaturePage({ path }: { path: string }) {
       container.replaceChildren();
     };
     const accessLost = () => {
-      accessDenied = true;
+      returned.clear();
       clear();
       const message = document.createElement("p");
       message.setAttribute("role", "status");
@@ -99,30 +112,16 @@ export function FeaturePage({ path }: { path: string }) {
       container.append(message, link);
     };
     const groupChanged = () => queueMicrotask(mount);
-    const visibility = () => {
-      if (accessDenied || retainWhenHidden) return;
-      if (document.hidden) clear();
-      else mount();
-    };
-    const pageShow = (event: PageTransitionEvent) => {
-      if (event.persisted && !accessDenied) mount();
-    };
-    document.addEventListener("visibilitychange", visibility);
     window.addEventListener("mazi:group", groupChanged);
     window.addEventListener("mazi:access-lost", accessLost);
-    window.addEventListener("pagehide", clear);
-    window.addEventListener("pageshow", pageShow);
     mount();
     return () => {
       disposed = true;
       clear();
       window.removeEventListener("mazi:group", groupChanged);
       window.removeEventListener("mazi:access-lost", accessLost);
-      document.removeEventListener("visibilitychange", visibility);
-      window.removeEventListener("pagehide", clear);
-      window.removeEventListener("pageshow", pageShow);
     };
-  }, [path]);
+  }, [path, returned]);
   return <div ref={host} className="feature-page" />;
 }
 export default FeaturePage;

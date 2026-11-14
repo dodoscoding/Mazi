@@ -1,4 +1,5 @@
 import type { Memory } from "../memories";
+import { evidenceChronology } from "./evidence.ts";
 
 export type ChronologyDate =
   | {
@@ -28,6 +29,8 @@ function readable(day: string) {
   ).format(new Date(`${day}T00:00:00Z`));
 }
 export function chronologyDate(memory: Memory): ChronologyDate {
+  const evidence = evidenceChronology(memory);
+  if (evidence) return evidence;
   if (memory.year !== null) {
     const day = calendarDay(memory.date.split(" · ")[0].split(" to ")[0]);
     return {
@@ -45,17 +48,18 @@ export function chronologyDate(memory: Memory): ChronologyDate {
   )
     ? "Capture date incomplete"
     : "Capture date unknown";
-  const days = memory.photos.map(
-    (photo) =>
-      (photo.provenance || [])
-        .flatMap((item) => {
-          const day =
-            !item.sharedAt.ambiguous && calendarDay(item.sharedAt.local);
-          return day ? [day] : [];
-        })
-        .sort()[0],
-  );
-  if (!days.length || days.some((day) => !day))
+  // Each photo's earliest share date; photos without one do not blank the others.
+  const days = memory.photos.flatMap((photo) => {
+    const earliest = (photo.provenance || [])
+      .flatMap((item) => {
+        const day =
+          !item.sharedAt.ambiguous && calendarDay(item.sharedAt.local);
+        return day ? [day] : [];
+      })
+      .sort()[0];
+    return earliest ? [earliest] : [];
+  });
+  if (!days.length)
     return {
       basis: "unknown",
       year: null,
@@ -65,7 +69,7 @@ export function chronologyDate(memory: Memory): ChronologyDate {
           ? `${memory.date} · ${capture}`
           : capture,
     };
-  const sorted = (days as string[]).sort();
+  const sorted = days.sort();
   const first = sorted[0],
     last = sorted[sorted.length - 1];
   return {

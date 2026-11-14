@@ -1,0 +1,136 @@
+Frozen revision 921670ea1cfbbaf219baa4bc2af9c1bd719d0b7b.
+Initial 23-test run, isolated mazi_social_20261104_test / mazi-social-test.
+
+======================================================================
+ERROR: test_replay_cas_departure_and_export_match_sqlite (tests.backend.social.test_plans_postgres.HostedPlansTests.test_replay_cas_departure_and_export_match_sqlite)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_plans_postgres.py", line 26, in setUp
+    self.alice = self.store.register(self.fixture + '@example.test', 'synthetic password')
+                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/identity/core.py", line 270, in register
+    with self.db:
+         ^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 229, in __enter__
+    self._begin()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 134, in _begin
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+======================================================================
+ERROR: test_replay_cas_immutable_fractional_creation_and_export_visibility (tests.backend.social.test_comments_postgres.HostedCommentsTests.test_replay_cas_immutable_fractional_creation_and_export_visibility)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_comments_postgres.py", line 19, in setUp
+    test_plans_postgres.HostedPlansTests.setUp(self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_plans_postgres.py", line 26, in setUp
+    self.alice = self.store.register(self.fixture + '@example.test', 'synthetic password')
+                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/identity/core.py", line 270, in register
+    with self.db:
+         ^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 229, in __enter__
+    self._begin()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 134, in _begin
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+======================================================================
+ERROR: test_identity_departure_preserves_monotonic_version_and_stale_rows_stay_unknown (tests.backend.social.test_labels_postgres.HostedLabelsTests.test_identity_departure_preserves_monotonic_version_and_stale_rows_stay_unknown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_labels_postgres.py", line 52, in test_identity_departure_preserves_monotonic_version_and_stale_rows_stay_unknown
+    older.remove_member(self.alice, self.group, self.ben)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/identity/core.py", line 378, in remove_member
+    self._member(admin, group, admin=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/identity/core.py", line 305, in _member
+    row = self.db.execute("SELECT role FROM members WHERE user_id=? AND group_id=?",
+          ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                          (user, group)).fetchone()
+                          ^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 175, in execute
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+======================================================================
+ERROR: test_export_people_and_hidden_memories_use_native_event_columns (tests.backend.test_postgres.PostgresContracts.test_export_people_and_hidden_memories_use_native_event_columns)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/test_postgres.py", line 28, in setUp
+    self.user = self.store.register(self.fixture + '@example.test', 'synthetic password')
+                ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/identity/core.py", line 270, in register
+    with self.db:
+         ^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 229, in __enter__
+    self._begin()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 134, in _begin
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+======================================================================
+ERROR: test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/test_postgres.py", line 192, in test_policy_readers_overlap_and_fence_withdrawal_until_commit
+    self.store.db.execute('INSERT INTO archive_assets VALUES(?,?,?,?,?,?,?,?,?)',
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        (self.fixture, self.group, self.fixture, 'synthetic', 'synthetic', 'image/jpeg', 1, 8, 8))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/mazi/persistence.py", line 176, in execute
+    result = Cursor(self._db.execute(bind_sql(query), params))
+                    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi/.venv/lib/python3.14/site-packages/psycopg/connection.py", line 304, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.InvalidTextRepresentation: invalid input syntax for type bigint: "e74f7c72ac7b4f2e951be7755cffa2b5"
+CONTEXT:  unnamed portal parameter $1 = '...'
+
+======================================================================
+FAIL: test_private_schema_and_group_time_query_index (tests.backend.social.test_plans_postgres.HostedPlansTests.test_private_schema_and_group_time_query_index)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_plans_postgres.py", line 101, in test_private_schema_and_group_time_query_index
+    self.assertIn('social_plans_group_time', details)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'social_plans_group_time' not found in "Limit  (cost=0.12..2.35 rows=1 width=45)   ->  Index Only Scan using social_plans_upcoming on social_plans  (cost=0.12..2.35 rows=1 width=45)         Index Cond: ((group_id = '44ab0acc-cf35-4e99-9be4-af5f938cdfd5'::text) AND (status = 'active'::text) AND (starts_at >= '0'::double precision))"
+
+======================================================================
+FAIL: test_database_group_foreign_keys_runtime_privileges_and_keyset_query_index (tests.backend.social.test_comments_postgres.HostedCommentsTests.test_database_group_foreign_keys_runtime_privileges_and_keyset_query_index)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_comments_postgres.py", line 93, in test_database_group_foreign_keys_runtime_privileges_and_keyset_query_index
+    self.assertIn('social_comments_photo_time', details)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'social_comments_photo_time' not found in "Limit  (cost=3.95..3.95 rows=1 width=45)   ->  Sort  (cost=3.95..3.95 rows=1 width=45)         Sort Key: created_at, id         ->  Index Scan using social_comments_activity on social_comments  (cost=0.14..3.94 rows=1 width=45)               Index Cond: (group_id = 'f5debca7-54a7-4cb2-989b-0854ee155ea5'::text)               Filter: (photo_id = '68d63d741de741cf88cb8cff738f6455asset'::text)"
+
+======================================================================
+FAIL: test_uniqueness_group_foreign_keys_and_private_indexed_storage (tests.backend.social.test_reactions_postgres.HostedReactionsTests.test_uniqueness_group_foreign_keys_and_private_indexed_storage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/final-hosted-validation/tests/backend/social/test_reactions_postgres.py", line 86, in test_uniqueness_group_foreign_keys_and_private_indexed_storage
+    self.assertIn('social_reactions_photo_member', details)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'social_reactions_photo_member' not found in "Index Scan using social_reactions_activity on social_reactions  (cost=0.12..2.35 rows=1 width=32)   Index Cond: (group_id = '54ddadc2-4ca2-40a9-8edd-a47e205e31da'::text)   Filter: (photo_id = '208b8983b8af4e418e9b98c188249b14asset'::text)"
+
+----------------------------------------------------------------------
+Ran 23 tests in 507.383s
+
+FAILED (failures=3, errors=5)

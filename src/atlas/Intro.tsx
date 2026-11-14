@@ -81,8 +81,8 @@ export function Intro({
       <div className="intro-title" aria-hidden="true">
         <p className="hud-label intro-kicker">{kicker}</p>
         <p className="intro-heading">
-          <span className="intro-line">The Atlas</span>{" "}
-          <em className="intro-line">of Us</em>
+          <span className="intro-line">Bizim</span>{" "}
+          <em className="intro-line">Atlas’ımız</em>
         </p>
         <span className="intro-wipe">
           <i />
@@ -94,7 +94,7 @@ export function Intro({
         className="button button--secondary intro-skip"
         onClick={() => done.current()}
       >
-        Skip intro <kbd aria-hidden="true">Esc</kbd>
+        Tanıtımı atla <kbd aria-hidden="true">Esc</kbd>
       </button>
     </div>
   );

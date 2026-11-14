@@ -1,0 +1,26 @@
+test_idle_accepted_connection_does_not_block_health (tests.backend.test_server.AppServerTests.test_idle_accepted_connection_does_not_block_health) ... ERROR
+
+======================================================================
+ERROR: test_idle_accepted_connection_does_not_block_health (tests.backend.test_server.AppServerTests.test_idle_accepted_connection_does_not_block_health)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/idle-connections/tests/backend/test_server.py", line 70, in test_idle_accepted_connection_does_not_block_health
+    response = connection.getresponse()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 1478, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 304, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py", line 729, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+----------------------------------------------------------------------
+Ran 1 test in 1.571s
+
+FAILED (errors=1)

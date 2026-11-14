@@ -14,6 +14,13 @@ const glyphs = {
       <path d="M20 20l-4-4" />
     </>
   ),
+  people: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
   imports: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
   more: (
     <>
@@ -40,6 +47,12 @@ const glyphs = {
     </>
   ),
   check: <path d="M5 12l5 5 9-10" />,
+  pin: (
+    <>
+      <path d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0113 0c0 5.3-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.3" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof glyphs;

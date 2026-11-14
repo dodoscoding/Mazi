@@ -91,3 +91,90 @@ class MemoryTests(unittest.TestCase):
         self.store.remove_member(self.alice, self.group, self.ben)
         self.assertEqual(self.store.stories(self.alice, self.group), [])
         self.assertEqual(self.store.db.execute('SELECT count(*) FROM story_contributions').fetchone()[0], 0)
+
+    def test_event_notebook_preserves_legacy_notes_and_owns_exact_target(self):
+        first = self.store.create_story(self.alice, self.group, self.event)
+        first = self.store.write_story(self.alice, self.group, first['id'], 1, 'First memory')
+        first = self.store.write_story(self.ben, self.group, first['id'], 2, 'Ben remembers')
+        second = self.store.create_story(self.alice, self.group, self.event)
+        self.store.write_story(self.alice, self.group, second['id'], 1, 'Another perspective')
+        self.store.db.execute('INSERT INTO shared_profiles VALUES(?,?,?,NULL)', (self.ben, 'ben', 'Ben'))
+        self.store.db.commit()
+        notebook = self.store.event_notebook(self.ben, self.group, self.event)
+        self.assertEqual(notebook['eventId'], self.event)
+        notes = [note for section in notebook['sections'] for note in section['notes']]
+        self.assertEqual(sorted(note['text'] for note in notes), ['Another perspective', 'Ben remembers', 'First memory'])
+        mine = next(note for note in notes if note['ownership']['kind'] == 'mine')
+        self.assertEqual(mine['authorName'], 'Ben')
+        self.assertEqual({note['authorName'] for note in notes if note is not mine}, {'Group member'})
+        target = mine['ownership']['target']
+        saved = self.store.write_event_note(self.ben, self.group, self.event, target, 'Changed')
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, target, 'Stale')
+        mine = next(note for section in saved['sections'] for note in section['notes'] if note['ownership']['kind'] == 'mine')
+        removed = self.store.write_event_note(self.ben, self.group, self.event, mine['ownership']['target'], '')
+        self.assertEqual(sorted(note['text'] for section in removed['sections'] for note in section['notes']), ['Another perspective', 'First memory'])
+        self.store.close()
+        self.store = MemoryStore(self.temp.name)
+        self.assertEqual(len(self.store.event_notebook(self.ben, self.group, self.event)['sections']), 2)
+
+    def test_event_note_first_save_is_atomic_and_rechecks_visibility(self):
+        for invalid in ['', 'x' * 2001, []]:
+            with self.assertRaises(ValueError): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, invalid)
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 0)
+        notebook = self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Remembered')
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Lost response retry')
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 1)
+        note = notebook['sections'][0]['notes'][0]
+        self.assertEqual(note['text'], 'Remembered')
+        for target in [None, {}, {'kind': 'saved', 'storyId': note['ownership']['target']['storyId'], 'revision': True}]:
+            with self.assertRaises(ValueError): self.store.write_event_note(self.ben, self.group, self.event, target, 'Invalid')
+        self.store.hide(self.ben, self.assets[0], True)
+        with self.assertRaises(Denied): self.store.event_notebook(self.ben, self.group, self.event)
+        with self.assertRaises(Denied): self.store.write_event_note(self.ben, self.group, self.event, note['ownership']['target'], 'Hidden')
+        with self.assertRaises(Denied): self.store.event_notebook(self.outsider, self.group, self.event)
+
+    def test_saved_target_cannot_add_a_note_or_cross_events(self):
+        story = self.store.create_story(self.alice, self.group, self.event)
+        target = dict(kind='saved', storyId=story['id'], revision=1)
+        with self.assertRaises(Conflict): self.store.write_event_note(self.ben, self.group, self.event, target, 'Forged')
+        self.store.write_story(self.ben, self.group, story['id'], 1, 'Existing')
+        other = 'synthetic-other-event'
+        self.store.db.execute('INSERT INTO review_events SELECT ?,group_id,asset_ids,?,status,actor_id,updated_at FROM review_events WHERE id=?', (other, 'Other event', self.event))
+        self.store.db.commit()
+        with self.assertRaises(Denied): self.store.write_event_note(self.ben, self.group, other, dict(target, revision=2), 'Wrong event')
+        self.assertEqual(self.store.story(self.ben, self.group, story['id'])['contributions'][0]['text'], 'Existing')
+
+    def test_first_note_failure_rolls_back_and_concurrent_connections_do_not_duplicate(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+        from unittest.mock import patch
+        with patch.object(self.store, '_write_contribution', side_effect=RuntimeError('Synthetic write failure')):
+            with self.assertRaises(RuntimeError): self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Failed')
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM advanced_stories').fetchone()[0], 0)
+        other = MemoryStore(self.temp.name)
+        barrier = Barrier(2)
+        def save(store, content):
+            barrier.wait()
+            try:
+                store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, content)
+                return 'saved'
+            except Conflict:
+                return 'conflict'
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                first = pool.submit(save, self.store, 'First tab')
+                second = pool.submit(save, other, 'Second tab')
+                self.assertEqual(sorted([first.result(), second.result()]), ['conflict', 'saved'])
+            result = self.store.event_notebook(self.ben, self.group, self.event)
+            self.assertEqual(len(result['sections']), 1)
+            self.assertEqual(len(result['sections'][0]['notes']), 1)
+        finally:
+            other.close()
+
+    def test_notebook_withdrawal_and_departure_remove_access(self):
+        self.store.write_event_note(self.ben, self.group, self.event, {'kind': 'new'}, 'Private')
+        self.store.remove_member(self.alice, self.group, self.ben)
+        with self.assertRaises(Denied): self.store.event_notebook(self.ben, self.group, self.event)
+        self.assertEqual(self.store.event_notebook(self.alice, self.group, self.event)['sections'], [])
+        self.store.withdraw(self.alice, self.run2)
+        with self.assertRaises(Denied): self.store.event_notebook(self.alice, self.group, self.event)

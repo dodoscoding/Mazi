@@ -23,13 +23,26 @@ export function useEntry() {
       controller.current?.abort();
       const abort = new AbortController();
       controller.current = abort;
-      if (path === "/api/session" || path === "/api/logout")
+      // A quiet revalidation keeps what is on screen unless access is lost.
+      const unavailable = (error: string) =>
         setState((previous) =>
-          retainReady && previous.status === "ready"
+          retainReady && previous.status !== "loading"
             ? previous
-            : { status: "loading" },
+            : { status: "error", error },
         );
-      else setState((previous) => ({ ...previous, pending: true, error: "" }));
+      const signedOut = (error: string) => {
+        profile.current = null;
+        sessionStorage.removeItem("mazi.group");
+        setState((previous) =>
+          retainReady && previous.status === "signed-out"
+            ? previous
+            : { status: "signed-out", error },
+        );
+      };
+      if (path === "/api/session" || path === "/api/logout") {
+        if (!retainReady) setState({ status: "loading" });
+      } else
+        setState((previous) => ({ ...previous, pending: true, error: "" }));
       try {
         const response = await fetch(path, {
           signal: abort.signal,
@@ -56,16 +69,12 @@ export function useEntry() {
             response.status !== 403 &&
             response.status !== 401
           )
-            setState({ status: "error", error: message });
-          else
-            setState({
-              status: "signed-out",
-              error: path === "/api/session" ? "" : message,
-            });
+            unavailable(message);
+          else signedOut(path === "/api/session" ? "" : message);
           return false;
         }
         if (path === "/api/logout") {
-          setState({ status: "signed-out", error: "" });
+          signedOut("");
           return true;
         }
         if (
@@ -79,7 +88,8 @@ export function useEntry() {
         }
         accessLost.current = false;
         profile.current = value;
-        sessionStorage.setItem("mazi.group", value.group_id);
+        if (!sessionStorage.getItem("mazi.group"))
+          sessionStorage.setItem("mazi.group", value.group_id);
         setState({
           status: value.introduced ? "ready" : "onboarding",
           profile: value,
@@ -93,11 +103,7 @@ export function useEntry() {
               pending: false,
               error: "Mazi could not connect. Please retry.",
             }));
-          else
-            setState({
-              status: "error",
-              error: "Mazi could not connect. Please retry.",
-            });
+          else unavailable("Mazi could not connect. Please retry.");
         }
         return false;
       }
@@ -109,38 +115,32 @@ export function useEntry() {
   }, [request]);
   useEffect(() => {
     refresh();
-    const clear = () => {
-      generation.current++;
-      controller.current?.abort();
-      setState({ status: "loading" });
+    const revalidate = () => {
+      if (!accessLost.current) void request("/api/session", undefined, true);
+    };
+    const visibility = () => {
+      if (!document.hidden) revalidate();
+    };
+    const pageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) revalidate();
     };
     const lost = () => {
       accessLost.current = true;
-      clear();
+      generation.current++;
+      controller.current?.abort();
       setState({
         status: "signed-out",
         error: "Your access changed. Enter again to check your circle.",
       });
     };
-    const visibility = () => {
-      if (accessLost.current) return;
-      const path = location.hash.split("?")[0];
-      const retainImport = path === "#/imports" || path === "#/circle";
-      if (document.hidden) {
-        if (!retainImport) clear();
-      } else if (retainImport) void request("/api/session", undefined, true);
-      else refresh();
-    };
-    window.addEventListener("pagehide", clear);
-    window.addEventListener("pageshow", refresh);
+    window.addEventListener("pageshow", pageShow);
     window.addEventListener("mazi:session", refresh);
     window.addEventListener("mazi:access-lost", lost);
     document.addEventListener("visibilitychange", visibility);
     return () => {
       generation.current++;
       controller.current?.abort();
-      window.removeEventListener("pagehide", clear);
-      window.removeEventListener("pageshow", refresh);
+      window.removeEventListener("pageshow", pageShow);
       window.removeEventListener("mazi:session", refresh);
       window.removeEventListener("mazi:access-lost", lost);
       document.removeEventListener("visibilitychange", visibility);

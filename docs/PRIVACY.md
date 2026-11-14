@@ -89,10 +89,53 @@ EU hosting is accepted. Verify actual regions, provider terms, hosting security,
 
 ## Local Memory answer processing
 
-Phase 6 requires a separate, default-off Memory answer switch for the group, requesting member, and every contributor or correction author supporting a record, in addition to Phase 5 local-processing eligibility. Existing search consent alone does not authorize Memory answers. Only current visible records participate; no imported instruction can authorize tools. There is no external model provider, persisted question text, answer history, or answer cache. The local database retains daily request counts and elapsed processing time, keyed by member/group/UTC day; provider cost is zero, while infrastructure cost is not measured. Production retention and account deletion integration for this usage metadata remain release gates. Citation reads repeat consent and visibility checks. Already delivered output cannot be recalled; the browser discards it on backgrounding or navigation.
+Phase 6 requires a separate, default-off Memory answer switch for the group, requesting member, and every contributor or correction author supporting a record, in addition to Phase 5 local-processing eligibility. Existing search consent alone does not authorize Memory answers. Only current visible records participate; no imported instruction can authorize tools. There is no external model provider, persisted question text, answer history, or answer cache. The local database retains daily request counts and elapsed processing time, keyed by member/group/UTC day; provider cost is zero, while infrastructure cost is not measured. Production retention and account deletion integration for this usage metadata remain release gates. Citation reads repeat consent and visibility checks. Already delivered output cannot be recalled; the browser discards it on navigation, lost access or logout, but keeps it on screen while the tab is hidden ([D24](DECISIONS.md#keep-the-view-in-the-background-24-october-2026)).
 
 ## Production review
 
 Before launch, identify data regions, subprocessors, provider training/retention settings, consent text, support routes, nonmember requests, incident ownership, and any needed privacy/legal assessment. Keep sensitive production exports out of development fixtures. Do not claim regulatory compliance from the existence of RLS or encryption.
 
 Mandatory privacy scenarios are T01, T02, T05, T09, T11, T13, and T15 in the [test plan](TEST_PLAN.md), according to the enabled milestone. A feature stays disabled if its access and revocation scenarios fail.
+
+## Group plan contributions
+
+The P1 backend shares a member's plans and attendance only with current members of that group. The organizer edits, cancels or removes their own plan. A member controls their own attendance response. The response list uses current shared-profile names and never exposes account email addresses. Plans work with an empty archive and do not enable optional recognition or AI processing.
+
+An optional approved-memory link is rechecked on every plan read and export. A hidden or withdrawn child removes that link from the response. Independently authored plan text remains a group contribution. Removing the organizer's membership withdraws their plans and dependent responses. Removing an attendee's membership removes that member's responses. Cleanup runs at the membership database boundary and reads independently require current membership.
+
+When the member has authored plans or current attendance, the existing archive export includes those contributions in `social.json`, with final metadata admission checks. Empty exports preserve their previous file inventory. Other members' attendance lists are not copied into an organizer's exported plan. Durable retry receipts retain only actor and group IDs, request key, operation, payload hash, result ID and timestamp. They survive contribution removal so retrying an earlier command cannot restore it. The UI, physical-device pilot and production acceptance are not established by these backend contracts.
+
+
+The P1 interface keeps unsent plan drafts and exact retry commands only in that tab's component memory. Group, profile and access loss clear the draft and abort its pending requests; late responses are discarded. Private plan text and drafts are not written to localStorage or sessionStorage. A deep link cannot silently adopt its group, and the sample-mode Plans page never reads or writes the real group's social API. Physical-device pilot and production acceptance remain separate.
+
+## Native conversation contributions
+
+The C1 backend stores each native comment under one permanent photo or approved-memory target and one author. Current group members can read a conversation only while its target remains visible to them. This includes list totals and export records. A hidden memory masks its original children even through another overlapping event. An independent eligible source can keep a photo conversation accessible after one source is withdrawn. Losing the last eligible source removes access.
+
+Only the author may edit or remove their comment. Membership removal withdraws that member's comments through composite foreign-key cleanup. Reads also join current membership, so restoring a stale social row for a departed author does not expose the text. The archive export contains only the member's own currently visible comments. Existing notebook recollections keep their current ownership and export rules.
+
+Comment deletion retains a text-free ledger entry with the comment, author, group and target IDs plus deletion time. The hosted runtime cannot update or delete these entries. Current deletion receipts and tombstones must be reconciled before restored data is served. Synthetic tests cover stale-row reinsertion with the current ledger, a latest SQLite snapshot that includes the ledger, and current source withdrawal. They do not prove that a full historical backup predating deletion can enforce later decisions without the current ledger. Production backup retention and isolated restore acceptance remain separate operational gates.
+
+## Native reaction contributions
+
+Native reactions share a limited emoji and the reacting member's current profile with current group members who can access the target. Counts and names use the same current photo, approved-memory or comment visibility. Comment reactions inherit the comment's original target and author checks. Hidden targets, a withdrawn last source and removed members cannot expose reaction totals, names or export records. Imported source-chat reactions retain their existing source rules.
+
+A member sets or clears their own reaction. Removing that member or deleting a native comment cascades the affected records. Text-free reaction deletion entries retain only reaction, group and member IDs and deletion time to suppress restored stale rows. They contain no emoji or text. Current receipts and deletion ledgers must be reconciled before restored data is served. An old receipt cannot overwrite a newer desired state; a fresh action after rejoining is a new contribution. Production retention and recovery acceptance remain operational gates, not claims made by these synthetic backend tests.
+
+The archive export includes only the requesting member's active, currently visible reactions. It excludes other reactors' names and aggregate counts. Backend reads cap member-name output at 50 per emoji and target while retaining exact current counts. The lazy interface requests only the selected target and visible comment page. Comment drafts and uncertain write bodies remain in tab memory, never localStorage or sessionStorage. Group, profile, target or access replacement disposes them and ignores late responses. Private counts and names disappear with denied targets or removed comments. Physical-device acceptance remains separate work.
+
+## Manual photo declarations
+
+The F1 backend shares manual human-presence, screenshot and AI-use declarations with current members who can access the photograph. These dimensions are independent. AI `none-declared` records a member's statement and does not assert a successful detection. Old photographs remain unknown without a declaration or permitted confirmed person association. No filename, screen ratio or automatic image analysis assigns these labels.
+
+Depicted people come only from existing confirmed associations. Source sharers, importers and chat participants remain separate. Suppressed or departed identities do not appear in label names or derived presence. A manual human-absence declaration conflicts with an active approved association even when its name is suppressed; the error reveals no name. Subject disassociation and no-retag controls remain unchanged.
+
+A current member with photo access may correct a declaration. Reads, all-or-nothing bulk writes, request retries and export check current group/source/hide visibility. Member departure clears declarations still authored by that member, preserves the revision ledger and does not erase another member's later correction. A stale row cannot override a newer retained revision after rejoining. The version ledger retains only photo/group/dimension IDs and versions, without prior declaration values or actor history. Reconcile current ledgers before restored data is served; synthetic stale-row tests do not establish historical full-backup recovery acceptance.
+
+The archive export contains only the member's own current-version, currently visible declarations. It excludes other actors' label contributions and suppressed person names. SQLite and hosted behavior, UI acceptance and operational recovery are distinct evidence gates.
+
+## Social summary reads
+
+Social Home and activity use current group membership, active authors and source-domain visibility. Hidden or withdrawn targets cannot retain text, thumbnails or counts through the summary. Approved-memory discussions require every original child; photo discussions remain attached to the permanent asset. Departed and deletion-tombstoned contributions are excluded before display. The feed is computed from source records and retains no copied activity content.
+
+Home's compact photo preview omits chat text and per-source provenance lists while retaining real date/place evidence. Explicit detail reads use the same authorized Atlas projector for only the requested asset set. Private image requests still check access when bytes are read. These APIs add no public profile, notification service or export permission. The browser uses those bounded reads, scopes them to the current profile/circle/target, clears projections and aborts pending reads on access/session/group replacement, and ignores late results. Initial Home requests no full Atlas or notebook data. Visibility/return rechecks current authority. Physical-device validation remains separate acceptance evidence.

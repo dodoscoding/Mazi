@@ -27,9 +27,11 @@ export default defineConfig({
       testMatch:
         domain === "discovery"
           ? /discovery(-learned)?\.spec\.ts/
-          : domain === "memories"
-            ? /(memories|browse-features)\.spec\.ts/
-            : `${domain}.spec.ts`,
+          : domain === "sources"
+            ? /(sources|discord-return)\.spec\.ts/
+            : domain === "memories"
+              ? /(memories|browse-features)\.spec\.ts/
+              : `${domain}.spec.ts`,
       use: {
         ...(screen === "desktop"
           ? devices["Desktop Chrome"]

@@ -78,9 +78,88 @@ The [program plan](../work/poteto/luminous-night/PLAN.md) records the data shape
 
 Hobby has no always-on process and allows one cron a day. The worker therefore becomes a bounded drain: a signed-in, visible tab calls `POST /api/work`, and a daily cron calls it with `CRON_SECRET`. Imports advance only while someone has the app open, or once a day. The owner accepted that tradeoff. An always-on container host (Fly.io, Render, Railway) would keep the thread worker but costs about $5-7 a month. The local server keeps its worker thread. [Deployment](DEPLOYMENT.md) records setup and limits; [verification](../work/poteto/production-deploy/VERIFICATION.md) records the live journey. Representative real-device latency and M0-M7 milestones remain separate gates.
 
+## Map places from GPS and Review, 23 October 2026
+
+**D21: Photos place themselves on the map.** Real imports drew no pins because only a manual share wrote a place. The owner decided on 23 October 2026:
+
+- A photograph with EXIF GPS is pinned automatically when it is imported, at the centre of the nearest listed city within 100 km. The exact coordinates never reach the map. This revises the Phase 4 rule that raw EXIF never creates a point.
+- The contributor can remove that pin, and a removed pin stays removed: the removal is recorded for that contributor and photograph, so a rerun or a re-import does not restore it. A later manual share by the same contributor clears the removal.
+- Any circle member can place a memory by naming its city in Review. A name that matches one city pins the photograph there and takes precedence over source locations. A name shared by several cities asks for the country, and unknown text is kept as text.
+- Matching is offline against Natural Earth's public-domain populated places ([map data](history/sources/MAP_DATA.md)). No coordinates or place names leave the server.
+
+The pins live in `shared_places`, so Places, Discovery, Answers and export read them unchanged. The hosted archive needs the `place_removals` migration before the deploy and a backfill afterwards ([Deployment](DEPLOYMENT.md#map-places-rollout)). Accepted gaps: places more than 100 km from any listed city get no pin; another contributor's GPS copy of the same photograph still pins until that contributor removes it; removing one contribution's pin leaves the same contributor's other contributions of that photograph pinned; the Apple Photos companion sends no location.
+
+**D21 addendum, 24 October 2026: name on the map.** Production held 458 photographs, all from WhatsApp or Discord, which strip GPS, so the globe stayed empty and naming a place one photograph at a time in Review was the only way to fill it. The owner decided on 24 October 2026:
+
+- Beside the globe and flat map, an Unplaced memories tray lists every Atlas memory without a place, with a thumbnail, title and date. Picking one and typing a city ("girne", "Victoria, CA") pins every photograph in that memory, and the memory appears on the map at once.
+- Any circle member can do it, the same rule as Review places. The place can be changed or cleared later from the featured memory card.
+- It uses the Review rule above: one matching city is stored on each photograph's Review annotation as the city's full label and wins over source locations; a shared name offers its candidates as choices; unknown text is reported and nothing is written. Title, date and anniversary are left as they are.
+- A Review-named city now also stands in for a photograph's shared locations in the Places list, so Atlas and Places agree.
+
+The write is `POST /api/atlas/place` ([contract](CONTRACTS.md#shared-places-and-archive-export)); it needs no new table or migration. Archive export still lists only contribution locations from `shared_places`.
+
+## Search filters, 24 October 2026
+
+**D22: Filter Search by source and by who shared.** The owner asked to filter by who published a photograph and to tell WhatsApp and Discord photographs apart on the Search page. Engineering decided on 24 October 2026:
+
+- Source and Shared by are visible filters that apply at once to photographs, memories, chats and places. Their choices come only from the photographs the viewer can currently see.
+- "Who published" is the chat sender recorded by the source, otherwise the importing member's display name. It is the name a card's "Shared by" line already shows, so the filter reveals nothing new. It stays separate from the tagged Person filter, as D19 requires.
+- Search keeps its query and filters in the page URL so Back restores them. A search phrase or member name can therefore remain in that browser's history; the fragment is never sent to the server.
+
+[Contracts](CONTRACTS.md#search-and-ai-boundary) record the request and response fields; [verification](../work/poteto/search-filters-20261024/VERIFICATION.md) records the evidence. Accepted gaps: a memory mixing chat and manual photographs is filtered by its chat senders only; tagged person records drop out of People while a filter is set; Person and search mode are not restored from the URL.
+
+## Chat photo dates, 24 October 2026
+
+**D23: A chat photo is dated by its message.** The owner reported that a photo's date sometimes does not show. On 24 October 2026 all 458 live photographs were chat imports (305 WhatsApp, 153 Discord) and none carried an EXIF capture date, so the message's share time is the only date evidence. D09 still applies: a share date is labelled as one and never replaces a capture assertion.
+
+- Discord bot imports keep storing the raw share time, because the stored assertion is part of each origin's fingerprint and reshaping it would turn a re-sync into an identity conflict. Atlas resolves any stored assertion that kept only raw evidence, so Discord photographs, including those imported earlier, get their share date on read without a migration or backfill.
+- A WhatsApp export writes every date in one order. Atlas settles day/month order once per uploaded chat from every timestamp the archive kept for it: photo messages and their neighbouring context messages. Any day above 12 decides; only a chat with no deciding day, or with contradictory ones, stays ambiguous. Stored assertions keep the importer's result, because they are part of the origin fingerprint and a changed value would turn a re-import of the same export into an identity conflict.
+- A memory shows the range of its dated photographs. Undated photographs no longer remove its date or year, and a photograph with conflicting capture evidence contributes its whole range. Either case keeps the memory approximate, and timeline items list every evidenced day as `dates`. This supersedes the rule in [Replay chronology](#replay-chronology-and-uncropped-photographs-22-october-2026) that every photograph needs sharing evidence.
+- EXIF capture times are read with subseconds, `-` separators, a `T` separator, a trailing `Z` or offset, and OffsetTimeOriginal.
+
+Accepted gaps: Discord times are UTC, so a photo shared shortly after local midnight east of UTC shows the previous day. Order settlement sees only the timestamps the archive retained, not every line of the original export.
+
+## Keep the view in the background, 24 October 2026
+
+**D24: Backgrounding keeps the view.** On 23 October 2026 the owner asked that backgrounding the app on a phone must not reload it. Hiding the tab used to clear the signed-in view as a privacy measure, so returning showed "Opening Mazi…", refetched the session, circles and Atlas, and rebuilt the globe. Now the view and its in-memory data stay while the tab is hidden. When the tab is shown again, or restored from the back-forward cache, the session is revalidated in the background and the current screen stays. A 401 or 403, a different person or circle, or logout still clears it; a network failure or busy server does not. Authorized data is not written to browser storage or kept across sessions. Accepted costs: a hidden page shows what it showed until the tab returns, a shared device's screen stays visible until access is rechecked, and the request-driven drain ([D20](#vercel-production-runtime-22-october-2026)) keeps its idle call from any hidden page. [Verification](../work/poteto/keep-view-20261024/VERIFICATION.md) records the evidence.
+
+## Private social space direction, 1 November 2026
+
+**D25: A private social space for the existing group.** The owner requested a simpler Home, clear place/date information, less confusing navigation, filters for people/screenshots/AI images, and discoverable features. The product should evolve beyond a photo-memory archive. In the follow-up, the owner selected a private group with shared memories, comments, reactions and events.
+
+This changes the intended emphasis of D13's rediscovery-first purpose and D15's photography-led experience: shared history becomes the foundation for ongoing interaction. The existing private circle, responsive website, immediate group sharing, evidence/uncertainty rules and Luminous night visual language remain the planning baseline. The owner did not select live rooms or an avatar world. Existing application behavior and M0-M7 acceptance are not changed by this decision record.
+
+[The feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) rates all six requests and proposes a shared navigation structure, explicit date-basis filtering, independent content/provenance labels and small social increments. Those mechanisms remain proposals. New comments, reactions and future events need domain, ownership, deletion and test contracts before implementation; the existing event notebook can be reused for recollections. No recognition, external AI processing, provider change, paid provisioning or deployment is authorized by this documentation update.
+
+## Interface clarity, 1 November 2026
+
+**D26: Ana sayfa, Keşfet and Grubumuz.** The owner requested merging the investigation and implementing its clarity group first. These are the same three primary labels on desktop and phone. Ekle is a separate visible contribution action. Ana sayfa shows one featured memory with available metadata and a secondary event-note link. Its photo, title and primary action open the same detail. A single Keşfet link opens the rest of the archive. It does not claim an activity feed or recent contributions without authoring timestamps.
+
+Engineering selected a dedicated `/explore` directory over permanent secondary navigation around every workspace. The directory groups named links under Bul, Gez and Birlikte hatırla. Those links explain Search, Atlas, Timeline, People, stories, annual recaps, capsules and correction tools. Existing `/discover` keeps its rediscovery workspace. Grubumuz retains membership controls and exposes imports, sources and help. Navigation, account actions and linked People, group, import and places headings use Turkish. Other existing workspace copy remains English in this increment.
+
+Atlas moves to `/atlas` with its map, Replay, date controls and place correction intact. Legacy root links carrying `selected` or `view=portal` still resolve to Atlas. Existing memory/photo/notebook URLs, browser history, sample mode and `/places` Discord callbacks remain compatible. Section queries reach the actual People, stories, recap, capsule and source controls. `/people` and `/settings`, including hash links, replace their own history entry with the confirmed People section and the visible Grup ayarları section. Source management belongs to Grubumuz, while place review belongs to Keşfet. Memory detail belongs to Keşfet; browser history determines its contextual return.
+
+This changes navigation and presentation, not storage, access, metadata semantics or processing consent. D24 background retention remains applicable. Comments, reactions and content classifiers remain later increments. P1 adds independent group plans and attendance. [N1 evidence](../work/poteto/social-navigation/VERIFICATION.md) records the simpler Home, grouped directory and repaired legacy entries. [Implementation evidence](../work/poteto/interface-clarity/VERIFICATION.md) records synthetic checks and remaining limits; it does not close production milestones or authorize a new deployment.
+
+On 4 November 2026, P1 extends Ekle into a menu with Fotoğraf veya arşiv and Buluşma planla. Grubumuz exposes Planlar. A plan detail link carries its group and stable plan ID, and rechecks the current circle. The route loads independently of Atlas so an empty group can arrange its first meeting. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records the two-profile desktop/phone journey and remaining acceptance limits.
+
+On 4 November 2026, H1 replaces real Home's full-archive landing read with one bounded social summary. The feature order is upcoming plan, visible conversation, photo fallback and empty planning. Grubumuz exposes the activity route. Selected details use a dedicated authorized card read, including grouped permanent photo IDs. The existing sample Home stays local. Optional feature/detail code now loads on its route, with shared photo styles retained at their consumers and an explicit chunk-error reload. [H1 interface evidence](../work/poteto/social-home-ui/VERIFICATION.md) records network, latency, focus and two-session checks. This completes synthetic frontend adoption, not the physical-phone or five-friend acceptance gates.
+
+## Social feature bundle budget, 4 November 2026
+
+**D27: Keep the initial script limit and budget the optional social code.** The authorized social-space implementation adds plans, manual labels, conversations, filters and bounded Home reads. The combined plans and labels candidate measures 401.8 KiB gzip across scripts, exceeding the earlier 400 KiB total ceiling by 1.8 KiB. Its entry script is 149.1 KiB and its stylesheet is 36.9 KiB, both within their existing limits.
+
+Allocate 420 KiB gzip for total scripts in this increment. Keep entry JavaScript at 150 KiB, CSS at 40 KiB and the Globe chunk at 256 KiB. No new UI dependency is authorized by this decision. Load optional editors and social tools on use. Do not increase a primary limit to absorb feature growth. [Measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) records the candidate and commands.
+
+The final combined release must pass all bundle gates. H1 must also prove that initial Home requests neither Atlas nor a notebook per card. This is a delegated engineering budget decision, not evidence of hosted latency, physical-phone acceptance or a production milestone.
+
 ## App simplification, 14 November 2026
 
-**D21: Relive shared history simply and playfully.** The owner confirmed Globe
+The initial simplification proposal and issue #146 called this decision D21.
+Integration with the newer decision history assigns it D28; the approved scope
+is unchanged, and historical D21-D27 retain their identifiers.
+
+**D28: Relive shared history simply and playfully.** The owner confirmed Globe
 as the opening experience and Photos as its easy conventional alternative,
 with Add and Settings as supporting surfaces. Photos shows individual
 photographs grouped by month with year navigation and an Undated section;
@@ -187,7 +266,7 @@ A full TypeScript backend port was considered and rejected for this change becau
 
 ## Import continuity and worker ownership, 22 October 2026
 
-The owner requested fixes for background interruption, repeated ZIP reads, and slow-work lease failure, followed by verification and merge. Imports and Circle retain their mounted lifecycle while the document is hidden. The session gate keeps the ready import route mounted during foreground session validation. Navigation, page closure, group or session changes, and denied access still end the route's work. Other feature routes retain background privacy cleanup. Browser suspension and computer sleep remain outside the continuation guarantee.
+The owner requested fixes for background interruption, repeated ZIP reads, and slow-work lease failure, followed by verification and merge. Imports and Circle retain their mounted lifecycle while the document is hidden. The session gate keeps the ready import route mounted during foreground session validation. Navigation, page closure, group or session changes, and denied access still end the route's work. Other feature routes retain background privacy cleanup; D24 later replaced that cleanup with background revalidation. Browser suspension and computer sleep remain outside the continuation guarantee.
 
 The import worker reuses one validated ZIP for the current run, bounded by the existing 128 MiB archive limit. A new run replaces that copy. Completion, detected cancellation or access loss, fatal archive errors, and store shutdown release it. No durable cache or storage-format migration is introduced. Hosted upload receipts still require a successful byte readback before acknowledgment; the transport no longer repeats that verification for a new object.
 
@@ -197,6 +276,20 @@ A 60-second lease controls when another worker may reclaim an item. Work must be
 
 The owner requested fixes for slow Search, inactive Replay, unclear undated labels, and cropped opened photographs, with tests before deployment. Atlas and Timeline prefer capture chronology. When capture chronology is unavailable, they may use resolved sharing dates with an explicit sharing label. D09 still applies. Sharing dates never replace stored capture assertions or capture-date search filters.
 
-A grouped memory needs resolved, unambiguous sharing evidence for every photograph before sharing dates position it in Replay. The earliest valid sharing observation for each photograph supplies a sharing range. Partial or conflicting evidence remains visible without guessing a capture date. Replay visits individual dated memories, including several in the same year, and supports pause, completion, and restart. Memories without usable chronology remain available for manual browsing.
+A grouped memory needed resolved, unambiguous sharing evidence for every photograph before sharing dates positioned it in Replay; [D23](#chat-photo-dates-24-october-2026) replaced that with the range of its dated photographs. The earliest valid sharing observation for each photograph supplies a sharing range. Partial or conflicting evidence remains visible without guessing a capture date. Replay visits individual dated memories, including several in the same year, and supports pause, completion, and restart. Memories without usable chronology remain available for manual browsing.
 
 Opened portal and detail photographs preserve the entire image within the available screen area. Thumbnails can remain cropped. This changes framing, not stored image bytes or preview resolution. Search uses batched keyword metadata reads for small archives while preserving existing large-archive budgets and access rules.
+
+## Hosted Discord server connection, 23 October 2026
+
+The owner requested Discord server intake on the hosted deployment as well as locally. Two owner decisions apply. Text-only messages do not become memories; photo and video messages do, and surrounding text messages are their context. Any circle member who can add the bot to a Discord server may connect it. Discord requires Manage Server for that step, and Mazi adds no separate operator approval; the owner states that the Discord server contains only Mazi members.
+
+Linking a Discord server to a circle replaces the `MAZI_DISCORD_SOURCES` operator allowlist. A Discord source is approved only while its server is linked to the source's circle. The link uses Discord's bot authorization with a single-use, ten-minute state bound to the member who started it. Because the session cookie is `SameSite=Strict`, Discord returns to the Places page, which completes the link with a same-site request. Mazi stores the server ID and name and discards the Discord user token. Bot permission checks before reads, transfers and publication are unchanged. The [Phase 4 guide](history/sources/README.md) records setup.
+
+## Event notebook decision, 23 October 2026
+
+The owner requested clickable event titles that open related imported chat messages and notes members write. The selected presentation stays within the event page and extends the existing Atlas visual system. Titles open the notebook directly; ordinary photo navigation remains available.
+
+The notebook uses approved archive events and existing story contributions. It preserves all stories attached to an event and lets members edit or remove only their own recollections. Imported text remains bounded source context, distinct from member statements. This increment does not introduce semantic topic matching, complete chat transcripts, or standalone text-only memories. The existing Archive review flow creates event titles.
+
+An event-scoped read and transactional note write retain current membership, full-event visibility, and revision checks without a new storage schema. Recoverable failures keep the visible draft; access loss and navigation clear private content. Backgrounding retains the notebook and its in-memory draft under [D24](#keep-the-view-in-the-background-24-october-2026), with session revalidation on return. The [feature brief](../work/poteto/event-notebook/BRIEF.md) records acceptance and design choices. Local synthetic verification does not establish production milestone acceptance.

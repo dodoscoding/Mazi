@@ -3,6 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Memory, Photo as PhotoData } from "../memories";
 import { Photo } from "../Photo";
 import { Glyph } from "./glyphs";
+import { photoDateLabel, photoPlaceLabel } from "./evidence";
 
 const settle = { duration: 360, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
 const fade = { duration: 150, easing: "linear" };
@@ -33,7 +34,7 @@ function Thumb({
     <button
       type="button"
       className={failed ? "is-failed" : undefined}
-      aria-label={`Photo ${index + 1}: ${photo.caption}`}
+      aria-label={`Fotoğraf ${index + 1}: ${photo.caption}`}
       aria-pressed={current}
       onClick={choose}
     >
@@ -169,8 +170,8 @@ export function Viewer({
   return (
     <section
       className="gallery viewer"
-      aria-label="Memory photographs"
-      aria-roledescription="carousel"
+      aria-label="Anının fotoğrafları"
+      aria-roledescription="fotoğraf dizisi"
       tabIndex={0}
       onKeyDown={(event) => {
         if (
@@ -210,7 +211,18 @@ export function Viewer({
         <figcaption className="viewer-caption">
           <span className="viewer-caption-text">
             <span className="viewer-caption-title">{photo.caption}</span>
-            {meta && <span className="viewer-caption-meta">{meta}</span>}
+            {photo.evidence ? (
+              <>
+                <span className="viewer-caption-meta">
+                  {photoDateLabel(photo)}
+                </span>
+                <span className="viewer-caption-meta">
+                  {photoPlaceLabel(photo)}
+                </span>
+              </>
+            ) : (
+              meta && <span className="viewer-caption-meta">{meta}</span>
+            )}
           </span>
           <span className="viewer-count" aria-live="polite">
             {index + 1} / {photos.length}
@@ -221,7 +233,7 @@ export function Viewer({
             <button
               type="button"
               className="viewer-arrow viewer-arrow--previous"
-              aria-label="Previous photo"
+              aria-label="Önceki fotoğraf"
               aria-disabled={index === 0}
               onClick={() => index > 0 && go(index - 1)}
             >
@@ -230,7 +242,7 @@ export function Viewer({
             <button
               type="button"
               className="viewer-arrow viewer-arrow--next"
-              aria-label="Next photo"
+              aria-label="Sonraki fotoğraf"
               aria-disabled={index === photos.length - 1}
               onClick={() => index < photos.length - 1 && go(index + 1)}
             >
@@ -245,7 +257,7 @@ export function Viewer({
         )}
       </figure>
       {many && (
-        <div className="filmstrip" role="group" aria-label="Choose a photo">
+        <div className="filmstrip" role="group" aria-label="Fotoğraf seç">
           {photos.map((item, position) => (
             <Thumb
               key={item.src}

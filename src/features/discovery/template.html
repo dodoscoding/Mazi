@@ -1,4 +1,9 @@
 <div class="discovery-page" data-view="discover">
+  <nav class="feature-sections" aria-label="Keşif bölümleri">
+    <a href="#/discover">Yeniden keşfet</a>
+    <a href="#/discover?section=people">Kişiler</a>
+    <a href="#/search">Anı ara</a>
+  </nav>
   <header class="disc-head">
     <div class="disc-heading">
       <h1 id="discovery-title" class="disc-title">Discover</h1>
@@ -11,17 +16,17 @@
     class="disc-prompts"
     aria-label="Rediscovery prompts"
   ></section>
-  <label class="disc-group">Group<select id="groups"></select></label>
+  <label class="disc-group">Grup<select id="groups"></select></label>
   <p id="notice" role="status" aria-live="polite"></p>
   <div id="private" hidden>
     <div id="context-choice" class="disc-context" hidden>
       <button id="include-context" type="button" class="disc-pill">
-        Include memories, chats, places and people
+        Anı, sohbet, yer ve kişileri dahil et
       </button>
       <p id="context-status" class="hint" role="status"></p>
     </div>
     <form id="search-form" class="disc-search" role="search">
-      <h2 id="search-title" class="disc-search-title">Find a photograph</h2>
+      <h2 id="search-title" class="disc-search-title">Fotoğraf bul</h2>
       <div class="search-bar">
         <svg
           width="22"
@@ -35,21 +40,21 @@
         >
           <path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4" />
         </svg>
-        <label for="query" class="visually-hidden">Search</label>
+        <label for="query" class="visually-hidden">Ara</label>
         <input
           id="query"
           type="search"
           maxlength="200"
           autocomplete="off"
           enterkeyhint="search"
-          placeholder="A place, a person, a word from a chat"
+          placeholder="Yer, kişi veya sohbetten bir sözcük"
         />
         <span id="result-total" class="search-count"></span>
         <button
           id="clear-query"
           type="button"
           class="search-clear"
-          aria-label="Clear search"
+          aria-label="Aramayı temizle"
           hidden
         >
           <svg
@@ -66,7 +71,7 @@
           </svg>
         </button>
         <button type="submit" class="disc-submit">
-          <span class="disc-submit-label">Search archive</span>
+          <span class="disc-submit-label">Arşivde ara</span>
           <svg
             width="18"
             height="18"
@@ -83,97 +88,113 @@
         </button>
       </div>
       <p id="search-help" class="hint">
-        Words &amp; filters can search more than 1,000 visible photographs,
-        within metadata-work limits. Related search supports up to 10,000
-        visible photographs per circle, within metadata and processing limits.
+        Sözcükler ve filtreler, işleme sınırları içinde görünür fotoğrafları
+        tarar. İlişkili arama grup başına en fazla 10.000 görünür fotoğrafı
+        destekler.
       </p>
       <p id="search-recovery" class="hint" hidden>
         <span id="search-recovery-message"></span>
-        No partial results are shown. Your search and filters are still here.
+        Kısmi sonuç gösterilmez. Aramanız ve filtreleriniz korunur.
         <button id="use-keyword" type="button" hidden>
-          Use Words &amp; filters
+          Sözcükler ve filtreleri kullan
         </button>
-        <a href="#/memories">Browse photographs</a> or
-        <a href="#/review">search the review timeline</a> instead.
+        <a href="#/memories">Fotoğraflara göz at</a> veya
+        <a href="#/review">inceleme akışında ara</a>
       </p>
+      <div id="search-filters" class="disc-filters" hidden>
+        <div class="disc-filter">
+          <span id="source-filter-label" class="hud-label">Kaynak</span>
+          <div
+            id="source-filter"
+            class="result-types"
+            role="group"
+            aria-labelledby="source-filter-label"
+          ></div>
+        </div>
+        <label class="disc-filter"
+          ><span class="hud-label">Paylaşan</span
+          ><select id="shared-by">
+            <option value="">Herkes</option>
+          </select></label
+        >
+      </div>
       <div class="disc-tools">
         <div
           id="result-types"
           class="result-types"
           role="group"
-          aria-label="Result types"
+          aria-label="Sonuç türleri"
           hidden
         ></div>
         <label class="disc-mode"
-          >Search mode<select id="mode">
-            <option value="keyword">Words & filters</option>
-            <option value="semantic">
-              Related concepts & colors (local baseline)
-            </option>
+          >Arama türü<select id="mode">
+            <option value="keyword">Sözcükler ve filtreler</option>
+            <option value="semantic">İlişkili kavramlar ve renkler</option>
           </select></label
         >
       </div>
       <details class="disc-refine">
-        <summary>Refine by place, person, date or source</summary>
+        <summary>Yer, kişi, tarih ve etiketle daralt</summary>
         <div class="filters">
           <label
-            >Country code<input id="country" maxlength="2" placeholder="NL"
+            >Ülke kodu<input id="country" maxlength="2" placeholder="NL"
           /></label>
           <label
-            >Person<select id="person">
-              <option value="">Anyone</option>
+            >Kişi<select id="person">
+              <option value="">Herkes</option>
             </select>
             <button id="load-people" type="button" class="disc-pill" hidden>
-              Load people
+              Kişileri yükle
             </button></label
           >
           <label
-            >Place<input id="place" maxlength="200" placeholder="Amsterdam"
+            >Yer<input id="place" maxlength="200" placeholder="Amsterdam"
           /></label>
           <label
-            >Object or concept in text<input
+            >Metindeki nesne veya kavram<input
               id="object"
               maxlength="200"
               placeholder="Bicycle"
           /></label>
-          <label>From<input id="start" type="date" /></label
-          ><label>Through<input id="end" type="date" /></label>
           <label
-            >Source<select id="source">
-              <option value="">Any source</option>
-              <option value="manual">Manual</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="messenger">Messenger</option>
-              <option value="discord">Discord export / bot</option>
-              <option value="apple">Apple Photos</option>
+            >Tarih türü<select id="date-basis">
+              <option value="chronology">Gösterilen tarih</option>
+              <option value="capture">Çekim tarihi</option>
+              <option value="shared">Paylaşım tarihi</option>
             </select></label
           >
+          <label>Başlangıç<input id="start" type="date" /></label
+          ><label>Bitiş<input id="end" type="date" /></label>
         </div>
+        <p id="date-scope" hidden>
+          Seçili filtrelerin eşleşmesi yalnız fotoğraflarda doğrulanır. Anı,
+          sohbet, yer ve kişi sonuçları bu kapsamın dışındadır.
+        </p>
       </details>
       <div class="disc-index-tools">
         <button id="clear-similar" type="button" hidden>
-          Clear similar-image search
+          Benzer görsel aramasını temizle
         </button>
         <button id="build-index" type="button" hidden>
-          Build local search index
+          Yerel arama dizini oluştur
         </button>
-        <button id="stop-index" type="button" hidden>Stop indexing</button>
+        <button id="stop-index" type="button" hidden>Dizinlemeyi durdur</button>
       </div>
       <p class="hint">
-        Local indexing supports up to 10,000 visible photographs per circle in
-        resumable batches.
+        Yerel dizin, grup başına en fazla 10.000 görünür fotoğrafı
+        sürdürülebilir parçalarla işler.
       </p>
       <p id="index-progress" role="status"></p>
       <p id="index-recovery" class="hint" hidden>
-        Indexing stopped because the archive exceeds its photo, metadata or
-        processing budget. Completed batches remain available.
-        <a href="#/memories">Browse photographs</a> or
-        <a href="#/review">search the review timeline</a> instead.
+        Fotoğraf veya işleme sınırı aşıldığı için dizinleme durdu. Tamamlanan
+        parçalar kullanılabilir.
+        <a href="#/memories">Fotoğraflara göz at</a> veya
+        <a href="#/review">inceleme akışında ara</a>
       </p>
       <p class="hint" id="model-help">
-        Related search uses a small offline vocabulary and image colors. It does
-        not recognize faces or infer objects in photographs. Words and filters
-        keep working with optional processing off.
+        İlişkili arama sınırlı bir çevrimdışı sözcük dağarcığı ve görsel
+        renklerini kullanır. Yüz tanımaz, nesne tahmin etmez. İsteğe bağlı
+        işleme kapalıyken sözcükler ve filtreler çalışır.
       </p>
     </form>
 
@@ -181,18 +202,18 @@
       id="search-loading"
       class="disc-loading"
       role="status"
-      aria-label="Searching"
+      aria-label="Aranıyor"
       hidden
     ></div>
     <div id="search-none" class="search-none" hidden>
       <h2 id="none-title"></h2>
       <p>
-        No memory, place, person, chat or photograph mentions it. Search looks
-        at titles, stories, places, names and imported chats, not inside photos.
+        Bu ifadeye rastlanmadı. Arama başlıkları, hikâyeleri, yerleri, adları ve
+        içe aktarılan sohbetleri tarar; fotoğrafların içeriğini yorumlamaz.
       </p>
-      <span class="hud-label">Try</span>
+      <span class="hud-label">Deneyin</span>
       <div id="none-try" class="search-try"></div>
-      <a href="/ask" class="primary-action">Ask your archive instead</a>
+      <a href="/ask" class="primary-action">Arşivine sor</a>
     </div>
 
     <div id="search-groups" class="search-results disc-results">
@@ -207,12 +228,12 @@
         </section>
         <section id="photo-results" aria-labelledby="results-heading">
           <div class="disc-section-title">
-            <h2 id="results-heading" class="hud-label">Photographs</h2>
+            <h2 id="results-heading" class="hud-label">Fotoğraflar</h2>
             <p id="count" role="status"></p>
           </div>
           <div id="results" class="disc-photos"></div>
           <button id="more" type="button" class="disc-pill" hidden>
-            Next page
+            Sonraki sayfa
           </button>
         </section>
         <section
@@ -258,7 +279,7 @@
     </div>
 
     <section class="panel disc-manage" aria-labelledby="people-heading">
-      <h2 id="people-heading">People, confirmed by you</h2>
+      <h2 id="people-heading" tabindex="-1">Fotoğraftaki kişiler</h2>
       <p>
         These are person records, separate from sign-in accounts. No faces are
         detected or clustered.

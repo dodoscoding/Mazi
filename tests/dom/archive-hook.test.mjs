@@ -62,6 +62,23 @@ async function harness(t, boundary) {
   };
 }
 const groups = [{ id: "circle", name: "Our circle", role: "admin" }];
+const archivePhoto = (id) => ({
+  id,
+  kind: "photo",
+  shortTitle: "Synthetic photograph",
+  title: "Synthetic photograph",
+  date: "Date not recorded",
+  year: null,
+  approximate: true,
+  by: "Our circle",
+  description: "A synthetic archive photograph.",
+  source: "manual",
+  photos: [{ src: "/synthetic.jpg", alt: "Synthetic", caption: "Synthetic" }],
+  messages: [],
+  place: null,
+  people: { shared: [], conversation: [] },
+  dateBasis: "undated",
+});
 
 test("independent feature routes load circle context without requesting Atlas", async (t) => {
   const calls = [];
@@ -95,10 +112,10 @@ test("Atlas routes still load current memories and demo search remains local", a
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
-  for (const path of ["/", "/timeline", "/memory/photo"]) {
+  for (const path of ["/atlas", "/timeline"]) {
     await h.render(path);
     assert.equal(h.current.memories[0].id, "photo");
   }
@@ -120,13 +137,13 @@ test("leaving Atlas aborts and ignores late data; returning fetches again", asyn
       signal = options.signal;
       return pending.promise;
     }
-    return Response.json({ memories: [{ id: "fresh" }] });
+    return Response.json({ memories: [archivePhoto("fresh")] });
   });
-  await h.render("/");
+  await h.render("/atlas");
   await h.render("/imports");
   assert.equal(signal.aborted, true);
   await act(async () =>
-    pending.resolve(Response.json({ memories: [{ id: "stale" }] })),
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
   );
   assert.deepEqual(h.current.memories, []);
   assert.equal(calls, 1);
@@ -135,7 +152,7 @@ test("leaving Atlas aborts and ignores late data; returning fetches again", asyn
   assert.equal(h.current.memories[0].id, "fresh");
 });
 
-test("feature routes retain group access denial and pagehide cleanup", async (t) => {
+test("a reload that is denied clears the circle and reports lost access", async (t) => {
   let denied = false;
   let accessLost = 0;
   const h = await harness(t, async () =>
@@ -145,12 +162,14 @@ test("feature routes retain group access denial and pagehide cleanup", async (t)
   );
   h.window.addEventListener("mazi:access-lost", () => accessLost++);
   await h.render("/imports");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pagehide")));
-  assert.deepEqual(h.current.groups, []);
+  assert.deepEqual(h.current.groups, groups);
   denied = true;
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:session")),
+  );
   assert.equal(accessLost, 1);
   assert.equal(h.current.status, "signed-out");
+  assert.deepEqual(h.current.groups, []);
   assert.deepEqual(h.current.memories, []);
   assert.equal(h.window.sessionStorage.getItem("mazi.group"), null);
 });
@@ -168,7 +187,7 @@ test("without an authenticated profile no archive requests are made", async (t) 
   assert.deepEqual(calls, []);
 });
 
-test("superseded visibility loads abort and pagehide cancels private work", async (t) => {
+test("superseded loads abort and lost access cancels private work", async (t) => {
   const pending = deferred();
   const signals = [];
   let calls = 0;
@@ -176,16 +195,133 @@ test("superseded visibility loads abort and pagehide cancels private work", asyn
     signals.push(options.signal);
     if (++calls === 1) return pending.promise;
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("fresh")] },
     );
   });
-  await h.render("/");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pageshow")));
+  await h.render("/atlas");
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:session")),
+  );
   assert.equal(signals[0].aborted, true);
   assert.equal(h.current.memories[0].id, "fresh");
   await act(async () => pending.resolve(Response.json(groups)));
   assert.equal(h.current.memories[0].id, "fresh");
-  await act(async () => h.window.dispatchEvent(new h.window.Event("pagehide")));
-  assert.equal(signals.at(-1).aborted, true);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:access-lost")),
+  );
   assert.deepEqual(h.current.memories, []);
+  assert.deepEqual(h.current.groups, []);
+});
+
+test("backgrounding keeps the loaded atlas and makes no requests", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
+    );
+  });
+  await h.render("/atlas");
+  const before = calls.length;
+  for (const hidden of [true, false]) {
+    await act(async () => {
+      Object.defineProperty(h.window.document, "hidden", {
+        value: hidden,
+        configurable: true,
+      });
+      h.window.document.dispatchEvent(new h.window.Event("visibilitychange"));
+    });
+    assert.equal(h.current.status, "ready");
+    assert.equal(h.current.memories[0].id, "photo");
+  }
+  for (const type of ["pagehide", "pageshow"]) {
+    await act(async () => h.window.dispatchEvent(new h.window.Event(type)));
+    assert.equal(h.current.memories[0].id, "photo");
+  }
+  assert.equal(calls.length, before);
+});
+
+test("moving between Atlas and feature pages keeps the loaded atlas", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
+    );
+  });
+  await h.render("/atlas");
+  const seen = [];
+  for (const path of ["/imports", "/atlas", "/review", "/timeline"]) {
+    await h.render(path);
+    seen.push(h.current.status, h.current.memories[0]?.id);
+  }
+  assert.deepEqual(seen, [
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+    "ready",
+    "photo",
+  ]);
+  assert.deepEqual(calls, ["/api/groups", "/api/atlas?group=circle"]);
+});
+
+test("choosing another circle sticks and loads that circle", async (t) => {
+  const circles = [...groups, { id: "other", name: "Other", role: "member" }];
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    if (path === "/api/groups") return Response.json(circles);
+    const group = new URL(path, "http://localhost").searchParams.get("group");
+    return Response.json({ memories: [archivePhoto(`${group}-photo`)] });
+  });
+  await h.render("/atlas");
+  assert.equal(h.current.group, "circle");
+  await act(async () => h.current.chooseGroup("other"));
+  assert.equal(h.current.group, "other");
+  assert.equal(h.current.memories[0].id, "other-photo");
+  assert.equal(h.window.sessionStorage.getItem("mazi.group"), "other");
+  await h.render("/imports");
+  await h.render("/atlas");
+  assert.equal(h.current.group, "other");
+  assert.equal(calls.at(-1), "/api/atlas?group=other");
+});
+
+test("a saved photo correction rereads authoritative Atlas facts", async (t) => {
+  let reads = 0;
+  const h = await harness(t, async (path) =>
+    Response.json(
+      path === "/api/groups"
+        ? groups
+        : {
+            memories: [
+              {
+                ...archivePhoto("photo"),
+                title: ++reads === 1 ? "Before" : "Corrected",
+              },
+            ],
+          },
+    ),
+  );
+  await h.render("/atlas");
+  assert.equal(h.current.memories[0].title, "Before");
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.memories[0].title, "Corrected");
+  assert.equal(reads, 2);
+});
+
+test("Home and selected-memory routes never request the full Atlas", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(path === "/api/groups" ? groups : { memories: [] });
+  });
+  await h.render("/");
+  await h.render("/memory/photo-selected");
+  assert.deepEqual(calls, ["/api/groups"]);
+  assert.equal(h.current.status, "ready");
 });

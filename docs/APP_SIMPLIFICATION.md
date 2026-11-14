@@ -1,7 +1,7 @@
 # Mazi app deletion and simplification plan
 
 Prepared on 14 November 2026 from the owner discussion and source inspection.
-[D21](DECISIONS.md#app-simplification-14-november-2026) records the confirmed
+[D28](DECISIONS.md#app-simplification-14-november-2026) records the confirmed
 product choices. The [implementation specification](APP_SIMPLIFICATION_SPEC.md)
 is published as [issue #146](https://github.com/dodoscoding/Mazi/issues/146)
 with the `ready-for-agent` label. No application changes have been implemented

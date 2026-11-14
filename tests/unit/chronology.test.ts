@@ -62,11 +62,16 @@ test("capture wins, stable ties remain stable and invalid or ambiguous evidence 
     ["b", "a"],
   );
 });
-test("grouped photos require complete sharing coverage and label ranges and partial capture honestly", () => {
-  assert.equal(
-    chronologyDate(memory("partial", ["2025-01-01", null])).basis,
-    "unknown",
+test("grouped photos take their sharing range from dated photos and ignore undated or ambiguous ones", () => {
+  const partial = chronologyDate(memory("partial", ["2025-01-01", null]));
+  assert.deepEqual(
+    [partial.basis, partial.year, partial.sortKey],
+    ["shared", 2025, "2025-01-01"],
   );
+  const mixed = memory("mixed", ["2025-03-01", "2025-01-01"]);
+  mixed.photos[1].provenance![0].sharedAt.ambiguous = true;
+  assert.equal(chronologyDate(mixed).sortKey, "2025-03-01");
+  assert.equal(chronologyDate(memory("none", [null, null])).basis, "unknown");
   const range = chronologyDate(
     memory("range", ["2024-01-01", "2025-01-01"], {
       date: "2019-01-01 · some dates unknown",
@@ -91,4 +96,94 @@ test("conflicting capture assertions remain explicit when sharing positions Repl
   });
   assert.match(chronologyDate(item).label, /Capture date incomplete/);
   assert.equal(chronologyDate(item).basis, "shared");
+});
+
+test("server photo evidence drives chronology without moving calendar days or hiding conflicts", () => {
+  const item = memory("photo-evidence", []);
+  item.photos = [
+    {
+      src: "/photo",
+      alt: "",
+      caption: "",
+      assetId: "asset-1",
+      evidence: {
+        capture: {
+          basis: "capture",
+          status: "conflict",
+          days: ["2020-01-02", "2020-03-04"],
+          start: "2020-01-02",
+          through: "2020-03-04",
+          timezone: null,
+        },
+        shared: [],
+        chronology: {
+          basis: "capture",
+          status: "conflict",
+          days: ["2020-01-02", "2020-03-04"],
+          start: "2020-01-02",
+          through: "2020-03-04",
+          timezone: null,
+        },
+        place: { status: "unknown", text: null, pin: null },
+      },
+    },
+  ];
+  assert.equal(chronologyDate(item).basis, "capture");
+  assert.equal(chronologyDate(item).year, 2020);
+  assert.equal(chronologyDate(item).sortKey, "2020-01-02");
+  assert.match(
+    chronologyDate(item).label,
+    /2 Oca 2020.*4 Mar 2020.*Çekim tarihi çelişkili/,
+  );
+});
+
+test("photo summaries distinguish missing places and dates and never lend sibling pins", async () => {
+  const { photoEvidenceMemory, unknownDate } =
+    await import("../helpers/photo-evidence.ts");
+  const { evidencePin, evidencePlaceLabel, evidenceDateLabel } =
+    await import("../../src/memory/evidence.ts");
+  const item = structuredClone(photoEvidenceMemory);
+  assert.equal(evidencePin(item), null);
+  assert.equal(
+    evidencePlaceLabel(item),
+    "Istanbul, TR · Bazı yerler bilinmiyor",
+  );
+  item.photos[1].evidence!.chronology = unknownDate;
+  assert.match(
+    chronologyDate(item).label,
+    /2 Oca 2020.*Bazı tarihler bilinmiyor/,
+  );
+  item.photos[1].evidence!.place = {
+    status: "known",
+    text: "Paris, FR",
+    pin: { name: "Paris", country: "FR", latitude: 48.8566, longitude: 2.3522 },
+  };
+  assert.equal(evidencePlaceLabel(item), "Birden fazla yer");
+  assert.equal(evidencePin(item), null);
+  assert.match(
+    evidenceDateLabel({
+      ...unknownDate,
+      basis: "capture",
+      status: "approximate",
+      days: ["2020-01-02"],
+      start: "2020-01-02",
+      through: "2020-01-02",
+    }),
+    /Yaklaşık.*Çekildi/,
+  );
+  assert.match(
+    evidenceDateLabel({
+      ...unknownDate,
+      basis: "capture",
+      status: "range",
+      days: [],
+      start: "2020-01-02",
+      through: "2020-03-04",
+    }),
+    /2 Oca 2020.*4 Mar 2020.*Çekildi/,
+  );
+  assert.equal(
+    evidenceDateLabel({ ...unknownDate, status: "ambiguous" }),
+    "Gün ve ay belirsiz",
+  );
 });

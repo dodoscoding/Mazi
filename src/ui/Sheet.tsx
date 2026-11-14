@@ -14,6 +14,7 @@ export function Sheet({
   open,
   onClose,
   label,
+  closeLabel,
   className = "",
   style,
   children,
@@ -21,6 +22,7 @@ export function Sheet({
   open: boolean;
   onClose: () => void;
   label: string;
+  closeLabel?: string;
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
@@ -108,7 +110,7 @@ export function Sheet({
         <button
           type="button"
           className="sheet-handle"
-          aria-label={`Close ${label}`}
+          aria-label={closeLabel || `Close ${label}`}
           onClick={onClose}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId);

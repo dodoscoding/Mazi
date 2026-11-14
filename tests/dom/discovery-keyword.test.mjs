@@ -37,6 +37,10 @@ const searchPage = {
   items: [photograph],
   total: 1,
   next_offset: null,
+  facets: {
+    sources: [{ value: "apple", count: 1 }],
+    shared_by: [{ value: "Ana", count: 1 }],
+  },
   mode: "keyword",
   unindexed: 0,
 };
@@ -74,8 +78,14 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
         : searchPage;
     }),
   );
-  const { $, root } = feature;
+  const { $, root, window } = feature;
   await until(() => $("#results h3"), "initial photograph");
+  root.querySelector("#source-filter button[data-source=apple]").click();
+  await until(() => requests.length === 2, "source applied at once");
+  $("#shared-by").value = "Ana";
+  $("#shared-by").dispatchEvent(new window.Event("change", { bubbles: true }));
+  await until(() => requests.length === 3, "Shared by applied at once");
+  await until(() => $("#results h3"), "filtered photograph");
   const filters = {
     query: "lake bicycle",
     person: "synthetic-person",
@@ -84,7 +94,6 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     object: "bicycle",
     start: "2024-01-01",
     end: "2024-12-31",
-    source: "apple",
   };
   for (const [id, value] of Object.entries(filters)) $("#" + id).value = value;
   $("#mode").value = "semantic";
@@ -96,12 +105,12 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
   assert.equal($("#mode").value, "semantic");
   assert.deepEqual(
     requests.map((request) => request.mode),
-    ["keyword", "semantic"],
+    ["keyword", "keyword", "keyword", "semantic"],
   );
-  assert.match($("#search-recovery").textContent, /10,000 visible photographs/);
-  assert.match($("#search-recovery").textContent, /No partial results/);
+  assert.match($("#search-recovery").textContent, /10.000 görünür fotoğraf/);
+  assert.match($("#search-recovery").textContent, /Kısmi sonuç gösterilmez/);
   const retry = [...root.querySelectorAll("#search-recovery button")].find(
-    (button) => button.textContent.trim() === "Use Words & filters",
+    (button) => button.textContent.trim() === "Sözcükler ve filtreleri kullan",
   );
   assert.ok(
     retry,
@@ -128,11 +137,18 @@ test("semantic capacity offers an explicit Words & filters retry preserving the 
     start: "2024-01-01",
     end: "2024-12-31",
     source: "apple",
+    date_basis: "chronology",
+    shared_by: "Ana",
     similar: "",
     offset: "0",
   });
   for (const [id, value] of Object.entries(filters))
     assert.equal($("#" + id).value, value);
+  assert.equal($("#shared-by").value, "Ana");
+  assert.equal(
+    $("#source-filter button[aria-pressed=true]").dataset.source,
+    "apple",
+  );
 });
 
 test("keyword metadata-budget exhaustion hides stale totals and keeps filters for retry", async (t) => {
@@ -160,25 +176,22 @@ test("keyword metadata-budget exhaustion hides stale totals and keeps filters fo
   $("#place").value = "Lake";
   submit(feature);
   await until(
-    () => $("#result-total").textContent === "1001 results",
+    () => $("#result-total").textContent === "1001 sonuç",
     "exact total above 1,000",
   );
   unavailable = true;
   $("#more").click();
   await until(() => !$("#search-recovery").hidden, "keyword budget recovery");
-  assert.match($("#search-recovery").textContent, /metadata-work budget/);
-  assert.match(
-    $("#search-recovery").textContent,
-    /Complete results are unavailable/,
-  );
-  assert.match($("#search-recovery").textContent, /No partial results/);
+  assert.match($("#search-recovery").textContent, /işleme sınırını/);
+  assert.match($("#search-recovery").textContent, /tam sonuç getirilemiyor/);
+  assert.match($("#search-recovery").textContent, /Kısmi sonuç gösterilmez/);
   assert.doesNotMatch($("#search-recovery").textContent, /1,000/);
   assert.equal($("#use-keyword").hidden, true);
   assert.equal($("#mode").value, "keyword");
   assert.equal($("#query").value, "lake");
   assert.equal($("#place").value, "Lake");
   assert.equal(root.querySelectorAll("#results article").length, 0);
-  assert.equal($("#count").textContent, "Search unavailable.");
+  assert.equal($("#count").textContent, "Arama kullanılamıyor.");
   assert.equal($("#result-total").textContent, "");
   assert.equal($("#result-types").hidden, true);
   assert.equal($("#search-groups").hidden, true);
@@ -187,12 +200,12 @@ test("keyword metadata-budget exhaustion hides stale totals and keeps filters fo
   assert.equal($("#search-recovery a").getAttribute("href"), "#/memories");
   assert.match(
     $("#search-help").textContent,
-    /Words & filters can search more than 1,000/,
+    /Sözcükler ve filtreler, işleme sınırları içinde/,
   );
   unavailable = false;
   submit(feature);
   await until(
-    () => $("#result-total").textContent === "1001 results",
+    () => $("#result-total").textContent === "1001 sonuç",
     "keyword retry exact total",
   );
   assert.equal($("#search-recovery").hidden, true);
@@ -217,11 +230,11 @@ test("Words & filters recovery clears a failed similar-image reference", async (
   $("#mode").value = "semantic";
   submit(feature);
   await until(
-    () => $("#count").textContent.endsWith("semantic"),
+    () => $("#count").textContent.endsWith("İlişkili arama"),
     "semantic photograph",
   );
   [...root.querySelectorAll("#results button")]
-    .find((button) => button.textContent === "Find similar colors")
+    .find((button) => button.textContent === "Benzer renkleri bul")
     .click();
   await until(
     () => !$("#search-recovery").hidden,
@@ -255,11 +268,9 @@ for (const mode of ["semantic", "keyword"]) {
     await until(() => !$("#search-recovery").hidden, "failed request recovery");
     assert.match(
       $("#search-recovery-message").textContent,
-      mode === "semantic"
-        ? /10,000 visible photographs/
-        : /metadata-work budget/,
+      mode === "semantic" ? /10.000 görünür fotoğraf/ : /işleme sınırını/,
     );
     assert.equal($("#use-keyword").hidden, mode !== "semantic");
-    assert.equal($("#count").textContent, "Search unavailable.");
+    assert.equal($("#count").textContent, "Arama kullanılamıyor.");
   });
 }

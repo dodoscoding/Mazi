@@ -6,14 +6,17 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 
 `npm run dev` supervises a Vite interface and a loopback Python API/worker. Vite forwards `/api`, `/health` and `/land.geojson` without rewriting the browser Host, preserving Origin validation. The browser uses one origin and one HttpOnly session cookie. `npm start` builds the interface and serves both assets and APIs from Python.
 
+The loopback `AppServer` accepts connections on separate threads so an idle browser preconnection cannot stop other assets or APIs from loading. A lock created for each server serializes complete GET and POST handlers, including their store access and response delivery. Header reads happen before that lock; request-body reads remain inside the existing handler. Closing the server waits for active dispatch under the same lock, then rejects queued or late dispatch before store access. Idle header readers do not delay that close. The shared request store still serves one request at a time, and the background worker retains its separate connection. Vercel uses `handler_for` directly and retains its own request lock. [Idle-connection regression evidence](../work/poteto/idle-connections/VERIFICATION.md) records the accepted-socket reproduction and browser reload checks.
+
 `python -m mazi` is the backend entry point. With ignored `.env.supabase` present, normal startup selects hosted PostgreSQL/private Storage; `--local` or `MAZI_BACKEND=local` retains SQLite and file keys in `.mazi-imports`. Hosted scratch defaults to `.mazi-hosted`; it is separate from the local source. The background worker uses a separate connection with the same configuration. Startup never transfers an archive or seeds samples. The historical `.mazi-pilot` archive remains separate. [Hosted setup](SUPABASE_SETUP.md) documents credentials, transfer and recovery. On Vercel, `api/index.py` serves the same handler as one function and signed-in tabs drive the worker through `/api/work`; [deployment](DEPLOYMENT.md) describes the tradeoff.
 
 ## Ownership
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/App.tsx`, `src/Atlas.tsx` | Shared navigation, Atlas selection, memory detail, timeline and renderer recovery. |
-| `src/useArchive.ts`, `mazi/atlas.py` | Live authorized Atlas cards, consistent projection, request cancellation and private-state invalidation. |
+| `src/App.tsx`, `src/navigation.ts`, `src/Shell.tsx` | Route dispatch, one navigation table, three primary destinations and shared contribution/account controls. |
+| `src/Home.tsx`, `src/Explore.tsx`, `src/Atlas.tsx` | Local sample landing, capability directory, group links, and the separate Atlas selection/portal/renderer experience under D26. |
+| `src/useArchive.ts`, `mazi/atlas.py` | Live authorized full Atlas only for Atlas/timeline consumers. Lazy `src/memory/SelectedMemory.tsx` owns current selected-detail reads, retries and private-state disposal. |
 | `src/features/` | Imports, review, places/sources, discovery, answers/evidence and advanced memories in the shared shell. |
 | `mazi/persistence.py`, `mazi/storage.py` | Backend selection, compatible rows/binding, schema-scoped transaction locks, verified private bytes and deletion receipts. |
 | `mazi/identity/` | Shared profiles, transactional circle/code setup, sessions and retained legacy domain contracts. |
@@ -21,11 +24,12 @@ Mazi combines the Atlas interface and the complete local archive engine in one a
 | `mazi/sources/`, `tools/apple-photos/` | Source intake, shared places, Discord and the macOS Photos companion. |
 | `mazi/discovery/`, `mazi/answers/` | People, hiding, consent, search and evidence-based answers. |
 | `mazi/memories/` | Recaps, stories, revisions, capsules, subevents, slideshows, video and notices. |
+| `src/social/` | Lazy React social Home, paged activity, plans/attendance and selected-target conversations, bounded reaction batches and tab-memory retryable drafts. |
 | `tests/backend/`, `tests/browser/`, `tests/unified.spec.ts` | Domain regression contracts, fixture servers and integrated app journeys. |
 
 `src/useEntry.ts` owns loading, signed-out, onboarding, ready and connection-error states. `src/Entry.tsx` renders login and the reusable introduction. The entry gate precedes every route, including samples. Shared-mode inherited HTTP authorization requires a mapped profile and current configured-circle membership; other circle IDs and legacy entry endpoints are denied. The additive profile/policy tables preserve existing user UUIDs, ownership and credentials. Introduction completion persists per profile; browser sessions expire after 30 days.
 
-React owns routes and feature lifecycles. Existing feature workflows are scoped DOM modules with imported HTML fragments. Each mount owns its requests, timers and object URLs and disposes them on navigation. Imports and Circle retain their mounted state and transfers when hidden; other feature routes dispose on backgrounding. The session gate preserves a ready import route during foreground session validation. Denied access, session changes and page closure still clear it. They are bundled application modules, without standalone pages, script injection or iframes. The migrated imperative modules remain JavaScript; the shared lifecycle, registry and Atlas code are TypeScript. Converting individual forms to React can happen within these feature boundaries.
+React owns routes and feature lifecycles. Existing feature workflows are scoped DOM modules with imported HTML fragments. Each mount owns its requests, timers and object URLs and disposes them on navigation. Every route keeps its mounted state while the tab is hidden ([D24](DECISIONS.md#keep-the-view-in-the-background-24-october-2026)). When the tab is shown again, or restored from the back-forward cache, the session gate revalidates the session in the background and keeps the current screen. Only a 401 or 403, a different person or circle, or logout clears the view; a failed or busy revalidation keeps it. Authorized data stays in memory only, never in browser storage. They are bundled application modules, without standalone pages, script injection or iframes. The migrated imperative modules remain JavaScript; the shared lifecycle, registry and Atlas code are TypeScript. Converting individual forms to React can happen within these feature boundaries.
 
 ## Atlas data and appearance
 

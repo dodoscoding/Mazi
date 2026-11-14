@@ -1,6 +1,6 @@
 # Mazi product specification
 
-The confirmed product direction is recorded in [PRODUCT.md](../PRODUCT.md) and [D13-D15](DECISIONS.md), dated 3 October 2026. Remaining implementation and release details are proposals. This specification reconciles the preserved [original brief](source/PRODUCT_BRIEF.md) with those decisions; no feature exists yet.
+The confirmed product direction is recorded in [PRODUCT.md](../PRODUCT.md), D13-D15 and the later [D25-D26 decisions](DECISIONS.md). Remaining release details are proposals. This specification reconciles the preserved [original brief](source/PRODUCT_BRIEF.md) with those decisions. Local implementation evidence does not establish production acceptance.
 
 ## Product purpose
 
@@ -20,7 +20,7 @@ The core unit is a memory supported by media and historical evidence. An album a
 
 ## Release boundaries
 
-The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is an internal pilot. M2 is a closed beta. Initial navigation is Home, Timeline, Search; later destinations remain roadmap proposals and appear only when shipped. The current product is a website.
+The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is an internal pilot. M2 is a closed beta. D26 replaces D13's initial navigation with Home, Keşfet and Grubumuz. Only implemented capabilities receive feature links. The current product is a website.
 
 | Capability | First production release | Later delivery |
 | --- | --- | --- |
@@ -33,11 +33,13 @@ The first production release is the M3 exit in the [roadmap](ROADMAP.md). M1 is 
 | Access | Sign-in and active group membership on every read. All imported content has the same group audience. | Private staging and individual/component audience controls are deferred. Recognition at M5 needs its own decision. |
 | Operations | Audit events, export, deletion, recovery drill, quotas, alerts, accessibility, monitored production. | Generated recaps, video, and capsules at M7. |
 
+The local event notebook lets members open an approved event title to read imported chat excerpts and add their own recollections. It retains all existing event stories and current access checks. The [event notebook decision](DECISIONS.md#event-notebook-decision-23-october-2026) records this owner-approved extension.
+
 Keyword search covers group titles, user captions, and imported source text. It does not promise object recognition. On This Day excludes removed or technically unavailable material and uncertain anniversary dates.
 
 ## Primary journeys
 
-The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shared-code-entry-decision-14-october-2026) instead of the production-planning invitation journey below. Friends enter a shared code and unique visible name. Existing names resume immediately. New profiles see the introduction once, returning sessions open the Atlas, and About retains the introduction. Existing application pages remain unchanged in scope.
+The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shared-code-entry-decision-14-october-2026) instead of the production-planning invitation journey below. Friends enter a shared code and unique visible name. Existing names resume immediately. New profiles see the introduction once, returning sessions open Home, and About retains the introduction. D26 reorganizes access to the existing application pages.
 
 1. A group creator signs in, creates a private group, and sends a single-use invitation through their chosen channel. The recipient accepts before expiry. An expired or revoked invitation grants nothing.
 2. A contributor selects files or an archive and sees the inventory, formats, size, and processing choices. Transfer and background progress survive interruption. Successful items remain reviewable if other items fail.
@@ -57,7 +59,9 @@ The local application uses the owner-approved [D17 entry flow](DECISIONS.md#shar
 | People | Confirmed visible associations, shared memories, and places. No popularity scores or competitive rankings. | M5. |
 | Memory AI | Answers from authorized evidence with citations and uncertainty. | M6. |
 
-Unavailable areas are omitted from the shipped navigation. My Imports and group settings are supporting routes. My Imports remains easy to reach without becoming a primary destination. Home, Timeline, Search is the initial ordering.
+The table describes capabilities and their original milestone scope. D26 groups their entry points under Ana sayfa, Keşfet and Grubumuz on both screen sizes. Home has one featured memory and secondary event-note access. Its title, photograph and primary action open the same detail, and one directory link opens the rest of the archive. It does not mount the Atlas or fabricate recent social activity. Keşfet groups descriptive links under Bul, Gez and Birlikte hatırla. It provides links to the implemented workspaces, including focused entries to People, stories, annual recap and capsules. Grubumuz exposes membership, import history, sources, corrections and help. Ekle opens a separate menu for photos, archives and plans independently of the three primary links. Unavailable social capabilities are omitted.
+
+Atlas has the canonical `/atlas` route. Existing root selection/portal links and feature URLs remain supported. The [navigation contract](CONTRACTS.md#interface-navigation) owns URL, focus and lifecycle compatibility.
 
 ## Product rules
 
@@ -130,3 +134,35 @@ Every source section has a planning home and a delivery milestone. These rows re
 | B28 Quality requirements | TEST_PLAN, ARCHITECTURE | All milestones |
 | B29 Engineering principle | CONTRACTS | M0 onward |
 | B30 Final product goal | ROADMAP, SPEC | M5 through M7 |
+
+## Independent group plans backend
+
+The P1 backend of the [social-space implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) lets current group members create a future or past meeting without uploading a photo. The organizer controls its title, local start and optional end, IANA timezone, place, description, cancellation and optional visible approved-memory link. Members set or clear one attendance response each. Upcoming results use server time and exclude cancelled or started plans.
+
+The backend includes bounded list/detail reads, transactional retry protection, revision conflicts, membership cleanup and authored-contribution export in SQLite and the hosted PostgreSQL schema. [The API contract](CONTRACTS.md#group-plans-and-attendance-api) defines the wire behavior. The P1 interface exposes Planlar from Grubumuz and Buluşma planla from the separate Ekle menu. Its lazy-loaded list, detail and forms work without fetching Atlas. Members can create, edit, cancel or delete their own plans and set or clear attendance. Repeated local hours require an explicit UTC offset. Social Home remains a separate implementation slice. Backend completion does not imply the five-friend findability gate or a physical-phone pilot has passed.
+
+The backend includes bounded list/detail reads, transactional retry protection, revision conflicts, membership cleanup and authored-contribution export in SQLite and the hosted PostgreSQL schema. [The API contract](CONTRACTS.md#group-plans-and-attendance-api) defines the wire behavior. Circle/Add entry points, browser forms and social Home remain pending implementation in their own slices. Backend completion does not imply the five-friend findability gate or a physical-phone pilot has passed.
+
+## Native conversations backend
+
+The C1 comments backend gives each permanent photo and fully visible approved memory its own flat conversation. A member may write separate messages, edit their own message with version checks or remove it. Creation time belongs to the server and remains unchanged when text is edited. Lists page by creation time and stable identity. Current target visibility, active authors, request replay and deletion tombstones apply consistently to text, totals and authored export.
+
+[The comment API](CONTRACTS.md#photo-and-approved-memory-comments-api) is implemented for SQLite and hosted PostgreSQL. [The privacy policy](PRIVACY.md#native-conversation-contributions) distinguishes current-ledger restoration checks from a full stale-backup recovery guarantee. Notebook recollections remain unchanged. The lazy [conversation interface](CONTRACTS.md#conversation-interface) implements separate photo/memory comments, reactions and in-memory retryable drafts. Social Home remains a pending delivery slice.
+
+## Native reactions backend
+
+The C1 backend lets a current member set or remove a reaction from the closed set `👍`, `❤️`, `😂`, `🎉` on a visible permanent photo, approved memory or native comment. It returns current counts, the member's own state and bounded current member-name lists. Desired-state writes and retained request receipts prevent duplicate taps and delayed retries from changing a later choice.
+
+[The reaction API](CONTRACTS.md#native-reactions-api) includes a bounded, fully authorized batch read for conversation pages. SQLite and hosted storage enforce uniqueness, group relationships, departure cleanup and comment-delete cascades. Reaction tombstones suppress stale rows while the current deletion ledger is retained. Authored export participates in the existing final admission checks. Notebook recollections and imported source reactions remain unchanged. Browser controls use one bounded batch for the visible comment page and preserve exact retry identity. Social Home remains a pending delivery slice.
+
+## Manual photo declarations backend
+
+The F1 backend adds independent human-presence, screenshot and AI-use declarations to permanent photo IDs. Old data defaults to unknown. It separates effective presence derived from permitted confirmed people from a member's own declaration, version and attribution. It does not infer labels from source names, image size or automatic recognition.
+
+[The bounded labels API](CONTRACTS.md#photo-declarations-api) supports current reads and all-or-nothing corrections of at most 50 photographs. Each changed dimension requires its expected revision. Clear and departure cleanup advance retained versions, request replay cannot restore older values, and authored export participates in the existing final admission check. SQLite and hosted schemas enforce group relationships and update discovery generations. Atlas payloads and Search predicates are not changed by this backend slice. Label badges/editors and combined filters remain frontend/F2 delivery work.
+
+## Social Home backend and selected detail
+
+The H1 read API highlights a current upcoming plan, otherwise the latest visible conversation, otherwise one authorized photo. It returns at most three real actions and supports a first plan with an empty archive. Social action timestamps remain separate from photo capture/share evidence. The private activity list uses stable time/identity cursors and current actor, source, hide and deletion rules.
+
+[The bounded read contract](CONTRACTS.md#bounded-social-home-and-activity-reads) limits source candidates, metadata and preview size. It stores no copied feed and does not load full Atlas to produce a summary. A separate selected-memory endpoint reuses the Atlas projector for a selected asset set, preserving permanent photo links, evidence, source fingerprints and compact labels. The lazy frontend adopts these reads: initial Home and direct photo detail make zero full Atlas/notebook requests. The [interface contract](CONTRACTS.md#social-landing-and-selected-detail-interface) and synthetic two-session evidence cover empty planning, attendance, real photo intake, conversations, reactions and next-day return. Physical-device and friend-study acceptance remain separate.

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { settled } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -15,8 +16,9 @@ const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
 async function openHome(page: Page) {
   await page.goto("/?demo=1");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
+  await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
+    /is-loaded/,
+  );
 }
 
 test("night is the only theme and an old day choice is cleared", async ({
@@ -33,8 +35,7 @@ test("night is the only theme and an old day choice is cleared", async ({
   expect(await page.evaluate(() => localStorage.getItem("mazi.theme"))).toBe(
     null,
   );
-  if (isPhone(page))
-    await page.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("button", { name: "Hesap", exact: true }).click();
   await expect(page.getByRole("button", { name: /^Switch to/ })).toHaveCount(0);
   await page.goto("/?demo=1#/about");
   await expect(page.getByRole("radiogroup", { name: "Theme" })).toHaveCount(0);
@@ -55,30 +56,44 @@ test("the theme renders without storage", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("the phone tab bar reaches Imports in one tap and About in two", async ({
+test("the phone has three tabs, reachable Add choices and reachable account help", async ({
   page,
 }) => {
   test.skip(!isPhone(page), "The tab bar is the phone navigation.");
   await openHome(page);
-  const tabs = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(tabs).toBeVisible();
-  await tabs.getByRole("link", { name: "My Imports" }).click();
+  const tabs = page.getByRole("navigation", {
+    name: "Main navigation",
+    exact: true,
+  });
+  await expect(tabs.getByRole("link")).toHaveText([
+    "Ana sayfa",
+    "Keşfet",
+    "Grubumuz",
+  ]);
+  await page
+    .locator(".site-header")
+    .getByRole("button", { name: "Ekle", exact: true })
+    .click();
+  await page
+    .getByRole("navigation", { name: "Ekle seçenekleri" })
+    .getByRole("link", { name: "Fotoğraf veya arşiv", exact: true })
+    .click();
   await expect(page).toHaveURL(/#\/imports/);
-  await expect(tabs.getByRole("link", { name: "My Imports" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  const more = tabs.getByRole("button", { name: "More", exact: true });
-  await more.click();
-  const sheet = page.getByRole("dialog", { name: "More" });
-  await expect(sheet).toBeVisible();
+  await expect(
+    tabs.getByRole("link", { name: "Grubumuz", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  const account = page.getByRole("button", { name: "Hesap", exact: true });
+  await account.click();
+  await expect(account).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Escape");
-  await expect(sheet).toHaveCount(0);
-  await expect(more).toBeFocused();
-  await more.click();
-  await sheet.getByRole("link", { name: "About", exact: true }).click();
+  await expect(account).toHaveAttribute("aria-expanded", "false");
+  await expect(account).toBeFocused();
+  await account.click();
+  await page
+    .locator(".account-menu .menu-popover")
+    .getByRole("link", { name: "Yardım ve gizlilik", exact: true })
+    .click();
   await expect(page).toHaveURL(/#\/about/);
-  await expect(sheet).toHaveCount(0);
   await expect(
     page.getByRole("heading", {
       name: "A private atlas for one circle of friends",
@@ -87,82 +102,79 @@ test("the phone tab bar reaches Imports in one tap and About in two", async ({
   await expect(tabs).toBeVisible();
 });
 
-test("Archive tools opens, is keyboard operable and closes on Escape", async ({
+test("account controls are keyboard operable and Escape returns focus", async ({
   page,
 }) => {
-  test.skip(isPhone(page), "Phones reach the archive tools through More.");
   await openHome(page);
-  const button = page.getByRole("button", { name: "Archive tools" });
+  const button = page.getByRole("button", { name: "Hesap", exact: true });
   await button.focus();
   await page.keyboard.press("Enter");
   await expect(button).toHaveAttribute("aria-expanded", "true");
-  const tools = page.getByRole("navigation", { name: "Archive tools" });
-  await expect(tools.getByRole("link", { name: "Memories" })).toBeFocused();
+  const menu = page.locator(".account-menu .menu-popover");
+  const about = menu.getByRole("link", {
+    name: "Yardım ve gizlilik",
+    exact: true,
+  });
+  await expect(about).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(tools.getByRole("link", { name: "Discover" })).toBeFocused();
+  await expect(
+    menu.getByRole("link", { name: "Tanıtımı izle", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("End");
   await expect(
-    tools.getByRole("button", { name: "Sign out", exact: true }),
+    menu.getByRole("button", { name: "Çıkış yap", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(tools.getByRole("link", { name: "Memories" })).toBeFocused();
+  await expect(about).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(button).toHaveAttribute("aria-expanded", "false");
-  await expect(tools).toHaveCount(0);
   await expect(button).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/#\/discover/);
-  await expect(tools).toHaveCount(0);
+  await expect(page).toHaveURL(/#\/about/);
+  await expect(button).toHaveAttribute("aria-expanded", "false");
 });
 
-test("Home has no axe violations", async ({ page }) => {
-  // The first-visit Atlas intro fades the HUD in; this audit is of the settled Home.
-  await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
+test("Home and Explore have no axe violations", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHome(page);
-  for (const theme of ["night"] as const) {
-    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    const results = await new AxeBuilder({ page }).analyze();
-    expect(results.violations, `${theme} theme`).toEqual([]);
-  }
+  await settled(page);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .getByRole("link", { name: "Keşfet", exact: true })
+    .click();
+  await settled(page);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test("a mouse click on an Archive tools link lands even when clicks do not focus", async ({
+test("a mouse click on account help lands even when clicks do not focus", async ({
   page,
 }) => {
-  test.skip(isPhone(page), "Phones reach the archive tools through More.");
   await openHome(page);
-  await page.getByRole("button", { name: "Archive tools" }).click();
-  const tools = page.getByRole("navigation", { name: "Archive tools" });
-  const memories = tools.getByRole("link", { name: "Memories" });
-  await expect(memories).toBeFocused();
-  // Safari and macOS Firefox blur the focused item without focusing the target.
-  await memories.evaluate((link) =>
+  await page.getByRole("button", { name: "Hesap", exact: true }).click();
+  const about = page
+    .locator(".account-menu .menu-popover")
+    .getByRole("link", { name: "Yardım ve gizlilik", exact: true });
+  await expect(about).toBeFocused();
+  await about.evaluate((link) =>
     link.addEventListener("mousedown", (event) => event.preventDefault()),
   );
-  const places = tools.getByRole("link", { name: "Places & sources" });
   await page.evaluate(() => (document.activeElement as HTMLElement).blur());
-  await places.click();
-  await expect(page).toHaveURL(/#\/places/);
+  await about.click();
+  await expect(page).toHaveURL(/#\/about/);
 });
 
-test("the open Archive tools menu has no axe violations", async ({ page }) => {
-  test.skip(isPhone(page), "Phones reach the archive tools through More.");
+test("the open account menu has no axe violations", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHome(page);
-  await page.goto("/?demo=1#/memories");
-  const button = page.getByRole("button", { name: "Archive tools" });
-  await button.focus();
-  await page.keyboard.press("Enter");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Archive tools" })
-      .getByRole("link", { name: "Memories" }),
-  ).toBeFocused();
-  const results = await new AxeBuilder({ page })
-    .include(".menu-popover")
-    .analyze();
-  expect(results.violations).toEqual([]);
+  await page.getByRole("button", { name: "Hesap", exact: true }).click();
+  await settled(page);
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .include(".account-menu .menu-popover")
+        .analyze()
+    ).violations,
+  ).toEqual([]);
 });

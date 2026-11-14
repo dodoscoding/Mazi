@@ -1,5 +1,12 @@
-import { useLayoutEffect, useState } from "react";
-import type { RefObject } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import type { MouseEvent, RefObject } from "react";
 import {
   provenanceOf,
   shareDate,
@@ -24,12 +31,18 @@ import {
 import type { SourceKind } from "./memory/facts";
 import { Glyph } from "./memory/glyphs";
 import type { GlyphName } from "./memory/glyphs";
+import { EventNotebook } from "./memory/EventNotebook";
 import { Viewer } from "./memory/Viewer";
 import type { LinkFor } from "./useRoute";
-import { useReducedMotion } from "./useRoute";
+import { canGoBack, useReducedMotion } from "./useRoute";
 import { Arrow } from "./ui/icons";
 import type { IconName } from "./ui/icons";
 import "./styles/memory.css";
+
+const ConversationPanel = lazy(() => import("./social/ConversationPanel"));
+
+const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
+const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
 
@@ -42,6 +55,10 @@ const sourceGlyph: Record<SourceKind, GlyphName> = {
 
 export function MemoryView({
   memory,
+  group,
+  notebook,
+  discussion,
+  sessionKey,
   memories = [memory],
   photo,
   demo,
@@ -51,6 +68,10 @@ export function MemoryView({
   heading,
 }: {
   memory: Memory;
+  group: string;
+  notebook: boolean;
+  discussion?: "photo" | "memory";
+  sessionKey?: string;
   memories?: Memory[];
   photo: number;
   demo: boolean;
@@ -59,20 +80,39 @@ export function MemoryView({
   navigate: Navigate;
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
+  const [editing, setEditing] = useState<
+    "capture_date" | "place" | "labels" | null
+  >(null);
+  useEffect(() => setEditing(null), [group, memory.id, photo]);
+  const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
   const reduced = useReducedMotion();
+  const notebookHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (notebook && memory.kind === "memory" && !demo) {
+      notebookHeading.current?.focus({ preventScroll: true });
+      notebookHeading.current?.scrollIntoView({ block: "start" });
+    }
+  }, [notebook, memory.id, memory.kind, demo]);
   const photoIndex = Math.min(Math.floor(photo), memory.photos.length - 1);
   const place = placeLine(memory);
   const date = displayDate(memory);
-  const uncertain = memory.approximate && hasDate(memory);
+  const hasEvidence = memory.photos.every((photo) => photo.evidence);
+  const uncertain = hasEvidence
+    ? memory.photos.some((photo) =>
+        ["conflict", "ambiguous", "unknown", "approximate"].includes(
+          photo.evidence!.chronology.status,
+        ),
+      )
+    : memory.approximate && hasDate(memory);
   const basis = dateBasisNotes(memory).join(" ");
   const shared = memory.people?.shared || [];
   const meta = [
     date,
     sourceSharedLine(memory) ||
       (shared.length
-        ? `${provenanceOf(memory).length ? "Added to archive" : "Shared"} by ${shared.join(", ")}`
+        ? `${provenanceOf(memory).length ? "Arşive ekleyenler" : "Paylaşanlar"}: ${shared.join(", ")}`
         : ""),
-    memory.source ? "" : "Sample Atlas",
+    memory.source ? "" : "Örnek Atlas",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -95,14 +135,33 @@ export function MemoryView({
         )
       )
         return;
-      navigate(backUrl, true);
+      if (canGoBack()) history.back();
+      else navigate(backUrl, true);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [backUrl, navigate]);
 
+  // Back returns to the in-app page the memory was opened from.
+  const back = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!canGoBack()) return link(backUrl, true)(event);
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    history.back();
+  };
   const go = (index: number) =>
-    navigate(`/memory/${memory.id}?photo=${index}`, false, true);
+    navigate(
+      `/memory/${memory.id}?photo=${index}${discussion ? `&discussion=${discussion}` : ""}`,
+      false,
+      true,
+    );
   const momentLink = (
     item: Memory | undefined,
     label: string,
@@ -112,7 +171,7 @@ export function MemoryView({
       <a
         className="round-link"
         href={`#/memory/${item.id}`}
-        onClick={link(`/memory/${item.id}`)}
+        onClick={link(`/memory/${item.id}`, false, true)}
         aria-label={`${label}: ${item.title}, ${displayDate(item)}`}
       >
         <Glyph name={glyph} size={14} />
@@ -127,13 +186,9 @@ export function MemoryView({
     <article className="memory-detail">
       <div className="detail-bar">
         <div className="detail-bar-start">
-          <a
-            className="back-pill"
-            href={`#${backUrl}`}
-            onClick={link(backUrl, true)}
-          >
+          <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
-            <span className="back-label">Back to atlas</span>
+            <span className="back-label">Geri</span>
             <kbd aria-hidden="true">Esc</kbd>
           </a>
           <p className="hud-label crumb">
@@ -146,21 +201,43 @@ export function MemoryView({
               .join(" / ")}
           </p>
         </div>
+        {!demo && memory.kind === "memory" && (
+          <a
+            className="detail-notes-link"
+            href={`#/memory/${memory.id}?notebook=1`}
+            onClick={(event) => {
+              if (
+                !notebook ||
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              )
+                return link(`/memory/${memory.id}?notebook=1`)(event);
+              event.preventDefault();
+              notebookHeading.current?.focus({ preventScroll: true });
+              notebookHeading.current?.scrollIntoView({ block: "start" });
+            }}
+          >
+            Notları aç <Glyph name="chevron-right" size={14} />
+          </a>
+        )}
         {moments.length > 1 && position >= 0 && (
-          <nav className="moments" aria-label="Other memories">
+          <nav className="moments" aria-label="Diğer anılar">
             <span className="hud-label">
-              Memory {position + 1} of {moments.length}
+              Anı {position + 1} / {moments.length}
             </span>
-            {momentLink(earlier, "Earlier memory", "chevron-left")}
-            {momentLink(later, "Later memory", "chevron-right")}
+            {momentLink(earlier, "Önceki anı", "chevron-left")}
+            {momentLink(later, "Sonraki anı", "chevron-right")}
           </nav>
         )}
         {memory.place && (
           <a
             className="round-link globe-link"
-            href={`#${backUrl}`}
-            onClick={link(backUrl, true)}
-            aria-label="Show on the globe"
+            href={`#${atlasUrl}`}
+            onClick={link(atlasUrl, true)}
+            aria-label="Kürede göster"
           >
             <Glyph name="globe" size={18} />
           </a>
@@ -175,6 +252,57 @@ export function MemoryView({
           reduced={reduced}
           go={go}
         />
+        {!demo && memory.photos[photoIndex]?.assetId && (
+          <section
+            aria-label="Seçili fotoğraf bilgisi"
+            className="memory-tools photo-tools"
+          >
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("capture_date")}
+            >
+              Tarihi düzelt
+            </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("place")}
+            >
+              {memory.photos[photoIndex].evidence?.place.text
+                ? "Yeri değiştir"
+                : "Yer ekle"}
+            </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("labels")}
+            >
+              Etiketleri düzenle
+            </button>
+            {editing === "labels" && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoLabels
+                  key={`${group}:${memory.photos[photoIndex].assetId}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
+            {editing && editing !== "labels" && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoCorrection
+                  key={`${group}:${memory.photos[photoIndex].assetId}:${editing}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  field={editing}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
+          </section>
+        )}
         <div className="story-columns">
           <div className="story">
             <div className="story-chips">
@@ -193,13 +321,66 @@ export function MemoryView({
             <p className="memory-description">{memory.description}</p>
             <Conversation key={memory.id} memory={memory} />
             {!demo && (
+              <>
+                <nav className="memory-tools" aria-label="Sohbet seçimi">
+                  {memory.photos[photoIndex]?.assetId && (
+                    <a
+                      className="button button--secondary"
+                      href={`#/memory/${memory.id}?photo=${photoIndex}&discussion=photo`}
+                      onClick={link(
+                        `/memory/${memory.id}?photo=${photoIndex}&discussion=photo`,
+                      )}
+                    >
+                      Fotoğraf üzerine konuş
+                    </a>
+                  )}
+                  {memory.kind === "memory" && (
+                    <a
+                      className="button button--secondary"
+                      href={`#/memory/${memory.id}?discussion=memory`}
+                      onClick={link(`/memory/${memory.id}?discussion=memory`)}
+                    >
+                      Anı üzerine konuş
+                    </a>
+                  )}
+                </nav>
+                {discussion &&
+                  (discussion === "photo"
+                    ? memory.photos[photoIndex]?.assetId
+                    : memory.kind === "memory") && (
+                    <Suspense
+                      fallback={<p role="status">Sohbet yükleniyor…</p>}
+                    >
+                      <ConversationPanel
+                        key={`${sessionKey}:${group}:${discussion}:${discussion === "photo" ? memory.photos[photoIndex].assetId : memory.id}`}
+                        group={group}
+                        target={{
+                          kind: discussion,
+                          id:
+                            discussion === "photo"
+                              ? memory.photos[photoIndex].assetId!
+                              : memory.id,
+                        }}
+                        focus
+                      />
+                    </Suspense>
+                  )}
+              </>
+            )}
+            <EventNotebook
+              key={`${group}:${memory.id}`}
+              group={group}
+              event={!demo && memory.kind === "memory" ? memory.id : null}
+              heading={notebookHeading}
+            />
+            {!demo && (
               <div className="memory-tools">
                 <a
                   className="button button--secondary"
                   href="#/review"
                   onClick={link("/review")}
                 >
-                  Review this archive
+                  Arşivi incele
                 </a>
                 {memory.kind === "memory" && (
                   <a
@@ -207,27 +388,36 @@ export function MemoryView({
                     href="#/memories"
                     onClick={link("/memories")}
                   >
-                    Write a shared story
+                    Ortak bir hikâye yaz
                   </a>
                 )}
               </div>
             )}
           </div>
-          <aside className="facts" aria-label="About this memory">
+          <aside className="facts" aria-label="Bu anı hakkında">
             <section className="fact" aria-labelledby="fact-when">
               <h2 id="fact-when" className="hud-label">
-                When
+                Ne zaman
               </h2>
               <p className="fact-value">{date}</p>
               {uncertain ? (
                 <div className="uncertainty-note" role="note">
                   <p>
-                    <b>Date uncertain.</b> Not every photo has a confirmed date,
-                    so Mazi shows “About”. {basis}
+                    {hasEvidence ? (
+                      <>
+                        <b>Tarih belirsiz.</b> Her fotoğrafın tarih durumu ayrı
+                        gösterilir. {basis}
+                      </>
+                    ) : (
+                      <>
+                        <b>Tarih belirsiz.</b> Her fotoğrafın tarihi doğrulanmış
+                        değil; bu nedenle yaklaşık tarih gösterilir. {basis}
+                      </>
+                    )}
                   </p>
                   {!demo && (
                     <a href="#/review" onClick={link("/review")}>
-                      Fix the date in Archive review
+                      Arşiv incelemesinde tarihi düzelt
                     </a>
                   )}
                 </div>
@@ -239,20 +429,22 @@ export function MemoryView({
               {memory.place && <Locator memory={memory} />}
               <div>
                 <h2 id="fact-where" className="hud-label">
-                  Where
+                  Nerede
                 </h2>
-                <p className="fact-value">{place || "No place recorded"}</p>
+                <p className="fact-value">{place || "Yer kaydedilmemiş"}</p>
                 {memory.place ? (
                   <a
                     className="text-link globe-text-link"
-                    href={`#${backUrl}`}
-                    onClick={link(backUrl, true)}
+                    href={`#${atlasUrl}`}
+                    onClick={link(atlasUrl, true)}
                   >
-                    Show on the globe
+                    Kürede göster
                   </a>
                 ) : (
                   <p className="fact-detail">
-                    The photos disagree on a place, or none was recorded.
+                    {hasEvidence
+                      ? "Her fotoğrafın yeri kendi bilgi satırında gösterilir. Eksik veya çelişkili yerler haritada işaretlenmez."
+                      : "Fotoğrafların yerleri uyuşmuyor veya yer kaydedilmemiş."}
                   </p>
                 )}
               </div>
@@ -260,7 +452,7 @@ export function MemoryView({
             <People memory={memory} />
             <section className="fact" aria-labelledby="fact-sources">
               <h2 id="fact-sources" className="hud-label">
-                Source evidence
+                Kaynak bilgileri
               </h2>
               <ul className="sources">
                 {sourceRows(memory).map((row) => (
@@ -285,11 +477,11 @@ export function MemoryView({
                     <span className="source-text">
                       <b>
                         {item.sender
-                          ? `Shared by ${item.sender}`
-                          : "Source share"}
+                          ? `Paylaşanlar ${item.sender}`
+                          : "Kaynak paylaşımı"}
                       </b>
                       <span>
-                        {shareDate(item) || "Share date not recorded"}
+                        {shareDate(item) || "Paylaşım tarihi kaydedilmemiş"}
                       </span>
                     </span>
                   </li>
@@ -310,9 +502,10 @@ function Conversation({ memory }: { memory: Memory }) {
   if (!first) return null;
   return (
     <section className="conversation" aria-labelledby="conversation-heading">
-      <h2 id="conversation-heading" className="hud-label">
-        From the conversation
-      </h2>
+      <h2 id="conversation-heading">Kaynak konuşmadan</h2>
+      <p className="conversation-origin">
+        Özgün konuşmada paylaşılan, aktarılmış alıntılar.
+      </p>
       <blockquote>
         <p>“{first.text}”</p>
       </blockquote>
@@ -329,7 +522,7 @@ function Conversation({ memory }: { memory: Memory }) {
             aria-controls="conversation-messages"
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? "Hide conversation" : "Show conversation"}
+            {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
             <span className="toggle-mark" aria-hidden="true">
               <Glyph name="chevron-right" size={16} />
             </span>
@@ -370,29 +563,29 @@ function People({ memory }: { memory: Memory }) {
   return (
     <section className="fact" aria-labelledby="fact-people">
       <h2 id="fact-people" className="hud-label">
-        People in the evidence
+        Kaynaklarda adı geçenler
       </h2>
       {shared.length === 0 &&
       conversation.length === 0 &&
       senders.length === 0 ? (
-        <p className="fact-detail">No one is named in the sources.</p>
+        <p className="fact-detail">Kaynaklarda kimsenin adı geçmiyor.</p>
       ) : (
         <dl className="people">
           {senders.length > 0 && (
             <div>
-              <dt>Shared by</dt>
+              <dt>Paylaşanlar</dt>
               <dd>{chips(senders)}</dd>
             </div>
           )}
           {shared.length > 0 && (
             <div>
-              <dt>{hasProvenance ? "Added to archive by" : "Shared by"}</dt>
+              <dt>{hasProvenance ? "Arşive ekleyenler" : "Paylaşanlar"}</dt>
               <dd>{chips(shared)}</dd>
             </div>
           )}
           {conversation.length > 0 && (
             <div>
-              <dt>In the conversation</dt>
+              <dt>Konuşmada adı geçenler</dt>
               <dd>{chips(conversation)}</dd>
             </div>
           )}
@@ -435,14 +628,14 @@ function RelatedMemories({
   return (
     <section className="related" aria-labelledby="related-heading">
       <h2 id="related-heading" className="hud-label">
-        Related memories
+        İlgili anılar
       </h2>
       <ul>
         {related.map(({ memory: item, why }) => (
           <li key={item.id}>
             <a
               href={`#/memory/${item.id}`}
-              onClick={link(`/memory/${item.id}`)}
+              onClick={link(`/memory/${item.id}`, false, true)}
             >
               {item.photos[0] && (
                 <img src={item.photos[0].src} alt="" loading="lazy" />
@@ -475,22 +668,19 @@ export function MemoryNotFound({
         <Glyph name="compass" size={28} stroke={1.4} />
       </span>
       <h1 ref={heading} tabIndex={-1}>
-        Memory not found
+        Anı bulunamadı
       </h1>
-      <p>
-        This memory is unavailable, or you no longer have access to it. The rest
-        of your atlas is still here.
-      </p>
+      <p>Bu anı şu anda kullanılamıyor veya erişimin değişmiş olabilir.</p>
       <div className="not-found-actions">
         <a className="primary-action" href="#/" onClick={link("/")}>
-          Back to atlas <Arrow />
+          Geri <Arrow />
         </a>
         <a
           className="button button--ghost"
           href="#/timeline"
           onClick={link("/timeline")}
         >
-          Browse the timeline
+          Zaman çizelgesini aç
         </a>
       </div>
     </section>

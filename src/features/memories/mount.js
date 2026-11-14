@@ -4,6 +4,26 @@ import "./memories.css";
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
+  const entrySection = new URLSearchParams(lifecycle.search).get("section");
+  const entryHeading = new Map([
+    ["stories", "stories-heading"],
+    ["recap", "recap-heading"],
+    ["capsules", "capsules-heading"],
+  ]).get(entrySection);
+  let entryFocused = false;
+  function focusEntry() {
+    if (
+      !entryHeading ||
+      entryFocused ||
+      root.hidden ||
+      lifecycle.mountKind === "refresh"
+    )
+      return;
+    entryFocused = true;
+    const heading = $(entryHeading);
+    heading.focus({ preventScroll: true });
+    heading.scrollIntoView({ block: "start" });
+  }
   let group = "",
     generation = 0;
   function node(tag, text) {
@@ -26,6 +46,7 @@ export function mount(root, lifecycle) {
     if (!response.ok) {
       const error = Error(data.error || "Request failed");
       error.status = response.status;
+      error.code = data.code;
       throw error;
     }
     return data;
@@ -52,12 +73,22 @@ export function mount(root, lifecycle) {
       if (current === generation) $("notice").textContent = error.message;
     }
   }
+  function eventTitle(title, id) {
+    const heading = node("h3", "");
+    const link = node("a", title);
+    link.href = `#/memory/${encodeURIComponent(id)}?notebook=1`;
+    heading.append(link);
+    return heading;
+  }
   function renderStory(story) {
     const panel = node("article", "");
     panel.className = "panel story";
     const header = node("header", "");
     header.className = "story-head";
-    header.append(node("h3", story.event.title), node("p", story.notice));
+    header.append(
+      eventTitle(story.event.title, story.event.id),
+      node("p", story.notice),
+    );
     panel.append(header);
     const saved = node("section", "");
     saved.className = "story-saved";
@@ -241,7 +272,7 @@ export function mount(root, lifecycle) {
         const card = node("article", "");
         card.className = "panel";
         card.append(
-          node("h3", memory.title),
+          eventTitle(memory.title, memory.id),
           node("p", `${memory.start} — ${memory.end}`),
         );
         for (const asset of memory.assets)
@@ -282,6 +313,7 @@ export function mount(root, lifecycle) {
       group = lifecycle.selectGroup($("groups"));
       $("groups").closest("label").hidden = $("groups").options.length < 2;
       grid.load(group);
+      if (group) focusEntry();
       await refresh();
     } catch (error) {
       $("notice").textContent = error.message + ". Sign in from Imports.";

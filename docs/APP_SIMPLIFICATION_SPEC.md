@@ -145,7 +145,7 @@ Remove the competing standalone destinations and relocate their retained functio
 
 ## Further Notes
 
-This spec synthesizes the owner's confirmed discussion of 14 November 2026 and product decision D21. The confirmed purpose is: **Relive shared history in a simple but fun way.** Annual recap, Conversation context, and Past creations use the domain glossary meanings.
+This spec synthesizes the owner's confirmed discussion of 14 November 2026 and product decision D28. The confirmed purpose is: **Relive shared history in a simple but fun way.** Annual recap, Conversation context, and Past creations use the domain glossary meanings.
 
 The testing boundaries were explicitly confirmed by the owner. No further product interview is required for this spec. Detailed extraction order and final component boundaries remain implementation choices constrained by the observable contracts above.
 

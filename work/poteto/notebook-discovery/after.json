@@ -1,0 +1,28 @@
+[
+  {
+    "name": "desktop",
+    "decoration": "underline",
+    "heading": {
+      "x": 48,
+      "y": 592.484375,
+      "width": 742.546875,
+      "height": 42
+    },
+    "focused": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "name": "phone",
+    "decoration": "underline",
+    "heading": {
+      "x": 20,
+      "y": 90.25,
+      "width": 372,
+      "height": 37
+    },
+    "focused": true,
+    "overflow": false,
+    "errors": []
+  }
+]

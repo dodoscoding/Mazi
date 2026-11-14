@@ -2548,3 +2548,37 @@
     gap: 8px;
   }
 }
+
+.photo-filters fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.photo-filters label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 13px;
+}
+.photo-filters input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+.photo-filters button,
+.photo-date-filters button {
+  min-height: 40px;
+  margin: 4px;
+  padding: 6px 10px;
+}
+.photo-date-filters label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}
+.photo-date-filters input,
+.photo-date-filters select {
+  width: 100%;
+  min-width: 0;
+}

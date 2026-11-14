@@ -114,7 +114,7 @@ export function AtlasStage({
     setFailed(true);
     setReady(false);
     toast.show({
-      message: "The globe stopped drawing, so the atlas is laid flat.",
+      message: "Küre çizilemedi. Atlas düz haritada açıldı.",
     });
   }, [toast]);
   const markReady = useCallback(() => setReady(true), []);
@@ -178,7 +178,7 @@ export function AtlasStage({
       )}
       {!flat && !ready && (
         <p className="scene-loading" role="status">
-          Drawing your atlas…
+          Atlas hazırlanıyor…
         </p>
       )}
       {failed && compact && (
@@ -187,7 +187,7 @@ export function AtlasStage({
             <path d="M12 3l9 16H3z" />
             <path d="M12 10v4M12 17v.5" />
           </svg>
-          3D isn't available here; same timeline, flat map.
+          3D kullanılamıyor. Zaman çizelgesi düz haritada gösteriliyor.
         </p>
       )}
       {failed && !compact && (
@@ -197,17 +197,16 @@ export function AtlasStage({
             <path d="M12 10v4M12 17v.5" />
           </svg>
           <p>
-            <b>The atlas is in flat view.</b> This browser couldn't load or draw
-            the globe, so you're seeing the same atlas laid flat. The list,
-            years, search and memories all work. If retrying doesn't help,
-            reload the page to get the latest globe files.
+            <b>Atlas düz haritada gösteriliyor.</b> Tarayıcı küreyi yükleyemedi.
+            Liste, yıllar, arama ve anılar kullanılabilir. Yeniden dene; sorun
+            sürerse sayfayı yenile.
           </p>
           <button
             type="button"
             className="button button--secondary"
             onClick={retry}
           >
-            Retry 3D view
+            3D görünümü yeniden dene
           </button>
         </div>
       )}

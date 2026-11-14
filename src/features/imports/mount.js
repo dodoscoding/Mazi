@@ -1,3 +1,4 @@
+import { groupDestinations } from "../../navigation.ts";
 import {
   confirmAction,
   el,
@@ -68,9 +69,23 @@ export function mount(root, lifecycle) {
   toastNotice($("notice"), lifecycle);
   root.querySelector(".fx").dataset.mode = circleMode ? "circle" : "imports";
   if (circleMode) {
-    $("page-title").textContent = "Our circle";
+    $("page-title").textContent = "Grubumuz";
     $("page-sub").textContent =
-      "The people who share this atlas. Nothing here is public.";
+      "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
+    const shortcuts = el("nav");
+    shortcuts.className = "group-destinations";
+    shortcuts.setAttribute("aria-label", "Grup araçları");
+    for (const entry of groupDestinations) {
+      const link = el("a");
+      link.href = `#${entry.path}`;
+      link.setAttribute("aria-label", entry.label);
+      link.append(
+        el("strong", "", entry.label),
+        el("span", "", entry.description),
+      );
+      shortcuts.append(link);
+    }
+    root.querySelector(".fx-head").after(shortcuts);
   }
 
   async function api(path, body) {
@@ -849,5 +864,21 @@ export function mount(root, lifecycle) {
         $("retry-workspace").disabled = false;
       }
     });
-  run(refresh);
+  run(async () => {
+    await refresh();
+    if (
+      !root.isConnected ||
+      $("workspace").hidden ||
+      lifecycle.mountKind === "refresh"
+    )
+      return;
+    const target =
+      circleMode &&
+      new URLSearchParams(lifecycle.search).get("section") === "settings"
+        ? $("group-settings-heading")
+        : $("page-title");
+    target.focus({ preventScroll: true });
+    if (target.id === "group-settings-heading")
+      target.scrollIntoView({ block: "start" });
+  });
 }

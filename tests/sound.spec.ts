@@ -71,35 +71,22 @@ async function remember(page: Page, key: string, value: string) {
 }
 
 async function openAtlas(page: Page) {
-  await page.goto("/?demo=1");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await page.goto("/?demo=1#/atlas");
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
 }
 
-/** The sound toggle: in the header on wide screens, in More on phones. */
 async function soundToggle(page: Page) {
-  if (isPhone(page)) {
-    const more = page.getByRole("button", { name: "More", exact: true });
-    if ((await more.getAttribute("aria-expanded")) !== "true")
-      await more.click();
-    return page
-      .getByRole("dialog", { name: "More" })
-      .getByRole("button", { name: "Sound", exact: true });
-  }
+  const account = page.getByRole("button", { name: "Hesap", exact: true });
+  if ((await account.getAttribute("aria-expanded")) !== "true")
+    await account.click();
   return page
-    .locator(".site-header")
+    .locator(".account-menu .menu-popover")
     .getByRole("button", { name: "Sound", exact: true });
 }
 
-/** What the toggle shows: its pill label on phones, its tooltip on hover elsewhere. */
 async function expectShown(page: Page, text: "Sound off" | "Sound on") {
-  const toggle = await soundToggle(page);
-  if (isPhone(page)) {
-    await expect(toggle).toHaveText(text);
-    return;
-  }
-  await toggle.hover();
-  await expect(toggle.getByText(text)).toBeVisible();
+  await expect(await soundToggle(page)).toHaveText(text);
 }
 
 test("sound is off until a member turns it on, and the choice survives a reload", async ({
@@ -128,10 +115,10 @@ test("with sound off, browsing the atlas never creates an AudioContext", async (
   await spyOnAudio(page);
   await signIn(page);
   await openAtlas(page);
-  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.getByRole("slider", { name: "Yıl" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/selected=lake-days/);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/view=portal/);
   // The URL leads the render by a frame; Esc belongs to the portal once it holds focus.
   await expect(page.locator("#dossier-title")).toBeFocused();
@@ -154,7 +141,7 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   expect((await audio(page)).songStarts).toEqual([0]);
   expect(await calls(page, "createBufferSource")).toBe(0);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
   await expect.poll(() => calls(page, "createBufferSource")).toBe(1);
   await expect(page.locator("#dossier-title")).toBeFocused();
@@ -175,13 +162,13 @@ test("under reduced motion the whoosh is dropped but a year step still ticks", a
   await page.keyboard.press("Shift");
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   const before = await calls(page, "createOscillator");
-  await page.getByRole("slider", { name: "Year" }).focus();
+  await page.getByRole("slider", { name: "Yıl" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/selected=lake-days/);
   await expect
     .poll(() => calls(page, "createOscillator"))
     .toBeGreaterThan(before);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page).toHaveURL(/view=portal/);
   await page.waitForTimeout(300);
   expect(await calls(page, "createBufferSource")).toBe(0);
@@ -211,7 +198,7 @@ test("the headers with the sound toggle have no axe violations", async ({
     const toggle = await soundToggle(page);
     for (const pressed of ["false", "true"]) {
       await expect(toggle).toHaveAttribute("aria-pressed", pressed);
-      const scope = isPhone(page) ? ".more-sheet" : ".site-header";
+      const scope = ".site-header";
       expect(
         (await new AxeBuilder({ page }).include(scope).analyze()).violations,
         `${theme} ${scope} pressed=${pressed}`,

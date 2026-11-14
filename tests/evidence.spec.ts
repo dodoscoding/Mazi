@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { openFullMemory } from "./helpers/atlas";
 
 test.beforeEach(async ({ page }) => {
   expect(
@@ -26,13 +25,15 @@ test("capture stable Home and memory at the required review sizes", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1");
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
+  await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
+    /is-loaded/,
+  );
   await page.screenshot({
     path: testInfo.outputPath(`${name}.png`),
     fullPage: true,
   });
-  await openFullMemory(page);
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
   await expect(page.locator(".gallery .photo-frame")).toHaveClass(/is-loaded/);
   await page.screenshot({
     path: testInfo.outputPath(`${name}-detail.png`),
@@ -55,9 +56,9 @@ test("resting atlas stops requesting animation frames under reduced motion", asy
       });
     Object.defineProperty(window, "__atlasFrameCount", { get: () => frames });
   });
-  await page.goto("/?demo=1");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await page.goto("/?demo=1#/atlas");
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   // A bounded measurement window after the selection has settled.
   await page.waitForTimeout(1200);
   const before = await page.evaluate(() =>

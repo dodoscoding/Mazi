@@ -82,7 +82,7 @@ class RemainingCapacityTests(unittest.TestCase):
         self.prepare(1001)
         self.store.correct_asset(self.alice, 'capacity-00000', title='Café bicycle', capture_date='2021-01-02', place='Harbour')
         with self.store.transaction():
-            streamed = list(self.store._keyword_documents(self.ben, self.group, '', time.perf_counter(), processing=True))
+            streamed = list(self.store._keyword_documents(self.ben, self.group, '', time.perf_counter(), processing=True, photo_evidence=False))
             for doc in streamed:
                 expected = self.store._document(self.ben, doc['id'])
                 self.assertEqual({key: value for key, value in doc.items() if key != 'person_match'}, expected)

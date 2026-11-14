@@ -301,6 +301,6 @@ they are still required before the parent specification can be considered done.
 - [ ] Remove redundant More/Archive tools inventories, per-surface circle selectors, and obsolete compositions/styles only after their retained responsibilities are in use elsewhere.
 - [ ] Preserve the completed viewer, Add, Settings, source/context, Past creations, entry, and existing accessibility behavior during the switch.
 - [ ] Each contributing slice has desktop/phone and applicable denial/recovery coverage; this ticket checks cross-destination navigation and old-link compatibility rather than replacing those tests.
-- [ ] Reconcile product/specification/roadmap/interaction records with D21 while preserving historical traceability, and record screenshots plus exact validation evidence.
+- [ ] Reconcile product/specification/roadmap/interaction records with D28 while preserving historical traceability, and record screenshots plus exact validation evidence.
 - [ ] Do not deploy, purge content, change storage formats, or modify/close the parent issue as part of this ticket.
 

@@ -707,3 +707,14 @@
     width: 100%;
   }
 }
+
+.feature-content .group-settings-links {
+  display: grid;
+  margin-top: 12px;
+}
+.feature-content .group-settings-links a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent-atmosphere);
+}

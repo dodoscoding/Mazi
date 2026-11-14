@@ -1,0 +1,30 @@
+[WebServer] (node:15519) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 8 tests using 1 worker
+
+(node:15531) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+SYNTHETIC_QUERY_TIMINGS [{"path":"/api/social/home","ms":0.616,"queries":15},{"path":"/api/social/home","ms":0.498,"queries":14},{"path":"/api/social/home","ms":0.96,"queries":14},{"path":"/api/social/home","ms":0.517,"queries":14},{"path":"/api/atlas/memory","ms":1.877,"queries":21},{"path":"/api/atlas/memory","ms":0.617,"queries":21},{"path":"/api/social/home","ms":0.462,"queries":18},{"path":"/api/social/home","ms":1.002,"queries":31},{"path":"/api/social/home","ms":0.748,"queries":31},{"path":"/api/atlas/memory","ms":0.541,"queries":21},{"path":"/api/atlas/memory","ms":1.149,"queries":22}]
+  ✓  1 [desktop] › tests/social-home.spec.ts:79:1 › two sessions go from an empty Home through planning, a real photo upload, conversation and next-day return (9.4s)
+
+  ✓  2 [desktop] › tests/social-home.spec.ts:213:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged (5.4s)
+
+  ✓  3 [desktop] › tests/social-home.spec.ts:277:1 › Home and selected detail recover from read errors and clear withdrawn content (5.8s)
+  ✓  4 [desktop] › tests/social-home.spec.ts:326:1 › a failed optional Home chunk offers reload without requesting the archive (1.7s)
+(node:15599) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  5 [phone] › tests/social-home.spec.ts:79:1 › two sessions go from an empty Home through planning, a real photo upload, conversation and next-day return
+
+  ✓  6 [phone] › tests/social-home.spec.ts:213:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged (5.5s)
+
+  ✓  7 [phone] › tests/social-home.spec.ts:277:1 › Home and selected detail recover from read errors and clear withdrawn content (5.9s)
+  ✓  8 [phone] › tests/social-home.spec.ts:326:1 › a failed optional Home chunk offers reload without requesting the archive (1.8s)
+
+  1 skipped
+  7 passed (37.2s)

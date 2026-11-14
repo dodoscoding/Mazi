@@ -1,0 +1,95 @@
+[WebServer] (node:14051) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 58 tests using 6 workers
+
+(node:14069) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14070) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14071) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/interface-clarity.spec.ts:115:1 › the three destinations and contribution action fit a narrow phone (422ms)
+  ✓   2 [desktop] › tests/interface-clarity.spec.ts:150:1 › entering Home from another section starts at its heading (671ms)
+  ✓   6 [desktop] › tests/interface-clarity.spec.ts:96:1 › legacy portal links remain Atlas entries and globe links use the canonical route (699ms)
+  ✓   4 [desktop] › tests/interface-clarity.spec.ts:10:1 › three primary destinations and a quiet Home make the archive findable (793ms)
+  ✓   3 [desktop] › tests/interface-clarity.spec.ts:171:1 › Home distinguishes loading, retryable failure and an empty shared archive (1.1s)
+  -  11 [desktop] › tests/memory-detail.spec.ts:260:1 › touch swipe tracks the finger and changes photo, also with reduced motion
+  ✓   5 [desktop] › tests/interface-clarity.spec.ts:72:1 › Home returns focus and scroll to the archive link that opened a memory (1.4s)
+  ✓   9 [desktop] › tests/memory-detail.spec.ts:192:1 › keyboard focus stays put at the ends and after Retry (982ms)
+  ✓  10 [desktop] › tests/memory-detail.spec.ts:218:1 › the filmstrip chooses a photo on wider screens (945ms)
+  ✓   7 [desktop] › tests/interface-clarity.spec.ts:232:1 › main Home from a memory starts at the top instead of restoring an old card (1.7s)
+  ✓  12 [desktop] › tests/memory-detail.spec.ts:302:1 › an approximate date reads About with the uncertainty chip and basis (940ms)
+  ✓  14 [desktop] › tests/memory-detail.spec.ts:362:1 › related memories put the same place first and open that memory (673ms)
+  ✓  13 [desktop] › tests/memory-detail.spec.ts:328:1 › place, people and sources show evidence in plain words (1.0s)
+  ✓   8 [desktop] › tests/memory-detail.spec.ts:159:1 › buttons and arrow keys move between photos and keep ?photo=n (1.9s)
+  ✓  16 [desktop] › tests/memory-detail.spec.ts:420:1 › earlier and later follow the dates, with approximate memories in place (632ms)
+  ✓  19 [desktop] › tests/memory-detail.spec.ts:488:1 › a broken photo URL shows the retry state (1.0s)
+  ✓  20 [desktop] › tests/memory-detail.spec.ts:508:3 › ?photo=99 clamps to 3 / 3 (895ms)
+  ✓  21 [desktop] › tests/memory-detail.spec.ts:508:3 › ?photo=-1 clamps to 1 / 3 (900ms)
+  ✓  15 [desktop] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and pill returns past the portal (2.0s)
+  -  25 [desktop] › tests/memory-detail.spec.ts:543:1 › capture memory evidence screenshots
+  -  26 [desktop] › tests/memory-detail.spec.ts:589:1 › capture memory evidence at the responsive widths
+  ✓  17 [desktop] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and Escape returns past the portal (1.9s)
+  ✓  18 [desktop] › tests/memory-detail.spec.ts:479:1 › Escape from a direct memory returns to Home (1.7s)
+  ✓  22 [desktop] › tests/memory-detail.spec.ts:508:3 › ?photo=abc clamps to 1 / 3 (888ms)
+  ✓  23 [desktop] › tests/memory-detail.spec.ts:508:3 › ?photo=1.7 clamps to 2 / 3 (886ms)
+(node:14132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  30 [phone] › tests/interface-clarity.spec.ts:10:1 › three primary destinations and a quiet Home make the archive findable (635ms)
+  ✓  27 [desktop] › tests/memory-detail.spec.ts:617:1 › source sharing is visible on cards, portal and detail without a capture date (1.8s)
+  ✓  24 [desktop] › tests/memory-detail.spec.ts:516:3 › memory screens pass axe in night (2.1s)
+  ✓  32 [phone] › tests/interface-clarity.spec.ts:96:1 › legacy portal links remain Atlas entries and globe links use the canonical route (569ms)
+(node:14147) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  34 [phone] › tests/interface-clarity.spec.ts:115:1 › the three destinations and contribution action fit a narrow phone (298ms)
+  ✓  33 [phone] › tests/interface-clarity.spec.ts:171:1 › Home distinguishes loading, retryable failure and an empty shared archive (553ms)
+  ✓  31 [phone] › tests/interface-clarity.spec.ts:72:1 › Home returns focus and scroll to the archive link that opened a memory (1.8s)
+  ✓  35 [phone] › tests/interface-clarity.spec.ts:150:1 › entering Home from another section starts at its heading (525ms)
+  -  39 [phone] › tests/memory-detail.spec.ts:218:1 › the filmstrip chooses a photo on wider screens
+  ✓  29 [desktop] › tests/memory-detail.spec.ts:822:1 › photo facts stay visible and follow the selected photo across archive views (3.4s)
+  ✓  38 [phone] › tests/memory-detail.spec.ts:192:1 › keyboard focus stays put at the ends and after Retry (944ms)
+(node:14163) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  36 [phone] › tests/interface-clarity.spec.ts:232:1 › main Home from a memory starts at the top instead of restoring an old card (1.7s)
+  ✓  37 [phone] › tests/memory-detail.spec.ts:159:1 › buttons and arrow keys move between photos and keep ?photo=n (1.8s)
+  ✓  41 [phone] › tests/memory-detail.spec.ts:328:1 › place, people and sources show evidence in plain words (966ms)
+  ✓  40 [phone] › tests/memory-detail.spec.ts:260:1 › touch swipe tracks the finger and changes photo, also with reduced motion (1.9s)
+  -  46 [phone] › tests/memory-detail.spec.ts:420:1 › earlier and later follow the dates, with approximate memories in place
+  ✓  42 [phone] › tests/memory-detail.spec.ts:302:1 › an approximate date reads About with the uncertainty chip and basis (951ms)
+  ✓  28 [desktop] › tests/memory-detail.spec.ts:716:1 › opened photographs preserve portrait and panoramic edges (4.9s)
+(node:14175) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  43 [phone] › tests/memory-detail.spec.ts:362:1 › related memories put the same place first and open that memory (1.1s)
+  ✓  44 [phone] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and pill returns past the portal (1.1s)
+  ✓  48 [phone] › tests/memory-detail.spec.ts:488:1 › a broken photo URL shows the retry state (986ms)
+  ✓  45 [phone] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and Escape returns past the portal (1.6s)
+  ✓  50 [phone] › tests/memory-detail.spec.ts:508:3 › ?photo=-1 clamps to 1 / 3 (896ms)
+  -  54 [phone] › tests/memory-detail.spec.ts:543:1 › capture memory evidence screenshots
+  -  55 [phone] › tests/memory-detail.spec.ts:589:1 › capture memory evidence at the responsive widths
+  ✓  49 [phone] › tests/memory-detail.spec.ts:508:3 › ?photo=99 clamps to 3 / 3 (917ms)
+  ✓  51 [phone] › tests/memory-detail.spec.ts:508:3 › ?photo=abc clamps to 1 / 3 (884ms)
+  ✓  47 [phone] › tests/memory-detail.spec.ts:479:1 › Escape from a direct memory returns to Home (1.7s)
+  ✓  52 [phone] › tests/memory-detail.spec.ts:508:3 › ?photo=1.7 clamps to 2 / 3 (886ms)
+  ✓  56 [phone] › tests/memory-detail.spec.ts:617:1 › source sharing is visible on cards, portal and detail without a capture date (1.7s)
+  ✓  53 [phone] › tests/memory-detail.spec.ts:516:3 › memory screens pass axe in night (1.9s)
+  ✓  58 [phone] › tests/memory-detail.spec.ts:822:1 › photo facts stay visible and follow the selected photo across archive views (3.4s)
+  ✓  57 [phone] › tests/memory-detail.spec.ts:716:1 › opened photographs preserve portrait and panoramic edges (4.3s)
+
+  7 skipped
+  51 passed (16.9s)

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler } from "react";
 import type { Photo as PhotoData } from "./memories";
 import { Glyph } from "./memory/glyphs";
+import "./styles/photo.css";
 export function Photo({
   photo,
   continuity = false,
@@ -12,6 +13,7 @@ export function Photo({
   continuity?: boolean;
   eager?: boolean;
   openMemory?: {
+    id?: string;
     href: string;
     label: string;
     onClick: MouseEventHandler<HTMLAnchorElement>;
@@ -78,6 +80,7 @@ export function Photo({
           )}
           {openMemory ? (
             <a
+              id={openMemory.id}
               className="feature-photo-link"
               href={openMemory.href}
               aria-label={openMemory.label}
