@@ -405,17 +405,8 @@ export function MemoryView({
                   href="#/add?section=suggestions"
                   onClick={link("/add?section=suggestions")}
                 >
-                  Arşivi incele
+                  Add önerileri
                 </a>
-                {memory.kind === "memory" && (
-                  <a
-                    className="button button--ghost"
-                    href="#/photos"
-                    onClick={link("/photos")}
-                  >
-                    Ortak bir hikâye yaz
-                  </a>
-                )}
               </div>
             )}
           </div>
@@ -440,14 +431,6 @@ export function MemoryView({
                       </>
                     )}
                   </p>
-                  {!demo && (
-                    <a
-                      href="#/add?section=suggestions"
-                      onClick={link("/add?section=suggestions")}
-                    >
-                      Arşiv incelemesinde tarihi düzelt
-                    </a>
-                  )}
                 </div>
               ) : (
                 basis && <p className="fact-detail">{basis}</p>

@@ -1,6 +1,13 @@
 import { buildChronology } from "./memory/chronology";
 import { sourceSharedLine } from "./memory/provenance";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -221,6 +228,7 @@ function AtlasHome({
   openMemory,
   onPlaced,
   openLink,
+  heading,
 }: {
   archive: Archive;
   memories: Memory[];
@@ -234,6 +242,9 @@ function AtlasHome({
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
+  useLayoutEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [heading]);
   const layout = useLayout();
   const phone = layout === "phone";
   const compact = phone || layout === "tablet";
@@ -827,7 +838,12 @@ function AtlasHome({
       data-flat={flat || undefined}
       aria-labelledby="atlas-title"
     >
-      <h1 id="atlas-title" className="visually-hidden">
+      <h1
+        id="atlas-title"
+        ref={heading}
+        tabIndex={-1}
+        className="visually-hidden"
+      >
         Atlas
       </h1>
       <AtlasStage
