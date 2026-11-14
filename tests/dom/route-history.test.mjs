@@ -86,11 +86,11 @@ test("a plain hash link from a feature page counts as an in-app entry", async (t
   assert.equal(h.canGoBack(), true);
 });
 
-test("Home and Atlas have separate canonical routes", async (t) => {
+test("Atlas legacy links canonicalize to the opening Globe", async (t) => {
   const home = await harness(t, "http://localhost/?demo=1#/");
   assert.equal(home.route.path, "/");
   await home.navigate("/atlas?selected=lake-days&view=portal");
-  assert.equal(home.route.path, "/atlas");
+  assert.equal(home.route.path, "/");
   assert.equal(home.route.selected, "lake-days");
   assert.equal(home.route.search, "?selected=lake-days&view=portal");
 });
@@ -100,14 +100,14 @@ test("legacy root selection links retain their Atlas state", async (t) => {
     t,
     "http://localhost/?demo=1#/?selected=lake-days&view=portal",
   );
-  assert.equal(h.route.path, "/atlas");
+  assert.equal(h.route.path, "/");
   assert.equal(h.route.selected, "lake-days");
   assert.equal(h.route.search, "?selected=lake-days&view=portal");
   assert.equal(h.canGoBack(), false);
 });
 
 for (const [alias, path, search] of [
-  ["people", "/discover", "?section=people"],
+  ["people", "/settings", "?unavailable=people"],
 ]) {
   for (const prefix of ["/", "/#/"]) {
     test(`${prefix}${alias} replaces the legacy entry without adding history`, async (t) => {
@@ -124,13 +124,13 @@ for (const [alias, path, search] of [
 test("aliases reached inside the app preserve the previous destination", async (t) => {
   const h = await harness(t, "http://localhost/#/explore");
   await h.navigate("/people");
-  assert.equal(h.route.path, "/discover");
+  assert.equal(h.route.path, "/settings");
   assert.equal(h.window.history.length, 2);
   await act(async () => {
     h.window.history.back();
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  assert.equal(h.route.path, "/explore");
+  assert.equal(h.route.path, "/photos");
 });
 
 test("a People alias preserves search and sample parameters but owns its section", async (t) => {
@@ -138,8 +138,11 @@ test("a People alias preserves search and sample parameters but owns its section
     t,
     "http://localhost/?demo=1#/people?q=ferry&source=discord&section=other",
   );
-  assert.equal(h.route.path, "/discover");
-  assert.equal(h.route.search, "?q=ferry&source=discord&section=people");
+  assert.equal(h.route.path, "/settings");
+  assert.equal(
+    h.route.search,
+    "?q=ferry&source=discord&section=other&unavailable=people",
+  );
   assert.equal(h.window.location.search, "?demo=1");
   assert.equal(h.window.history.length, 1);
 });
