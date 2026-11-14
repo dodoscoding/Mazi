@@ -6,7 +6,8 @@ Implements #151 and approved specification user stories 27–30, under decision 
 
 - `78ad6e6`: integrated Add import/recovery contract.
 - `a64394c`: expose the existing import workspace at `/add` and through the shell's Add menu.
-- Follow-up regression commit records cancellation/history/session-loss coverage and fixture-independent identification of the imported photograph.
+- `fb46ede`: cancellation/history/session-loss coverage and fixture-independent identification of the imported photograph.
+- `2f06068`: merge latest integration including Settings `00a7eeb`; resolve shared mode detection while preserving Add and Settings. The focused 8-test suite and lint pass again after this merge.
 
 ## Behavior
 
@@ -25,6 +26,7 @@ The owner-approved seam is the existing integrated real-app Playwright boundary 
 - `MAZI_UNIFIED_PORT=8121 npx playwright test --config playwright.unified.config.ts -g 'Add imports|Add preserves|named profile imports|import report has one technical'`: **8 passed** (desktop and phone). This builds the actual app and starts the existing temporary-archive Python server. Covers upload → inventory → confirm → automatic availability, invalid-media retry, report download, exact imported photograph in Globe, persisted history, cancellation before processing, session-loss clearing, retained legacy import/logout behavior, and no publish gate.
 - `.venv/bin/python -m unittest tests.backend.imports.test_http tests.backend.imports.test_engine tests.backend.identity.test_shared_entry`: **49 passed**. Includes upload replay/resume, retry/backoff, recovery, cancellation/withdrawal/departure fencing, report ownership, session validation, and denied media access.
 - `npm run lint`: passed. `git diff --check`: passed.
+- `python3 work/poteto/product-plan/verify_docs.py`: passed (19 authored documents, 350 local links).
 - `npm run build`: passed through the integrated browser server startup; existing bundle-size warning remains.
 
 The broader browser run initially found ambiguous unnamed-photo selectors. The final assertion identifies the asset through the public archive response and its displayed Globe photograph, preserving independence from fixture ordering.
