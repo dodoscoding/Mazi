@@ -119,15 +119,16 @@ test("with sound off, browsing the atlas never creates an AudioContext", async (
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/selected=lake-days/);
   await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
-  await expect(page).toHaveURL(/view=portal/);
-  // The URL leads the render by a frame; Esc belongs to the portal once it holds focus.
-  await expect(page.locator("#dossier-title")).toBeFocused();
+  await expect(page).toHaveURL(/memory\/lake-days/);
+  await expect(
+    page.getByRole("heading", { name: "Lake days", level: 1 }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).not.toHaveURL(/view=portal/);
   expect((await audio(page)).contexts).toBe(0);
 });
 
-test("with sound on, diving into the portal schedules a whoosh", async ({
+test("with sound on, a retained legacy portal schedules a whoosh", async ({
   page,
 }) => {
   await spyOnAudio(page);
@@ -141,7 +142,9 @@ test("with sound on, diving into the portal schedules a whoosh", async ({
   await expect.poll(() => calls(page, "createMediaElementSource")).toBe(1);
   expect((await audio(page)).songStarts).toEqual([0]);
   expect(await calls(page, "createBufferSource")).toBe(0);
-  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await page.evaluate(() => {
+    location.hash = "/?selected=last-ferry&view=portal";
+  });
   await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
   await expect.poll(() => calls(page, "createBufferSource")).toBe(1);
   await expect(page.locator("#dossier-title")).toBeFocused();
@@ -168,7 +171,9 @@ test("under reduced motion the whoosh is dropped but a year step still ticks", a
   await expect
     .poll(() => calls(page, "createOscillator"))
     .toBeGreaterThan(before);
-  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await page.evaluate(() => {
+    location.hash = "/?selected=lake-days&view=portal";
+  });
   await expect(page).toHaveURL(/view=portal/);
   await page.waitForTimeout(300);
   expect(await calls(page, "createBufferSource")).toBe(0);
