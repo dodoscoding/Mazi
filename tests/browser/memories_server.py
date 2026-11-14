@@ -75,6 +75,19 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
                     pass
             asset = store.db.execute('SELECT asset_id FROM archive_origins WHERE run_id=?', (resource['id'],)).fetchone()[0]
             store.correct_asset(alice, asset, title=title, capture_date=None, place='')
+    if os.environ.get('MAZI_PHOTOS_FIXTURE') == '1':
+        import zipfile
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w') as export:
+            export.writestr('lantern-chat.txt', '04/01/2024, 20:00 - Lena: The lanterns are ready for the ferry.\n04/01/2024, 20:01 - Omar: Bring the paper map to the ferry. <img src=x onerror=alert(1)>')
+        data = archive.getvalue()
+        run = store.begin_import(alice, group, 'whatsapp', 'Synthetic lantern conversation', len(data), hashlib.sha256(data).hexdigest(), {'date_order': 'DMY'})
+        store.write_chunk(alice, run, 0, data)
+        store.finish_transfer(alice, run)
+        store.scan(run)
+        store.confirm(alice, run)
+        while store.work_once():
+            pass
     configure_shared(store, group, {"Alice": alice, "Ben": ben})
     if os.environ.get("MAZI_PAST_CREATIONS_FIXTURE") == "1":
         from .past_fixture import seed_past_creations

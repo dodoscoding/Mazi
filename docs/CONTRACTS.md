@@ -316,3 +316,46 @@ Real Home reads only `/api/social/home` after the shared session and circle cont
 Every real `/memory/ID` route uses `/api/atlas/memory`, including permanent `photo-ASSET` links when the photo belongs to an approved memory. A cached Atlas never substitutes for current selected-target authorization. Group, profile or access replacement aborts and clears selected and social projections, and late responses cannot restore them. Visibility/return rereads current authority. A retryable selected revalidation failure preserves the existing page and its private editor until the user retries; a denied read removes it. Discussion and notebook query/focus behavior remains separate. Full Atlas remains available on Atlas/timeline routes and existing Gallery/Search feature owners retain their own scoped readers.
 
 Optional Home, feature-page and full-detail modules load through route boundaries. Failed chunks show a Turkish reload action. Shared photo and Atlas note-link styles load with their actual consumers, before optional detail code. Lazy Home restores the heading on entry and the original card's focus/scroll on return. Detail controls and new landing states use Turkish while titles, comments and imported source content retain their supplied text. Sample mode remains local and never mounts real social authoring controls.
+
+## Retained source conversation reads
+
+The local D28 Photos composition retrieves recorded Conversation context without
+AI answer generation or answer-processing consent. This is a read of retained
+normalized import data, not a new message/memory schema or a complete transcript.
+The media-processing outcome `SKIPPED / NO_MEDIA` remains unchanged: after the
+owner confirms group sharing, its retained source message can be searched without
+inventing a photograph. Inventoried but unconfirmed source text remains private.
+
+| Read | Parameters | Response |
+| --- | --- | --- |
+| `GET /api/discovery/conversations` | Current `group`; keyword `query` (up to 500 characters); optional `source`, `shared_by`, `cursor`, `limit` (1 to 50). | `items`, `next_cursor`, `complete`. Each result retains its normalized record ID, source/conversation, historical sender label, raw source share time, recorded text and `hasPhoto`; no photo association is inferred. |
+| `GET /api/discovery/context` | Current `group`, exact result `record` ID. | The accessible source record plus `sourceRef` and its bounded normalized `messages` window. Unavailable or cross-circle records return 404; denied group membership returns 403. |
+
+Both reads require current reader and contributor membership, an unwithdrawn
+source/import run, and existing source availability. Attached-photo records also
+require their live origin and respect the reader's photo/event hides. Independent
+text-only records keep their own source dependency rather than borrowing a photo's
+visibility. Run withdrawal, contributor departure and membership removal suppress
+both results and subsequent context reads, including imports containing no media.
+The owner retains the existing Add import-withdrawal control for confirmed
+text-only imports. Sender display labels are historical assertions, not verified
+account identities. Displayed message times are sharing evidence, never capture
+dates.
+
+The scan reads at most 256 authorized candidate records per request, with a
+64 KiB stored-record limit and a two-second scan budget. Pages can contain no
+matches while `complete` is false: clients must offer continuation with the same
+query/filters and `next_cursor`, and must not describe an unsearched tail as an
+exhaustive absence. A capacity failure returns the existing `capacity_exceeded`
+error rather than partial context. Each continuation and context open rechecks
+current access; continuation is not an immutable archive snapshot. Refresh starts
+a new scan after archive changes. No index, model, provider call or background job
+is introduced.
+
+Photos presents photographs first and source messages second. Conversation search
+uses keyword, recorded source and historical sender filters. Year, capture-date,
+place and photograph-label filters apply only to photographs; when present, the
+interface explicitly states that scope instead of claiming those properties for
+text-only results. Unsupported conversation API filter parameters return 400. Opening context stays within Photos, is dismissible, and restores
+the query/filter/scroll position. Reload, withdrawal or access/session loss clears
+old context before a new read; delayed responses cannot repopulate closed context.

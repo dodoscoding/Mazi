@@ -61,11 +61,16 @@ test("one authenticated shell connects real Atlas, retained memories, discovery 
     page.getByRole("button", { name: "Start a story", exact: true }),
   ).toHaveCount(0);
   await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
-  await navigate(page, "Search", "search");
-  await expect(page.locator("#results article")).toHaveCount(initialCount);
-  await page.getByLabel("Ara", { exact: true }).fill("bicycle");
+  await navigate(page, "Search", "photos");
+  await expect(page.locator(".mem-tile")).toHaveCount(initialCount);
+  await page
+    .getByRole("searchbox", {
+      name: "Fotoğraf ve konuşmalarda ara",
+      exact: true,
+    })
+    .fill("bicycle");
   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
   await navigate(page, "Ask your archive", "ask");
   await page.getByLabel("Ask the archive").fill("When was bicycle?");
   await page

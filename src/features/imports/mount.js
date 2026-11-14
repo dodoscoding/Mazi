@@ -561,7 +561,12 @@ export function mount(root, lifecycle) {
       report.state,
     );
     $("withdraw").hidden =
-      report.withdrawn || !report.counts.AVAILABLE_TO_GROUP;
+      report.withdrawn ||
+      !(
+        report.counts.AVAILABLE_TO_GROUP ||
+        (report.no_media &&
+          !["UPLOADING", "SCANNING", "INVENTORIED"].includes(report.state))
+      );
     $("transfer").value = Math.round((report.received * 100) / report.size);
     const tableSignature = JSON.stringify(report.items);
     if ($("items").dataset.signature !== tableSignature) {

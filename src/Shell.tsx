@@ -103,8 +103,8 @@ export function Shell({
             {circle && <span className="hud-label circle-name">{circle}</span>}
             <a
               className="shell-search"
-              href="#/search"
-              onClick={link("/search")}
+              href="#/photos?search=1"
+              onClick={link("/photos?search=1")}
               aria-label="Anı ara"
             >
               <Icon name="search" size={20} />

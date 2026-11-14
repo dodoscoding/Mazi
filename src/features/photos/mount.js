@@ -1,8 +1,12 @@
+import { createConversationSearch } from "./search";
 import { createGallery } from "../memories/gallery";
 import "../memories/memories.css";
 import "./photos.css";
 
 export function mount(root, lifecycle) {
+  root.querySelector("#photos-search").hidden = new URLSearchParams(
+    lifecycle.search,
+  ).has("recap");
   const api = async (path) => {
     const response = await lifecycle.fetch(path);
     const value = await response.json();
@@ -13,7 +17,12 @@ export function mount(root, lifecycle) {
     }
     return value;
   };
-  const gallery = createGallery(root, lifecycle, api, { photos: true });
+  const conversations = createConversationSearch(root, lifecycle, api);
+  const gallery = createGallery(root, lifecycle, api, {
+    photos: true,
+    onSearch: conversations.search,
+    onReset: conversations.clear,
+  });
   let group = lifecycle.groupId;
   let active = true;
   const load = async () => {

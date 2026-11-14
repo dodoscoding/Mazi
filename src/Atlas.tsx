@@ -465,7 +465,7 @@ function AtlasHome({
       const onControl = !!target.closest?.("a, button, [role='slider']");
       if (event.key === "/") {
         event.preventDefault();
-        go("/search");
+        go("/photos?search=1");
       } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         const step = event.key === "ArrowRight" ? 1 : -1;
         const index = atlas.years.indexOf(year ?? NaN);

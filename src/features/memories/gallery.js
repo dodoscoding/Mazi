@@ -22,7 +22,12 @@ const focusable =
  * screens and a Filters sheet below 800px. Filters only use fields the Atlas
  * API returns: year, place, people evidence, source and date certainty.
  */
-export function createGallery(root, lifecycle, api, { photos = false } = {}) {
+export function createGallery(
+  root,
+  lifecycle,
+  api,
+  { photos = false, onSearch, onReset } = {},
+) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
   let memories = [],
@@ -64,6 +69,20 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
     $("recap-back").href = `#${recapReturn}`;
   }
   let undated = photos && entry.get("undated") === "1";
+  const photoQuery = $("photos-query");
+  if (photoQuery) {
+    photoQuery.value = entry.get("q") || "";
+    $("photos-search").onsubmit = (event) => {
+      event.preventDefault();
+      void refreshMatches();
+    };
+    $("photos-clear-query").onclick = () => {
+      photoQuery.value = "";
+      photoQuery.focus();
+      void refreshMatches();
+    };
+    if (entry.get("search") === "1") photoQuery.focus({ preventScroll: true });
+  }
   const invalidFilters = new Map();
   for (const [key, parameter] of [
     ["years", "years"],
@@ -151,6 +170,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
     const params = new URLSearchParams();
     if (recap) return params;
     photoFilters.apply(params);
+    if (photoQuery?.value) params.set("q", photoQuery.value);
     for (const [key, parameter] of [
       ["years", "years"],
       ["places", "places"],
@@ -216,6 +236,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
         params.set(to, params.get(from));
         params.delete(from);
       }
+    if (photos) onSearch?.(new URLSearchParams(params), galleryGroup);
     try {
       const result = await api("/api/discovery/matches?" + params);
       if (generation !== matchRun || current !== run) return;
@@ -934,6 +955,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
 
   async function load(group) {
     const current = ++run;
+    onReset?.();
     if (galleryGroup && galleryGroup !== group) {
       filters = emptyFilters();
       photoFilters.reset(false);
