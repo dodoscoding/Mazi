@@ -183,13 +183,13 @@
 
 **Creative North Star: "Luminous night"**
 
-Mazi is a globe seen from space at night. The circle's memories are warm lights on a cool, dark world. A member turns the globe, scrubs through the years, and dives through a portal into one memory. Day is the same atlas printed on paper, not an inverted night.
+Mazi is a globe seen from space at night. The circle's memories are warm lights on a cool, dark world. A member turns the globe, explores years, and opens a photograph directly in the shared viewer. Photos offers the conventional browser for the same archive. Day is the same atlas printed on paper, not an inverted night.
 
 This file records what the redesign built. The values come from the code: [`src/styles/tokens.css`](src/styles/tokens.css), [`src/styles/base.css`](src/styles/base.css), [`src/ui/`](src/ui/), [`src/atlas/palette.ts`](src/atlas/palette.ts) and the screen stylesheets. The owner chose the direction in [D19](docs/DECISIONS.md#luminous-night-visual-world-14-october-2026). The stage order and data shapes are in the [program plan](work/poteto/luminous-night/PLAN.md). The Claude Design "Round 2 · Luminous night" artboards are the measured contract. This file describes the build; it is not production acceptance.
 
 **Key characteristics:**
 
-- Night is the default for everyone. A header toggle switches to day, and the browser remembers it under `mazi.theme`.
+- Night remains the default. The retained day palette describes the earlier visual system; a day toggle is not a new D28 requirement.
 - Cool is the world, warm is the people.
 - One authored 3D scene, with a flat map and plain HTML controls that reach every memory without it.
 - Motion follows one sheet of durations and easings. Under reduced motion, movement becomes a short fade.
@@ -243,17 +243,19 @@ Display sizes are tokens: `display-xl` 72px, `display-l` 48px, `display-m` 32px 
 
 ## Layout
 
-Under [D26](docs/DECISIONS.md#interface-clarity-1-november-2026), the desktop shell has Home, Keşfet and Grubumuz beside the wordmark. Search, Ekle and account controls stay visible in the header. The account menu contains help, introduction replay, sound, group selection and sign-out. It also contains the sample exit when applicable. Page gutters are 48px, then 32px below 1150px, 24px below 800px and 20px below 600px.
+[D28](docs/DECISIONS.md#app-simplification-14-november-2026) defines two primary views, Globe and Photos, with supporting Add and Settings access on desktop and phone. Search must be easy to reach from either primary view and opens Photos search. The final navigation work is tracked in [PR #161](https://github.com/dodoscoding/Mazi/pull/161); the older Home/Keşfet/Grubumuz layout is historical.
 
-Below 600px the header is 64px. A 64px bottom navigation, plus the safe-area inset, uses the same three labels. Ekle stays in the header rather than becoming another tab. Touch targets are 44px, and 48px for primary phone actions.
+Globe preserves the Luminous night world, optional sound, reduced-motion handling and equivalent conventional controls. Opening a photograph goes directly to the shared viewer without a portal preview gate. Photos shows individual photographs by month, newest first, with year navigation, Undated and compact filters rather than permanent tool inventories. Search puts photographs first and exact recorded source conversations second, including conversations with no photograph.
 
-Home uses a large photograph beside a title, available metadata and memory/note actions, then at most three smaller archive memories. It stacks on phones. Keşfet is a directory of named destinations with short descriptions and ordinary links. Grubumuz exposes management links beside the existing group workspace. New entry-page copy is Turkish; existing workspace copy remains English.
+The viewer contains the full photograph within the screen. Facts, conversation context, sources, corrections and eligible contribution controls remain contextual. Closing it returns to the originating route, selection, filters, position and focus. Annual recap uses the same browser/viewer, oldest first, and requires reliable capture-year evidence; it has no editor, generated narration or video tools.
 
-Atlas is a separate view at `/atlas`. Its places index, globe, selected memory and year scrubber retain their existing layout. Home does not mount that control stack. Focused section links reveal People, stories, annual recaps and capsules without changing their underlying workspaces.
+Add combines import/source/progress/recovery and focused correction tasks. Settings contains membership/account controls, export/departure, About/introduction replay and applicable preferences. Past creations appears only for eligible existing content and offers reading/export/authorized deletion under the existing capsule clock rules. No AI or creation controls are reintroduced through secondary navigation.
+
+Retain the established responsive gutters, safe-area clearance, named controls, keyboard focus and reduced-motion alternatives. Touch targets remain at least 44px, and 48px for primary phone actions. Use one current-circle context; necessary circle management belongs in Settings rather than repeated selectors.
 
 ## Elevation & Depth
 
-Depth belongs to the globe. Panels separate by tone and a 1px inset line. Floating layers (menus, sheets, toasts, the dossier) add `shadow-float`. Photo frames sit on `bg-raised` with a 3px radius and crop with `object-fit: cover`.
+Depth belongs to the globe. Panels separate by tone and a 1px inset line. Floating layers (menus, sheets and toasts) add `shadow-float`. Photo frames sit on `bg-raised` with a 3px radius. Thumbnails may crop; the opened viewer contains the entire photograph.
 
 ### The globe at night
 
@@ -278,9 +280,9 @@ Durations: `instant` 120ms, `quick` 200ms, `base` 320ms, `slow` 600ms, `camera` 
 | Toast | Rises 12px over 320ms (`arrive`), leaves over 200ms (`exit`) |
 | Theme switch | 600ms colour tween, `arrive` |
 | First Atlas visit | 4,200ms title sequence over the rising globe |
-| Dive into the portal | 1,600ms: camera 0–1,100ms (`camera`), portal opens 600–1,100ms, dossier rises from 900ms |
-| Back out of the portal | 1,100ms: dossier out over 300ms, portal closes from 250ms, both `exit` |
-| Home to memory photo morph | 600ms in, 420ms back |
+| Historical portal dive (not an opening requirement) | 1,600ms: camera 0–1,100ms (`camera`), portal opens 600–1,100ms, dossier rises from 900ms |
+| Historical portal return | 1,100ms: dossier out over 300ms, portal closes from 250ms, both `exit` |
+| Historical Home photo morph | 600ms in, 420ms back |
 | Photo change in the viewer | Drifts 24px and fades over 360ms, `arrive` |
 | Introduction beats | 480ms, `arrive` |
 | Replay | One year every 1.2s |
@@ -300,13 +302,13 @@ The shared primitives live in `src/ui/`.
 - **IconButton.** A 44px circle with a `line` outline and a 16px icon in `text-secondary`. It turns `text-primary` on hover. In the header it sits on `overlay-hud`.
 - **Theme.** The current app keeps the night palette. The earlier day toggle is no longer exposed in the shell.
 - **Sound toggle.** Named "Sound", with `aria-pressed` carrying the state. Entry and the account menu use a pill labelled "Sound off" or "Sound on". When on, it turns `accent-atmosphere`.
-- **Menu.** Account controls use the existing popover, `surface` and `shadow-float`. Rows remain keyboard operable with focus returned to the trigger on Escape. Archive capabilities use the visible Keşfet directory and group links.
+- **Menu.** Account controls use the existing popover, `surface` and `shadow-float`. Rows remain keyboard operable with focus returned to the trigger on Escape. Archive capabilities use Globe, Photos, Add and Settings rather than a second directory of destinations.
 - **Sheet.** A bottom sheet with a scrim and a drag handle. It traps focus and closes on Escape, a scrim tap or a downward drag. Focus then returns to the opener.
 - **Toast.** Bottom centre, above the phone tab bar, up to 440px wide, with a status icon in `success` or `error`.
 - **Field.** 56px high on `bg-deep` (`surface` by day), with a `text-muted` border, a 6px radius and a HUD label above it.
 - **HUD label.** Geist Mono 11px, uppercase, 0.16em tracking, `text-secondary`. It labels data and places over the globe and fields; it never sits above a heading as a kicker.
 - **Memory meta.** 13px `text-secondary` with tabular numerals; items are joined by a muted middle dot.
-- **Navigation.** Header links are 14px Geist 500 in `text-secondary`. The current section turns `text-primary` with a 1.5px `accent-node` underline. Desktop and phone derive the active parent from the same navigation table. Memory detail belongs to Keşfet; imports and help belong to Grubumuz.
+- **Navigation.** Header links are 14px Geist 500 in `text-secondary`. The current section turns `text-primary` with a 1.5px `accent-node` underline. Desktop and phone derive the active parent from the same navigation table. The shared viewer preserves its originating Globe/Photos/recap state; imports belong to Add and account/help to Settings.
 
 ### Sound
 
