@@ -56,6 +56,12 @@ Final screenshots use the existing explicit fictional sample mode and public sam
 
 Relative to the pre-implementation baseline, frontend source contains 2,919 added and 9,536 deleted lines: a net reduction of 6,617 lines. Tests and acceptance evidence are accounted for separately. Old destination compositions are deleted; retained imports, source connections, correction queues, gallery, source context and historical readers remain shared modules.
 
+## Hosted verification
+
+[GitHub Verify run 43641320992](https://github.com/dodoscoding/Mazi/actions/runs/43641320992) for final evidence commit `dc22f276df9e7e8b5bd02aa51eae7b9b6ea7dda1` failed before any job steps or runner allocation. GitHub reports that recent account payments failed or the spending limit needs adjustment. All five jobs have empty step lists; this is not a hosted test execution result. [Run receipt](verification/github-ci.json) preserves the observed status and annotation.
+
+The repository account owner must resolve billing/spending-limit status before hosted verification can run. Local checks above are complete; optional hosted/model gates remain unverified. No account billing or spending settings were changed.
+
 ## Handoff
 
-All original review findings are resolved and the final automated checks above pass. PR #161 carries closing references for the parent and all thirteen child tickets; GitHub closes them when the PR is merged. Review and merge remain the next owner action. Deployment and production acceptance remain separate.
+All original review findings are resolved and the final local automated checks above pass. Hosted verification has the account-level limitation described above. PR #161 carries closing references for the parent and all thirteen child tickets; GitHub closes them when the PR is merged. Review and merge remain the next owner action. Deployment and production acceptance remain separate.
