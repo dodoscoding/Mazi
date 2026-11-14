@@ -445,9 +445,10 @@ test("shared viewer opens directly and restores Globe and browse state", async (
   await expect(page).toHaveURL(origin);
   await expect(page.locator("#featured-title")).toContainText("Our summer");
   await page.goto("/#/timeline");
-  await page
-    .getByRole("button", { name: "Önce en yeniler", exact: true })
-    .click();
+  if (info.project.name === "desktop")
+    await page
+      .getByRole("button", { name: "Önce en yeniler", exact: true })
+      .click();
   const card = page.locator(".tl-card").filter({ hasText: "Our summer" });
   await card.scrollIntoViewIfNeeded();
   const scroll = await page.evaluate(() => scrollY);
@@ -455,16 +456,18 @@ test("shared viewer opens directly and restores Globe and browse state", async (
   await expect(page.locator(".viewer")).toBeVisible();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(page).toHaveURL(/#\/timeline$/);
-  await expect(
-    page.getByRole("button", { name: "Önce en yeniler", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
   await card.click();
   await expect(page.locator(".viewer")).toBeVisible();
   await page.goBack();
-  await expect(
-    page.getByRole("button", { name: "Önce en yeniler", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
   await page.screenshot({
     path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
   });

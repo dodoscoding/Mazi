@@ -104,6 +104,7 @@ export function Atlas(props: {
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  openMemory: (id: string) => void;
   onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
@@ -217,6 +218,7 @@ function AtlasHome({
   reduced,
   link,
   chooseMemory,
+  openMemory,
   onPlaced,
   openLink,
 }: {
@@ -227,6 +229,7 @@ function AtlasHome({
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  openMemory: (id: string) => void;
   onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
@@ -332,15 +335,10 @@ function AtlasHome({
 
   const openPortal = useCallback(
     (id = selected.id) => {
-      const active = document.activeElement;
-      opener.current =
-        active && active !== document.body ? active : openLink.current;
-      pushed.current = true;
       setPlaying(false);
-      setFocusPlace(null);
-      go(`/atlas?selected=${id}&view=portal`);
+      openMemory(id);
     },
-    [selected.id, openLink],
+    [selected.id, openMemory],
   );
   const closePortal = useCallback(() => {
     if (pushed.current) {
