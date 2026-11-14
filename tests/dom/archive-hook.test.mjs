@@ -323,3 +323,50 @@ test("group change aborts old read and cannot accept its late success", async (t
   await act(async () => pending.resolve(Response.json(groups)));
   assert.equal(h.current.group, "other");
 });
+
+for (const failure of ["network", "401", "403"]) {
+  test(`quiet Atlas ${failure} preserves data only for transient failure`, async (t) => {
+    let fail = false,
+      lost = 0;
+    const h = await harness(t, async (path) => {
+      if (path === "/api/groups") return Response.json(groups);
+      if (fail) {
+        if (failure === "network") throw Error("offline");
+        return new Response("Denied", { status: Number(failure) });
+      }
+      return Response.json({ memories: [{ id: "photo" }] });
+    });
+    h.window.addEventListener("mazi:access-lost", () => lost++);
+    await h.render("/");
+    fail = true;
+    await visibility(h, false);
+    if (failure === "network") {
+      assert.equal(h.current.status, "ready");
+      assert.equal(h.current.memories[0].id, "photo");
+      assert.equal(lost, 0);
+    } else {
+      assert.notEqual(h.current.status, "ready");
+      assert.deepEqual(h.current.memories, []);
+      assert.equal(lost, 1);
+      assert.equal(h.window.sessionStorage.getItem("mazi.group"), null);
+    }
+  });
+}
+
+test("newer denial wins over an overlapping quiet archive success", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  const h = await harness(t, async (path) => {
+    if (path !== "/api/groups")
+      return Response.json({ memories: [{ id: "photo" }] });
+    if (++calls === 1) return Response.json(groups);
+    if (calls === 2) return pending.promise;
+    return new Response("Denied", { status: 403 });
+  });
+  await h.render("/");
+  await visibility(h, false);
+  await visibility(h, false);
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.deepEqual(h.current.memories, []);
+  assert.notEqual(h.current.status, "ready");
+});
