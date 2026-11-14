@@ -42,6 +42,18 @@ async function request(path: string, signal?: AbortSignal, body?: object) {
     const error = await response.json();
     throw Error(error.error || "Past creations could not load. Please retry.");
   }
+  const json = response.json.bind(response);
+  const blob = response.blob.bind(response);
+  response.json = async () => {
+    const value = await json();
+    if (signal?.aborted) throw new DOMException("Read cancelled", "AbortError");
+    return value;
+  };
+  response.blob = async () => {
+    const value = await blob();
+    if (signal?.aborted) throw new DOMException("Read cancelled", "AbortError");
+    return value;
+  };
   return response;
 }
 function CreationPhoto({ path, alt }: { path: string; alt: string }) {
@@ -147,19 +159,20 @@ export default function PastCreations({
   }, [deleting]);
   async function act(work: () => Promise<void>) {
     if (pending) return;
+    const activeController = controller.current;
     setPending(true);
     setNotice("");
     try {
       await work();
     } catch (error) {
-      if (!controller.current.signal.aborted)
+      if (!activeController.signal.aborted)
         setNotice(
           error instanceof Error
             ? error.message
             : "Operation failed. Please retry.",
         );
     } finally {
-      if (!controller.current.signal.aborted) setPending(false);
+      if (!activeController.signal.aborted) setPending(false);
     }
   }
   async function exportRecord(kind: "story" | "capsule", id: string) {
