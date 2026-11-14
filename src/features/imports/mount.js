@@ -54,6 +54,8 @@ export function mount(root, lifecycle) {
     settingsMode ||
     location.hash.startsWith("#/circle") ||
     location.pathname === "/circle";
+  const addMode =
+    location.hash.startsWith("#/add") || location.pathname === "/add";
   let group = null;
   let groups = [];
   let selectedRun = null;
@@ -72,6 +74,7 @@ export function mount(root, lifecycle) {
   });
   toastNotice($("notice"), lifecycle);
   root.querySelector(".fx").dataset.mode = circleMode ? "circle" : "imports";
+  if (addMode) $("page-title").textContent = "Add";
   if (circleMode) {
     $("page-title").textContent = settingsMode ? "Settings" : "Grubumuz";
     if (settingsMode) {

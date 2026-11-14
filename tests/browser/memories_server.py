@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='mazi-discovery-browser-') as root:
         image = io.BytesIO()
         Image.new('RGB', (80, 80), color).save(image, 'JPEG')
         data = image.getvalue()
-        resource = store.begin_resource(alice, source, dict(item=str(index), component='photo', version='original', filename=f'photo-{index}.jpg', date='2024-01-02', kind='image', albums=[]), len(data), hashlib.sha256(data).hexdigest())
+        resource = store.begin_resource(alice, source, dict(item=str(index), component='photo', version='original', filename=f'photo-{index}.jpg', date='2024-01-02', kind='image', albums=[], context=[{'locator': '0', 'text': 'Anyone checked the ferry time?', 'sender': {'label': 'Maya'}, 'shared_at': '2024-01-02T21:14:00'}, {'locator': 'reply-0', 'text': 'Worth missing the ferry for.', 'sender': {'label': 'Alex'}, 'shared_at': '2024-01-02T21:18:00'}] if index == 0 else []), len(data), hashlib.sha256(data).hexdigest())
         store.resource_chunk(alice, resource['id'], 0, data)
         store.finish_resource(alice, resource['id'])
         while store.work_once(): pass

@@ -185,6 +185,14 @@ export function MemoryView({
   return (
     <article className="memory-detail">
       <div className="detail-bar">
+        <a
+          className="round-link"
+          href={`#${backUrl}`}
+          onClick={back}
+          aria-label="Fotoğrafı kapat"
+        >
+          <Glyph name="close" size={18} />
+        </a>
         <div className="detail-bar-start">
           <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
@@ -503,31 +511,31 @@ function Conversation({ memory }: { memory: Memory }) {
   return (
     <section className="conversation" aria-labelledby="conversation-heading">
       <h2 id="conversation-heading">Kaynak konuşmadan</h2>
-      <p className="conversation-origin">
-        Özgün konuşmada paylaşılan, aktarılmış alıntılar.
-      </p>
-      <blockquote>
-        <p>“{first.text}”</p>
-      </blockquote>
-      <p className="conversation-who">
-        {first.name}
-        {first.time && `, ${readableDate(first.time)}`}
-      </p>
-      {memory.messages.length > 1 && (
-        <>
-          <button
-            type="button"
-            className="conversation-toggle"
-            aria-expanded={expanded}
-            aria-controls="conversation-messages"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
-            <span className="toggle-mark" aria-hidden="true">
-              <Glyph name="chevron-right" size={16} />
-            </span>
-          </button>
-          <ol id="conversation-messages" hidden={!expanded}>
+      <button
+        type="button"
+        className="conversation-toggle"
+        aria-expanded={expanded}
+        aria-controls="conversation-messages"
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
+        <span className="toggle-mark" aria-hidden="true">
+          <Glyph name="chevron-right" size={16} />
+        </span>
+      </button>
+      <div id="conversation-messages" hidden={!expanded}>
+        <p className="conversation-origin">
+          Özgün konuşmada paylaşılan, aktarılmış alıntılar.
+        </p>
+        <blockquote>
+          <p>“{first.text}”</p>
+        </blockquote>
+        <p className="conversation-who">
+          {first.name}
+          {first.time && `, ${readableDate(first.time)}`}
+        </p>
+        {memory.messages.length > 1 && (
+          <ol>
             {memory.messages.map((message, index) => (
               <li key={index}>
                 <div>
@@ -538,8 +546,8 @@ function Conversation({ memory }: { memory: Memory }) {
               </li>
             ))}
           </ol>
-        </>
-      )}
+        )}
+      </div>
     </section>
   );
 }

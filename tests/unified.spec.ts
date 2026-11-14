@@ -72,10 +72,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(
     page.getByRole("heading", { name: "Our summer", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
-  expect(await page.locator(".photo-frame img").getAttribute("src")).toContain(
-    "/api/",
-  );
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
+  expect(
+    await page.locator(".viewer-track .photo-frame img").getAttribute("src"),
+  ).toContain("/api/");
   await page
     .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
     .click();
@@ -410,4 +410,309 @@ test("access loss clears private drafts and supporting records", async ({
         nodes.map((node) => (node as HTMLTextAreaElement).value),
       ),
   ).not.toContain("Private unsaved capsule draft");
+});
+
+test("shared viewer opens directly and restores Globe and browse state", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  const origin = page.url();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await expect(page.locator(".dossier")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/photo=1/);
+  expect(
+    await page
+      .locator(".viewer-track img")
+      .evaluate((image) => getComputedStyle(image).objectFit),
+  ).toBe("contain");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(origin);
+  await expect(page.locator("#featured-title")).toContainText("Our summer");
+  await page.goto("/#/timeline");
+  if (info.project.name === "desktop")
+    await page
+      .getByRole("button", { name: "Önce en yeniler", exact: true })
+      .click();
+  const card = page.locator(".tl-card").filter({ hasText: "Our summer" });
+  await card.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => scrollY);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page).toHaveURL(/#\/timeline$/);
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.goBack();
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
+  });
+});
+
+test("shared viewer preserves individual-photo selection and closes to filtered gallery", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all&order=oldest&years=2024");
+  const photo = page.locator('.mem-tile[href*="photo=1"]').first();
+  await photo.scrollIntoViewIfNeeded();
+  const origin = page.url();
+  const selected = await photo.getAttribute("href");
+  await photo.click();
+  await expect(page).toHaveURL(
+    new RegExp(selected!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"),
+  );
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page
+    .getByRole("link", { name: "Fotoğrafı kapat", exact: true })
+    .click();
+  await expect(page).toHaveURL(origin);
+  await expect(photo).toBeFocused();
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
+});
+
+test("shared viewer keeps Conversation context optional and supports keyboard photos", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  await openFullMemory(page);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("“Anyone checked the ferry time?”", { exact: true }),
+  ).toBeHidden();
+  await page
+    .getByRole("button", { name: "Konuşmayı göster", exact: true })
+    .click();
+  await expect(
+    page.getByText("Worth missing the ferry for.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Kaynak bilgileri", exact: true }),
+  ).toBeVisible();
+  await page.locator(".viewer").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByText("3 / 3", { exact: true })).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-context-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("shared viewer clears retained private media when the session is lost", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all");
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.locator(".viewer, .mem-tile, .facts, .conversation"),
+  ).toHaveCount(0);
+  expect(
+    (
+      await page.request.get("/api/atlas/memory?group=missing&memory=missing")
+    ).status(),
+  ).toBe(403);
+});
+
+test("Add imports, recovers failures and shares successful photographs automatically", async ({
+  page,
+}, info) => {
+  const login = await page.request.post("/api/entry", {
+    data: {
+      name: "Ben",
+      code: "synthetic-shared-code",
+    },
+  });
+  expect(login.ok()).toBe(true);
+  await page.goto("/#/add");
+  await expect(
+    page.getByRole("heading", { name: "Add", exact: true, level: 1 }),
+  ).toBeVisible();
+  const filename = `add-${info.project.name}-${Date.now()}.jpg`;
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; from PIL import Image; p=io.BytesIO(); Image.new('RGB',(83,61),(51,78,121)).save(p,'JPEG'); a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr(sys.argv[1],p.getvalue()); z.writestr('broken.jpg',b'not a photograph'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+    filename,
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page.getByLabel("Source account label").fill("Add synthetic archive");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "add.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Start importing to group", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("completed");
+  await expect(page.locator("#report-summary")).toContainText(
+    "1 available to group",
+  );
+  await expect(page.locator("#items")).toContainText("invalid media");
+  const retrying = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/imports/retry") &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Retry item", exact: true }).click();
+  const retry = await retrying;
+  expect(retry.ok()).toBe(true);
+  const retriedRun = retry.request().postDataJSON().id;
+  await expect
+    .poll(async () => {
+      const report = await (
+        await page.request.get(`/api/imports/${retriedRun}`)
+      ).json();
+      return report.state;
+    })
+    .toBe("COMPLETED");
+  await expect(page.locator("#report-title")).toContainText("completed");
+  await expect(
+    page.getByRole("button", { name: "Retry item", exact: true }),
+  ).toBeVisible();
+  const downloading = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download outcome report", exact: true })
+    .click();
+  expect((await downloading).suggestedFilename()).toBe(
+    "mazi-import-report.json",
+  );
+  const profile = await login.json();
+  const records = await (
+    await page.request.get(`/api/archive?group=${profile.group_id}`)
+  ).json();
+  const imported = records.find(
+    (record: { origins: { original_filename: string }[] }) =>
+      record.origins.some((origin) => origin.original_filename === filename),
+  );
+  expect(imported).toBeTruthy();
+  await page.goto("/#/atlas");
+  await expect(
+    page
+      .getByRole("button", {
+        name: "Untitled photograph anısını seç",
+        exact: true,
+      })
+      .filter({ has: page.locator(`img[src$="/${imported.id}"]`) }),
+  ).toBeVisible();
+  await page.goto("/#/add");
+  await expect(page.locator("#imports")).toContainText("Done");
+  await page.screenshot({
+    path: `work/poteto/app-simplification/add-${info.project.name}.png`,
+    animations: "disabled",
+    fullPage: true,
+  });
+});
+
+test("Add preserves inventory cancellation, history and session-loss clearing", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page.getByRole("button", { name: "Ekle", exact: true }).click();
+  await page.getByRole("link", { name: "Add", exact: true }).click();
+  await expect(page).toHaveURL(/#\/add$/);
+  const fixture = execFileSync(".venv/bin/python", [
+    "-c",
+    "import io,sys,zipfile; a=io.BytesIO(); z=zipfile.ZipFile(a,'w'); z.writestr('cancelled.jpg',b'cancel before processing'); z.close(); sys.stdout.buffer.write(a.getvalue())",
+  ]);
+  await page.locator("#upload select[name=source]").selectOption("manual");
+  await page
+    .getByLabel("Source account label")
+    .fill("cancelled synthetic archive");
+  await page.getByLabel("Export ZIP").setInputFiles({
+    name: "cancel.zip",
+    mimeType: "application/zip",
+    buffer: fixture,
+  });
+  await page
+    .getByRole("button", { name: "Upload and inspect inventory", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("inventoried");
+  await page
+    .getByRole("button", { name: "Cancel remaining work", exact: true })
+    .click();
+  await expect(page.locator("#report-title")).toContainText("cancelled");
+  await expect(page.locator("#report-summary")).toContainText(
+    "0 unique photos",
+  );
+  await page.reload();
+  await expect(page.locator("#imports")).toContainText("Cancelled");
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.reload();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator("#imports")).toHaveCount(0);
 });

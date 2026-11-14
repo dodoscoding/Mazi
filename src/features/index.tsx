@@ -22,6 +22,7 @@ import "./workspace.css";
 import "./imports/imports.css";
 
 export const featureRegistry = {
+  "/add": { template: importsTemplate, mount: importsMount },
   "/imports": { template: importsTemplate, mount: importsMount },
   "/circle": { template: importsTemplate, mount: importsMount },
   "/settings": { template: importsTemplate, mount: importsMount },
@@ -114,7 +115,12 @@ export function FeaturePage({
       link.href = "#/imports";
       link.textContent = "Sign in";
       link.addEventListener("click", () => {
-        if (pathname === "/imports" || pathname === "/circle") mount();
+        if (
+          pathname === "/add" ||
+          pathname === "/imports" ||
+          pathname === "/circle"
+        )
+          mount();
       });
       container.append(message, link);
     };
