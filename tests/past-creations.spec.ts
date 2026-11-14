@@ -123,6 +123,9 @@ test("Past creations retains historical reads and only authorized deletion", asy
   await expect(
     page.getByRole("heading", { name: "Sealed capsule", exact: true }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Past creations", exact: true }),
+  ).toBeFocused();
   await page.screenshot({
     path: `work/poteto/app-simplification/past-creations-${info.project.name}.png`,
     fullPage: true,

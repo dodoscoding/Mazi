@@ -406,6 +406,7 @@ export default function PastCreations({
               if (!controller.current.signal.aborted) {
                 setDeleting(null);
                 reload();
+                requestAnimationFrame(() => heading.current?.focus());
               }
             })
           }
