@@ -42,6 +42,20 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
       : location.search);
   const entry = new URLSearchParams(searchText);
   let undated = photos && entry.get("undated") === "1";
+  const photoQuery = $("photos-query");
+  if (photoQuery) {
+    photoQuery.value = entry.get("q") || "";
+    $("photos-search").onsubmit = (event) => {
+      event.preventDefault();
+      void refreshMatches();
+    };
+    $("photos-clear-query").onclick = () => {
+      photoQuery.value = "";
+      photoQuery.focus();
+      void refreshMatches();
+    };
+    if (entry.get("search") === "1") photoQuery.focus({ preventScroll: true });
+  }
   const invalidFilters = new Map();
   for (const [key, parameter] of [
     ["years", "years"],
@@ -128,6 +142,7 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
   function parameters() {
     const params = new URLSearchParams();
     photoFilters.apply(params);
+    if (photoQuery?.value) params.set("q", photoQuery.value);
     for (const [key, parameter] of [
       ["years", "years"],
       ["places", "places"],
