@@ -115,6 +115,16 @@ export function Shell({
                 <nav aria-label="Ekle seçenekleri" className="menu-list">
                   <a
                     className="menu-item"
+                    href="#/add"
+                    onClick={(event) => {
+                      link("/add")(event);
+                      close();
+                    }}
+                  >
+                    Add
+                  </a>
+                  <a
+                    className="menu-item"
                     href="#/imports"
                     onClick={(event) => {
                       link("/imports")(event);
