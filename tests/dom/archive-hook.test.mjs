@@ -314,3 +314,62 @@ test("selected-memory routes never request the full Atlas", async (t) => {
   assert.deepEqual(calls, ["/api/groups"]);
   assert.equal(h.current.status, "ready");
 });
+
+test("archive changes keep feature circle context and refresh cached Atlas on return", async (t) => {
+  let title = "Before";
+  const h = await harness(t, async (path) =>
+    Response.json(
+      path === "/api/groups"
+        ? groups
+        : { memories: [{ ...archivePhoto("photo"), title }] },
+    ),
+  );
+  await h.render("/atlas");
+  await h.render("/settings");
+  const circleContext = h.current.groups;
+  title = "After";
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.group, "circle");
+  assert.equal(h.current.groups, circleContext);
+  assert.deepEqual(h.current.memories, []);
+  await h.render("/atlas");
+  assert.equal(h.current.memories[0].title, "After");
+});
+
+test("archive invalidation aborts pending Atlas and denial clears private context", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  let signal;
+  let denied = false;
+  const h = await harness(t, async (path, options) => {
+    if (path === "/api/groups") return Response.json(groups);
+    calls++;
+    if (calls === 1) {
+      signal = options.signal;
+      return pending.promise;
+    }
+    return denied
+      ? Response.json({ error: "Denied" }, { status: 403 })
+      : Response.json({ memories: [archivePhoto("fresh")] });
+  });
+  await h.render("/atlas");
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(signal.aborted, true);
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () =>
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
+  );
+  assert.equal(h.current.memories[0].id, "fresh");
+  denied = true;
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.deepEqual(h.current.memories, []);
+  assert.deepEqual(h.current.groups, []);
+  assert.equal(h.current.group, "");
+});

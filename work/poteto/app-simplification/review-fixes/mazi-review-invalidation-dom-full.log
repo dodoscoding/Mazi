@@ -1,0 +1,198 @@
+✔ independent feature routes load circle context without requesting Atlas (173.298167ms)
+✔ Atlas routes still load current memories and demo search remains local (245.436416ms)
+✔ leaving Atlas aborts and ignores late data; returning fetches again (180.40325ms)
+✔ a reload that is denied clears the circle and reports lost access (304.408291ms)
+✔ without an authenticated profile no archive requests are made (180.859375ms)
+✔ superseded loads abort and lost access cancels private work (206.410916ms)
+✔ backgrounding keeps the loaded atlas and makes no requests (226.910334ms)
+✔ moving between Atlas and feature pages keeps the loaded atlas (265.596417ms)
+✔ choosing another circle sticks and loads that circle (251.340833ms)
+9:51:45 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ a saved photo correction rereads authoritative Atlas facts (304.017875ms)
+✔ selected-memory routes never request the full Atlas (135.237791ms)
+✔ archive changes keep feature circle context and refresh cached Atlas on return (237.849541ms)
+✔ archive invalidation aborts pending Atlas and denial clears private context (254.436334ms)
+9:51:43 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ failed land requests can retry and only usable land is cached (333.626458ms)
+9:51:43 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ a stalled land request is aborted within ten seconds and can retry (338.52625ms)
+✔ a stalled response body is also bounded and cannot populate the cache late (281.106458ms)
+9:51:44 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ land recovers from network rejection without caching failure (313.178292ms)
+✔ land recovers from invalid JSON without caching failure (324.198625ms)
+✔ land recovers from empty geometry without caching failure (391.831417ms)
+✔ land recovers from malformed geometry without caching failure (257.530209ms)
+9:51:45 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ an already cancelled land caller does not start a request (259.273917ms)
+✔ the globe renders while the optional land request is stalled (531.600084ms)
+9:51:44 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ retrying a failed scene loads it again while ordinary rerenders do not (429.878667ms)
+✔ a scene retry cancels old land work and late results cannot replace recovered land (393.435333ms)
+✔ globe startup does not wait for page load and unmount removes deferred land work (282.951458ms)
+✔ unmount aborts land and ignores a late transport success (491.856625ms)
+✔ visibility, reduced motion, compact framing and context loss survive recovery (292.745208ms)
+✔ repeated scene failures remain usable in flat view with reload guidance (332.727917ms)
+✔ review capacity keeps timeline and reviewed decisions available with honest summaries (148.673667ms)
+✔ finishing the full review timeline cannot claim all caught up while suggestions are unavailable (4721.040042ms)
+✔ review suggestion retries stay locked while pending and preserve correction drafts (47.311167ms)
+✔ archive 401 still clears private input and reports access loss (39.676041ms)
+✔ archive 403 still clears private input and reports access loss (44.794458ms)
+✔ selected photo conversation batches only its visible page reactions and escapes plain text (236.757166ms)
+✔ session loss clears conversation text, counts and private draft (134.230041ms)
+✔ a lost write keeps its text and retries the identical command (225.799084ms)
+▶ late reads and writes cannot restore comments after group or access loss
+  ✔ late read (109.661792ms)
+  ✔ late write (215.152292ms)
+✔ late reads and writes cannot restore comments after group or access loss (325.399708ms)
+✔ a stale edit reloads current text without replacing its private draft (267.190625ms)
+✔ denied reaction batches discard a previously visible comment and every reaction (198.544917ms)
+✔ failed page loads offer an exact-cursor retry without leaking the previous projection (267.338833ms)
+✔ a confirmed create outside the page is visible without expanding reaction batches (512.185041ms)
+▶ deleting a different comment preserves new and edit drafts, including an exact delete retry
+  ✔ new composer (221.231834ms)
+  ✔ other edit draft (187.446083ms)
+✔ deleting a different comment preserves new and edit drafts, including an exact delete retry (408.968875ms)
+✔ Discord return loads channels while an unrelated archive page is pending (304.585959ms)
+✔ replacement views await one Discord exchange (113.791125ms)
+✔ clear invalidates an in-flight Discord result (51.447541ms)
+✔ account invalidates an in-flight Discord result (29.333167ms)
+✔ Discord return completes once across the React effect lifecycle (1240.648458ms)
+✔ backgrounding keeps the signed-in view and revalidates quietly on return (173.625ms)
+✔ quiet revalidation keeps the view through outages and clears it on lost access (87.676708ms)
+✔ a different person or circle on return clears the view (99.512375ms)
+✔ revalidation keeps the circle the person chose (60.552667ms)
+✔ a feature page keeps its mounted view while the tab is hidden (910.331375ms)
+✔ Gallery badges come from its read and explicit selection loads one bounded editor request (765.983083ms)
+✔ Gallery selection stops at fifty stable asset IDs (841.499458ms)
+✔ Gallery deselect cancels an editor whose lazy import is pending (541.765125ms)
+✔ Gallery clear cancels an editor whose lazy import is pending (500.845083ms)
+✔ Gallery toggle cancels an editor whose lazy import is pending (491.505792ms)
+✔ an upload uses its own resume offset while another report is selected (152.560125ms)
+✔ a workspace load failure offers a retry that restores the requested circle without duplicate history (17.773917ms)
+✔ the submitted archive keeps its circle and source when the form changes during hashing (19.404459ms)
+✔ an already completed archive keeps its report without transferring again (97.696666ms)
+✔ overlapping gallery refreshes keep only the newest page and cursor (35.560125ms)
+✔ a late report page cannot replace the most recently requested page (81.202625ms)
+✔ repeated load-more clicks request and append each gallery page once (125.763625ms)
+✔ a failed load-more request releases the control and retries the same cursor (62.503291ms)
+✔ source-record pagination prevents duplicate requests and can retry a failure (28.251708ms)
+✔ archive transfer fills the allowed chunk size and preserves every byte (253.179792ms)
+✔ periodic polling respects COMPLETED lifecycle (72.770125ms)
+✔ periodic polling respects CANCELLED lifecycle (67.830333ms)
+✔ periodic polling respects FAILED lifecycle (40.048334ms)
+✔ periodic polling respects INVENTORIED lifecycle (66.241875ms)
+✔ periodic polling respects PROCESSING lifecycle (35.38475ms)
+✔ media progress excludes records without media and inventory awaits confirmation (19.899042ms)
+✔ atomic selection sends only chosen dimensions and retries an identical receipt after lost response (768.130291ms)
+✔ conflict reloads all selected revisions without discarding the draft (244.423083ms)
+✔ group change clears selection drafts and ignores late write results (459.2445ms)
+9:51:46 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ access denial rereads the whole selection and removes drafts (266.494792ms)
+✔ phone Photos exposes a conventional year and compact filters without alternate browse modes (765.725375ms)
+✔ selected-photo editor preserves draft after conflict and retries only that field (844.574917ms)
+✔ access loss aborts pending save and ignores its late success (398.839584ms)
+✔ draft input waits for its selected-photo snapshot before accepting edits (169.10725ms)
+✔ Photos renders each photo's date and place under its thumbnail (718.311875ms)
+✔ Viewer changes the facts with the selected photo instead of copying the memory summary (463.118291ms)
+✔ Gallery renders only authoritative matched children while preserving original photo indices and URLs (544.544083ms)
+9:51:46 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ Photos restores archive and label predicates and reset clears the complete selection (510.759083ms)
+✔ pending and failed Gallery matches clear stale thumbnails and totals while retaining the filter (235.400125ms)
+✔ Gallery keeps failed authority after selection changes (HTTP 400) and retries the filter (185.3475ms)
+✔ Gallery keeps failed authority after selection changes (HTTP 503) and retries the filter (217.166666ms)
+✔ Gallery keeps an initial archive failure after selection changes (118.883292ms)
+✔ Photos search 400 clears stale matches, retains query and retries (737.737917ms)
+✔ Photos search 503 clears stale matches, retains query and retries (228.167625ms)
+✔ Photos displays photographs while secondary conversations fail and retry independently (235.337875ms)
+✔ late Photos matching response cannot replace a newer query (185.23175ms)
+✔ Photos preserves legacy place, country and object predicates plus opaque bookmark context (127.381916ms)
+✔ the tray opens, asks which Victoria, and pins every photo of the chosen memory (644.253ms)
+✔ an unknown city is reported, writes nothing and keeps the memory in the tray (93.672542ms)
+✔ on a phone the tray closes after a pin so the globe shows it (207.933125ms)
+✔ a placed memory can be cleared, and placed memories update at once then from the server (120.440667ms)
+✔ a saved whole-memory place updates each child's evidence before a failed reread (174.878125ms)
+✔ map capacity keeps repair controls available and removal restores the map (470.986042ms)
+✔ failed source and contribution refresh preserve draft and selection for retry (147.262667ms)
+✔ older map source and contribution responses cannot replace a newer refresh (140.665084ms)
+✔ a removed selected contribution never silently retargets a location draft (159.176625ms)
+✔ access loss 401 clears drafts and ignores late source and contribution data (98.533833ms)
+✔ access loss 403 clears drafts and ignores late source and contribution data (104.484292ms)
+✔ a groups network failure offers retry without false sign-in and restores focus (76.708833ms)
+✔ successful share remains saved when map refresh fails (77.6ms)
+✔ successful remove remains saved when map refresh fails (88.010833ms)
+✔ a stalled optional coastline does not block places or source controls (453.921792ms)
+✔ coastline retry clears a malformed-data warning without losing places (104.593708ms)
+✔ obsolete coastline failure cannot replace a successful newer map (100.0775ms)
+✔ real lifecycle access denial still hides private places and ignores late outlines (130.687542ms)
+✔ source summary states the scope of 31 shared items (73.960334ms)
+✔ source summary states the scope of 1020 shared items (49.616417ms)
+✔ source summary states the scope of 1021 shared items (68.99875ms)
+✔ source summary discloses paginated provenance (51.465041ms)
+✔ failed lookahead never claims a complete source summary (73.813542ms)
+✔ older source overview cannot overwrite a newer refresh (86.639167ms)
+✔ disposed places view ignores a late source overview (72.704792ms)
+✔ returning from Discord links the server and creates a source from chosen channels (44.578ms)
+✔ Discord channel limits and refusals stay inside the source form (45.709125ms)
+✔ an empty circle explains connecting first and a cancelled return changes nothing (33.755333ms)
+✔ review search commits only the newest requested query (295.184958ms)
+✔ an obsolete search error cannot replace successful newer results (107.83475ms)
+✔ review load-more locks repeated requests and retries a failed cursor (109.943541ms)
+✔ saving a review place says whether it was pinned on the map (117.49325ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (138.082708ms)
+✔ a memory opened from inside the app can go back, across photo changes (50.700959ms)
+✔ a plain hash link from a feature page counts as an in-app entry (22.410625ms)
+✔ Atlas legacy links canonicalize to the opening Globe (31.749292ms)
+✔ legacy root selection links retain their Atlas state (56.914458ms)
+✔ /people replaces the legacy entry without adding history (47.521625ms)
+✔ /#/people replaces the legacy entry without adding history (33.476792ms)
+✔ aliases reached inside the app preserve the previous destination (18.076209ms)
+✔ a People alias preserves search and sample parameters but owns its section (30.825583ms)
+✔ /settings is a real route without an alias history entry (15.959292ms)
+✔ /#/settings is a real route without an alias history entry (36.811708ms)
+✔ old /timeline?year=2024&q=two%3Fwords&places=%5B%22Doe%2C+City%22%5D&photo=2 preserves its retained task and exact parameters (18.229792ms)
+✔ old /memories?story=exact-record&group=circle preserves its retained task and exact parameters (18.014417ms)
+✔ old /memories?section=capsules&capsule=sealed preserves its retained task and exact parameters (21.934834ms)
+✔ old /review?section=export&asset=original preserves its retained task and exact parameters (37.68025ms)
+✔ old /review?section=events&cursor=next preserves its retained task and exact parameters (20.917084ms)
+✔ old /circle?section=plans&plan=actual-plan&group=foreign preserves its retained task and exact parameters (21.957666ms)
+✔ Discord outer query remains available to its captured controller and never enters canonical hash (22.726083ms)
+✔ a literal question mark inside a query does not truncate later bookmark parameters (33.716959ms)
+A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+
+When testing, code that resolves suspended data should be wrapped into act(...):
+
+act(() => {
+  /* finish loading suspended data */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+A suspended resource finished loading inside a test, but the event was not wrapped in act(...).
+
+When testing, code that resolves suspended data should be wrapped into act(...):
+
+act(() => {
+  /* finish loading suspended data */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+✔ a grouped photo detail reads only the explicit selected-memory endpoint (506.000833ms)
+✔ selected memory ignores a late private response after session disposal (234.030625ms)
+✔ signed-in tab drains while work is pending, then idles until kicked (235.862834ms)
+✔ stops for a server with its own worker thread (78.063458ms)
+✔ stops for a server without the route (110.22ms)
+✔ drains pending work when initially hidden (88.183333ms)
+✔ drains pending work when hidden during a request (117.414958ms)
+✔ work kicks do not overlap a request and logout stops pending work (156.37ms)
+✔ import guidance, source choice and native upload remain in their reading order (33.603875ms)
+✔ working page styles are scoped and cannot override hidden controls or reorder keyboard flow (65.951667ms)
+✔ Photos keeps the page heading before its search form (14.132667ms)
+ℹ tests 160
+ℹ suites 0
+ℹ pass 160
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5344.210167
