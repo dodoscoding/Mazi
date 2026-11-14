@@ -729,11 +729,11 @@ function AtlasHome({
           {demo ? "Örnek anılar" : "Anılar"} · {memories.length}
         </h2>
         <a
-          href="#/timeline"
-          onClick={link("/timeline")}
-          aria-label="Bütün anılar"
+          href="#/photos"
+          onClick={link("/photos")}
+          aria-label="Fotoğraflarda gezin"
         >
-          Tümü
+          Fotoğraflar
         </a>
       </div>
       <div className="memory-list">

@@ -1,0 +1,50 @@
+.photos-page .mem-layout {
+  display: block;
+}
+.photos-page .mem-filters {
+  display: none;
+}
+.photos-page .mem-filters-button {
+  display: inline-flex;
+}
+.photos-page .mem-filters.is-open {
+  display: flex;
+  position: fixed;
+  z-index: 47;
+  inset: auto 0 0;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 24px;
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  box-shadow: var(--shadow-float);
+}
+.photos-page .mem-sheet-foot {
+  display: block;
+}
+.photos-page .mem-scrim:not([hidden]) {
+  display: block;
+  position: fixed;
+  z-index: 46;
+  inset: 0;
+  background: var(--overlay-sheet);
+}
+.photos-page .photo-month {
+  margin-bottom: 40px;
+}
+.photos-page .photo-month h2 {
+  margin: 0 0 18px;
+  font-size: 32px;
+}
+.photos-page .photo-month > p {
+  color: var(--text-secondary);
+}
+.photos-page .mem-controls label {
+  margin: 0;
+}
+.photos-page #photos-year {
+  min-height: var(--target);
+}
