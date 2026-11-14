@@ -384,7 +384,7 @@ test("related memories put the same place first and open that memory", async ({
 });
 
 for (const backAction of ["pill", "Escape"]) {
-  test(`portal event title opens the notebook and ${backAction} returns past the portal`, async ({
+  test(`legacy portal event title opens the notebook and ${backAction} restores its origin`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -409,11 +409,10 @@ for (const backAction of ["pill", "Escape"]) {
     if (backAction === "pill")
       await page.getByRole("link", { name: "Geri", exact: true }).click();
     else await page.keyboard.press("Escape");
-    await expect(page).toHaveURL(/#\/\?selected=harbour-night$/);
-    await expect(page.locator(".featured")).toContainText(
+    await expect(page).toHaveURL(/#\/\?selected=harbour-night&view=portal$/);
+    await expect(page.locator(".dossier")).toContainText(
       "The harbour after the last ferry",
     );
-    await expect(page.locator(".dossier")).toHaveCount(0);
   });
 }
 
