@@ -8,6 +8,6 @@ export default defineConfig({
   reporter: [["list"]],
   webServer: {
     ...unified.webServer,
-    command: `MAZI_PHOTOS_FIXTURE=1 ${unified.webServer!.command}`,
+    env: { MAZI_PHOTOS_FIXTURE: "1" },
   },
 });
