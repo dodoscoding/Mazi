@@ -68,25 +68,25 @@ Environment: macOS, Node 24.15.0, locked shared `node_modules` and `.venv`
 symlinks; synthetic temporary archives only. Integrated browser port `8129`.
 The ordinary desktop Chromium and Pixel 7 projects were used.
 
-| Command / boundary | Result |
-| --- | --- |
-| Initial `playwright.unified` final-navigation contract at `af61538` | Red: returning root still showed Home; no opening Globe |
-| Navigation and sample tracer, desktop + phone | 6 passed after core/demo changes |
-| Legacy predicates DOM tracer `14cc87a` → `cf82fe9` | Red missing place predicate, then 5 Photos search contracts passed |
-| Whole-query tracer `0a161b3` → `312d595` | Red truncated literal `?` query, then all route cases passed |
-| People route tracer → `4e6b32d` | Red interim unavailable route, then retained Settings route cases passed |
-| `MAZI_UNIFIED_PORT=8129 npm run test:app`, unified portion from `031891a` | 104 passed across desktop and phone |
-| Same script, conversations | 21 passed; one unchanged baseline phone skip |
-| Same script, Add sources / Add queues | 6 passed / 6 passed |
-| Same script, Photos/search/evidence | 24 passed, 2 evidence-state failures; stopped the chained script |
-| Scoped evidence rerun after dedicated compatibility fix `4e6b32d` | 2 passed; existing inaccessible/foreign/ambiguous states retained |
-| `playwright.recap.config.ts` | 8 passed |
-| `playwright.past-creations.config.ts` | 2 passed |
-| Final settled Globe / invalid selection browser contracts at `4e6b32d` | 4 passed desktop + phone |
-| `npm run test:unit` | 23 passed |
-| Selected existing social Home, plans, comments and server HTTP suites | 15 passed; no social API retirement |
-| `npm run build`, `npm run typecheck`, `npm run lint` | Passed |
-| `npm run check:budgets` | All scripts 392.1 KiB gzip / unchanged 420 KiB; entry 90.8/150, Globe 242.9/256, CSS 16.0/40 |
+| Command / boundary                                                        | Result                                                                                       |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Initial `playwright.unified` final-navigation contract at `af61538`       | Red: returning root still showed Home; no opening Globe                                      |
+| Navigation and sample tracer, desktop + phone                             | 6 passed after core/demo changes                                                             |
+| Legacy predicates DOM tracer `14cc87a` → `cf82fe9`                        | Red missing place predicate, then 5 Photos search contracts passed                           |
+| Whole-query tracer `0a161b3` → `312d595`                                  | Red truncated literal `?` query, then all route cases passed                                 |
+| People route tracer → `4e6b32d`                                           | Red interim unavailable route, then retained Settings route cases passed                     |
+| `MAZI_UNIFIED_PORT=8129 npm run test:app`, unified portion from `031891a` | 104 passed across desktop and phone                                                          |
+| Same script, conversations                                                | 21 passed; one unchanged baseline phone skip                                                 |
+| Same script, Add sources / Add queues                                     | 6 passed / 6 passed                                                                          |
+| Same script, Photos/search/evidence                                       | 24 passed, 2 evidence-state failures; stopped the chained script                             |
+| Scoped evidence rerun after dedicated compatibility fix `4e6b32d`         | 2 passed; existing inaccessible/foreign/ambiguous states retained                            |
+| `playwright.recap.config.ts`                                              | 8 passed                                                                                     |
+| `playwright.past-creations.config.ts`                                     | 2 passed                                                                                     |
+| Final settled Globe / invalid selection browser contracts at `4e6b32d`    | 4 passed desktop + phone                                                                     |
+| `npm run test:unit`                                                       | 23 passed                                                                                    |
+| Selected existing social Home, plans, comments and server HTTP suites     | 15 passed; no social API retirement                                                          |
+| `npm run build`, `npm run typecheck`, `npm run lint`                      | Passed                                                                                       |
+| `npm run check:budgets`                                                   | All scripts 392.1 KiB gzip / unchanged 420 KiB; entry 90.8/150, Globe 242.9/256, CSS 16.0/40 |
 
 Execution logs are `/tmp/mazi159-*.log` in this working session. The root
 integration pass records final immutable-candidate validation after supporting
@@ -126,3 +126,41 @@ search, without live archive administration or invented capture chronology.
   were also removed. Existing import and FeaturePage contracts remain green.
 - Settled screenshots wait for scene readiness, rather than capturing the Globe
   loading overlay. The four linked images were visually inspected.
+
+## Assembled support candidate
+
+On 14 November 2026, this worktree fast-forwarded to integration
+`fd9dfded36f2d10fa0d52ada4a50613259389247`, preserving the supporting changes and
+all detailed commits. The integration commit uses a Conventional Commit message.
+This includes `c56785d`/`d669520` (Settings manual people and selected-photograph
+privacy controls), `d19e63c` (literal query separators through photo changes),
+`7e881b1`/`ab21bc8`/`601457a`/`59ef464` (current domain journeys), and
+`d1e284b`/`7c6d131` (canonical test links and historical source pointers).
+
+The support handoff supplied by the integration owner records **44/44 domain
+browser tests with no skips**, **27 backend contracts**, the **19-document /
+353-link** checker, and an additional **215-link audit**. These support results
+are distinguished from this worktree's focused assembled-candidate checks:
+
+- Unified navigation, explicit sample isolation, invalid/ambiguous selection,
+  document/hash transitions and old People tasks: **14/14 desktop/phone**.
+  Command: `MAZI_UNIFIED_PORT=8129 npx playwright test -c playwright.unified.config.ts tests/final-navigation.spec.ts tests/clarity-workspaces.spec.ts -g 'returning member|explicit sample|invalid explicit|document Settings|People links|people preserves'`.
+  Log: `/tmp/mazi159-assembled-nav.log`.
+- Retained Settings people creation, selected-photo personal hiding, own-subject
+  removal, consent and denial: **2/2 desktop/phone** using the real discovery
+  fixture. Command: `MAZI_DOMAIN_PORT_BASE=18159 MAZI_BROWSER_RESULTS_DIR=/tmp/mazi159-assembled-domain MAZI_PYTHON=.venv/bin/python npx playwright test -c tests/browser/playwright.config.ts tests/browser/discovery.spec.ts --project=discovery-desktop --project=discovery-phone -g 'retained People'`.
+  Log: `/tmp/mazi159-assembled-privacy.log`.
+- `npm run build`, `npm run lint`, `npm run test:unit` (**23/23**), the canonical
+  documentation checker (**19 documents, 353 links**) and `git diff --check`
+  pass. The build includes TypeScript checking.
+- Assembled budgets: **393.6/420 KiB** total scripts, **90.8/150 KiB** entry,
+  **242.9/256 KiB** Globe, **16.0/40 KiB** stylesheet. No ceiling was raised.
+- Relative to the starting integration `deac243`, `mazi/server.py` is the only
+  changed backend source file (document-route serving). The preserved source
+  brief has no diff; schema, stored archive formats and original data are
+  unchanged by this ticket.
+
+The assembled implementation is ready for root review. The root agent's full
+branch review and final one-shot app/default-browser verification, including its
+isolated Firefox environment, are still pending. These local results do not
+claim production acceptance or deployment.
