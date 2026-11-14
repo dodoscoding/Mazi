@@ -58,6 +58,30 @@ class ReviewHttpTests(unittest.TestCase):
         connection.close()
         return result
 
+    def test_selected_photo_contributions_are_scoped_and_owner_only(self):
+        path = f"/api/review/my-contributions?group={self.group}"
+        status, body = self.request(path + "&asset=" + self.asset)
+        self.assertEqual(status, 200)
+        owned = json.loads(body)
+        self.assertEqual(len(owned), 1)
+        self.assertEqual(owned[0]["asset"], self.asset)
+        self.assertEqual(len(json.loads(self.request(path)[1])), 1)
+        ben = self.store.register("ben-owner-test@example.test", "correct horse battery")
+        self.store.accept(ben, self.store.invite(self.alice, self.group))
+        ben_token = self.store.login("ben-owner-test@example.test", "correct horse battery")
+        self.assertEqual(json.loads(self.request(path + "&asset=" + self.asset, token=ben_token)[1]), [])
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
+                                      token=ben_token)[0], 403)
+        self.assertEqual(json.loads(self.request(path + "&asset=unavailable-photo")[1]), [])
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201)[0], 400)
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201, token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request(path + "&asset=" + self.asset, token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
+                                      token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]})[0], 200)
+        self.assertEqual(json.loads(self.request(path + "&asset=" + self.asset)[1]), [])
+        self.assertEqual(self.request(f"/api/review/rendition/{self.asset}")[0], 403)
+
     def test_review_place_reports_how_it_matched_the_map(self):
         ben = self.store.register("ben@example.test", "correct horse battery")
         self.store.accept(ben, self.store.invite(self.alice, self.group))
