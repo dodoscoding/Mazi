@@ -67,6 +67,15 @@ export function mount(root, lifecycle) {
     );
   }
   async function preferences(state) {
+    $("settings-people").replaceChildren(
+      ...state.people.map((person) =>
+        el(
+          "p",
+          "fx-small",
+          `${person.name} · ${person.count} photographs${person.verified ? " · Confirmed identity" : ""}`,
+        ),
+      ),
+    );
     $("settings-personal-processing").checked =
       state.settings.contribution_enabled;
     $("settings-group-processing").checked = state.settings.group_enabled;
@@ -247,6 +256,16 @@ export function mount(root, lifecycle) {
           group_wide: groupWide,
         }),
       );
+  $("settings-person-create").onsubmit = (event) => {
+    event.preventDefault();
+    run(async () => {
+      await mutate("person", {
+        group: group.id,
+        name: $("settings-new-person").value,
+      });
+      $("settings-new-person").value = "";
+    });
+  };
   $("settings-identity-form").onsubmit = (event) => {
     event.preventDefault();
     run(() =>

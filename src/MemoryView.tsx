@@ -44,6 +44,7 @@ const ConversationPanel = lazy(() => import("./social/ConversationPanel"));
 const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
 const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
 const PhotoContributions = lazy(() => import("./memory/PhotoContributions"));
+const PhotoPrivacy = lazy(() => import("./memory/PhotoPrivacy"));
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
 
@@ -298,6 +299,17 @@ export function MemoryView({
             >
               Katkımı yönet
             </button>
+            <Suspense
+              fallback={
+                <p role="status">Loading photograph privacy controls…</p>
+              }
+            >
+              <PhotoPrivacy
+                key={`${group}:${memory.photos[photoIndex].assetId}`}
+                group={group}
+                asset={memory.photos[photoIndex].assetId!}
+              />
+            </Suspense>
             {editing === "contributions" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoContributions
