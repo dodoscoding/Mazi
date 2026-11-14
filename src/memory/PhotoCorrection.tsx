@@ -101,7 +101,7 @@ export default function PhotoCorrection({
       if (!response.ok)
         throw Error(
           response.status === 400
-            ? "Tarih geçersiz veya yıl dönümü için gerekli. Arşiv incelemesinden yıl dönümünü düzenleyin."
+            ? "Tarih geçersiz veya bu fotoğrafın yıl dönümü için gerekli. Geçerli bir çekim tarihiyle yeniden deneyin."
             : "Kaydedilemedi. Taslağınız korundu; yeniden deneyin.",
         );
       window.dispatchEvent(new Event("mazi:archive-changed"));
