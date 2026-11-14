@@ -411,3 +411,61 @@ test("access loss clears private drafts and supporting records", async ({
       ),
   ).not.toContain("Private unsaved capsule draft");
 });
+
+test("shared viewer opens directly and restores Globe and browse state", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  const origin = page.url();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await expect(page.locator(".dossier")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/photo=1/);
+  expect(
+    await page
+      .locator(".viewer-track img")
+      .evaluate((image) => getComputedStyle(image).objectFit),
+  ).toBe("contain");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(origin);
+  await expect(page.locator("#featured-title")).toContainText("Our summer");
+  await page.goto("/#/timeline");
+  await page
+    .getByRole("button", { name: "Önce en yeniler", exact: true })
+    .click();
+  const card = page.locator(".tl-card").filter({ hasText: "Our summer" });
+  await card.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => scrollY);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page).toHaveURL(/#\/timeline$/);
+  await expect(
+    page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.goBack();
+  await expect(
+    page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
+  });
+});
