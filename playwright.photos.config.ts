@@ -4,7 +4,7 @@ import unified from "./playwright.unified.config";
 export default defineConfig({
   ...unified,
   testMatch: ["photos.spec.ts"],
-  outputDir: "work/poteto/app-simplification/photos-results",
+  outputDir: "test-results/photos",
   reporter: [["list"]],
   webServer: {
     ...unified.webServer,

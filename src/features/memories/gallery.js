@@ -713,9 +713,13 @@ export function createGallery(root, lifecycle, api, { photos = false } = {}) {
         memory.photos.some((photo) => matched.has(photo.assetId)),
       ),
     );
+    const total =
+      photos && undated
+        ? photographRows(shown).filter((row) => !row.month).length
+        : facets?.total || 0;
     $("grid-summary").textContent =
-      `${facets?.total || 0} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
-    $("filters-apply").textContent = `${facets?.total || 0} fotoğrafı göster`;
+      `${total} eşleşen fotoğraf · ${facets?.photo_facets?.denominator || 0} görünür fotoğraf`;
+    $("filters-apply").textContent = `${total} fotoğrafı göster`;
     remember();
     renderGrid(shown);
   }
