@@ -544,3 +544,33 @@ test("shared viewer keeps Conversation context optional and supports keyboard ph
     fullPage: true,
   });
 });
+
+test("shared viewer clears retained private media when the session is lost", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all");
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.locator(".viewer, .mem-tile, .facts, .conversation"),
+  ).toHaveCount(0);
+  expect(
+    (
+      await page.request.get("/api/atlas/memory?group=missing&memory=missing")
+    ).status(),
+  ).toBe(403);
+});
