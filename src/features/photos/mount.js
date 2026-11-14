@@ -9,7 +9,17 @@ export function mount(root, lifecycle) {
   root.querySelector("#photos-search").hidden = new URLSearchParams(
     lifecycle.search,
   ).has("recap");
+  const demo = new URLSearchParams(location.search).get("demo") === "1";
+  if (demo) {
+    const note = document.createElement("p");
+    note.setAttribute("role", "status");
+    note.textContent =
+      "Sample Atlas · Fictional photographs only. Capture dates are unknown; live archive and source operations are unavailable.";
+    root.prepend(note);
+    root.querySelector("#filters-open").hidden = true;
+  }
   const api = async (path) => {
+    if (demo) return (await import("./sample")).sampleRead(path);
     const response = await lifecycle.fetch(path);
     const value = await response.json();
     if (!response.ok) {
@@ -25,7 +35,7 @@ export function mount(root, lifecycle) {
     onSearch: conversations.search,
     onReset: conversations.clear,
   });
-  let group = lifecycle.groupId;
+  let group = demo ? "sample" : lifecycle.groupId;
   let active = true;
   const load = async () => {
     if (!group) group = (await api("/api/session")).group_id;

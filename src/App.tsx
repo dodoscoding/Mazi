@@ -181,6 +181,21 @@ export default function App() {
         }
       />
     );
+  else if (demo && !["/", "/photos"].includes(route.path) && !memoryId)
+    content = (
+      <section className="not-found">
+        <h1 ref={heading} tabIndex={-1}>
+          Sample Atlas
+        </h1>
+        <p>
+          Örnek arşivde Globe, Photos ve fotoğraf görüntüleyici kullanılabilir.
+          Canlı arşiv işlemleri örnek modunda açılmaz.
+        </p>
+        <a href="#/photos" onClick={link("/photos")}>
+          Photos
+        </a>
+      </section>
+    );
   else if (new URLSearchParams(route.search).has("unavailable"))
     content = (
       <section className="not-found">
