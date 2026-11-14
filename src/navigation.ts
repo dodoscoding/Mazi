@@ -170,6 +170,7 @@ const sectionPaths: Record<string, MainSection> = {
   "/review": "explore",
   "/circle": "circle",
   "/settings": "circle",
+  "/past-creations": "circle",
   "/imports": "circle",
   "/about": "circle",
   "/introduction": "circle",
