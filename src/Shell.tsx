@@ -73,7 +73,7 @@ export function Shell({
     <ToastProvider>
       <div
         className="shell"
-        data-section={routePath === "/" ? "home" : routePath.split("/")[1]}
+        data-section={routePath === "/" ? "atlas" : routePath.split("/")[1]}
       >
         <a
           className="skip-link"
@@ -110,42 +110,6 @@ export function Shell({
               <Icon name="search" size={20} />
               <span>Anı ara</span>
             </a>
-            <Menu label="Ekle" className="add-menu">
-              {(close) => (
-                <nav aria-label="Ekle seçenekleri" className="menu-list">
-                  <a
-                    className="menu-item"
-                    href="#/add"
-                    onClick={(event) => {
-                      link("/add")(event);
-                      close();
-                    }}
-                  >
-                    Add
-                  </a>
-                  <a
-                    className="menu-item"
-                    href="#/imports"
-                    onClick={(event) => {
-                      link("/imports")(event);
-                      close();
-                    }}
-                  >
-                    Fotoğraf veya arşiv
-                  </a>
-                  <a
-                    className="menu-item"
-                    href="#/circle?section=plans&new=1"
-                    onClick={(event) => {
-                      link("/circle?section=plans&new=1")(event);
-                      close();
-                    }}
-                  >
-                    Buluşma planla
-                  </a>
-                </nav>
-              )}
-            </Menu>
             <Menu label="Hesap" className="account-menu">
               {(close) => (
                 <nav aria-label="Hesap araçları" className="menu-list">
@@ -160,50 +124,10 @@ export function Shell({
                   >
                     Settings
                   </a>
-                  <a
-                    className="menu-item"
-                    href="#/about"
-                    onClick={(event) => {
-                      link("/about")(event);
-                      close();
-                    }}
-                  >
-                    Yardım ve gizlilik
-                  </a>
-                  <a
-                    className="menu-item"
-                    href="#/introduction"
-                    onClick={(event) => {
-                      link("/introduction")(event);
-                      close();
-                    }}
-                  >
-                    Tanıtımı izle
-                  </a>
                   <SoundToggle
                     variant="pill"
                     className="button button--secondary account-sound"
                   />
-                  {!demo &&
-                    !path.startsWith("/settings") &&
-                    archive.groups.length > 0 && (
-                      <label className="circle-picker">
-                        Grubumuz
-                        <select
-                          aria-label="Grup değiştir"
-                          value={archive.group}
-                          onChange={(event) =>
-                            archive.chooseGroup(event.target.value)
-                          }
-                        >
-                          {archive.groups.map((group) => (
-                            <option key={group.id} value={group.id}>
-                              {group.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
                   {demo && (
                     <a className="menu-item" href="/">
                       Örnek arşivden çık

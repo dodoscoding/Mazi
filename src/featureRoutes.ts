@@ -1,16 +1,4 @@
-const featurePaths = [
-  "/photos",
-  "/add",
-  "/imports",
-  "/circle",
-  "/settings",
-  "/review",
-  "/places",
-  "/discover",
-  "/answer-evidence",
-  "/memories",
-];
-
-export function isFeaturePath(path: string, demo: boolean) {
-  return featurePaths.includes(path) || (path === "/search" && !demo);
+const featurePaths = ["/photos", "/add", "/settings", "/answer-evidence"];
+export function isFeaturePath(path: string, _demo: boolean) {
+  return featurePaths.includes(path);
 }

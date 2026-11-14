@@ -104,6 +104,12 @@ export default function SelectedMemory({
       </section>
     );
   if (state.kind !== "ready") return null;
+  if (
+    !Number.isInteger(props.photo) ||
+    props.photo < 0 ||
+    props.photo >= state.memory.photos.length
+  )
+    return <MemoryNotFound link={props.link} heading={props.heading} />;
   return (
     <>
       {state.error && (
