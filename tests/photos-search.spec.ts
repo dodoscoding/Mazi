@@ -45,3 +45,58 @@ test("Globe search opens Photos and preserves keyword filters and the selected p
     page.getByRole("link", { name: /Ask your archive|Arşivine sor/ }),
   ).toHaveCount(0);
 });
+
+test("Photos searches photographs first and opens actual text-only Conversation context", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/photos?q=ferry");
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
+  const conversations = page.getByRole("region", {
+    name: "Konuşma sonuçları",
+    exact: true,
+  });
+  await expect(conversations).toBeVisible();
+  const result = conversations.getByRole("button", {
+    name: /The lanterns are ready/,
+  });
+  await expect(result).toBeVisible();
+  expect((await page.locator("#grid").boundingBox())!.y).toBeLessThan(
+    (await conversations.boundingBox())!.y,
+  );
+  await result.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => scrollY);
+  await result.click();
+  const context = page.getByRole("region", {
+    name: "Kaynak konuşma bağlamı",
+    exact: true,
+  });
+  await expect(context).toBeVisible();
+  await expect(context).toContainText("Lena");
+  await expect(context).toContainText("Bring the paper map to the ferry.");
+  await expect(context).toContainText("lantern-chat.txt#line:1");
+  await expect(context.locator("img, a[href*='/memory/']")).toHaveCount(0);
+  await page.screenshot({
+    path: `work/poteto/app-simplification/search-context-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await context
+    .getByRole("button", { name: "Bağlamı kapat", exact: true })
+    .click();
+  await expect(context).toBeHidden();
+  await expect(result).toBeFocused();
+  await expect(
+    page.getByRole("searchbox", {
+      name: "Fotoğraf ve konuşmalarda ara",
+      exact: true,
+    }),
+  ).toHaveValue("ferry");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
+});
