@@ -1,4 +1,3 @@
-import { groupDestinations } from "../../navigation.ts";
 import {
   confirmAction,
   el,
@@ -79,24 +78,9 @@ export function mount(root, lifecycle) {
     $("page-title").textContent = settingsMode ? "Settings" : "Grubumuz";
     if (settingsMode) {
       $("circle-title").textContent = "Members";
-      $("group-settings-heading").closest("section").hidden = true;
     }
     $("page-sub").textContent =
       "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
-    const shortcuts = el("nav");
-    shortcuts.className = "group-destinations";
-    shortcuts.setAttribute("aria-label", "Grup araçları");
-    for (const entry of groupDestinations) {
-      const link = el("a");
-      link.href = `#${entry.path}`;
-      link.setAttribute("aria-label", entry.label);
-      link.append(
-        el("strong", "", entry.label),
-        el("span", "", entry.description),
-      );
-      shortcuts.append(link);
-    }
-    if (!settingsMode) root.querySelector(".fx-head").after(shortcuts);
   }
 
   async function api(path, body) {
@@ -183,8 +167,8 @@ export function mount(root, lifecycle) {
     const apple = el("div", "source-card source-card--link");
     const badge = el("span", "source-badge");
     badge.append(icon("photo"));
-    const connect = el("a", "fx-text-link", "Connect in Places & sources");
-    connect.href = "/places";
+    const connect = el("a", "fx-text-link", "Connect in Add");
+    connect.href = "#/add?section=sources";
     apple.append(
       badge,
       el("b", "", "Apple Photos"),

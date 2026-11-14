@@ -26,7 +26,7 @@ export function createGallery(
   root,
   lifecycle,
   api,
-  { photos = false, onSearch, onReset } = {},
+  { photos = false, readOnly = false, onSearch, onReset } = {},
 ) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
@@ -283,7 +283,7 @@ export function createGallery(
   const choose = document.createElement("button");
   choose.textContent = "Fotoğraf seç";
   choose.type = "button";
-  choose.hidden = recap;
+  choose.hidden = recap || readOnly;
   const count = document.createElement("span");
   const edit = document.createElement("button");
   edit.textContent = "Seçili etiketleri düzenle";

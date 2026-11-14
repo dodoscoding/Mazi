@@ -13,7 +13,11 @@ export function cuesFor(
   next: SoundRoute,
   reduced: boolean,
 ): Cue[] {
-  if (next.path !== "/atlas" || previous.path !== "/atlas") return [];
+  if (
+    !["/", "/atlas"].includes(next.path) ||
+    !["/", "/atlas"].includes(previous.path)
+  )
+    return [];
   const cues: Cue[] = [];
   if (next.portal !== previous.portal) {
     // Under reduced motion the dive is a crossfade, so it gets no whoosh either.

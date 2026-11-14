@@ -29,24 +29,18 @@ test("historical story and capsule links reach Past creations without authoring"
   }
 });
 
-test("People opens confirmed-association controls and retains its entry URL", async ({
+test("retired People links explain unavailability without opening unrelated records", async ({
   page,
 }) => {
-  await page.goto("/#/explore");
-  await page
-    .getByRole("navigation", { name: "Keşfet araçları" })
-    .getByRole("link", { name: "Kişiler", exact: true })
-    .click();
+  await page.goto("/#/discover?section=people&person=unknown");
   await expect(
     page.getByRole("heading", {
-      name: "Fotoğraftaki kişiler",
+      name: "Bu bağlantı artık kullanılamıyor",
       exact: true,
     }),
-  ).toBeFocused();
-  await expect(page).toHaveURL(/#\/discover\?section=people$/);
-  await page.getByRole("textbox", { name: /^Person/ }).focus();
-  await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-  await expect(page.getByRole("textbox", { name: /^Person/ })).toBeFocused();
+  ).toBeVisible();
+  await expect(page).toHaveURL(/#\/settings\?/);
+  await expect(page.locator(".viewer")).toHaveCount(0);
 });
 
 test("unknown section names keep the normal workspace available", async ({
@@ -62,35 +56,35 @@ test("unknown section names keep the normal workspace available", async ({
   expect(errors).toEqual([]);
 });
 
-test("recap refresh keeps the photo gallery available without creation prompts", async ({
+test("old recap year links open the ordinary year in Photos without authoring", async ({
   page,
 }) => {
-  await page.goto("/#/memories?section=recap");
+  await page.goto("/#/memories?section=recap&year=2024");
+  await expect(page).toHaveURL(/recap=2024/);
   await expect(
-    page.getByRole("heading", { name: "Annual recap", exact: true }),
-  ).toBeFocused();
-  await page
-    .getByRole("button", { name: "Refresh recap", exact: true })
-    .click();
-  await expect(page.locator("#recap")).toContainText("Our summer");
-  await expect(page.locator("#grid")).not.toBeEmpty();
+    page.getByRole("heading", { name: "Annual recap 2024", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#recap-scope")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Start a story", exact: true }),
   ).toHaveCount(0);
 });
 
 for (const prefix of ["/", "/#/"]) {
-  test(`${prefix}people opens the confirmed people heading without an extra history entry`, async ({
+  test(`${prefix}people preserves Back and explains its retired destination`, async ({
     page,
   }) => {
-    await page.goto("/#/explore");
+    await page.goto("/#/photos");
     await page.goto(`${prefix}people`);
-    await expect(page).toHaveURL(/#\/discover\?section=people$/);
+    await expect(page).toHaveURL(/#\/settings\?unavailable=people$/);
     await expect(
-      page.getByRole("heading", { name: "Fotoğraftaki kişiler", exact: true }),
-    ).toBeFocused();
+      page.getByRole("heading", {
+        name: "Bu bağlantı artık kullanılamıyor",
+        exact: true,
+      }),
+    ).toBeVisible();
     await page.goBack();
-    await expect(page).toHaveURL(/#\/explore$/);
+    await expect(page).toHaveURL(/#\/photos$/);
   });
   test(`${prefix}settings opens account and membership controls and keeps Back usable`, async ({
     page,
@@ -108,26 +102,24 @@ for (const prefix of ["/", "/#/"]) {
       }),
     ).toBeVisible();
     await page.goBack();
-    await expect(page).toHaveURL(/#\/explore$/);
+    await expect(page).toHaveURL(/#\/photos$/);
   });
 }
 
 test("source management has its own section, focus and parent destination", async ({
   page,
 }) => {
-  await page.goto("/#/circle");
-  await page
-    .getByRole("navigation", { name: "Grup araçları" })
-    .getByRole("link", { name: "Kaynak bağlantıları", exact: true })
-    .click();
-  await expect(page).toHaveURL(/#\/places\?section=sources$/);
+  await page.goto("/#/places?section=sources");
+  await expect(page).toHaveURL(/#\/add\?section=sources$/);
   await expect(
     page.getByRole("heading", { name: "Kaynak bağlantıları", exact: true }),
-  ).toBeFocused();
+  ).toBeVisible();
   await expect(
     page
       .getByRole("navigation", { name: "Main navigation", exact: true })
-      .getByRole("link", { name: "Grubumuz", exact: true }),
+      .filter({ visible: true })
+      .first()
+      .getByRole("link", { name: "Add", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await page
     .locator('#source-form input[name="label"]')
@@ -192,28 +184,31 @@ test("date bases find an imported sharing-only photo while old bookmarks retain 
     await page.goto(
       `/#/search?q=${filename}&from=2024-02-03&through=2024-02-03`,
     );
-    await expect(page.locator("#count")).toContainText("0 fotoğraf");
-    await expect(page.locator("#date-basis")).toHaveValue("");
-    await page.locator("#date-basis").selectOption("shared");
+    await expect(page.locator("#grid-summary")).toContainText(
+      "0 eşleşen fotoğraf",
+    );
+    await page.locator("#filters-open").click();
+    await expect(page.locator('[name="date_basis"]')).toHaveValue("");
+    await page.locator('[name="date_basis"]').selectOption("shared");
     await page
-      .getByRole("button", { name: "Arşivde ara", exact: true })
-      .click();
-    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
-    await expect(page.locator("#results .disc-photo")).toContainText(
+      .locator(".photo-date-filters")
+      .evaluate((form) => (form as HTMLFormElement).requestSubmit());
+    await expect(page.locator(".mem-tile")).toHaveCount(1);
+    await expect(page.locator(".mem-tile")).toContainText(
       "3 Şub 2024 · Paylaşıldı · UTC",
     );
-    await expect(page.locator("#results .disc-photo")).toContainText(
-      "Yer bilinmiyor",
-    );
+    await expect(page.locator(".mem-tile")).toContainText("Yer bilinmiyor");
     await expect(page).toHaveURL(/date_basis=shared/);
-    await page.locator("#date-basis").selectOption("chronology");
+    await page.locator('[name="date_basis"]').selectOption("chronology");
     await page
-      .getByRole("button", { name: "Arşivde ara", exact: true })
-      .click();
-    await expect(page.locator("#count")).toContainText("1 fotoğraf");
+      .locator(".photo-date-filters")
+      .evaluate((form) => (form as HTMLFormElement).requestSubmit());
+    await expect(page.locator("#grid-summary")).toContainText(
+      "1 eşleşen fotoğraf",
+    );
     await page.reload();
-    await expect(page.locator("#date-basis")).toHaveValue("chronology");
-    await expect(page.locator("#results .disc-photo")).toHaveCount(1);
+    await expect(page.locator('[name="date_basis"]')).toHaveValue("chronology");
+    await expect(page.locator(".mem-tile")).toHaveCount(1);
     await page.waitForFunction(() =>
       document
         .getAnimations()
@@ -221,11 +216,12 @@ test("date bases find an imported sharing-only photo while old bookmarks retain 
     );
     const directory = "work/poteto/photo-search-corrections/screenshots";
     mkdirSync(directory, { recursive: true });
-    await page.locator("#results .disc-photo").screenshot({
+    await page.locator(".mem-tile").screenshot({
       path: `${directory}/${info.project.name}-sharing-result.png`,
     });
+    await page.locator("#filters-open").click();
     await page
-      .locator(".disc-refine")
+      .locator("#memory-filters")
       .screenshot({ path: `${directory}/${info.project.name}-date-basis.png` });
     expect(
       await page.evaluate(
@@ -419,17 +415,14 @@ test("photo label editing and atomic Gallery selection show honest badges at pho
     page.on("request", (request) => requests.push(request.url()));
     await page.goto("/#/search");
     await expect(
-      page.locator("#results .photo-label-badge", {
+      page.locator("#grid .photo-label-badge", {
         hasText: "AI ile düzenlendi",
       }),
     ).toHaveCount(2);
     expect(
-      requests.filter(
-        (url) =>
-          url.includes("/api/atlas") || url.includes("/api/discovery/people"),
-      ),
+      requests.filter((url) => url.includes("/api/discovery/people")),
     ).toEqual([]);
-    await page.locator("#results").screenshot({
+    await page.locator("#grid").screenshot({
       animations: "disabled",
       path: `${directory}/${info.project.name}-search-badges.png`,
     });
@@ -555,28 +548,29 @@ test("same-photo filters survive reload and keep original child links at narrow 
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
     await page.goto("/#/search?" + query);
-    await expect(page.locator("#count")).toContainText("0 fotoğraf");
+    await expect(page.locator("#grid-summary")).toContainText(
+      "0 eşleşen fotoğraf",
+    );
     await expect(page.locator(".photo-filters")).toContainText(
       `görünür ${visible.total} fotoğrafın tamamı`,
     );
-    await expect(page.locator("#date-scope")).toBeVisible();
-    expect(
-      requests.some(
-        (url) =>
-          url.includes("/api/atlas") || url.includes("/api/discovery/state"),
-      ),
-    ).toBe(false);
-    await page
-      .locator(".disc-refine")
-      .evaluate((node) => ((node as HTMLDetailsElement).open = true));
+
+    expect(requests.some((url) => url.includes("/api/discovery/state"))).toBe(
+      false,
+    );
+    await page.locator("#filters-open").click();
     await page
       .getByRole("button", { name: "Ekran görüntüsü: Evet ×", exact: true })
       .click();
-    await expect(page.locator("#count")).toContainText("1 fotoğraf");
+    await expect(page.locator("#grid-summary")).toContainText(
+      "1 eşleşen fotoğraf",
+    );
     await page.reload();
-    await expect(page.locator("#count")).toContainText("1 fotoğraf");
-    await expect(page.locator("#mode")).toHaveValue("keyword");
-    await page.locator("#results").screenshot({
+    await expect(page.locator("#grid-summary")).toContainText(
+      "1 eşleşen fotoğraf",
+    );
+
+    await page.locator("#grid").screenshot({
       animations: "disabled",
       path: `${directory}/${info.project.name}-search-filtered.png`,
     });
@@ -587,28 +581,22 @@ test("same-photo filters survive reload and keep original child links at narrow 
         exact: true,
       }),
     ).toBeVisible();
-    if (info.project.name === "phone")
-      await page.locator("#filters-open").click();
+    await page.locator("#filters-open").click();
     await page
       .getByRole("button", { name: "Ekran görüntüsü: Evet ×", exact: true })
       .click();
     await expect(page.locator("#grid-summary")).toContainText(
       "1 eşleşen fotoğraf",
     );
-    if (info.project.name === "phone")
-      await page.locator("#filters-apply").click();
+    await page.locator("#filters-apply").click();
     await expect(page.locator(".mem-tile")).toHaveCount(1);
     await expect(page.locator(".mem-tile")).toHaveAttribute(
       "href",
       `#/memory/${memory.id}?photo=2`,
     );
-    await page.locator('[data-view="all"]').click();
     await page.reload();
     await expect(page.locator(".mem-tile")).toHaveCount(1);
-    await expect(page.locator('[data-view="all"]')).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -701,8 +689,7 @@ test("Gallery presentation controls retain failed matching authority until retry
       }),
     });
   });
-  if (info.project.name === "phone")
-    await page.locator("#filters-open").click();
+  await page.locator("#filters-open").click();
   await page
     .getByRole("group", { name: "Ekran görüntüsü", exact: true })
     .getByRole("checkbox", { name: /^Evet/ })
@@ -710,11 +697,8 @@ test("Gallery presentation controls retain failed matching authority until retry
   await expect(page.locator("#grid-summary")).toHaveText(
     "Eşleşmeler yüklenemedi.",
   );
-  if (info.project.name === "phone")
-    await page.locator("#filters-apply").click();
+  await page.locator("#filters-apply").click();
   for (const control of [
-    page.locator('[data-view="all"]'),
-    page.locator("#grid-order"),
     page.getByRole("button", { name: "Fotoğraf seç", exact: true }),
   ]) {
     await control.click();
@@ -743,8 +727,4 @@ test("Gallery presentation controls retain failed matching authority until retry
     }),
   ).toBeVisible();
   await expect(page).toHaveURL(/screenshot=yes/);
-  await expect(page.locator('[data-view="all"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
 });

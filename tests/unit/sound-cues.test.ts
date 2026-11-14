@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { cuesFor, type SoundRoute } from "../../src/sound/cues.ts";
 
 const atlas = (overrides: Partial<SoundRoute> = {}): SoundRoute => ({
-  path: "/atlas",
+  path: "/",
   portal: false,
   selected: "last-ferry",
   year: 2024,
@@ -52,7 +52,11 @@ test("the archive arriving and other screens stay silent", () => {
   );
   assert.deepEqual(cuesFor(atlas({ path: "" }), atlas(), false), []);
   assert.deepEqual(
-    cuesFor(atlas({ path: "/" }), atlas({ path: "/", portal: true }), false),
+    cuesFor(
+      atlas({ path: "/" }),
+      atlas({ path: "/photos", portal: true }),
+      false,
+    ),
     [],
   );
 });

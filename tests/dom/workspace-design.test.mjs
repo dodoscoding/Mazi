@@ -82,28 +82,15 @@ test("working page styles are scoped and cannot override hidden controls or reor
     );
 });
 
-test("Search keeps its page heading visible above the search form", async (t) => {
+test("Photos keeps the page heading before its search form", async (t) => {
   const window = new Window();
   t.after(() => window.happyDOM.abort());
-  const root = window.document.createElement("section");
-  root.className = "feature-content";
-  root.innerHTML = await source("features/discovery/template.html");
-  root.querySelector(".discovery-page").dataset.view = "search";
-  window.document.body.append(root);
-  for (const path of [
-    "features/features.css",
-    "features/discovery/discovery.css",
-    "features/workspace.css",
-  ]) {
-    const style = window.document.createElement("style");
-    style.textContent = await source(path);
-    window.document.head.append(style);
-  }
-  const header = root.querySelector(".disc-head");
-  assert.equal(window.getComputedStyle(header).position || "static", "static");
-  assert.equal(window.getComputedStyle(header).display, "flex");
-  assert.equal(root.querySelector("h1").id, "discovery-title");
+  const root = window.document.createElement("main");
+  root.innerHTML = await source("features/photos/template.html");
   assert.ok(
-    header.compareDocumentPosition(root.querySelector("#search-form")) & 4,
+    root
+      .querySelector("h1")
+      .compareDocumentPosition(root.querySelector("#photos-search")) & 4,
   );
+  assert.equal(root.querySelectorAll("#mode,#build-index,#ask-card").length, 0);
 });

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 import { flushSync } from "react-dom";
-import { routeAliases } from "./navigation";
+
 export type Route = ReturnType<typeof readRoute>;
 export type LinkFor = (
   url: string,
@@ -36,26 +36,83 @@ export function readRoute() {
     history.replaceState(history.state, "", `#/photos?${params}`);
     return readRoute();
   }
-  const alias = routeAliases[path];
+  let alias: string | undefined;
+  const section = params.get("section");
+  if (path === "/atlas") alias = "/";
+  if (
+    ["/timeline", "/memories", "/search", "/discover", "/explore"].includes(
+      path,
+    )
+  )
+    alias = "/photos";
+  if (
+    path === "/memories" &&
+    (params.has("story") ||
+      params.has("capsule") ||
+      ["stories", "capsules"].includes(section || ""))
+  ) {
+    alias = "/past-creations";
+    params.delete("section");
+  } else if (path === "/memories" && section === "recap") {
+    if (!params.has("recap") && /^\d{4}$/.test(params.get("year") || ""))
+      params.set("recap", params.get("year")!);
+  }
+  if (["/search", "/discover"].includes(path)) params.set("search", "1");
+  if (path === "/people" || (path === "/discover" && section === "people")) {
+    alias = "/settings";
+    params.set("unavailable", "people");
+  }
+  if (path === "/imports") alias = "/add";
+  if (path === "/circle") {
+    alias = "/settings";
+    if (section === "plans" || params.has("plan"))
+      params.set("unavailable", "plans");
+    else params.set("section", "members");
+  }
+  if (path === "/about") alias = "/settings";
+  if (path === "/places") {
+    alias =
+      section === "sources" ||
+      params.has("code") ||
+      params.has("error") ||
+      new URLSearchParams(location.search).has("code") ||
+      new URLSearchParams(location.search).has("error")
+        ? "/add"
+        : "/";
+    if (alias === "/add") params.set("section", "sources");
+  }
+  if (path === "/review") {
+    if (["export", "departure", "account"].includes(section || ""))
+      alias = "/settings";
+    else {
+      alias = "/add";
+      params.set("section", "suggestions");
+    }
+  }
+
+  if (alias === "/photos" && params.has("year") && !params.has("years"))
+    params.set("years", params.get("year")!);
   if (alias) {
+    if (path === "/places")
+      for (const key of ["code", "state", "error"]) params.delete(key);
     const [target, defaults] = alias.split("?");
     new URLSearchParams(defaults).forEach((value, key) =>
       params.set(key, value),
     );
-    const canonical = `${target}?${params}`;
+    const canonical = target + (params.size ? `?${params}` : "");
     history.replaceState(history.state, "", `#${canonical}`);
     return readRoute();
   }
   return {
-    path:
-      path === "/" &&
-      (params.has("selected") || params.get("view") === "portal")
-        ? "/atlas"
-        : path || "/",
+    path: path || "/",
     search: query ? `?${query}` : "",
-    selected: params.get("selected") || "last-ferry",
+    selected: params.has("selected") ? params.get("selected")! : "last-ferry",
     notebook: params.get("notebook") === "1",
-    photo: Math.max(0, Number(params.get("photo")) || 0),
+    photo: params.has("photo")
+      ? params.get("photo")?.trim()
+        ? Number(params.get("photo"))
+        : NaN
+      : 0,
   };
 }
 let activeTransition: ViewTransition | undefined;

@@ -1,6 +1,13 @@
 import { buildChronology } from "./memory/chronology";
 import { sourceSharedLine } from "./memory/provenance";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -190,11 +197,7 @@ function EmptyAtlas({
           </div>
         )}
         <div className="atlas-empty-actions">
-          <a
-            className="primary-action"
-            href="#/imports"
-            onClick={link("/imports")}
-          >
+          <a className="primary-action" href="#/add" onClick={link("/add")}>
             {archive.group ? "Fotoğraf ekle" : "Grup oluştur veya gruba katıl"}
           </a>
           <a
@@ -221,6 +224,7 @@ function AtlasHome({
   openMemory,
   onPlaced,
   openLink,
+  heading,
 }: {
   archive: Archive;
   memories: Memory[];
@@ -234,6 +238,9 @@ function AtlasHome({
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
+  useLayoutEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [heading]);
   const layout = useLayout();
   const phone = layout === "phone";
   const compact = phone || layout === "tablet";
@@ -344,12 +351,12 @@ function AtlasHome({
     if (pushed.current) {
       pushed.current = false;
       history.back();
-    } else go(`/atlas?selected=${selected.id}`, true);
+    } else go(`/?selected=${selected.id}`, true);
   }, [selected.id]);
   const portalIndex = memories.findIndex((memory) => memory.id === selected.id);
   const stepPortal = (direction: -1 | 1) => {
     const next = memories[portalIndex + direction];
-    if (next) go(`/atlas?selected=${next.id}&view=portal`, true);
+    if (next) go(`/?selected=${next.id}&view=portal`, true);
   };
 
   const representative = useCallback(
@@ -453,7 +460,7 @@ function AtlasHome({
         event.altKey
       )
         return;
-      if (readRoute().path !== "/atlas" || isField(event.target)) return;
+      if (readRoute().path !== "/" || isField(event.target)) return;
       if (portalOpen) {
         if (event.key === "Escape") {
           event.preventDefault();
@@ -827,7 +834,12 @@ function AtlasHome({
       data-flat={flat || undefined}
       aria-labelledby="atlas-title"
     >
-      <h1 id="atlas-title" className="visually-hidden">
+      <h1
+        id="atlas-title"
+        ref={heading}
+        tabIndex={-1}
+        className="visually-hidden"
+      >
         Atlas
       </h1>
       <AtlasStage
