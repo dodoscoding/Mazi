@@ -72,10 +72,10 @@ test("one authenticated shell connects real Atlas, stories, discovery and eviden
   await expect(
     page.getByRole("heading", { name: "Our summer", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
-  expect(await page.locator(".photo-frame img").getAttribute("src")).toContain(
-    "/api/",
-  );
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
+  expect(
+    await page.locator(".viewer-track .photo-frame img").getAttribute("src"),
+  ).toContain("/api/");
   await page
     .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
     .click();
@@ -410,6 +410,169 @@ test("access loss clears private drafts and supporting records", async ({
         nodes.map((node) => (node as HTMLTextAreaElement).value),
       ),
   ).not.toContain("Private unsaved capsule draft");
+});
+
+test("shared viewer opens directly and restores Globe and browse state", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  const origin = page.url();
+  await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await expect(page.locator(".dossier")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/photo=1/);
+  expect(
+    await page
+      .locator(".viewer-track img")
+      .evaluate((image) => getComputedStyle(image).objectFit),
+  ).toBe("contain");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(origin);
+  await expect(page.locator("#featured-title")).toContainText("Our summer");
+  await page.goto("/#/timeline");
+  if (info.project.name === "desktop")
+    await page
+      .getByRole("button", { name: "Önce en yeniler", exact: true })
+      .click();
+  const card = page.locator(".tl-card").filter({ hasText: "Our summer" });
+  await card.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => scrollY);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page).toHaveURL(/#\/timeline$/);
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
+  await card.click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  await page.goBack();
+  if (info.project.name === "desktop")
+    await expect(
+      page.getByRole("button", { name: "Önce en yeniler", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-return-${info.project.name}.png`,
+  });
+});
+
+test("shared viewer preserves individual-photo selection and closes to filtered gallery", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all&order=oldest&years=2024");
+  const photo = page.locator('.mem-tile[href*="photo=1"]').first();
+  await photo.scrollIntoViewIfNeeded();
+  const origin = page.url();
+  const selected = await photo.getAttribute("href");
+  await photo.click();
+  await expect(page).toHaveURL(
+    new RegExp(selected!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"),
+  );
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page
+    .getByRole("link", { name: "Fotoğrafı kapat", exact: true })
+    .click();
+  await expect(page).toHaveURL(origin);
+  await expect(photo).toBeFocused();
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
+});
+
+test("shared viewer keeps Conversation context optional and supports keyboard photos", async ({
+  page,
+}, info) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/atlas");
+  await page
+    .getByRole("button", { name: "Our summer anısını seç", exact: true })
+    .click();
+  await openFullMemory(page);
+  await page
+    .getByRole("button", { name: "Sonraki fotoğraf", exact: true })
+    .click();
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("“Anyone checked the ferry time?”", { exact: true }),
+  ).toBeHidden();
+  await page
+    .getByRole("button", { name: "Konuşmayı göster", exact: true })
+    .click();
+  await expect(
+    page.getByText("Worth missing the ferry for.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Kaynak bilgileri", exact: true }),
+  ).toBeVisible();
+  await page.locator(".viewer").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByText("3 / 3", { exact: true })).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: `work/poteto/app-simplification/viewer-context-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("shared viewer clears retained private media when the session is lost", async ({
+  page,
+}) => {
+  expect(
+    (
+      await page.request.post("/api/entry", {
+        data: { name: "Ben", code: "synthetic-shared-code" },
+      })
+    ).ok(),
+  ).toBe(true);
+  await page.goto("/#/memories?view=all");
+  await page.locator(".mem-tile").first().click();
+  await expect(page.locator(".viewer")).toBeVisible();
+  expect((await page.request.post("/api/logout", { data: {} })).ok()).toBe(
+    true,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.locator(".viewer, .mem-tile, .facts, .conversation"),
+  ).toHaveCount(0);
+  expect(
+    (
+      await page.request.get("/api/atlas/memory?group=missing&memory=missing")
+    ).status(),
+  ).toBe(403);
 });
 
 test("Add imports, recovers failures and shares successful photographs automatically", async ({
