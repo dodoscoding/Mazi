@@ -202,3 +202,14 @@ test("Discord outer query remains available to its captured controller and never
   assert.equal(h.window.location.hash, "#/add?section=sources");
   assert.equal(h.canGoBack(), false);
 });
+
+test("a literal question mark inside a query does not truncate later bookmark parameters", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/#/photos?q=what?when&places=%5B%22Doe%2C+City%22%5D&bookmark=exact",
+  );
+  const params = new URLSearchParams(h.route.search);
+  assert.equal(params.get("q"), "what?when");
+  assert.equal(params.get("places"), '["Doe, City"]');
+  assert.equal(params.get("bookmark"), "exact");
+});
