@@ -37,7 +37,8 @@ export function FeaturePage({ path }: { path: string }) {
     const [pathname, query] = path.split("?");
     const feature = featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
-    const retainWhenHidden = pathname === "/imports" || pathname === "/circle";
+    const discardWhenHidden =
+      pathname === "/ask" || pathname === "/answer-evidence";
     let disposed = false;
     let accessDenied = false;
     let lifecycle: ReturnType<typeof createLifecycle> | undefined;
@@ -48,7 +49,7 @@ export function FeaturePage({ path }: { path: string }) {
       observer?.disconnect();
       lifecycle?.dispose();
       container.replaceChildren();
-      if (document.hidden && !retainWhenHidden) return;
+      if (document.hidden && discardWhenHidden) return;
       const root = document.createElement("section");
       root.className = "feature-content";
       root.innerHTML = feature.template;
@@ -98,9 +99,12 @@ export function FeaturePage({ path }: { path: string }) {
       });
       container.append(message, link);
     };
-    const groupChanged = () => queueMicrotask(mount);
+    const groupChanged = () =>
+      queueMicrotask(() => {
+        if (!accessDenied) mount();
+      });
     const visibility = () => {
-      if (accessDenied || retainWhenHidden) return;
+      if (accessDenied || !discardWhenHidden) return;
       if (document.hidden) clear();
       else mount();
     };
