@@ -28,9 +28,7 @@ const failure = (error: unknown): ArchiveState => ({
   error: error instanceof Error ? error.message : "Archive unavailable",
 });
 export function useArchive(path: string, demo: boolean, groupId?: string) {
-  const groupRequest = useRef<
-    { controller: AbortController; quiet: boolean } | undefined
-  >(undefined);
+  const archiveEpoch = useRef(0);
   const currentPath = useRef(path);
   currentPath.current = path;
   const [state, setState] = useState<ArchiveState>(empty);
@@ -40,7 +38,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
   useEffect(() => {
     const invalidate = () => {
       if (demo) return;
-      if (groupRequest.current?.quiet) groupRequest.current.controller.abort();
+      archiveEpoch.current++;
       setState((previous) => ({ ...previous, memories: [], atlas: false }));
       setArchiveVersion((value) => value + 1);
     };
@@ -69,7 +67,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       controller?.abort();
       const request = new AbortController();
       controller = request;
-      groupRequest.current = { controller: request, quiet };
+
       if (!quiet) setState(empty);
       try {
         const response = await fetch("/api/groups", {
@@ -97,6 +95,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
         }
         if (group) sessionStorage.setItem("mazi.group", group);
         let refreshed: Memory[] | undefined;
+        const epoch = archiveEpoch.current;
         if (
           quiet &&
           !currentPath.current.startsWith("/memory/") &&
@@ -118,6 +117,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
           );
           if (request.signal.aborted) return;
         }
+        if (epoch !== archiveEpoch.current) refreshed = undefined;
         setState((previous) =>
           quiet && previous.status === "ready" && previous.group === group
             ? {

@@ -594,3 +594,26 @@ test("archive invalidation during initial groups read still finishes loading", a
   assert.equal(h.current.status, "ready");
   assert.equal(h.current.memories[0].id, "fresh");
 });
+
+test("foreground recheck during initial loading survives archive invalidation", async (t) => {
+  const initial = deferred();
+  const foreground = deferred();
+  let groupsCalls = 0;
+  const h = await harness(t, async (path) =>
+    path === "/api/groups"
+      ? ++groupsCalls === 1
+        ? initial.promise
+        : foreground.promise
+      : Response.json({ memories: [archivePhoto("fresh")] }),
+  );
+  await h.render("/");
+  await visibility(h, false);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:archive-changed")),
+  );
+  await act(async () => foreground.resolve(Response.json(groups)));
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () => initial.resolve(Response.json([])));
+  assert.equal(h.current.status, "ready");
+});
