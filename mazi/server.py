@@ -25,7 +25,7 @@ class AppServer(HTTPServer):
 
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
-APP_PATHS = {'/parallel', '/', '/atlas', '/imports', '/review', '/timeline', '/places',
+APP_PATHS = {'/explore', '/explore/parallel', '/parallel', '/', '/atlas', '/imports', '/review', '/timeline', '/places',
              '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/introduction', '/circle', '/search'}
 
 

@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import type { MouseEvent, ReactNode } from "react";
+import "./styles/explore.css";
 import { About } from "./About";
 import { Browse } from "./Browse";
 import { Entry, Introduction } from "./Entry";
@@ -131,6 +132,56 @@ export default function App() {
           void entry.logout();
         }}
       />
+    );
+  else if (
+    (route.path === "/explore" || route.path === "/explore/parallel") &&
+    profile
+  )
+    content = (
+      <section className="explore-section" aria-label="Explore">
+        <header className="explore-header">
+          <h1 ref={heading} tabIndex={-1}>
+            Explore
+          </h1>
+          <p>
+            Find photographs and conversations from your archive, or explore a
+            different life with Parallel You.
+          </p>
+          <nav aria-label="Explore sections">
+            <a
+              href="#/explore"
+              onClick={link("/explore")}
+              aria-current={route.path === "/explore" ? "page" : undefined}
+            >
+              Photos & conversations
+            </a>
+            <a
+              href="#/explore/parallel"
+              onClick={link("/explore/parallel")}
+              aria-current={
+                route.path === "/explore/parallel" ? "page" : undefined
+              }
+            >
+              Parallel You
+            </a>
+          </nav>
+        </header>
+        {route.path === "/explore/parallel" ? (
+          <Suspense fallback={<p role="status">Opening Parallel You…</p>}>
+            <ParallelPage
+              key={profile.user_id}
+              memberId={profile.user_id}
+              demo={demo}
+            />
+          </Suspense>
+        ) : (
+          <FeaturePage
+            key={profile.user_id}
+            path={"/search" + route.search}
+            discordReturn={discordReturn.current}
+          />
+        )}
+      </section>
     );
   else if (route.path === "/parallel" && profile)
     content = (

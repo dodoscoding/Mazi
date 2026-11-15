@@ -14,6 +14,7 @@ import "./styles/shell.css";
 
 type Archive = ReturnType<typeof useArchive>;
 const tools: [string, string][] = [
+  ["/explore", "Explore"],
   ["/memories", "Memories"],
   ["/discover", "Discover"],
   ["/ask", "Ask your archive"],

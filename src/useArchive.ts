@@ -87,6 +87,8 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
   }, [demo, groupId, version]);
   const loadAtlas =
     path !== "/parallel" &&
+    path !== "/explore" &&
+    path !== "/explore/parallel" &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&
     !!state.group &&

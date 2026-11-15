@@ -247,3 +247,7 @@ An event-scoped read and transactional note write retain current membership, ful
 ## Parallel You local implementation 14 November 2026
 
 The owner requested implementation of the Parallel You plan and selected keeping external AI disabled. Implement the browser-only per-member fiction space, recommended roles-only writing and scoped night palette, using an explicitly labelled deterministic sample provider. Keep existing total script ceilings. No paid model call, provider credential, deployment or archive-to-fiction bridge is authorized by this implementation. Provider selection, terms, spending and paid evaluation remain pending. Fiction persists on logout, with visible shared-device disclosure and delete controls, as recommended in D26. Production release remains separate from synthetic verification.
+
+## Explore section, 15 November 2026
+
+Add a section inside Mazi with two destinations: finding archived photographs and imported conversation context, and Parallel You. Preserve Home, Atlas and existing tools. This is retrieval, not a general chat assistant. Reuse discovery search and event notebooks with their existing access checks. Explore loads conversation context alongside photographs; chat results open the event notebook. Only imported, approved context is searchable, not complete external chat histories. Parallel You remains isolated fiction with the sample provider and external AI disabled. No schema or deployment change is required.

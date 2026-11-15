@@ -278,3 +278,30 @@ for (const mode of ["semantic", "keyword"]) {
     assert.equal($("#count").textContent, "Search unavailable.");
   });
 }
+
+test("Explore loads photo and conversation search together", async (t) => {
+  const requests = [];
+  const feature = await mountFeature(
+    t,
+    "discovery",
+    (path) => {
+      requests.push(path);
+      return boundary(() => searchPage)(path);
+    },
+    { route: "/explore" },
+  );
+  await until(() => feature.$("#results h3"), "photographs loaded");
+  assert.equal(feature.$(".discovery-page").dataset.view, "search");
+  assert.equal(
+    feature.$("#search-title").textContent,
+    "Find photos and conversations",
+  );
+  assert.ok(requests.some((path) => path.startsWith("/api/atlas")));
+  feature.$("#query").value = "lake";
+  submit(feature);
+  await until(
+    () => feature.window.location.hash.includes("q=lake"),
+    "query retained",
+  );
+  assert.ok(feature.window.location.hash.startsWith("#/explore?"));
+});

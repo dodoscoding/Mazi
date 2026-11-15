@@ -243,3 +243,78 @@ test("loading, refusal, invalid output and quota errors preserve the branch", as
     ).toBeNull();
   }
 });
+
+test("Explore keeps archive retrieval and Parallel You in one new section", async ({
+  page,
+}, testInfo) => {
+  await page.route("**/api/groups", (r) =>
+    r.fulfill({
+      json: [{ id: "circle", name: "Synthetic circle", role: "member" }],
+    }),
+  );
+  await page.route("**/api/discovery/state?*", (r) =>
+    r.fulfill({
+      json: {
+        people: [],
+        memories: [],
+        hidden_memories: [],
+        hidden: [],
+        suppressed: [],
+        identities: [],
+        settings: {
+          model_ready: false,
+          group_enabled: false,
+          contribution_enabled: false,
+        },
+      },
+    }),
+  );
+  await page.route("**/api/atlas?*", (r) =>
+    r.fulfill({ json: { memories: [] } }),
+  );
+  await page.route("**/api/discovery/search?*", (r) =>
+    r.fulfill({
+      json: {
+        items: [],
+        total: 0,
+        next_offset: null,
+        facets: { sources: [], shared_by: [] },
+        mode: "keyword",
+        unindexed: 0,
+      },
+    }),
+  );
+  await page.goto("/explore?demo=1");
+  await expect(
+    page.getByRole("heading", { name: "Explore", exact: true }),
+  ).toBeVisible();
+  const sections = page.getByRole("navigation", { name: "Explore sections" });
+  await expect(
+    sections.getByRole("link", { name: "Photos & conversations" }),
+  ).toHaveAttribute("aria-current", "page");
+  await sections.getByRole("link", { name: "Parallel You" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What if you chose differently?" }),
+  ).toBeVisible();
+  await sections.getByRole("link", { name: "Photos & conversations" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What if you chose differently?" }),
+  ).toHaveCount(0);
+  await expect(
+    sections.getByRole("link", { name: "Photos & conversations" }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: testInfo.outputPath("explore.png"),
+    fullPage: true,
+  });
+  await page.goto("/?demo=1");
+  await expect(
+    page.getByRole("navigation", { name: "Explore sections" }),
+  ).toHaveCount(0);
+  await expect(page.locator(".entry-page")).toHaveCount(0);
+});

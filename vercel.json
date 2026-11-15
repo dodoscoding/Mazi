@@ -96,6 +96,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/explore",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/explore/parallel",
+      "destination": "/index.html"
+    },
+    {
       "source": "/parallel",
       "destination": "/index.html"
     }

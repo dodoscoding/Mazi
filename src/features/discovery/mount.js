@@ -16,7 +16,8 @@ export function mount(root, lifecycle) {
   const path = (
     location.hash.startsWith("#/") ? location.hash.slice(1) : location.pathname
   ).split("?")[0];
-  const view = path === "/search" ? "search" : "discover";
+  const exploring = path === "/explore";
+  const view = path === "/search" || exploring ? "search" : "discover";
   root.querySelector(".discovery-page").dataset.view = view;
   // The URL holds the search so Back from a result restores it.
   const urlFields = [
@@ -66,7 +67,10 @@ export function mount(root, lifecycle) {
     counts = null;
   if (view === "search") {
     $("#discovery-title").textContent = "Search";
-    $("#search-title").textContent = "Search the archive";
+    $("#search-title").textContent = exploring
+      ? "Find photos and conversations"
+      : "Search the archive";
+    if (exploring) $(".disc-head").hidden = true;
     $("#prompts").hidden = true;
     $("#discover-sub").hidden = true;
   } else promptSkeleton(root);
@@ -74,7 +78,7 @@ export function mount(root, lifecycle) {
   lifecycle.onDispose(() => contextController.abort());
   let contextRevision = 0,
     contextReady = false,
-    contextWanted = false,
+    contextWanted = exploring,
     contextLoading = false,
     photoTotal = null,
     completedQuery = "";
@@ -699,7 +703,7 @@ export function mount(root, lifecycle) {
   $("#groups").onchange = () =>
     run(async () => {
       group = lifecycle.selectGroup($("#groups"));
-      contextWanted = false;
+      contextWanted = exploring;
       $("#mode").value = "keyword";
       similar = "";
       filters.source = filters.sharedBy = "";

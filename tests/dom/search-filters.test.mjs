@@ -219,3 +219,16 @@ test("A filter from the URL stays selectable when no visible photograph carries 
   assert.equal($("#shared-by").value, "Former member");
   assert.equal(root.querySelectorAll("#results article").length, 0);
 });
+
+test("Explore chat matches open the source event notebook", async (t) => {
+  const feature = await mountFeature(t, "discovery", archive([]), {
+    route: "/explore?q=lake",
+  });
+  await until(() => feature.$("#chat-list a"), "conversation matches");
+  const links = [...feature.root.querySelectorAll("#chat-list a")];
+  assert.equal(links.length, 2);
+  assert.equal(links[0].getAttribute("href"), "#/memory/picnic?notebook=1");
+  assert.match(links[0].textContent, /Ana/);
+  assert.match(links[0].textContent, /lake/);
+  assert.ok(feature.$("#results h3"));
+});

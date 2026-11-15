@@ -160,7 +160,7 @@ export function renderGroups(root, atlas, query, people, filters) {
   $("chat-list").replaceChildren(
     ...results.chats.map(({ memory, message, snippet }, index) => {
       const link = stagger(node("a", undefined, "result-chat"), index);
-      link.href = memoryHref(memory);
+      link.href = `${memoryHref(memory)}?notebook=1`;
       const avatar = node("span", initials(message.name), "br-avatar");
       avatar.setAttribute("aria-hidden", "true");
       const who = node("span", undefined, "result-who");
