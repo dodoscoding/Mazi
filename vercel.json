@@ -94,6 +94,10 @@
     {
       "source": "/welcome",
       "destination": "/index.html"
+    },
+    {
+      "source": "/parallel",
+      "destination": "/index.html"
     }
   ],
   "headers": [

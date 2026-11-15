@@ -7,6 +7,7 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: [
     "journey.spec.ts",
+    "parallel.spec.ts",
     "resilience.spec.ts",
     "evidence.spec.ts",
     "theme-shell.spec.ts",

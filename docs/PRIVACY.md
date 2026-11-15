@@ -96,3 +96,11 @@ Phase 6 requires a separate, default-off Memory answer switch for the group, req
 Before launch, identify data regions, subprocessors, provider training/retention settings, consent text, support routes, nonmember requests, incident ownership, and any needed privacy/legal assessment. Keep sensitive production exports out of development fixtures. Do not claim regulatory compliance from the existence of RLS or encryption.
 
 Mandatory privacy scenarios are T01, T02, T05, T09, T11, T13, and T15 in the [test plan](TEST_PLAN.md), according to the enabled milestone. A feature stays disabled if its access and revocation scenarios fail.
+
+## Parallel You sample stories
+
+Parallel You is a separate, optional fiction space. It reads no archive evidence and writes nothing into memories, search, answers, notebooks or exports. The implemented provider is a deterministic sample engine; external AI is disabled. The server receives only the submitted origin, ancestor path, meters and choice, and persists only daily admission counts and notice acceptance. Requests and chapters are not logged by this feature.
+
+Stories are saved under `mazi.parallel.v1.<memberId>` in the browser. This is an explicit exception to archive browser-storage rules: the records are invented fiction, not authorized archive data. Keys separate member views but are not encryption or protection against someone who controls the browser profile. The interface discloses that stories survive sign-out and offers per-universe and all-story deletion. Private browsing, storage denial or quota exhaustion can prevent persistence; the interface reports these failures.
+
+The sample notice is version `sample-v1`; it authorizes no external disclosure. An external provider requires a new notice, recorded retention/training terms, explicit provider and spend decisions, and separate implementation. The keyword-based sensitive-input check is conservative and incomplete, not a clinical safety system. The sample refusal card offers supportive text without generated chapters or unverified helpline numbers.

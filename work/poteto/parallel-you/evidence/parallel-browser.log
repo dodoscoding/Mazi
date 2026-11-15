@@ -1,0 +1,21 @@
+[WebServer] (node:63821) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 2 workers
+
+(node:63830) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:63831) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/parallel.spec.ts:30:1 › branches persist, map matches list, endings compare and delete (3.3s)
+  ✓   2 [phone] › tests/parallel.spec.ts:30:1 › branches persist, map matches list, endings compare and delete (3.4s)
+  ✓   3 [desktop] › tests/parallel.spec.ts:118:1 › feature off is hidden and never generates (271ms)
+  ✓   4 [phone] › tests/parallel.spec.ts:118:1 › feature off is hidden and never generates (285ms)
+  ✓   5 [desktop] › tests/parallel.spec.ts:130:1 › notice, timeout retry and access loss do not create chapters (555ms)
+  ✓   6 [phone] › tests/parallel.spec.ts:130:1 › notice, timeout retry and access loss do not create chapters (637ms)
+  ✓   7 [desktop] › tests/parallel.spec.ts:169:1 › leaving during notice acceptance cannot generate or save a story (669ms)
+  ✓   8 [phone] › tests/parallel.spec.ts:169:1 › leaving during notice acceptance cannot generate or save a story (699ms)
+  ✓   9 [desktop] › tests/parallel.spec.ts:209:1 › loading, refusal, invalid output and quota errors preserve the branch (1.3s)
+  ✓  10 [phone] › tests/parallel.spec.ts:209:1 › loading, refusal, invalid output and quota errors preserve the branch (2.1s)
+
+  10 passed (9.1s)

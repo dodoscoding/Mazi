@@ -282,3 +282,17 @@ The provider is behind an adapter so tests never reach the network. `MAZI_PARALL
 - Any use of archive memories, photographs, chats, people or places as story input.
 - Images, 3D, sound beyond the existing optional cue, Life Book and Random Universe.
 - Streaming chapters as they are written.
+
+
+## Implementation status 14 November 2026
+
+The owner selected external AI disabled. The local implementation is on `codex/parallel-you`, based on this planning branch. [Verification](VERIFICATION.md) records commands, results, environment and screenshots.
+
+- PY-S1: implemented domain types, validated tree operations, deterministic layout, bounded member-keyed storage and request/fixture modules.
+- PY-S2: implemented lazy members-only route, origin form, chapter, map/list, storage controls and script budget check. The 400 KiB total ceiling is unchanged.
+- PY-S3: implemented plain-JSON sample contracts, fake provider with one validation retry, transactional quotas, versioned notice, disabled-by-default endpoint, session recheck and bridge lock isolation. The hosted migration is provided but not applied. Pydantic, Anthropic SDK, provider terms and live-provider prompt integration are deferred pending provider decisions.
+- PY-S4: implemented sample endpoint requests, loading, cancellation, retry, refusal and access-loss states. Browser fixtures remain available with explicit demo mode.
+- PY-S5: implemented endings count, deterministic sample twists, compare endings, reduced-motion map and chapter regeneration/deletion with descendant removal.
+- PY-S6: implemented a no-cost structural harness for 12 origins/tone scenarios and 48 chapters. English sample templates do not evaluate Turkish generation, consistency, name removal or actual AI writing quality. Paid evaluation and production release remain unperformed.
+
+The implementation consolidates the small screens into `ParallelPage.tsx` and uses one core unit-test file plus focused Python contract/HTTP tests. Sample twists are deterministic rather than probabilistic. Usage counts admitted attempts even on failure, so retries cannot evade quotas. No user text is sent to an external provider.

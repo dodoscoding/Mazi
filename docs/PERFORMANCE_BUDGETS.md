@@ -45,3 +45,7 @@ An owner-supplied WhatsApp export (57 MB, 10,676 messages, 306 JPEGs) ran throug
 The run found two defects, both now fixed. Times written as `21.07.45` left every message undated, and a truncated JPEG was retried as a storage failure. With no date order chosen, 3,132 of the 10,676 messages remain ambiguous; choosing day/month/year resolves all of them.
 
 At the measured rate, learned indexing of 10,000 distinct photographs would take about 13 minutes on this Mac. That is an extrapolation, not a measurement. Retrieval quality on real photographs is not measured: English keyword and related queries on this mostly non-English chat returned no keyword matches, related search ranked all 300 photos, and the English answer abstained. A labeled query set from the owner is needed to score quality.
+
+## Parallel You sample route
+
+The `/parallel` route loads `ParallelPage` and its stylesheet lazily. Its dedicated script ceiling is 24 KiB gzip, within the unchanged 400 KiB total script ceiling; no increase to the total budget is taken. The sample implementation measured 7.8 KiB for this chunk and 394.5 KiB for all scripts using `scripts/check-budgets.mjs` (gzip level 9). This is local build evidence, not a production performance result. No frontend dependency or font was added.

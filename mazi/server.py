@@ -15,6 +15,7 @@ from .identity.core import Denied
 from .memories.memories import MemoryStore
 from .memories.server import handler_for as memory_handler
 from .sources.server import worker
+from .parallel.server import handler_for as parallel_handler
 
 
 class AppServer(HTTPServer):
@@ -24,7 +25,7 @@ class AppServer(HTTPServer):
 
 DIST = Path(__file__).resolve().parents[1] / 'dist'
 LAND = Path(__file__).parent / 'sources' / 'land.geojson'
-APP_PATHS = {'/', '/atlas', '/imports', '/review', '/timeline', '/places',
+APP_PATHS = {'/parallel', '/', '/atlas', '/imports', '/review', '/timeline', '/places',
              '/discover', '/people', '/ask', '/memories', '/answer-evidence', '/settings', '/login', '/welcome', '/about', '/introduction', '/circle', '/search'}
 
 
@@ -33,7 +34,7 @@ def handler_for(store, dist=None, drain=None):
     store.shared_mode = True
     build = Path(dist) if dist is not None else DIST
 
-    class Handler(memory_handler(store)):
+    class Handler(parallel_handler(store, memory_handler(store))):
         def work(self):
             if drain is None:
                 return self.json(200, {'pending': False, 'mode': 'thread'})

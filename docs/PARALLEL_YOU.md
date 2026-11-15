@@ -2,7 +2,7 @@
 
 On 1 November 2026 the owner asked to add Parallel You to this repository as an addition to Mazi. Parallel You is an AI alternative-life simulator: a member changes one decision, a model writes a short fictional chapter of the life that might have followed, and every new choice opens a branch on a "multiverse map". The owner chose the hybrid direction (C) with a stronger game side. [The preserved blueprint](source/PARALLEL_YOU_BLUEPRINT.md) is the source; [D26](DECISIONS.md#parallel-you-experiment-1-november-2026) records the request.
 
-This document reconciles the blueprint with the repository and proposes a plan. Nothing in it is implemented. It does not select or enable a model provider, add keys, provision paid services or deploy anything. The step-by-step implementation plan is in [the Parallel You work plan](../work/poteto/parallel-you/PLAN.md).
+This document records the original proposed plan. On 14 November 2026 the owner requested implementation while keeping external AI disabled. The local sample implementation now covers the story core, screens, branching map, endings, browser persistence, fake-provider API, notice, quotas and lock isolation. See [implementation verification](../work/poteto/parallel-you/VERIFICATION.md) for tested scope and remaining live-provider work. No external model provider, keys, paid services or deployment are enabled. The step-by-step implementation plan is in [the Parallel You work plan](../work/poteto/parallel-you/PLAN.md).
 
 ## Summary
 

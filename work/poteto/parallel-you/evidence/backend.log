@@ -1,0 +1,22 @@
+..........................................................................................ss...........................................................................................................................................................................................................................................................................................................................................................................................ss................................F............ssssssss.......................................
+======================================================================
+FAIL: test_pil_rational_strings_become_signed_degrees (tests.backend.test_places.GpsTests.test_pil_rational_strings_become_signed_degrees)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dorukdellaloglu/mazi/.worktrees/parallel-you/tests/backend/test_places.py", line 10, in test_pil_rational_strings_become_signed_degrees
+    self.assertEqual(gps_degrees(ISTANBUL_EXIF), (41.0144, 28.975))
+AssertionError: Tuples differ: (41.0144, 28.974999999999998) != (41.0144, 28.975)
+
+First differing element 1:
+28.974999999999998
+28.975
+
+- (41.0144, 28.974999999999998)
++ (41.0144, 28.975)
+
+----------------------------------------------------------------------
+Ran 565 tests in 461.489s
+
+FAILED (failures=1, skipped=12)
+Real 10000-photo local seconds {'related': 0.3075, 'index': 0.7585, 'events': 0.1508, 'duplicates': 3.5739, 'places': 1.5378}
+Location export synthetic profile: {"final_validation_seconds": 1.8409761670045555, "location_scan_seconds": 0.8310405829979572, "maximum_page_rows": 128, "maximum_projected_page_utf8_bytes": 27648, "pages": 158, "rows": 20000}

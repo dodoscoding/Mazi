@@ -28,6 +28,7 @@ const tabs: [string, string, IconName][] = [
 ];
 
 export function Shell({
+  parallelEnabled = false,
   path,
   demo,
   archive,
@@ -36,6 +37,7 @@ export function Shell({
   onSignOut,
   children,
 }: {
+  parallelEnabled?: boolean;
   path: string;
   demo: boolean;
   archive: Archive;
@@ -124,6 +126,7 @@ export function Shell({
   const moreActive =
     moreOpen ||
     [
+      "/parallel",
       "/circle",
       "/about",
       "/introduction",
@@ -174,6 +177,8 @@ export function Shell({
                   {tools.map(([url, label]) =>
                     navLink(url, label, "menu-item", close),
                   )}
+                  {parallelEnabled &&
+                    navLink("/parallel", "Parallel You", "menu-item", close)}
                   <div className="menu-separator" />
                   {navLink("/about", "About", "menu-item menu-quiet", close)}
                   <div className="menu-separator" />
@@ -260,6 +265,8 @@ export function Shell({
           </div>
           <nav aria-label="Archive tools" className="more-list">
             {tools.map(([url, label]) => navLink(url, label, "", closeMore))}
+            {parallelEnabled &&
+              navLink("/parallel", "Parallel You", "", closeMore)}
             {navLink("/circle", "Our circle", "", closeMore)}
             {navLink("/about", "About", "more-quiet", closeMore)}
           </nav>

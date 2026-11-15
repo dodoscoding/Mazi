@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { About } from "./About";
 import { Browse } from "./Browse";
@@ -15,6 +22,8 @@ import { useArchive } from "./useArchive";
 import { useEntry } from "./useEntry";
 import { useReducedMotion, useRoute } from "./useRoute";
 import { useWorkDrain } from "./useWorkDrain";
+
+const ParallelPage = lazy(() => import("./parallel/ParallelPage"));
 
 export default function App() {
   const discordReturn = useRef(createDiscordReturn(location.search));
@@ -35,6 +44,20 @@ export default function App() {
     if (profile) discordReturn.current.bind(profile.user_id);
     else if (entry.state.status === "signed-out") discordReturn.current.clear();
   }, [profile?.user_id, entry.state.status]);
+  const [parallelEnabled, setParallelEnabled] = useState(false);
+  useEffect(() => {
+    setParallelEnabled(false);
+    if (!profile) return;
+    const controller = new AbortController();
+    void fetch("/api/parallel/config", { signal: controller.signal })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((value) => {
+        if (!controller.signal.aborted)
+          setParallelEnabled(value?.enabled === true);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [profile?.user_id]);
   const archive = useArchive(route.path, demo && !!profile, profile?.group_id);
   useWorkDrain(!!profile);
   useLayoutEffect(() => {
@@ -108,6 +131,16 @@ export default function App() {
           void entry.logout();
         }}
       />
+    );
+  else if (route.path === "/parallel" && profile)
+    content = (
+      <Suspense fallback={<p role="status">Opening Parallel You…</p>}>
+        <ParallelPage
+          key={profile.user_id}
+          memberId={profile.user_id}
+          demo={demo}
+        />
+      </Suspense>
     );
   else if (isFeaturePath(route.path, demo))
     content = (
@@ -187,6 +220,7 @@ export default function App() {
   else
     screen = (
       <Shell
+        parallelEnabled={parallelEnabled || demo}
         path={route.path}
         demo={demo}
         archive={archive}
