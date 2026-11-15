@@ -16,6 +16,7 @@ export default defineConfig({
     "browse.spec.ts",
     "entry-redesign.spec.ts",
     "sound.spec.ts",
+    "visibility.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,
