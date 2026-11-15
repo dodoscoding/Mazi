@@ -28,7 +28,9 @@ const failure = (error: unknown): ArchiveState => ({
   error: error instanceof Error ? error.message : "Archive unavailable",
 });
 export function useArchive(path: string, demo: boolean, groupId?: string) {
-  const groupRequest = useRef<AbortController | undefined>(undefined);
+  const groupRequest = useRef<
+    { controller: AbortController; quiet: boolean } | undefined
+  >(undefined);
   const currentPath = useRef(path);
   currentPath.current = path;
   const [state, setState] = useState<ArchiveState>(empty);
@@ -38,7 +40,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
   useEffect(() => {
     const invalidate = () => {
       if (demo) return;
-      groupRequest.current?.abort();
+      if (groupRequest.current?.quiet) groupRequest.current.controller.abort();
       setState((previous) => ({ ...previous, memories: [], atlas: false }));
       setArchiveVersion((value) => value + 1);
     };
@@ -67,7 +69,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       controller?.abort();
       const request = new AbortController();
       controller = request;
-      groupRequest.current = request;
+      groupRequest.current = { controller: request, quiet };
       if (!quiet) setState(empty);
       try {
         const response = await fetch("/api/groups", {

@@ -578,3 +578,19 @@ test("archive invalidation rejects an older quiet Atlas response", async (t) => 
   );
   assert.equal(h.current.memories[0].id, "fresh");
 });
+
+test("archive invalidation during initial groups read still finishes loading", async (t) => {
+  const pending = deferred();
+  const h = await harness(t, async (path) =>
+    path === "/api/groups"
+      ? pending.promise
+      : Response.json({ memories: [archivePhoto("fresh")] }),
+  );
+  await h.render("/");
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:archive-changed")),
+  );
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "fresh");
+});
