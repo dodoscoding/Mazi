@@ -1,120 +1,60 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-test("Annual recap and collaborative story editing", async ({
+
+test("photo browsing and retained recap offer no story or capsule writing", async ({
   page,
-}, testInfo) => {
+}) => {
   await page.request.post("/api/entry", {
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
-  const session = await (await page.request.get("/api/session")).json();
-  const priorStories = await page.request.get(
-    `/api/memories/stories?group=${session.group_id}`,
-  );
-  expect(priorStories.ok()).toBe(true);
-  for (const story of await priorStories.json()) {
-    if (!story.can_delete || story.event.title !== "Our summer") continue;
-    expect(
-      (
-        await page.request.post("/api/memories/delete", {
-          data: {
-            group: session.group_id,
-            story: story.id,
-            revision: story.revision,
-          },
-        })
-      ).ok(),
-    ).toBe(true);
-  }
-  const currentStory = page
-    .locator("#stories > article")
-    .filter({
-      has: page.getByRole("heading", { name: "Our summer", exact: true }),
-    })
-    .filter({
-      has: page.getByRole("button", { name: "Delete story", exact: true }),
-    });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/memories");
-  await expect(page.locator("#recap")).toContainText("Our summer");
-  await page.getByRole("button", { name: "Start a story" }).click();
-  await currentStory
-    .getByRole("textbox", { name: "Your recollection", exact: true })
-    .fill("<img src=x onerror=alert(1)> A beautiful day.");
-  await currentStory
-    .getByRole("button", { name: "Save my recollection" })
+  await expect(page.locator("#grid .mem-tile")).toHaveCount(3);
+  await page
+    .getByRole("combobox", { name: "Yıl", exact: true })
+    .selectOption("2024");
+  await page
+    .getByRole("link", { name: /2024.*Annual recap|Annual recap.*2024/ })
     .click();
-  await expect(page.locator("#stories")).toContainText("You: <img");
-  await expect(page.locator("#stories img[onerror]")).toHaveCount(0);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await page.screenshot({
-    path: testInfo.outputPath("evidence.png"),
-    fullPage: true,
-  });
-  await currentStory.getByLabel("Sub-event title").fill("Morning");
-  await currentStory
-    .getByRole("checkbox", { name: "Photo 1", exact: true })
-    .check();
-  await currentStory
-    .getByRole("button", { name: "Add sub-event", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("Morning · 1 photos");
-  await currentStory.getByRole("button", { name: "Show slideshow" }).click();
-  await expect(page.locator("#stories img")).toBeVisible();
-  await currentStory.getByRole("button", { name: "Next photo" }).click();
-  await expect(page.locator("#stories")).toContainText("Photo 2 of 3");
-  const videoDownload = page.waitForEvent("download");
-  await currentStory
-    .getByRole("button", { name: "Download video (AVI)", exact: true })
-    .click();
-  expect((await videoDownload).suggestedFilename()).toBe("mazi-memory.avi");
-  const downloadPromise = page.waitForEvent("download");
-  await currentStory.getByRole("button", { name: "Export story JSON" }).click();
-  expect((await downloadPromise).suggestedFilename()).toBe("mazi-story.json");
-  await currentStory
-    .getByRole("button", { name: "Remove my recollection" })
-    .click();
+  await expect(page).toHaveURL(/recap=2024/);
+  await expect(page.locator("#recap-scope")).toBeVisible();
+  await expect(page.locator(".mem-tile")).toHaveCount(3);
+  await expect(page.locator("#capsule-form, #stories textarea")).toHaveCount(0);
   await expect(
-    currentStory.getByRole("textbox", {
-      name: "Your recollection",
-      exact: true,
-    }),
-  ).toHaveValue("");
-  await currentStory
-    .getByRole("button", { name: "Delete story", exact: true })
-    .click();
-  await expect(page.locator("#stories")).toContainText("No shared stories");
+    page.getByRole("button", { name: "Start a story", exact: true }),
+  ).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test("Capsules stay sealed with a changed browser clock", async ({ page }) => {
-  await page.request.post("/api/entry", {
-    data: { name: "Ben", code: "synthetic-shared-code" },
-  });
-  await page.goto("/#/memories");
-  await expect(page.locator("#recap")).toContainText("Our summer");
-  await page
-    .getByLabel("Capsule title", { exact: true })
-    .fill("Hidden surprise");
-  await page.getByLabel("Note for the future").fill("These words stay sealed");
-  await page.getByLabel("Opening time").fill("2030-01-01T12:00");
-  await page.getByRole("button", { name: "Seal capsule", exact: true }).click();
-  await expect(page.locator("#capsules")).toContainText("Sealed capsule");
-  await expect(page.locator("#capsules")).not.toContainText("Hidden surprise");
-  await page.clock.install({ time: new Date("2035-01-01") });
-  await page.getByRole("button", { name: "Refresh stories" }).click();
-  await expect(page.locator("#capsules")).toContainText("Sealed capsule");
+test("retired writes cannot recreate historical stories or capsules through HTTP", async ({
+  page,
+}) => {
+  const profile = await (
+    await page.request.post("/api/entry", {
+      data: { name: "Ben", code: "synthetic-shared-code" },
+    })
+  ).json();
+  for (const operation of [
+    "create",
+    "write",
+    "note",
+    "seal",
+    "subevents",
+    "video",
+  ])
+    expect(
+      (
+        await page.request.post(`/api/memories/${operation}`, {
+          data: { group: profile.group_id },
+        })
+      ).status(),
+    ).toBe(410);
+  await page.goto("/#/memories?section=capsules");
+  await expect(page).toHaveURL(/#\/past-creations$/);
   await expect(
-    page.getByRole("button", { name: "Open capsule", exact: true }),
-  ).toHaveCount(0);
-  await page.getByLabel("Show in-app capsule notifications").check();
-  await expect(page.locator("#notifications")).toBeEmpty();
-  await page
-    .getByRole("button", { name: "Delete capsule", exact: true })
-    .click();
-  await expect(page.locator("#capsules")).toContainText(
-    "No available capsules",
-  );
+    page.getByText("No Past creations are currently available.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("textbox")).toHaveCount(0);
 });

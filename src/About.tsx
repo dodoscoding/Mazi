@@ -24,12 +24,12 @@ const promises: [string, string][] = [
     "Withdraw a contribution and it stops being shared for everyone at once. Files someone already downloaded cannot be recalled.",
   ],
   [
-    "Answers cite their sources",
-    "Ask your archive answers only from recorded archive metadata and links each claim to the record it came from.",
+    "Sources stay inspectable",
+    "Photographs and imported conversations retain their recorded source evidence.",
   ],
   [
     "Optional AI stays off",
-    "Face recognition and external AI providers are off. Memory answers run locally, and no question, photograph or message goes to a provider.",
+    "Face recognition and external AI providers are off. Search retrieves archived photographs and recorded source context without generating an answer.",
   ],
 ];
 
@@ -121,20 +121,26 @@ export function About({
   link,
   heading,
   onSignOut,
+  settings = false,
 }: {
   profileName: string;
   circle: string;
   link: LinkFor;
   heading: RefObject<HTMLHeadingElement | null>;
   onSignOut: () => void;
+  settings?: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
   return (
     <div className="about-page">
       <article className="about-story">
-        <h1 ref={heading} tabIndex={-1}>
-          A private atlas for <em>one circle of friends</em>
-        </h1>
+        {settings ? (
+          <h2>About</h2>
+        ) : (
+          <h1 ref={heading} tabIndex={-1}>
+            A private atlas for <em>one circle of friends</em>
+          </h1>
+        )}
         <p className="about-lede">
           Mazi means “together”. It gathers the photographs and conversations a
           circle already has, places each memory where and when it happened, and
@@ -159,8 +165,10 @@ export function About({
       <aside className="about-aside">
         <a
           className="about-replay"
-          href="#/introduction"
-          onClick={link("/introduction")}
+          href={settings ? "#/introduction?return=settings" : "#/introduction"}
+          onClick={link(
+            settings ? "/introduction?return=settings" : "/introduction",
+          )}
         >
           Replay introduction
           <Icon name="chevron-right" size={18} />

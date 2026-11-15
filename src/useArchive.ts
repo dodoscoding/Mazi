@@ -30,11 +30,17 @@ const failure = (error: unknown): ArchiveState => ({
 export function useArchive(path: string, demo: boolean, groupId?: string) {
   const [state, setState] = useState<ArchiveState>(empty);
   const [version, setVersion] = useState(0);
+  const [archiveVersion, setArchiveVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
   useEffect(() => {
-    window.addEventListener("mazi:archive-changed", refresh);
-    return () => window.removeEventListener("mazi:archive-changed", refresh);
-  }, [refresh]);
+    const invalidate = () => {
+      if (demo) return;
+      setState((previous) => ({ ...previous, memories: [], atlas: false }));
+      setArchiveVersion((value) => value + 1);
+    };
+    window.addEventListener("mazi:archive-changed", invalidate);
+    return () => window.removeEventListener("mazi:archive-changed", invalidate);
+  }, [demo]);
   useEffect(() => {
     if (!groupId) {
       setState(empty);
@@ -91,9 +97,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     };
   }, [demo, groupId, version]);
   const loadAtlas =
-    path !== "/" &&
     !path.startsWith("/memory/") &&
-    path !== "/explore" &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&
     !!state.group &&
@@ -129,7 +133,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       }
     })();
     return () => request.abort();
-  }, [loadAtlas, group]);
+  }, [loadAtlas, group, archiveVersion]);
   const chooseGroup = (id: string) => {
     sessionStorage.setItem("mazi.group", id);
     window.dispatchEvent(new Event("mazi:group"));

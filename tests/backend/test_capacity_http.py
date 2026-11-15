@@ -73,17 +73,12 @@ class CapacityHttpTests(unittest.TestCase):
                 status, evidence = request(f'/api/answers/evidence?group={group}&asset={asset}')
                 self.assertEqual((status, evidence['id']), (200, asset))
                 self.assertEqual(request(f'/api/answers/evidence?group={group}&asset={asset}', authenticated=False)[0], 403)
-                status, answer = request('/api/answers/ask', {'group': group, 'question': 'png'})
-                self.assertEqual(status, 200, answer)
-                self.assertEqual((answer['status'], answer['matching_records'], answer['shown']),
-                                 ('supported', 1001, 5))
-                self.assertEqual(len(answer['claims']), 5)
-                self.assertEqual(answer['usage']['requests'], 1)
-                for claim, citation in zip(answer['claims'], answer['evidence']):
-                    self.assertEqual(claim['evidence_ids'], [citation['id']])
-                    self.assertEqual(request(citation['url']), (200, citation))
-                self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'},
-                                         authenticated=False)[0], 403)
+                before_usage = request(f'/api/answers/state?group={group}')[1]['usage']
+                status, retired = request('/api/answers/ask', {'group': group, 'question': 'png'})
+                self.assertEqual(status, 410)
+                self.assertIn('retired', retired['error'])
+                self.assertEqual(request(f'/api/answers/state?group={group}')[1]['usage'], before_usage)
+                self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'}, authenticated=False)[0], 403)
                 for path in (f'/api/discovery/search?group={group}&mode=semantic',
                              f'/api/review/events?group={group}', f'/api/review/duplicates?group={group}'):
                     self.assertEqual(request(path)[0], 200)
@@ -91,7 +86,7 @@ class CapacityHttpTests(unittest.TestCase):
                 self.assertEqual(request('/api/discovery/index', {'group': group, 'limit': 2}, authenticated=False)[0], 403)
                 status, indexed = request('/api/discovery/index', {'group': group, 'limit': 2})
                 self.assertEqual((status, indexed['indexed'], indexed['remaining']), (200, 2, 999))
-                # Oversized source metadata fails both complete retrieval operations.
+                # Oversized source metadata fails ordinary retrieval; retired generation stays retired.
                 origin = store.db.execute('SELECT id,payload FROM archive_origins WHERE asset_id=? LIMIT 1', (asset,)).fetchone()
                 store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?',
                                  (json.dumps({'context': [{'text': 'x' * (64 * 1024)}]}), origin['id']))
@@ -99,8 +94,7 @@ class CapacityHttpTests(unittest.TestCase):
                 before_usage = request(f'/api/answers/state?group={group}')[1]['usage']
                 try:
                     self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'}),
-                                     (400, {'code': 'capacity_exceeded',
-                                            'error': 'Memory answers exceeded the 64 KiB metadata limit per origin. No partial answer was returned.'}))
+                                     (410, {'error': 'AI answers are retired. Search the archive instead.'}))
                     self.assertEqual(request(f'/api/answers/state?group={group}')[1]['usage'], before_usage)
                     self.assertEqual(request(f'/api/discovery/search?group={group}'),
                                      (400, {'code': 'capacity_exceeded',
@@ -108,27 +102,23 @@ class CapacityHttpTests(unittest.TestCase):
                 finally:
                     store.db.execute('UPDATE archive_origins SET payload=? WHERE id=?', (origin['payload'], origin['id']))
                     store.db.commit()
-                status, recovered = request('/api/answers/ask', {'group': group, 'question': 'png'})
-                self.assertEqual((status, recovered['matching_records'], recovered['shown']), (200, 1001, 5))
-                self.assertEqual(recovered['usage']['requests'], before_usage['requests'] + 1)
+                self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'png'})[0], 410)
+                self.assertEqual(request(f'/api/answers/state?group={group}')[1]['usage'], before_usage)
                 for path, body in [
                     (f'/api/discovery/search?group={group}&offset=bad', None),
                     (f'/api/review/timeline?group={group}&offset=bad', None),
-                    ('/api/answers/ask', {'group': group, 'question': ''}),
                 ]:
                     self.assertEqual(request(path, body), (400, {'error': 'Invalid request'}))
                 status, gallery = request(f'/api/archive?group={group}')
                 self.assertEqual((status, len(gallery)), (200, 30))
                 status, timeline = request(f'/api/review/timeline?group={group}')
                 self.assertEqual((status, timeline['total']), (200, 1001))
-                # A real visibility change restores the legacy boundary and guarded answers.
+                # A real visibility change preserves ordinary retrieval without re-enabling answers.
                 store.hide(user, gallery[0]['id'], True)
                 status, search = request(f'/api/discovery/search?group={group}')
                 self.assertEqual((status, search['total']), (200, 1000))
                 self.assertNotIn('code', search)
-                status, answer = request('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'})
-                self.assertEqual(status, 200, answer)
-                self.assertNotIn('code', answer)
+                self.assertEqual(request('/api/answers/ask', {'group': group, 'question': 'Where were these photographs taken?'})[0], 410)
             finally:
                 server.shutdown()
                 thread.join()

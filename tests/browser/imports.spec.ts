@@ -9,7 +9,7 @@ test("import inventory, automatic sharing, report, replay and withdrawal", async
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const unique = `${testInfo.project.name}-${Date.now()}`;
-  await page.goto("/#/imports");
+  await page.goto("/#/add");
   await page.getByLabel("Your name").fill(unique);
   await page.getByLabel("Shared code").fill("synthetic-shared-code");
   await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();

@@ -21,7 +21,7 @@ const button = (root, name) =>
 
 test("Gallery badges come from its read and explicit selection loads one bounded editor request", async (t) => {
   const reads = [];
-  const { root } = await mountFeature(t, "memories", (path) => {
+  const { root } = await mountFeature(t, "photos", (path) => {
     reads.push(path);
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/atlas")) return { memories: [memory()] };
@@ -32,7 +32,9 @@ test("Gallery badges come from its read and explicit selection loads one bounded
   });
   await until(() => root.querySelector(".mem-photo-facts"), "gallery");
   assert.match(
-    root.querySelector(".mem-photo-facts").textContent,
+    [...root.querySelectorAll(".mem-photo-facts")]
+      .map((node) => node.textContent)
+      .join(" "),
     /Ekran görüntüsü.*AI ile düzenlendi/,
   );
   assert.equal(
@@ -56,14 +58,14 @@ test("Gallery badges come from its read and explicit selection loads one bounded
     reads.find((path) => path.includes("social/labels")),
     "http://localhost",
   );
-  assert.deepEqual(JSON.parse(read.searchParams.get("assets")), [
+  assert.deepEqual(JSON.parse(read.searchParams.get("assets")).sort(), [
     "asset-0",
     "asset-1",
   ]);
 });
 
 test("Gallery selection stops at fifty stable asset IDs", async (t) => {
-  const { root } = await mountFeature(t, "memories", (path) => {
+  const { root } = await mountFeature(t, "photos", (path) => {
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/atlas")) return { memories: [memory(51)] };
     if (path.startsWith("/api/discovery/matches"))
@@ -86,7 +88,7 @@ test("Gallery selection stops at fifty stable asset IDs", async (t) => {
 for (const action of ["deselect", "clear", "toggle"]) {
   test(`Gallery ${action} cancels an editor whose lazy import is pending`, async (t) => {
     const reads = [];
-    const { root } = await mountFeature(t, "memories", (path) => {
+    const { root } = await mountFeature(t, "photos", (path) => {
       reads.push(path);
       if (path === "/api/groups") return [group];
       if (path.startsWith("/api/atlas")) return { memories: [memory()] };

@@ -153,6 +153,57 @@ Allocate 420 KiB gzip for total scripts in this increment. Keep entry JavaScript
 
 The final combined release must pass all bundle gates. H1 must also prove that initial Home requests neither Atlas nor a notebook per card. This is a delegated engineering budget decision, not evidence of hosted latency, physical-phone acceptance or a production milestone.
 
+## App simplification, 14 November 2026
+
+The initial simplification proposal and issue #146 called this decision D21.
+Integration with the newer decision history assigns it D28; the approved scope
+is unchanged, and historical D21-D27 retain their identifiers.
+
+**D28: Relive shared history simply and playfully.** The owner confirmed Globe
+as the opening experience and Photos as its easy conventional alternative,
+with Add and Settings as supporting surfaces. Photos shows individual
+photographs grouped by month with year navigation and an Undated section;
+conversations remain in the viewer and as secondary search results. Search
+becomes an easy-to-reach action in the shared browsing flow. Annual recaps are
+a simple year in photos. AI answers, collaborative-story creation, and
+time-capsule creation leave the active product. Existing stories and capsules
+remain under Settings / Past creations with reading, export and authorized
+deletion, including withdrawal of one’s own existing recollection; sealed
+capsules retain their opening dates even for their authors.
+
+This supersedes D13's separate Home / Timeline / Search navigation and earlier
+current-app scope commitments to the retired destinations and creation
+workflows. Useful source connections, correction, evidence, export, membership,
+and departure functions relocate rather than disappear. Existing access,
+automatic group sharing, ownership, storage, and capsule timing contracts
+remain in force. The choice favors a focused rediscovery experience over
+exposing every implemented capability as its own destination.
+
+The [complete simplification plan](APP_SIMPLIFICATION.md) maps the retired
+surfaces to their retained responsibilities, component work, delivery
+sequence, and acceptance checks. The owner requested conversion into a
+specification and confirmed integrated desktop/phone browser tests with
+targeted HTTP contracts as the testing boundaries. The resulting
+[specification](APP_SIMPLIFICATION_SPEC.md) is published as
+[issue #146](https://github.com/dodoscoding/Mazi/issues/146), labeled
+`ready-for-agent`. Implementation slices and their synthetic receipts are now
+tracked in [PR #161](https://github.com/dodoscoding/Mazi/pull/161) and
+[the implementation record](APP_SIMPLIFICATION.md#implementation-status).
+Final #159 navigation/compatibility acceptance is a separate integration gate;
+none of these records authorizes data deletion, deployment or production
+milestone acceptance. Earlier planning tables remain historical where they
+conflict with D28.
+
+Photos chronology may display resolved sharing evidence with an explicit label,
+but the simple Annual recap requires reliable capture-year evidence. Search
+retains bounded exact source conversations, including records without photos;
+photo-only filters do not imply text-only matches. Original media, independent
+live conversations, membership/ownership, `.mazi-imports` compatibility and
+existing storage remain unchanged. Application AI answer/consent writes,
+story/capsule creation/editing and generated-story media operations return 410.
+Retained read/export/delete endpoints continue their existing access checks;
+recollection withdrawal is deletion-only and cannot create or replace text.
+
 ## Open choices
 
 Implementation boundary, 6 October 2026: the requested Phase 2 import engine is runnable in [the local Python harness](history/imports/README.md), reusing the existing local identity foundation. It applies D14 automatic group availability and D06 departure withdrawal to its new archive data; the old M1 staging experiment remains separate. This is synthetic implementation evidence, not a replacement for D01's production stack. The old M2 issue payload's private staging and three-group beta instructions are superseded by D13/D14; the implementation uses the canonical contracts. Production provider integration, consented exporter fixtures, codecs and the one-group beta remain open.
@@ -256,3 +307,7 @@ The owner requested clickable event titles that open related imported chat messa
 The notebook uses approved archive events and existing story contributions. It preserves all stories attached to an event and lets members edit or remove only their own recollections. Imported text remains bounded source context, distinct from member statements. This increment does not introduce semantic topic matching, complete chat transcripts, or standalone text-only memories. The existing Archive review flow creates event titles.
 
 An event-scoped read and transactional note write retain current membership, full-event visibility, and revision checks without a new storage schema. Recoverable failures keep the visible draft; access loss and navigation clear private content. Backgrounding retains the notebook and its in-memory draft under [D24](#keep-the-view-in-the-background-24-october-2026), with session revalidation on return. The [feature brief](../work/poteto/event-notebook/BRIEF.md) records acceptance and design choices. Local synthetic verification does not establish production milestone acceptance.
+
+## D28 reconciliation of historical local increments
+
+The earlier Phase 6 answer engine, Phase 7 authoring/media increment and event-notebook write decisions above remain historical records. D28 retires their application generation/create/edit operations while preserving exact authorized source reads, stored creations, capsule opening-time checks and deletion-only own-recollection withdrawal. Independent native comments and source context keep their separate contracts. The retained offline engine and historical fixtures do not authorize restoring retired app endpoints.

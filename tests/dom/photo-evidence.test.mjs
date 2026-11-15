@@ -7,8 +7,8 @@ import { photoEvidenceMemory } from "../helpers/photo-evidence.ts";
 import { group, mountFeature, until } from "./feature-harness.mjs";
 import { atlasHarness } from "./atlas-harness.mjs";
 
-test("both gallery modes render each photo's date and place under its thumbnail", async (t) => {
-  const { $, root } = await mountFeature(t, "memories", (path) => {
+test("Photos renders each photo's date and place under its thumbnail", async (t) => {
+  const { $, root } = await mountFeature(t, "photos", (path) => {
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/discovery/matches"))
       return photoMatches(
@@ -27,12 +27,19 @@ test("both gallery modes render each photo's date and place under its thumbnail"
     const facts = [...root.querySelectorAll(".mem-photo-facts")].map(
       (node) => node.textContent,
     );
-    assert.match(facts[0], /2 Oca 2020 · Çekildi.*Istanbul, TR/);
-    assert.match(facts[1], /2 Oca 2024 · Paylaşıldı · UTC.*Yer bilinmiyor/);
-    assert.doesNotMatch(facts[1], /Istanbul|Çekildi/);
+    assert.match(
+      facts.find((text) => text.includes("Çekildi")),
+      /2 Oca 2020 · Çekildi.*Istanbul, TR/,
+    );
+    assert.match(
+      facts.find((text) => text.includes("Paylaşıldı")),
+      /2 Oca 2024 · Paylaşıldı · UTC.*Yer bilinmiyor/,
+    );
+    assert.doesNotMatch(
+      facts.find((text) => text.includes("Paylaşıldı")),
+      /Istanbul|Çekildi/,
+    );
   };
-  check();
-  $('[data-view="all"]').click();
   check();
   assert.equal(root.querySelectorAll(".mem-moment").length, 0);
 });

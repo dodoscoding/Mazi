@@ -1,6 +1,13 @@
 import { buildChronology } from "./memory/chronology";
 import { sourceSharedLine } from "./memory/provenance";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -104,6 +111,7 @@ export function Atlas(props: {
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  openMemory: (id: string) => void;
   onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
@@ -189,11 +197,7 @@ function EmptyAtlas({
           </div>
         )}
         <div className="atlas-empty-actions">
-          <a
-            className="primary-action"
-            href="#/imports"
-            onClick={link("/imports")}
-          >
+          <a className="primary-action" href="#/add" onClick={link("/add")}>
             {archive.group ? "Fotoğraf ekle" : "Grup oluştur veya gruba katıl"}
           </a>
           <a
@@ -217,8 +221,10 @@ function AtlasHome({
   reduced,
   link,
   chooseMemory,
+  openMemory,
   onPlaced,
   openLink,
+  heading,
 }: {
   archive: Archive;
   memories: Memory[];
@@ -227,10 +233,14 @@ function AtlasHome({
   reduced: boolean;
   link: LinkFor;
   chooseMemory: (id: string) => void;
+  openMemory: (id: string) => void;
   onPlaced: OnPlaced;
   heading: RefObject<HTMLHeadingElement | null>;
   openLink: RefObject<HTMLAnchorElement | null>;
 }) {
+  useLayoutEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+  }, [heading]);
   const layout = useLayout();
   const phone = layout === "phone";
   const compact = phone || layout === "tablet";
@@ -332,26 +342,21 @@ function AtlasHome({
 
   const openPortal = useCallback(
     (id = selected.id) => {
-      const active = document.activeElement;
-      opener.current =
-        active && active !== document.body ? active : openLink.current;
-      pushed.current = true;
       setPlaying(false);
-      setFocusPlace(null);
-      go(`/atlas?selected=${id}&view=portal`);
+      openMemory(id);
     },
-    [selected.id, openLink],
+    [selected.id, openMemory],
   );
   const closePortal = useCallback(() => {
     if (pushed.current) {
       pushed.current = false;
       history.back();
-    } else go(`/atlas?selected=${selected.id}`, true);
+    } else go(`/?selected=${selected.id}`, true);
   }, [selected.id]);
   const portalIndex = memories.findIndex((memory) => memory.id === selected.id);
   const stepPortal = (direction: -1 | 1) => {
     const next = memories[portalIndex + direction];
-    if (next) go(`/atlas?selected=${next.id}&view=portal`, true);
+    if (next) go(`/?selected=${next.id}&view=portal`, true);
   };
 
   const representative = useCallback(
@@ -455,7 +460,7 @@ function AtlasHome({
         event.altKey
       )
         return;
-      if (isField(event.target)) return;
+      if (readRoute().path !== "/" || isField(event.target)) return;
       if (portalOpen) {
         if (event.key === "Escape") {
           event.preventDefault();
@@ -467,7 +472,7 @@ function AtlasHome({
       const onControl = !!target.closest?.("a, button, [role='slider']");
       if (event.key === "/") {
         event.preventDefault();
-        go("/search");
+        go("/photos?search=1");
       } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         const step = event.key === "ArrowRight" ? 1 : -1;
         const index = atlas.years.indexOf(year ?? NaN);
@@ -731,11 +736,11 @@ function AtlasHome({
           {demo ? "Örnek anılar" : "Anılar"} · {memories.length}
         </h2>
         <a
-          href="#/timeline"
-          onClick={link("/timeline")}
-          aria-label="Bütün anılar"
+          href="#/photos"
+          onClick={link("/photos")}
+          aria-label="Fotoğraflarda gezin"
         >
-          Tümü
+          Fotoğraflar
         </a>
       </div>
       <div className="memory-list">
@@ -829,7 +834,12 @@ function AtlasHome({
       data-flat={flat || undefined}
       aria-labelledby="atlas-title"
     >
-      <h1 id="atlas-title" className="visually-hidden">
+      <h1
+        id="atlas-title"
+        ref={heading}
+        tabIndex={-1}
+        className="visually-hidden"
+      >
         Atlas
       </h1>
       <AtlasStage

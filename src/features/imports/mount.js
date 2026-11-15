@@ -1,4 +1,3 @@
-import { groupDestinations } from "../../navigation.ts";
 import {
   confirmAction,
   el,
@@ -48,8 +47,12 @@ const terminalStates = ["COMPLETED", "CANCELLED", "FAILED"];
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (id) => root.querySelector(`#${id}`);
-  const circleMode =
-    location.hash.startsWith("#/circle") || location.pathname === "/circle";
+  const currentPath = location.hash.startsWith("#/")
+    ? location.hash.slice(1).split("?")[0]
+    : location.pathname;
+  const settingsMode = currentPath === "/settings";
+  const circleMode = settingsMode;
+  const addMode = currentPath === "/add";
   let group = null;
   let groups = [];
   let selectedRun = null;
@@ -68,24 +71,14 @@ export function mount(root, lifecycle) {
   });
   toastNotice($("notice"), lifecycle);
   root.querySelector(".fx").dataset.mode = circleMode ? "circle" : "imports";
+  if (addMode) $("page-title").textContent = "Add";
   if (circleMode) {
-    $("page-title").textContent = "Grubumuz";
+    $("page-title").textContent = settingsMode ? "Settings" : "Grubumuz";
+    if (settingsMode) {
+      $("circle-title").textContent = "Members";
+    }
     $("page-sub").textContent =
       "Bu arşivi paylaşan arkadaşlarımız. Buradaki içerik grubumuza özel.";
-    const shortcuts = el("nav");
-    shortcuts.className = "group-destinations";
-    shortcuts.setAttribute("aria-label", "Grup araçları");
-    for (const entry of groupDestinations) {
-      const link = el("a");
-      link.href = `#${entry.path}`;
-      link.setAttribute("aria-label", entry.label);
-      link.append(
-        el("strong", "", entry.label),
-        el("span", "", entry.description),
-      );
-      shortcuts.append(link);
-    }
-    root.querySelector(".fx-head").after(shortcuts);
   }
 
   async function api(path, body) {
@@ -172,8 +165,8 @@ export function mount(root, lifecycle) {
     const apple = el("div", "source-card source-card--link");
     const badge = el("span", "source-badge");
     badge.append(icon("photo"));
-    const connect = el("a", "fx-text-link", "Connect in Places & sources");
-    connect.href = "/places";
+    const connect = el("a", "fx-text-link", "Connect in Add");
+    connect.href = "#/add?section=sources";
     apple.append(
       badge,
       el("b", "", "Apple Photos"),
@@ -550,7 +543,12 @@ export function mount(root, lifecycle) {
       report.state,
     );
     $("withdraw").hidden =
-      report.withdrawn || !report.counts.AVAILABLE_TO_GROUP;
+      report.withdrawn ||
+      !(
+        report.counts.AVAILABLE_TO_GROUP ||
+        (report.no_media &&
+          !["UPLOADING", "SCANNING", "INVENTORIED"].includes(report.state))
+      );
     $("transfer").value = Math.round((report.received * 100) / report.size);
     const tableSignature = JSON.stringify(report.items);
     if ($("items").dataset.signature !== tableSignature) {
@@ -872,13 +870,6 @@ export function mount(root, lifecycle) {
       lifecycle.mountKind === "refresh"
     )
       return;
-    const target =
-      circleMode &&
-      new URLSearchParams(lifecycle.search).get("section") === "settings"
-        ? $("group-settings-heading")
-        : $("page-title");
-    target.focus({ preventScroll: true });
-    if (target.id === "group-settings-heading")
-      target.scrollIntoView({ block: "start" });
+    $("page-title").focus({ preventScroll: true });
   });
 }

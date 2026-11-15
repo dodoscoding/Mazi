@@ -8,7 +8,7 @@ test("Gallery renders only authoritative matched children while preserving origi
   const reads = [];
   const { root, window } = await mountFeature(
     t,
-    "memories",
+    "photos",
     (path) => {
       reads.push(path);
       if (path === "/api/groups") return [group];
@@ -45,108 +45,66 @@ test("Gallery renders only authoritative matched children while preserving origi
   assert.equal(query.searchParams.has("date_basis"), false);
 });
 
-test("Search combines label choices, restores mode and excludes unrelated context without management reads", async (t) => {
+test("Photos restores archive and label predicates and reset clears the complete selection", async (t) => {
   const reads = [];
   const { root, window } = await mountFeature(
     t,
-    "discovery",
+    "photos",
     (path) => {
       reads.push(path);
-      if (path === "/api/groups") return [group];
-      if (path.startsWith("/api/discovery/search"))
-        return {
-          items: [],
-          total: 0,
-          next_offset: null,
-          unindexed: 0,
-          facets: { sources: [], shared_by: [] },
-          photo_facets: photoMatches([]).photo_facets,
-        };
-      return [];
-    },
-    { route: "/search?screenshot=yes&ai=generated,edited&mode=semantic" },
-  );
-  await until(
-    () => root.querySelector("#count").textContent.includes("0 fotoğraf"),
-    "filtered total",
-  );
-  const query = new URL(
-    reads.find((path) => path.includes("/search?")),
-    "http://localhost",
-  );
-  assert.equal(query.searchParams.get("mode"), "semantic");
-  assert.equal(query.searchParams.get("screenshot"), "yes");
-  assert.equal(query.searchParams.get("ai"), "edited,generated");
-  assert.equal(root.querySelector("#date-scope").hidden, false);
-  assert.equal(
-    reads.some(
-      (path) =>
-        path.startsWith("/api/atlas") ||
-        path.startsWith("/api/discovery/state"),
-    ),
-    false,
-  );
-  assert.match(window.location.hash, /mode=semantic/);
-});
-
-test("Search restores archive year/place predicates and reset clears the complete filter selection", async (t) => {
-  const reads = [];
-  const { root, window } = await mountFeature(
-    t,
-    "discovery",
-    (path) => {
-      reads.push(path);
-      if (path === "/api/groups") return [group];
-      if (path.startsWith("/api/discovery/search"))
-        return {
-          items: [],
-          total: 0,
-          next_offset: null,
-          mode: "keyword / filters",
-          unindexed: 0,
-          facets: { sources: [], shared_by: [] },
-          photo_facets: photoMatches([]).photo_facets,
-        };
+      if (path.startsWith("/api/atlas")) return { memories: [] };
+      if (path.startsWith("/api/discovery/matches")) return photoMatches([]);
       return [];
     },
     {
       route:
-        "/search?years=2024&places=%5B%22Doe%2C%20City%22%5D&uncertain=true&screenshot=unknown&source=apple&by=Ana",
+        "/photos?years=2024&places=%5B%22Doe%2C%20City%22%5D&uncertain=true&screenshot=yes&ai=generated,edited&source=apple&by=Ana",
     },
   );
   await until(
-    () => reads.some((path) => path.includes("/search?")),
-    "restored search",
+    () => reads.some((path) => path.includes("/matches?")),
+    "restored predicates",
   );
   const query = new URL(
-    reads.find((path) => path.includes("/search?")),
+    reads.find((path) => path.includes("/matches?")),
     "http://localhost",
-  );
-  assert.equal(query.searchParams.get("years"), "2024");
-  assert.equal(query.searchParams.get("places"), '["Doe, City"]');
-  assert.equal(query.searchParams.get("uncertain"), "true");
-  [...root.querySelectorAll("button")]
-    .find((button) => button.textContent === "Filtreleri temizle")
-    .click();
+  ).searchParams;
+  for (const [key, value] of Object.entries({
+    years: "2024",
+    places: '["Doe, City"]',
+    uncertain: "true",
+    screenshot: "yes",
+    ai: "edited,generated",
+    source: "apple",
+    shared_by: '["Ana"]',
+  }))
+    assert.equal(query.get(key), value);
+  root.querySelector("#filters-reset").click();
   await until(
-    () => reads.filter((path) => path.includes("/search?")).length === 2,
-    "reset search",
+    () => reads.filter((path) => path.includes("/matches?")).length === 2,
+    "cleared predicates",
   );
   const reset = new URL(
-    reads.filter((path) => path.includes("/search?"))[1],
+    reads.filter((path) => path.includes("/matches?"))[1],
     "http://localhost",
-  );
-  for (const field of ["years", "places", "uncertain", "screenshot"])
-    assert.equal(reset.searchParams.get(field), null);
-  assert.equal(reset.searchParams.get("source"), "");
-  assert.equal(reset.searchParams.get("person"), "");
-  assert.equal(window.location.hash, "#/search");
+  ).searchParams;
+  for (const key of [
+    "years",
+    "places",
+    "uncertain",
+    "screenshot",
+    "ai",
+    "source",
+    "shared_by",
+  ])
+    assert.equal(reset.get(key), null);
+  assert.equal(window.location.hash, "#/photos");
 });
 
 test("pending and failed Gallery matches clear stale thumbnails and totals while retaining the filter", async (t) => {
   const pending = deferred();
   let calls = 0;
-  const { root } = await mountFeature(t, "memories", (path) => {
+  const { root } = await mountFeature(t, "photos", (path) => {
     if (path === "/api/groups") return [group];
     if (path.startsWith("/api/atlas"))
       return { memories: [photoEvidenceMemory] };
@@ -191,13 +149,13 @@ function changePresentation(root, action) {
       .click();
 }
 
-for (const action of ["view", "order", "selection"]) {
+for (const action of ["selection"]) {
   for (const status of [400, 503]) {
     test(`Gallery keeps failed authority after ${action} changes (HTTP ${status}) and retries the filter`, async (t) => {
       const reads = [];
       const ids = photoEvidenceMemory.photos.map((photo) => photo.assetId);
       let calls = 0;
-      const { root } = await mountFeature(t, "memories", (path) => {
+      const { root } = await mountFeature(t, "photos", (path) => {
         if (path === "/api/groups") return [group];
         if (path.startsWith("/api/atlas"))
           return { memories: [photoEvidenceMemory] };
@@ -266,7 +224,7 @@ for (const action of ["view", "order", "selection"]) {
   }
 
   test(`Gallery keeps an initial archive failure after ${action} changes`, async (t) => {
-    const { root } = await mountFeature(t, "memories", (path) => {
+    const { root } = await mountFeature(t, "photos", (path) => {
       if (path === "/api/groups") return [group];
       if (path.startsWith("/api/atlas"))
         return Object.assign(Error("Synthetic archive unavailable"), {

@@ -1,41 +1,35 @@
 import { useEffect, useRef } from "react";
 import { createLifecycle } from "./lifecycle";
 import { createDiscordReturn, type DiscordReturn } from "./discordReturn";
+import settingsTemplate from "./settings/template.html?raw";
+import { mount as settingsMount } from "./settings/mount";
 import importsTemplate from "./imports/template.html?raw";
 import archiveTemplate from "./archive/template.html?raw";
 import placesTemplate from "./places/template.html?raw";
-import discoveryTemplate from "./discovery/template.html?raw";
-import answersTemplate from "./answers/template.html?raw";
-import evidenceTemplate from "./evidence/template.html?raw";
-import memoriesTemplate from "./memories/template.html?raw";
+import photosTemplate from "./photos/template.html?raw";
+import { mount as photosMount } from "./photos/mount";
 import { mount as importsMount } from "./imports/mount";
 import { mount as archiveMount } from "./archive/mount";
 import { mount as placesMount } from "./places/mount";
-import { mount as discoveryMount } from "./discovery/mount";
-import { mount as answersMount } from "./answers/mount";
-import { mount as evidenceMount } from "./evidence/mount";
-import { mount as memoriesMount } from "./memories/mount";
 import "./features.css";
 import "./workspace.css";
 import "./imports/imports.css";
 
 export const featureRegistry = {
-  "/imports": { template: importsTemplate, mount: importsMount },
-  "/circle": { template: importsTemplate, mount: importsMount },
+  "/photos": { template: photosTemplate, mount: photosMount },
+  "/add": { template: importsTemplate, mount: importsMount },
+  "/settings": { template: importsTemplate, mount: importsMount },
   "/review": { template: archiveTemplate, mount: archiveMount },
   "/places": { template: placesTemplate, mount: placesMount },
-  "/discover": { template: discoveryTemplate, mount: discoveryMount },
-  "/search": { template: discoveryTemplate, mount: discoveryMount },
-  "/ask": { template: answersTemplate, mount: answersMount },
-  "/answer-evidence": { template: evidenceTemplate, mount: evidenceMount },
-  "/memories": { template: memoriesTemplate, mount: memoriesMount },
 };
 export const featurePaths = Object.keys(featureRegistry);
 export function FeaturePage({
   path,
   discordReturn,
+  settingsControls = false,
 }: {
   path: string;
+  settingsControls?: boolean;
   discordReturn?: DiscordReturn;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -43,8 +37,21 @@ export function FeaturePage({
   const returned = discordReturn || localReturn.current;
   useEffect(() => {
     const container = host.current!;
-    const [pathname, query] = path.split("?");
-    const feature = featureRegistry[pathname as keyof typeof featureRegistry];
+    const separator = path.indexOf("?");
+    const pathname = separator < 0 ? path : path.slice(0, separator);
+    const query = separator < 0 ? "" : path.slice(separator + 1);
+    const add = pathname === "/add";
+    const sources =
+      add && new URLSearchParams(query).get("section") === "sources";
+    const suggestions =
+      add && new URLSearchParams(query).get("section") === "suggestions";
+    const feature = settingsControls
+      ? { template: settingsTemplate, mount: settingsMount }
+      : suggestions
+        ? featureRegistry["/review"]
+        : sources
+          ? featureRegistry["/places"]
+          : featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
     let mounted = false;
@@ -58,6 +65,24 @@ export function FeaturePage({
       const root = document.createElement("section");
       root.className = "feature-content";
       root.innerHTML = feature.template;
+      if (add) {
+        root.dataset.surface = "add";
+        const navigation = document.createElement("nav");
+        navigation.className = "add-sections";
+        navigation.setAttribute("aria-label", "Add sections");
+        for (const [label, href, current] of [
+          ["Imports", "#/add", !sources && !suggestions],
+          ["Source connections", "#/add?section=sources", sources],
+          ["Suggestions", "#/add?section=suggestions", suggestions],
+        ] as const) {
+          const link = document.createElement("a");
+          link.textContent = label;
+          link.href = href;
+          if (current) link.setAttribute("aria-current", "page");
+          navigation.append(link);
+        }
+        root.querySelector(".fx-head")?.after(navigation);
+      }
       container.append(root);
       lifecycle = createLifecycle(
         root,
@@ -71,8 +96,18 @@ export function FeaturePage({
         root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const href = link.getAttribute("href")!;
           const target = href.split("?")[0];
+          if (add && (target === "/imports" || target === "/")) {
+            link.setAttribute("href", "#/add");
+            if (sources) link.textContent = "Back to imports";
+            return;
+          }
+          if (add && target === "/places") {
+            link.setAttribute("href", "#/add?section=sources");
+            link.textContent = "Connect in Add";
+            return;
+          }
           if (target === "/" || featurePaths.includes(target))
-            link.setAttribute("href", `#${target === "/" ? "/imports" : href}`);
+            link.setAttribute("href", `#${target === "/" ? "/add" : href}`);
         });
       observer = new MutationObserver(rewriteLinks);
       observer.observe(root, { childList: true, subtree: true });
@@ -104,10 +139,15 @@ export function FeaturePage({
       message.textContent =
         "Your session or access changed. Sign in again to continue.";
       const link = document.createElement("a");
-      link.href = "#/imports";
+      link.href = "#/add";
       link.textContent = "Sign in";
       link.addEventListener("click", () => {
-        if (pathname === "/imports" || pathname === "/circle") mount();
+        if (
+          pathname === "/add" ||
+          pathname === "/imports" ||
+          pathname === "/circle"
+        )
+          mount();
       });
       container.append(message, link);
     };
@@ -121,7 +161,7 @@ export function FeaturePage({
       window.removeEventListener("mazi:group", groupChanged);
       window.removeEventListener("mazi:access-lost", accessLost);
     };
-  }, [path, returned]);
+  }, [path, returned, settingsControls]);
   return <div ref={host} className="feature-page" />;
 }
 export default FeaturePage;

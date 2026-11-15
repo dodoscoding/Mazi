@@ -63,9 +63,7 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
     page.getByRole("heading", { name: "Anı bulunamadı" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Birlikte hatırlayalım" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Atlas" })).toBeVisible();
 });
 
 test("reduced motion, fast reversals, no overflow and basic accessibility", async ({
@@ -106,7 +104,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
   ).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
   await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(
     page.getByText("Atlas düz haritada gösteriliyor."),
@@ -119,14 +117,12 @@ test("failed images are recoverable and renderer failure preserves the journey",
   ).toBeVisible();
 });
 
-test("retrying the Home photograph stays on Home", async ({ page }) => {
+test("retrying the Globe photograph stays on Globe", async ({ page }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
   await page.goto("/?demo=1");
   await expect(page.getByText("This photo could not load.")).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
   await expect(page).not.toHaveURL(/memory\/last-ferry/);
-  await expect(page.locator(".home-featured .photo-frame")).toHaveClass(
-    /is-loaded/,
-  );
+  await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
 });

@@ -1,0 +1,22 @@
+9:38:29 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ Gallery badges come from its read and explicit selection loads one bounded editor request (222.5615ms)
+✔ Gallery selection stops at fifty stable asset IDs (132.099667ms)
+✔ Gallery deselect cancels an editor whose lazy import is pending (101.607167ms)
+✔ Gallery clear cancels an editor whose lazy import is pending (105.658ms)
+✔ Gallery toggle cancels an editor whose lazy import is pending (93.993ms)
+9:38:29 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ phone Photos exposes a conventional year and compact filters without alternate browse modes (200.066333ms)
+9:38:29 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ Photos search 400 clears stale matches, retains query and retries (211.60125ms)
+✔ Photos search 503 clears stale matches, retains query and retries (120.618792ms)
+✔ Photos displays photographs while secondary conversations fail and retry independently (67.429584ms)
+✔ late Photos matching response cannot replace a newer query (81.052875ms)
+✔ Photos preserves legacy place, country and object predicates plus opaque bookmark context (63.867ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 877.645917

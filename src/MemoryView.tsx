@@ -43,6 +43,8 @@ const ConversationPanel = lazy(() => import("./social/ConversationPanel"));
 
 const PhotoLabels = lazy(() => import("./memory/PhotoLabels"));
 const PhotoCorrection = lazy(() => import("./memory/PhotoCorrection"));
+const PhotoContributions = lazy(() => import("./memory/PhotoContributions"));
+const PhotoPrivacy = lazy(() => import("./memory/PhotoPrivacy"));
 
 type Navigate = (url: string, animate?: boolean, replace?: boolean) => void;
 
@@ -81,10 +83,10 @@ export function MemoryView({
   heading: RefObject<HTMLHeadingElement | null>;
 }) {
   const [editing, setEditing] = useState<
-    "capture_date" | "place" | "labels" | null
+    "capture_date" | "place" | "labels" | "contributions" | null
   >(null);
   useEffect(() => setEditing(null), [group, memory.id, photo]);
-  const atlasUrl = `/atlas?selected=${encodeURIComponent(memory.id)}`;
+  const atlasUrl = `/?selected=${encodeURIComponent(memory.id)}&photo=${photo}`;
   const reduced = useReducedMotion();
   const notebookHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -135,6 +137,7 @@ export function MemoryView({
         )
       )
         return;
+      event.preventDefault();
       if (canGoBack()) history.back();
       else navigate(backUrl, true);
     };
@@ -156,12 +159,13 @@ export function MemoryView({
     event.preventDefault();
     history.back();
   };
-  const go = (index: number) =>
-    navigate(
-      `/memory/${memory.id}?photo=${index}${discussion ? `&discussion=${discussion}` : ""}`,
-      false,
-      true,
+  const go = (index: number) => {
+    const params = new URLSearchParams(
+      location.hash.split("?").slice(1).join("?"),
     );
+    params.set("photo", String(index));
+    navigate(`/memory/${encodeURIComponent(memory.id)}?${params}`, false, true);
+  };
   const momentLink = (
     item: Memory | undefined,
     label: string,
@@ -185,6 +189,14 @@ export function MemoryView({
   return (
     <article className="memory-detail">
       <div className="detail-bar">
+        <a
+          className="round-link"
+          href={`#${backUrl}`}
+          onClick={back}
+          aria-label="Fotoğrafı kapat"
+        >
+          <Glyph name="close" size={18} />
+        </a>
         <div className="detail-bar-start">
           <a className="back-pill" href={`#${backUrl}`} onClick={back}>
             <Glyph name="chevron-left" size={14} />
@@ -280,6 +292,34 @@ export function MemoryView({
             >
               Etiketleri düzenle
             </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setEditing("contributions")}
+            >
+              Katkımı yönet
+            </button>
+            <Suspense
+              fallback={
+                <p role="status">Loading photograph privacy controls…</p>
+              }
+            >
+              <PhotoPrivacy
+                key={`${group}:${memory.photos[photoIndex].assetId}`}
+                group={group}
+                asset={memory.photos[photoIndex].assetId!}
+              />
+            </Suspense>
+            {editing === "contributions" && (
+              <Suspense fallback={<p>Yükleniyor…</p>}>
+                <PhotoContributions
+                  key={`${group}:${memory.photos[photoIndex].assetId}`}
+                  group={group}
+                  asset={memory.photos[photoIndex].assetId!}
+                  close={() => setEditing(null)}
+                />
+              </Suspense>
+            )}
             {editing === "labels" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoLabels
@@ -290,7 +330,7 @@ export function MemoryView({
                 />
               </Suspense>
             )}
-            {editing && editing !== "labels" && (
+            {editing && editing !== "labels" && editing !== "contributions" && (
               <Suspense fallback={<p>Yükleniyor…</p>}>
                 <PhotoCorrection
                   key={`${group}:${memory.photos[photoIndex].assetId}:${editing}`}
@@ -377,20 +417,11 @@ export function MemoryView({
               <div className="memory-tools">
                 <a
                   className="button button--secondary"
-                  href="#/review"
-                  onClick={link("/review")}
+                  href="#/add?section=suggestions"
+                  onClick={link("/add?section=suggestions")}
                 >
-                  Arşivi incele
+                  Add önerileri
                 </a>
-                {memory.kind === "memory" && (
-                  <a
-                    className="button button--ghost"
-                    href="#/memories"
-                    onClick={link("/memories")}
-                  >
-                    Ortak bir hikâye yaz
-                  </a>
-                )}
               </div>
             )}
           </div>
@@ -415,11 +446,6 @@ export function MemoryView({
                       </>
                     )}
                   </p>
-                  {!demo && (
-                    <a href="#/review" onClick={link("/review")}>
-                      Arşiv incelemesinde tarihi düzelt
-                    </a>
-                  )}
                 </div>
               ) : (
                 basis && <p className="fact-detail">{basis}</p>
@@ -503,31 +529,31 @@ function Conversation({ memory }: { memory: Memory }) {
   return (
     <section className="conversation" aria-labelledby="conversation-heading">
       <h2 id="conversation-heading">Kaynak konuşmadan</h2>
-      <p className="conversation-origin">
-        Özgün konuşmada paylaşılan, aktarılmış alıntılar.
-      </p>
-      <blockquote>
-        <p>“{first.text}”</p>
-      </blockquote>
-      <p className="conversation-who">
-        {first.name}
-        {first.time && `, ${readableDate(first.time)}`}
-      </p>
-      {memory.messages.length > 1 && (
-        <>
-          <button
-            type="button"
-            className="conversation-toggle"
-            aria-expanded={expanded}
-            aria-controls="conversation-messages"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
-            <span className="toggle-mark" aria-hidden="true">
-              <Glyph name="chevron-right" size={16} />
-            </span>
-          </button>
-          <ol id="conversation-messages" hidden={!expanded}>
+      <button
+        type="button"
+        className="conversation-toggle"
+        aria-expanded={expanded}
+        aria-controls="conversation-messages"
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Konuşmayı gizle" : "Konuşmayı göster"}
+        <span className="toggle-mark" aria-hidden="true">
+          <Glyph name="chevron-right" size={16} />
+        </span>
+      </button>
+      <div id="conversation-messages" hidden={!expanded}>
+        <p className="conversation-origin">
+          Özgün konuşmada paylaşılan, aktarılmış alıntılar.
+        </p>
+        <blockquote>
+          <p>“{first.text}”</p>
+        </blockquote>
+        <p className="conversation-who">
+          {first.name}
+          {first.time && `, ${readableDate(first.time)}`}
+        </p>
+        {memory.messages.length > 1 && (
+          <ol>
             {memory.messages.map((message, index) => (
               <li key={index}>
                 <div>
@@ -538,8 +564,8 @@ function Conversation({ memory }: { memory: Memory }) {
               </li>
             ))}
           </ol>
-        </>
-      )}
+        )}
+      </div>
     </section>
   );
 }
@@ -677,8 +703,8 @@ export function MemoryNotFound({
         </a>
         <a
           className="button button--ghost"
-          href="#/timeline"
-          onClick={link("/timeline")}
+          href="#/photos"
+          onClick={link("/photos")}
         >
           Zaman çizelgesini aç
         </a>

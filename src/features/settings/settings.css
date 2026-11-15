@@ -1,0 +1,22 @@
+.settings-controls #settings-work:not([hidden]),
+.settings-controls form {
+  display: grid;
+  gap: 16px;
+}
+.settings-controls #settings-work > h3 {
+  margin-top: 24px;
+}
+.settings-controls button {
+  justify-self: start;
+}
+.settings-controls form {
+  margin-block: 20px;
+  max-width: 640px;
+}
+.settings-controls form label {
+  display: grid;
+  gap: 8px;
+}
+.settings-controls form label:has(input[type="checkbox"]) {
+  display: flex;
+}

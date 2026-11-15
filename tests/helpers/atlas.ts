@@ -1,12 +1,8 @@
 import type { Page } from "@playwright/test";
 
-/** Anıyı aç dives into the Atlas portal; the dossier's Anıyı aç reaches the full memory. */
+/** Open the selected photograph directly in the shared viewer. */
 export async function openFullMemory(page: Page) {
   await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
-  await page
-    .locator(".dossier")
-    .getByRole("link", { name: "Anıyı aç", exact: true })
-    .click();
 }
 
 /**

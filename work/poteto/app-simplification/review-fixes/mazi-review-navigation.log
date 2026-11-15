@@ -1,0 +1,26 @@
+[WebServer] (node:98877) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 10 tests using 1 worker
+
+(node:98887) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (2.7s)
+  ✓   2 [desktop] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.8s)
+  ✓   3 [desktop] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (936ms)
+  ✓   4 [desktop] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓   5 [desktop] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.3s)
+(node:98905) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [phone] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (2.8s)
+  ✓   7 [phone] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.7s)
+  ✓   8 [phone] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (944ms)
+  ✓   9 [phone] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓  10 [phone] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.2s)
+
+  10 passed (16.8s)
