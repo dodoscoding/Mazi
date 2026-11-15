@@ -54,6 +54,7 @@ export function FeaturePage({
           : featureRegistry[pathname as keyof typeof featureRegistry];
     if (!feature) return;
     let disposed = false;
+    let accessDenied = false;
     let mounted = false;
     let lifecycle: ReturnType<typeof createLifecycle> | undefined;
     let observer: MutationObserver | undefined;
@@ -132,6 +133,7 @@ export function FeaturePage({
       container.replaceChildren();
     };
     const accessLost = () => {
+      accessDenied = true;
       returned.clear();
       clear();
       const message = document.createElement("p");
@@ -151,7 +153,10 @@ export function FeaturePage({
       });
       container.append(message, link);
     };
-    const groupChanged = () => queueMicrotask(mount);
+    const groupChanged = () =>
+      queueMicrotask(() => {
+        if (!accessDenied) mount();
+      });
     window.addEventListener("mazi:group", groupChanged);
     window.addEventListener("mazi:access-lost", accessLost);
     mount();
