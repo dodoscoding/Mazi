@@ -23,3 +23,7 @@ The new Explore DOM contract failed before implementation (discover view instead
 
 - [Desktop](desktop.png)
 - [Phone](phone.png)
+
+## Review fixes, 16 November 2026
+
+Shell marks Explore active on /explore/parallel, the parallel sub-route keeps a single h1, and the section pills use theme tokens. Rerun after the fixes: npm run build, npm run lint, npm run check:budgets (394.8 KiB / 400 KiB) and git diff --check passed; npm run test:dom 153 passed; MAZI_TEST_CHROME=1 npm run test:parallel -- -g "Explore keeps" 2 passed (desktop and phone). GitHub CI did not start because of an account billing error.

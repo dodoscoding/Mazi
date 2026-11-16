@@ -3,8 +3,15 @@
   margin: 0 auto;
   padding: 32px 24px 12px;
 }
-.explore-header h1 {
+.explore-header h1,
+.explore-title {
   margin: 0 0 12px;
+}
+.explore-title {
+  font-family: var(--font-display);
+  font-size: 2em;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 .explore-header p {
   max-width: 640px;
@@ -23,10 +30,10 @@
   text-decoration: none;
 }
 .explore-header nav a[aria-current="page"] {
-  background: #233c35;
-  color: #fff;
+  background: var(--accent-terminator);
+  color: var(--on-accent);
 }
 .explore-header nav a:focus-visible {
-  outline: 3px solid #b87a36;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }

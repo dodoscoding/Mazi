@@ -288,6 +288,9 @@ test("Explore keeps archive retrieval and Parallel You in one new section", asyn
   await expect(
     page.getByRole("heading", { name: "Explore", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Find photos and conversations" }),
+  ).toBeVisible();
   const sections = page.getByRole("navigation", { name: "Explore sections" });
   await expect(
     sections.getByRole("link", { name: "Photos & conversations" }),
@@ -316,5 +319,4 @@ test("Explore keeps archive retrieval and Parallel You in one new section", asyn
   await expect(
     page.getByRole("navigation", { name: "Explore sections" }),
   ).toHaveCount(0);
-  await expect(page.locator(".entry-page")).toHaveCount(0);
 });

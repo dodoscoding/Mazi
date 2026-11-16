@@ -103,7 +103,9 @@ export function Shell({
         link(url)(event);
         after?.();
       }}
-      aria-current={path === url ? "page" : undefined}
+      aria-current={
+        path === url || path.startsWith(url + "/") ? "page" : undefined
+      }
     >
       {label}
     </a>
@@ -128,6 +130,7 @@ export function Shell({
     moreOpen ||
     [
       "/parallel",
+      "/explore/parallel",
       "/circle",
       "/about",
       "/introduction",

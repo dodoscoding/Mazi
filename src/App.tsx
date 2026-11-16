@@ -140,9 +140,13 @@ export default function App() {
     content = (
       <section className="explore-section" aria-label="Explore">
         <header className="explore-header">
-          <h1 ref={heading} tabIndex={-1}>
-            Explore
-          </h1>
+          {route.path === "/explore" ? (
+            <h1 ref={heading} tabIndex={-1}>
+              Explore
+            </h1>
+          ) : (
+            <p className="explore-title">Explore</p>
+          )}
           <p>
             Find photographs and conversations from your archive, or explore a
             different life with Parallel You.
