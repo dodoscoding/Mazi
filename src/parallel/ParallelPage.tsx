@@ -86,7 +86,7 @@ export default function ParallelPage({
   useEffect(() => setCompare([]), [universeId]);
   useEffect(() => {
     heading.current?.focus();
-  }, [screen, nodeId]);
+  }, [screen, nodeId, enabled]);
   useEffect(() => {
     const abort = new AbortController();
     if (!demo)
@@ -315,7 +315,9 @@ export default function ParallelPage({
         Delete your stories
       </button>
       {enabled === null ? (
-        <p role="status">Checking availability…</p>
+        <h1 ref={heading} tabIndex={-1}>
+          Checking availability…
+        </h1>
       ) : !enabled ? (
         <h1 ref={heading} tabIndex={-1}>
           Parallel You is not enabled

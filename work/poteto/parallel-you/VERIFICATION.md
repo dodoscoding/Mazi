@@ -72,3 +72,7 @@ Addressed the five review findings on PR #162: merge generation into current sta
 Validation on macOS with Node 24.22.1 and installed Chrome: build passed; 18 desktop/phone Parallel You browser tests passed; 29 focused Python contract/HTTP/bridge tests passed; formatting, document checker, whitespace and script budgets passed (394.6 KiB gzip total). The new sensitive-input regression failed before the fix. Temporarily retaining the bridge request lock made the strengthened concurrency test fail with `Session blocked behind generation`; the production implementation was restored and the suite passed. No archive data or external provider was used.
 
 GitHub Actions on PRs #162 and #164 did not start due to the account payment/spending-limit error. PR #110's previous backend failure was the floating-point GPS assertion already corrected on main; that existing correction is being propagated through this PR chain. Local checks do not establish hosted or production acceptance.
+
+## Deferred heading focus, 16 November 2026
+
+The second Explore review identified the same availability-focus gap on standalone `/parallel`. The loading state now has a focusable h1, and availability changes focus the resulting heading. Four new desktop/phone regressions (enabled and disabled responses) failed before the fix. Build and all 22 Parallel You browser tests then passed locally with installed Chrome.
