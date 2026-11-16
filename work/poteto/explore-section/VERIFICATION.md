@@ -35,3 +35,7 @@ Preserved the upstream Explore theme/navigation update at 7c29a07 and merged the
 ## Second review, 16 November 2026
 
 On /explore/parallel the Explore title is a paragraph, so the route-change focus target was empty and focus stayed on the clicked link while Parallel You checked availability. The title now takes focus (tabIndex -1) when no h1 is present. A new browser test failed before the change (focus inactive) and passes after it. Rerun: npm run build, npm run lint, npm run check:budgets, npm run check:docs and git diff --check passed; npm run test:dom 153 passed; MAZI_TEST_CHROME=1 npm run test:parallel 22 passed (desktop and phone).
+
+## Shared availability heading, 16 November 2026
+
+Integrated the standalone Parallel You focus correction while preserving 3db1580's Explore route focus fallback. Once ParallelPage mounts, its loading h1 receives focus, followed by the enabled/disabled page heading. Updated the nested-route contract to require this focused loading heading and exactly one h1. Integrated build, all 26 desktop/phone browser tests, script budgets (394.8 / 400 KiB), docs and whitespace checks passed locally.

@@ -328,7 +328,7 @@ test("Explore keeps archive retrieval and Parallel You in one new section", asyn
     page.getByRole("navigation", { name: "Explore sections" }),
   ).toHaveCount(0);
 });
-test("Explore moves focus to its title while Parallel You checks availability", async ({
+test("Explore moves focus to the loading heading while Parallel You checks availability", async ({
   page,
 }) => {
   await page.route("**/api/parallel/config", () => {});
@@ -337,7 +337,10 @@ test("Explore moves focus to its title while Parallel You checks availability", 
   await sections.getByRole("link", { name: "Photos & conversations" }).click();
   await sections.getByRole("link", { name: "Parallel You" }).click();
   await expect(page.getByText("Checking availability…")).toBeVisible();
-  await expect(page.locator(".explore-title")).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Checking availability…" }),
+  ).toBeFocused();
+  await expect(page.locator("h1")).toHaveCount(1);
 });
 async function seedStory(page: import("@playwright/test").Page) {
   await page.goto("/parallel?demo=1");
