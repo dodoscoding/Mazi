@@ -5,6 +5,7 @@ export function createLifecycle(
   search: string,
   restart: () => void,
   discordReturn = createDiscordReturn(location.search),
+  mountKind: "entry" | "refresh" = "entry",
 ) {
   let active = true;
   let controller = new AbortController();
@@ -83,6 +84,7 @@ export function createLifecycle(
   return {
     groupId,
     search,
+    mountKind,
     discordReturn,
     fetch: apiFetch,
     URL: ScopedURL,

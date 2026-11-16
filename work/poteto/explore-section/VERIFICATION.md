@@ -43,3 +43,7 @@ Integrated the standalone Parallel You focus correction while preserving 3db1580
 ## Local CI run, 16 November 2026
 
 GitHub Actions still refuses to start jobs (account payment or spending limit), so the verify.yml steps ran locally. Adding Explore as the first Archive tools entry moved first focus in that menu, which failed three theme-shell tests that expected Memories; they now expect Explore first. Passed: test:dom, test:unit, setup, lint, build, check:budgets, check:docs, test:backend, eval:retrieval, eval:answers, test:app, test:domains, the imports browser suite, the macOS companion build, and npm test on the desktop and phone projects (154 passed after rebasing on 51f061e; test:parallel 26 passed). The Firefox projects could not run on this host because headless Firefox exits on launch; m0-access (Supabase/Docker) and learned-retrieval (CLIP model) were not run.
+
+## Current main integration, 17 November 2026
+
+The owner confirmed the Globe, Photos, Add and Settings layout. Studio now lives at /studio under the account menu and reuses the current Photos workspace, including source context for conversations without photographs. Legacy /explore still redirects to Photos. Parallel You remains a separate sample mode within Studio. The earlier screenshots document the original prototype layout.

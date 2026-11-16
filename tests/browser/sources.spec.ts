@@ -9,20 +9,23 @@ test("authorized places, filters, optional paths, source controls and privacy", 
   await page.request.post("/api/entry", {
     data: { name: "Alice", code: "synthetic-shared-code" },
   });
-  await page.goto("/#/places");
-  await expect(page.locator("#places article")).toHaveCount(2);
-  await expect(page.locator("#map .route")).toHaveCount(0);
-  await page.getByLabel("Show travel paths by date").check();
-  await expect(page.locator("#map .route")).toHaveCount(1);
-  await page
-    .getByRole("combobox", { name: "Country", exact: true })
-    .selectOption("NL");
-  await expect(page.locator("#places article")).toHaveCount(1);
-  await expect(page.locator("#map .route")).toHaveCount(0);
-  await page
-    .getByRole("combobox", { name: "Country", exact: true })
-    .selectOption("");
-  await expect(page.locator("#places article")).toHaveCount(2);
+  const profile = await (await page.request.get("/api/session")).json();
+  const group = profile.group_id;
+  const read = async (query = "") =>
+    (await page.request.get(`/api/places?group=${group}${query}`)).json();
+  expect((await read()).points).toHaveLength(2);
+  expect((await read()).paths).toHaveLength(0);
+  expect((await read("&paths=1")).paths).toHaveLength(1);
+  expect((await read("&country=NL&paths=1")).points).toHaveLength(1);
+  expect((await read("&country=NL&paths=1")).paths).toHaveLength(0);
+  await page.goto("/#/atlas");
+  await expect(
+    page.getByRole("navigation", { name: "Yerler ve anılar", exact: true }),
+  ).toContainText("Amsterdam");
+  await expect(
+    page.getByRole("navigation", { name: "Yerler ve anılar", exact: true }),
+  ).toContainText("Istanbul");
+  await page.goto("/#/add?section=sources");
   await page
     .locator("#source-form")
     .getByLabel("Name", { exact: true })
@@ -56,7 +59,6 @@ test("authorized places, filters, optional paths, source controls and privacy", 
     path: testInfo.outputPath("places.png"),
     fullPage: true,
   });
-  const group = await page.locator("#groups").inputValue();
   expect(
     (
       await page.request.post("/api/places", {
@@ -76,9 +78,11 @@ test("authorized places, filters, optional paths, source controls and privacy", 
   const response = await page.request.get("/api/places?group=" + group);
   expect(response.status()).toBe(403);
   expect(await response.text()).not.toContain("Amsterdam");
-  await page.getByRole("button", { name: "Refresh places" }).click();
-  await expect(page.locator("#map circle")).toHaveCount(0);
-  await expect(page.locator("#places article")).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(
+    page.locator("#sources article, #resources article"),
+  ).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -97,7 +101,7 @@ test("a member connects a Discord server and picks its channels", async ({
   await page.request.post("/api/entry", {
     data: { name: "Alice", code: "synthetic-shared-code" },
   });
-  await page.goto("/places");
+  await page.goto("/#/add?section=sources");
   await page
     .getByRole("combobox", { name: "Source", exact: true })
     .selectOption("discord");

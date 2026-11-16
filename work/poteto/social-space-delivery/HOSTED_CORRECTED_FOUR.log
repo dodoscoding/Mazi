@@ -1,0 +1,38 @@
+test_private_schema_and_group_time_query_index (tests.backend.social.test_plans_postgres.HostedPlansTests.test_private_schema_and_group_time_query_index) ... {"connect_seconds": 30.219, "thread": "MainThread", "outcome": "ok"}
+ok
+test_database_group_foreign_keys_runtime_privileges_and_keyset_query_index (tests.backend.social.test_comments_postgres.HostedCommentsTests.test_database_group_foreign_keys_runtime_privileges_and_keyset_query_index) ... {"connect_seconds": 0.215, "thread": "MainThread", "outcome": "ok"}
+ok
+test_uniqueness_group_foreign_keys_and_private_indexed_storage (tests.backend.social.test_reactions_postgres.HostedReactionsTests.test_uniqueness_group_foreign_keys_and_private_indexed_storage) ... {"connect_seconds": 15.271, "thread": "MainThread", "outcome": "ok"}
+ok
+test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit) ... {"connect_seconds": 0.203, "thread": "MainThread", "outcome": "ok"}
+{"connect_seconds": 45.006, "thread": "MainThread", "outcome": "psycopg.errors.ConnectionTimeout"}
+ERROR
+Underlying psycopg.errors.ConnectionTimeout sqlstate=None connection timeout expired
+Multiple connection attempts failed. All failures were:
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '18.196.8.182': connection timeout expired
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '3.65.151.229': connection timeout expired
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '3.71.225.44': connection timeout expired
+
+======================================================================
+ERROR: test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/tests/backend/test_postgres.py", line 201, in test_policy_readers_overlap_and_fence_withdrawal_until_commit
+    with participant.db.read_transaction():
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 155, in read_transaction
+    self._begin(shared=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 134, in _begin
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+----------------------------------------------------------------------
+Ran 4 tests in 105.126s
+
+FAILED (errors=1)

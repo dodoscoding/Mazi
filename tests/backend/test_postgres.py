@@ -189,14 +189,17 @@ class PostgresContracts(unittest.TestCase):
         with self.store.db:
             self.store.db.execute('INSERT INTO import_runs(id,owner_id,group_id,source,namespace,manifest,options,size,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
                 (self.fixture, self.user, self.group, 'manual', 'synthetic', self.fixture, '{}', 1, 'COMPLETED', 0))
-            self.store.db.execute('INSERT INTO archive_assets VALUES(?,?,?,?,?,?,?,?,?)',
+            self.store.db.execute('INSERT INTO archive_assets(id,group_id,sha256,original_key,preview_key,mime,size,width,height) VALUES(?,?,?,?,?,?,?,?,?)',
                 (self.fixture, self.group, self.fixture, 'synthetic', 'synthetic', 'image/jpeg', 1, 8, 8))
-            self.store.db.execute('INSERT INTO archive_origins VALUES(?,?,?,?,?,?,?,?,0)',
+            self.store.db.execute('INSERT INTO archive_origins(id,asset_id,group_id,owner_id,run_id,occurrence,fingerprint,payload,withdrawn) VALUES(?,?,?,?,?,?,?,?,0)',
                 (self.fixture, self.fixture, self.group, self.user, self.fixture, self.fixture, self.fixture, '{}'))
         reader = MemoryStore(self.temp.name)
         writer = MemoryStore(self.temp.name)
         reader.db._lock_timeout = writer.db._lock_timeout = '50ms'
         try:
+            for participant in (reader, writer):
+                with participant.db.read_transaction():
+                    self.assertEqual(participant.db.execute('SELECT 1').fetchone()[0], 1)
             with self.store.db.read_transaction():
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                     result = pool.submit(atlas_view, reader, self.user, self.group).result(timeout=10)

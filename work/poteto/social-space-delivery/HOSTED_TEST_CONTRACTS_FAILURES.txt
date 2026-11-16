@@ -1,0 +1,75 @@
+Revision be67c8ac42b0e1b3b88fdb9de3a470d54247675c.
+All attempts used mazi_social_20261104_test / mazi-social-test.
+
+FIRST CORRECTED FOUR-CASE RUN
+
+Plans index/privacy case ... ok
+Comments index/privacy case ... ok
+Reactions index/privacy case ... ERROR
+Underlying psycopg.errors.ConnectionTimeout sqlstate=None connection timeout expired
+Multiple connection attempts failed. All failures were:
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '3.71.225.44': connection timeout expired
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '18.196.8.182': connection timeout expired
+- host: 'aws-1-eu-central-1.pooler.supabase.com', port: '5432', hostaddr: '3.65.151.229': connection timeout expired
+Policy-reader overlap case ... ERROR
+
+======================================================================
+ERROR: test_uniqueness_group_foreign_keys_and_private_indexed_storage (tests.backend.social.test_reactions_postgres.HostedReactionsTests.test_uniqueness_group_foreign_keys_and_private_indexed_storage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/tests/backend/social/test_comments_postgres.py", line 19, in setUp
+    test_plans_postgres.HostedPlansTests.setUp(self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/tests/backend/social/test_plans_postgres.py", line 26, in setUp
+    self.alice = self.store.register(self.fixture + '@example.test', 'synthetic password')
+                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/identity/core.py", line 270, in register
+    with self.db:
+         ^^^^^^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 229, in __enter__
+    self._begin()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 134, in _begin
+    self._start()
+    ~~~~~~~~~~~^^
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/mazi/persistence.py", line 127, in _start
+    raise ArchiveUnavailable('Hosted database unavailable; retry shortly') from None
+mazi.persistence.ArchiveUnavailable: Hosted database unavailable; retry shortly
+
+======================================================================
+ERROR: test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/tests/backend/test_postgres.py", line 202, in test_policy_readers_overlap_and_fence_withdrawal_until_commit
+    result = pool.submit(atlas_view, reader, self.user, self.group).result(timeout=10)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py", line 456, in result
+    raise TimeoutError()
+TimeoutError
+
+----------------------------------------------------------------------
+Ran 4 tests in 72.091s
+
+FAILED (errors=2)
+
+TARGETED SERIAL RETRY WITH CONNECT TIMING
+
+test_uniqueness_group_foreign_keys_and_private_indexed_storage ... {"connect_seconds": 30.309, "thread": "MainThread", "outcome": "ok"}
+ok
+test_policy_readers_overlap_and_fence_withdrawal_until_commit ... {"connect_seconds": 15.253, "thread": "MainThread", "outcome": "ok"}
+{"connect_seconds": 15.235, "thread": "ThreadPoolExecutor-0_0", "outcome": "ok"}
+ERROR
+
+======================================================================
+ERROR: test_policy_readers_overlap_and_fence_withdrawal_until_commit (tests.backend.test_postgres.PostgresContracts.test_policy_readers_overlap_and_fence_withdrawal_until_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/hosted-verification-contracts/tests/backend/test_postgres.py", line 202, in test_policy_readers_overlap_and_fence_withdrawal_until_commit
+    result = pool.submit(atlas_view, reader, self.user, self.group).result(timeout=10)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py", line 456, in result
+    raise TimeoutError()
+TimeoutError
+
+----------------------------------------------------------------------
+Ran 2 tests in 68.929s
+
+FAILED (errors=1)

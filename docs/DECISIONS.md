@@ -131,9 +131,82 @@ This changes the intended emphasis of D13's rediscovery-first purpose and D15's 
 
 [The feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) rates all six requests and proposes a shared navigation structure, explicit date-basis filtering, independent content/provenance labels and small social increments. Those mechanisms remain proposals. New comments, reactions and future events need domain, ownership, deletion and test contracts before implementation; the existing event notebook can be reused for recollections. No recognition, external AI processing, provider change, paid provisioning or deployment is authorized by this documentation update.
 
+## Interface clarity, 1 November 2026
+
+**D26: Ana sayfa, Keşfet and Grubumuz.** The owner requested merging the investigation and implementing its clarity group first. These are the same three primary labels on desktop and phone. Ekle is a separate visible contribution action. Ana sayfa shows one featured memory with available metadata and a secondary event-note link. Its photo, title and primary action open the same detail. A single Keşfet link opens the rest of the archive. It does not claim an activity feed or recent contributions without authoring timestamps.
+
+Engineering selected a dedicated `/explore` directory over permanent secondary navigation around every workspace. The directory groups named links under Bul, Gez and Birlikte hatırla. Those links explain Search, Atlas, Timeline, People, stories, annual recaps, capsules and correction tools. Existing `/discover` keeps its rediscovery workspace. Grubumuz retains membership controls and exposes imports, sources and help. Navigation, account actions and linked People, group, import and places headings use Turkish. Other existing workspace copy remains English in this increment.
+
+Atlas moves to `/atlas` with its map, Replay, date controls and place correction intact. Legacy root links carrying `selected` or `view=portal` still resolve to Atlas. Existing memory/photo/notebook URLs, browser history, sample mode and `/places` Discord callbacks remain compatible. Section queries reach the actual People, stories, recap, capsule and source controls. `/people` and `/settings`, including hash links, replace their own history entry with the confirmed People section and the visible Grup ayarları section. Source management belongs to Grubumuz, while place review belongs to Keşfet. Memory detail belongs to Keşfet; browser history determines its contextual return.
+
+This changes navigation and presentation, not storage, access, metadata semantics or processing consent. D24 background retention remains applicable. Comments, reactions and content classifiers remain later increments. P1 adds independent group plans and attendance. [N1 evidence](../work/poteto/social-navigation/VERIFICATION.md) records the simpler Home, grouped directory and repaired legacy entries. [Implementation evidence](../work/poteto/interface-clarity/VERIFICATION.md) records synthetic checks and remaining limits; it does not close production milestones or authorize a new deployment.
+
+On 4 November 2026, P1 extends Ekle into a menu with Fotoğraf veya arşiv and Buluşma planla. Grubumuz exposes Planlar. A plan detail link carries its group and stable plan ID, and rechecks the current circle. The route loads independently of Atlas so an empty group can arrange its first meeting. [P1 interface evidence](../work/poteto/social-plans-ui/VERIFICATION.md) records the two-profile desktop/phone journey and remaining acceptance limits.
+
+On 4 November 2026, H1 replaces real Home's full-archive landing read with one bounded social summary. The feature order is upcoming plan, visible conversation, photo fallback and empty planning. Grubumuz exposes the activity route. Selected details use a dedicated authorized card read, including grouped permanent photo IDs. The existing sample Home stays local. Optional feature/detail code now loads on its route, with shared photo styles retained at their consumers and an explicit chunk-error reload. [H1 interface evidence](../work/poteto/social-home-ui/VERIFICATION.md) records network, latency, focus and two-session checks. This completes synthetic frontend adoption, not the physical-phone or five-friend acceptance gates.
+
+## Social feature bundle budget, 4 November 2026
+
+**D27: Keep the initial script limit and budget the optional social code.** The authorized social-space implementation adds plans, manual labels, conversations, filters and bounded Home reads. The combined plans and labels candidate measures 401.8 KiB gzip across scripts, exceeding the earlier 400 KiB total ceiling by 1.8 KiB. Its entry script is 149.1 KiB and its stylesheet is 36.9 KiB, both within their existing limits.
+
+Allocate 420 KiB gzip for total scripts in this increment. Keep entry JavaScript at 150 KiB, CSS at 40 KiB and the Globe chunk at 256 KiB. No new UI dependency is authorized by this decision. Load optional editors and social tools on use. Do not increase a primary limit to absorb feature growth. [Measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) records the candidate and commands.
+
+The final combined release must pass all bundle gates. H1 must also prove that initial Home requests neither Atlas nor a notebook per card. This is a delegated engineering budget decision, not evidence of hosted latency, physical-phone acceptance or a production milestone.
+
+## App simplification, 14 November 2026
+
+The initial simplification proposal and issue #146 called this decision D21.
+Integration with the newer decision history assigns it D28; the approved scope
+is unchanged, and historical D21-D27 retain their identifiers.
+
+**D28: Relive shared history simply and playfully.** The owner confirmed Globe
+as the opening experience and Photos as its easy conventional alternative,
+with Add and Settings as supporting surfaces. Photos shows individual
+photographs grouped by month with year navigation and an Undated section;
+conversations remain in the viewer and as secondary search results. Search
+becomes an easy-to-reach action in the shared browsing flow. Annual recaps are
+a simple year in photos. AI answers, collaborative-story creation, and
+time-capsule creation leave the active product. Existing stories and capsules
+remain under Settings / Past creations with reading, export and authorized
+deletion, including withdrawal of one’s own existing recollection; sealed
+capsules retain their opening dates even for their authors.
+
+This supersedes D13's separate Home / Timeline / Search navigation and earlier
+current-app scope commitments to the retired destinations and creation
+workflows. Useful source connections, correction, evidence, export, membership,
+and departure functions relocate rather than disappear. Existing access,
+automatic group sharing, ownership, storage, and capsule timing contracts
+remain in force. The choice favors a focused rediscovery experience over
+exposing every implemented capability as its own destination.
+
+The [complete simplification plan](APP_SIMPLIFICATION.md) maps the retired
+surfaces to their retained responsibilities, component work, delivery
+sequence, and acceptance checks. The owner requested conversion into a
+specification and confirmed integrated desktop/phone browser tests with
+targeted HTTP contracts as the testing boundaries. The resulting
+[specification](APP_SIMPLIFICATION_SPEC.md) is published as
+[issue #146](https://github.com/dodoscoding/Mazi/issues/146), labeled
+`ready-for-agent`. Implementation slices and their synthetic receipts are now
+tracked in [PR #161](https://github.com/dodoscoding/Mazi/pull/161) and
+[the implementation record](APP_SIMPLIFICATION.md#implementation-status).
+Final #159 navigation/compatibility acceptance is a separate integration gate;
+none of these records authorizes data deletion, deployment or production
+milestone acceptance. Earlier planning tables remain historical where they
+conflict with D28.
+
+Photos chronology may display resolved sharing evidence with an explicit label,
+but the simple Annual recap requires reliable capture-year evidence. Search
+retains bounded exact source conversations, including records without photos;
+photo-only filters do not imply text-only matches. Original media, independent
+live conversations, membership/ownership, `.mazi-imports` compatibility and
+existing storage remain unchanged. Application AI answer/consent writes,
+story/capsule creation/editing and generated-story media operations return 410.
+Retained read/export/delete endpoints continue their existing access checks;
+recollection withdrawal is deletion-only and cannot create or replace text.
+
 ## Parallel You experiment, 1 November 2026
 
-**D26: Plan Parallel You beside the archive.** On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, as an addition to Mazi, and chose the hybrid direction with a stronger game side. The [preserved blueprint](source/PARALLEL_YOU_BLUEPRINT.md) proposed a separate Next.js app with browser-only storage and no accounts.
+**PY-D1: Plan Parallel You beside the archive.** On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, as an addition to Mazi, and chose the hybrid direction with a stronger game side. The [preserved blueprint](source/PARALLEL_YOU_BLUEPRINT.md) proposed a separate Next.js app with browser-only storage and no accounts.
 
 [The Parallel You plan](PARALLEL_YOU.md) proposes a space built on this repository's stack that reads nothing from the archive and labels every screen as fiction. In the follow-up the owner chose its placement: members-only inside the Mazi website, behind the shared-code session, rather than a separate public app. Stories a member generates for themselves are fiction, not archive data. If the owner accepts browser storage for them, D24's rule that authorized data is never written to browser storage still applies to everything else. Model, spend limits, storage, names, look and the script budget line are open choices listed in the plan.
 
@@ -244,10 +317,16 @@ The notebook uses approved archive events and existing story contributions. It p
 
 An event-scoped read and transactional note write retain current membership, full-event visibility, and revision checks without a new storage schema. Recoverable failures keep the visible draft; access loss and navigation clear private content. Backgrounding retains the notebook and its in-memory draft under [D24](#keep-the-view-in-the-background-24-october-2026), with session revalidation on return. The [feature brief](../work/poteto/event-notebook/BRIEF.md) records acceptance and design choices. Local synthetic verification does not establish production milestone acceptance.
 
+## D28 reconciliation of historical local increments
+
+The earlier Phase 6 answer engine, Phase 7 authoring/media increment and event-notebook write decisions above remain historical records. D28 retires their application generation/create/edit operations while preserving exact authorized source reads, stored creations, capsule opening-time checks and deletion-only own-recollection withdrawal. Independent native comments and source context keep their separate contracts. The retained offline engine and historical fixtures do not authorize restoring retired app endpoints.
+
 ## Parallel You local implementation 14 November 2026
 
-The owner requested implementation of the Parallel You plan and selected keeping external AI disabled. Implement the browser-only per-member fiction space, recommended roles-only writing and scoped night palette, using an explicitly labelled deterministic sample provider. Keep existing total script ceilings. No paid model call, provider credential, deployment or archive-to-fiction bridge is authorized by this implementation. Provider selection, terms, spending and paid evaluation remain pending. Fiction persists on logout, with visible shared-device disclosure and delete controls, as recommended in D26. Production release remains separate from synthetic verification.
+The owner requested implementation of the Parallel You plan and selected keeping external AI disabled. Implement the browser-only per-member fiction space, recommended roles-only writing and scoped night palette, using an explicitly labelled deterministic sample provider. Keep existing total script ceilings. No paid model call, provider credential, deployment or archive-to-fiction bridge is authorized by this implementation. Provider selection, terms, spending and paid evaluation remain pending. Fiction persists on logout, with visible shared-device disclosure and delete controls, as recommended in PY-D1. Production release remains separate from synthetic verification.
 
-## Explore section, 15 November 2026
+## Parallel You integration with the current shell, 16 November 2026
 
-Add a section inside Mazi with two destinations: finding archived photographs and imported conversation context, and Parallel You. Preserve Home, Atlas and existing tools. This is retrieval, not a general chat assistant. Reuse discovery search and event notebooks with their existing access checks. Explore loads conversation context alongside photographs; chat results open the event notebook. Only imported, approved context is searchable, not complete external chat histories. Parallel You remains isolated fiction with the sample provider and external AI disabled. No schema or deployment change is required.
+The owner confirmed keeping Globe, Photos, Add and Settings while adding the new section. Parallel You remains an isolated, disabled-by-default sample fiction route; it does not restore the archive AI answers or story/capsule authoring retired by D28. Its account-menu link stays reachable for member-scoped browser deletion even when generation is disabled. The separate section will use `/studio`; legacy `/explore` links retain their Photos redirect. Photo and conversation retrieval reuses the current Photos contracts, including exact text-only source context and current authorization. No external provider, deployment or migration is enabled.
+
+Studio is available from the account menu. It combines the Photos search workspace and Parallel You in two views. Search state uses the Studio URL so submitting a query keeps the Studio navigation available.

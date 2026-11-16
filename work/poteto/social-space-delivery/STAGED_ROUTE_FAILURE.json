@@ -1,0 +1,10 @@
+{
+  "time": "2026-11-04T15:30:52.939869+00:00",
+  "release_sha": "409d20c5b2f31078a4bb9f35fdc835bdccd7783c",
+  "deployment": "dpl_J8sZPSp38GqqyRxvk4CGYpTS1MnG",
+  "path": "/memory/release-probe",
+  "status": 404,
+  "content_type": "text/plain; charset=utf-8",
+  "vercel_not_found": true,
+  "result": "FAIL: missing edge rewrite; deployment not promoted"
+}

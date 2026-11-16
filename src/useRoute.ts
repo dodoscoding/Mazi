@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 import { flushSync } from "react-dom";
+
 export type Route = ReturnType<typeof readRoute>;
 export type LinkFor = (
   url: string,
@@ -20,18 +21,100 @@ export function useReducedMotion() {
   return reduced;
 }
 export function readRoute() {
-  const [path, query] = (
-    location.hash.startsWith("#/")
-      ? location.hash.slice(1)
-      : location.pathname + location.search
-  ).split("?");
+  const address = location.hash.startsWith("#/")
+    ? location.hash.slice(1)
+    : location.pathname + location.search;
+  const separator = address.indexOf("?");
+  const path = separator < 0 ? address : address.slice(0, separator);
+  const query = separator < 0 ? "" : address.slice(separator + 1);
   const params = new URLSearchParams(query);
+  if (path === "/ask") {
+    if (!params.has("q") && params.has("question"))
+      params.set("q", params.get("question")!);
+    params.delete("question");
+    params.delete("recap");
+    params.set("retired", "answers");
+    history.replaceState(history.state, "", `#/photos?${params}`);
+    return readRoute();
+  }
+  let alias: string | undefined;
+  const section = params.get("section");
+  if (path === "/atlas") alias = "/";
+  if (
+    ["/timeline", "/memories", "/search", "/discover", "/explore"].includes(
+      path,
+    )
+  )
+    alias = "/photos";
+  if (
+    path === "/memories" &&
+    (params.has("story") ||
+      params.has("capsule") ||
+      ["stories", "capsules"].includes(section || ""))
+  ) {
+    alias = "/past-creations";
+    params.delete("section");
+  } else if (path === "/memories" && section === "recap") {
+    if (!params.has("recap") && /^\d{4}$/.test(params.get("year") || ""))
+      params.set("recap", params.get("year")!);
+  }
+  if (["/search", "/discover"].includes(path)) params.set("search", "1");
+  if (path === "/people" || (path === "/discover" && section === "people")) {
+    alias = "/settings";
+    params.set("section", "people");
+    if (params.get("unavailable") === "people") params.delete("unavailable");
+  }
+  if (path === "/imports") alias = "/add";
+  if (path === "/circle") {
+    alias = "/settings";
+    if (section === "plans" || params.has("plan"))
+      params.set("unavailable", "plans");
+    else params.set("section", "members");
+  }
+  if (path === "/about") alias = "/settings";
+  if (path === "/places") {
+    alias =
+      section === "sources" ||
+      params.has("code") ||
+      params.has("error") ||
+      new URLSearchParams(location.search).has("code") ||
+      new URLSearchParams(location.search).has("error")
+        ? "/add"
+        : "/";
+    if (alias === "/add") params.set("section", "sources");
+  }
+  if (path === "/review") {
+    if (["export", "departure", "account"].includes(section || ""))
+      alias = "/settings";
+    else {
+      alias = "/add";
+      params.set("section", "suggestions");
+    }
+  }
+
+  if (alias === "/photos" && params.has("year") && !params.has("years"))
+    params.set("years", params.get("year")!);
+  if (alias) {
+    if (path === "/places")
+      for (const key of ["code", "state", "error"]) params.delete(key);
+    const [target, defaults] = alias.split("?");
+    new URLSearchParams(defaults).forEach((value, key) =>
+      params.set(key, value),
+    );
+    const canonical = target + (params.size ? `?${params}` : "");
+    history.replaceState(history.state, "", `#${canonical}`);
+    return readRoute();
+  }
   return {
-    path: path === "/atlas" ? "/" : path || "/",
+    path: path || "/",
     search: query ? `?${query}` : "",
-    selected: params.get("selected") || "last-ferry",
+    selected: params.has("selected") ? params.get("selected")! : "last-ferry",
     notebook: params.get("notebook") === "1",
-    photo: Math.max(0, Number(params.get("photo")) || 0),
+    photo: params.has("photo")
+      ? params.get("photo")?.trim()
+        ? Number(params.get("photo"))
+        : NaN
+      : 0,
   };
 }
 let activeTransition: ViewTransition | undefined;

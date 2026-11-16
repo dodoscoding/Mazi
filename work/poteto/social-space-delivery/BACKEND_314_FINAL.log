@@ -1,0 +1,93 @@
+
+> mazi@0.1.0 test:backend
+> .venv/bin/python -m unittest discover -s tests/backend -t .
+
+........................................................................................./Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/places.py:23: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d4e0>
+  return ' '.join(''.join(c for c in decomposed if not unicodedata.combining(c)).split())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/places.py:23: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d3f0>
+  return ' '.join(''.join(c for c in decomposed if not unicodedata.combining(c)).split())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/places.py:23: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d300>
+  return ' '.join(''.join(c for c in decomposed if not unicodedata.combining(c)).split())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/places.py:23: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d5d0>
+  return ' '.join(''.join(c for c in decomposed if not unicodedata.combining(c)).split())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/places.py:23: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d120>
+  return ' '.join(''.join(c for c in decomposed if not unicodedata.combining(c)).split())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.ss............................./Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/sources/sources.py:510: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10938a890>
+  + " ORDER BY COALESCE(p.day,''),p.origin LIMIT 128", (*params, last_day, last_day, last_origin)).fetchall()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/sources/sources.py:510: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978eb60>
+  + " ORDER BY COALESCE(p.day,''),p.origin LIMIT 128", (*params, last_day, last_day, last_origin)).fetchall()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/sources/sources.py:510: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d120>
+  + " ORDER BY COALESCE(p.day,''),p.origin LIMIT 128", (*params, last_day, last_day, last_origin)).fetchall()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/sources/sources.py:510: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978d5d0>
+  + " ORDER BY COALESCE(p.day,''),p.origin LIMIT 128", (*params, last_day, last_day, last_origin)).fetchall()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+....................../Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/discovery/photo_filters.py:37: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10978ed40>
+  photos = [dict(assetId=asset) for asset in visible]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...........................................................................................................................................................sss..................sss..................sss....................sss....s..............sss/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 409: 'Conflict'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 400: 'invalid_grant'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 503: 'Service Unavailable'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+./opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 400: 'Bad Request'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+.........................................................................../Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/imports/adapters.py:232: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x1094e7100>
+  "locator": f"line:{line_no}"})
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/imports/adapters.py:232: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10a68b4c0>
+  "locator": f"line:{line_no}"})
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/imports/adapters.py:232: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10a68bf10>
+  "locator": f"line:{line_no}"})
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/altanesmer/Desktop/Ales/Mazi-wt/keyword-filter-boundary/mazi/imports/adapters.py:232: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10a6d4040>
+  "locator": f"line:{line_no}"})
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.................................................................................................................................ss............./opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/encoder.py:265: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10a6d45e0>
+  def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.........................................ssssssss............................./opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7b4c0>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7b1f0>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7a6b0>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7ab60>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7af20>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7b2e0>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7ad40>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7b6a0>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py:1179: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10ad7ac50>
+  def _mock_call(self, /, *args, **kwargs):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...............
+----------------------------------------------------------------------
+Ran 701 tests in 344.593s
+
+OK (skipped=28)
+Real 10000-photo local seconds {'related': 0.349, 'index': 0.5074, 'events': 0.1033, 'duplicates': 1.8939, 'places': 1.0627}
+Location export synthetic profile: {"final_validation_seconds": 1.2980205409985501, "location_scan_seconds": 0.6920602079917444, "maximum_page_rows": 128, "maximum_projected_page_utf8_bytes": 27648, "pages": 158, "rows": 20000}

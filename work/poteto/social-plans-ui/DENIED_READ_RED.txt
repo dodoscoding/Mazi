@@ -1,0 +1,38 @@
+✔ Ekle exposes separate photo and meeting actions without changing the three destinations (90.852208ms)
+✔ empty plans work under StrictMode without loading Atlas (36.201625ms)
+✔ demo and another group's plan never request private social data (29.20725ms)
+✔ a deep link for another group is denied before reading (27.043834ms)
+✔ an uncertain save retains the draft and retries exactly the same command (47.699375ms)
+✔ a stale edit can reload the current revision without replacing its draft (43.247416ms)
+✔ late plan reads cannot restore content after access loss (28.550292ms)
+✔ plan wall times distinguish gaps, repeated hours and quarter-hour offsets (5.626875ms)
+✔ profile changes clear a pending write draft and discard its late response (34.924708ms)
+✔ a failed next page retains the list and retries its exact cursor (33.546584ms)
+✖ a denied write prevents an already-running read from restoring private content (34.162417ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 612.242375
+
+✖ failing tests:
+
+test at tests/dom/social-plans.test.mjs:357:1
+✖ a denied write prevents an already-running read from restoring private content (34.162417ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Bu plan kullanılamıyor/. Input:
+
+  'GrubumuzPlanlarBirlikte geçireceğimiz zamana yer açalım.Buluşma planlaTüm planlara dön1 Haziran 2030 18:00Cumartesi birlikteEurope/Copenhagen · UTC+02:00LimanBirlikte yürüyelim.Düzenleyen: AliceSen de geliyor musun?Geliyorum 0Belki 0Gelemiyorum 0Henüz kimse yanıt vermedi.Planı yenileDüzenleBuluşmayı iptal etBuluşmayı sil'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-plans-ui/tests/dom/social-plans.test.mjs:382:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'GrubumuzPlanlarBirlikte geçireceğimiz zamana yer açalım.Buluşma planlaTüm planlara dön1 Haziran 2030 18:00Cumartesi birlikteEurope/Copenhagen · UTC+02:00LimanBirlikte yürüyelim.Düzenleyen: AliceSen de geliyor musun?Geliyorum 0Belki 0Gelemiyorum 0Henüz kimse yanıt vermedi.Planı yenileDüzenleBuluşmayı iptal etBuluşmayı sil',
+    expected: /Bu plan kullanılamıyor/,
+    operator: 'match',
+    diff: 'simple'
+  }

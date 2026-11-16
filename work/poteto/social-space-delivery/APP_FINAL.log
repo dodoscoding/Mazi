@@ -1,0 +1,281 @@
+
+> mazi@0.1.0 test:app
+> playwright test --config playwright.unified.config.ts && playwright test --config playwright.social.config.ts && playwright test --config playwright.conversations.config.ts && playwright test --config playwright.home.config.ts
+
+[WebServer] (node:33518) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 92 tests using 1 worker
+
+(node:33554) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/clarity-workspaces.spec.ts:14:1 › named feature links land on their actual section and survive refresh failure (1.4s)
+  ✓   2 [desktop] › tests/clarity-workspaces.spec.ts:67:1 › People opens confirmed-association controls and retains its entry URL (934ms)
+  ✓   3 [desktop] › tests/clarity-workspaces.spec.ts:87:1 › unknown section names keep the normal workspace available (445ms)
+  ✓   4 [desktop] › tests/clarity-workspaces.spec.ts:100:1 › a group refresh does not repeat the requested section focus (149ms)
+  ✓   5 [desktop] › tests/clarity-workspaces.spec.ts:121:3 › /people opens the confirmed people heading without an extra history entry (194ms)
+  ✓   6 [desktop] › tests/clarity-workspaces.spec.ts:133:3 › /settings opens the visible group settings and keeps Back usable (161ms)
+  ✓   7 [desktop] › tests/clarity-workspaces.spec.ts:121:3 › /#/people opens the confirmed people heading without an extra history entry (143ms)
+  ✓   8 [desktop] › tests/clarity-workspaces.spec.ts:133:3 › /#/settings opens the visible group settings and keeps Back usable (135ms)
+  ✓   9 [desktop] › tests/clarity-workspaces.spec.ts:153:1 › source management has its own section, focus and parent destination (195ms)
+
+  ✓  10 [desktop] › tests/clarity-workspaces.spec.ts:182:1 › date bases find an imported sharing-only photo while old bookmarks retain capture (2.2s)
+  ✓  11 [desktop] › tests/clarity-workspaces.spec.ts:280:1 › selected child corrections refresh facts and leave its sibling untouched (2.1s)
+  ✓  12 [desktop] › tests/clarity-workspaces.spec.ts:368:1 › photo label editing and atomic Gallery selection show honest badges at phone width (3.0s)
+  ✓  13 [desktop] › tests/clarity-workspaces.spec.ts:510:1 › same-photo filters survive reload and keep original child links at narrow width (3.0s)
+  ✓  14 [desktop] › tests/clarity-workspaces.spec.ts:713:1 › Gallery presentation controls retain failed matching authority until retry succeeds (433ms)
+  ✓  15 [desktop] › tests/entry.spec.ts:4:1 › every signed-out route is gated and named profiles resume across browsers (2.2s)
+  ✘  16 [desktop] › tests/entry.spec.ts:97:1 › session checks stay neutral and introduction failures remain retryable (10.4s)
+(node:33881) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  17 [desktop] › tests/entry.spec.ts:151:1 › archive access denial clears the authenticated shell (10.2s)
+(node:34014) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  18 [desktop] › tests/entry.spec.ts:179:1 › an old Atlas denial cannot clear a newer authorized load (10.2s)
+(node:34102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 [desktop] › tests/event-notebook.spec.ts:22:1 › event notebook saves, reloads, edits and removes only your note (2.9s)
+  ✓  20 [desktop] › tests/event-notebook.spec.ts:120:1 › all legacy notes remain readable and conflict recovery targets the selected story (1.2s)
+  ✓  21 [desktop] › tests/event-notebook.spec.ts:185:1 › lost first-save response refreshes the saved target and keeps the draft (1.2s)
+  ✓  22 [desktop] › tests/event-notebook.spec.ts:234:1 › backgrounding retains notes, newer drafts and pending saves through authorized restore (1.0s)
+  ✓  23 [desktop] › tests/event-notebook.spec.ts:314:3 › foreground session denial 401 clears notebook and suppresses a late save (1.1s)
+  ✓  24 [desktop] › tests/event-notebook.spec.ts:314:3 › foreground session denial 403 clears notebook and suppresses a late save (1.2s)
+  ✘  25 [desktop] › tests/event-notebook.spec.ts:368:1 › event title links open notes alongside imported excerpts and use event IDs (11.8s)
+(node:34356) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  26 [desktop] › tests/event-notebook.spec.ts:458:1 › standalone photographs and sample mode never load private recollections (1.4s)
+  ✓  27 [desktop] › tests/event-notebook.spec.ts:491:1 › pending saves block duplicates, keep newer typing and clear on access loss (1.0s)
+  ✓  28 [desktop] › tests/event-notebook.spec.ts:551:5 › removed saved recollection retains its draft after conflict refresh without another own note (1.1s)
+  ✓  29 [desktop] › tests/event-notebook.spec.ts:551:5 › removed saved recollection retains its draft after successful removal without another own note (1.0s)
+  ✓  30 [desktop] › tests/event-notebook.spec.ts:551:5 › removed saved recollection retains its draft after conflict refresh with another own note (1.1s)
+  ✓  31 [desktop] › tests/event-notebook.spec.ts:551:5 › removed saved recollection retains its draft after successful removal with another own note (1.0s)
+  ✓  32 [desktop] › tests/event-notebook.spec.ts:644:1 › event notes are discoverable before the photograph viewer (1.0s)
+  ✓  33 [desktop] › tests/event-notebook.spec.ts:667:1 › Home exposes event notes without opening the Atlas or photograph viewer (1.7s)
+  ✓  34 [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (552ms)
+  ✓  35 [desktop] › tests/features-redesign.spec.ts:48:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.2s)
+  ✓  36 [desktop] › tests/features-redesign.spec.ts:80:1 › My Imports always says imports are shared at once and offers no publish step (175ms)
+
+  ✓  37 [desktop] › tests/features-redesign.spec.ts:107:1 › an import report has one technical confirm step and no publish gate (3.6s)
+  ✓  38 [desktop] › tests/features-redesign.spec.ts:157:1 › Our circle lists members without public or social counts (133ms)
+  ✓  39 [desktop] › tests/features-redesign.spec.ts:172:1 › Ask streams the answer word by word, then cites its evidence (2.1s)
+  ✓  40 [desktop] › tests/features-redesign.spec.ts:229:1 › Under reduced motion the answer appears complete (218ms)
+  ✓  41 [desktop] › tests/features-redesign.spec.ts:243:1 › Ask says when the archive has no evidence and links nothing (247ms)
+  ✓  42 [desktop] › tests/features-redesign.spec.ts:257:1 › PR 6 screens have no axe violations (9.2s)
+  ✘  43 [desktop] › tests/features-redesign.spec.ts:300:1 › Search photographs stay usable while included categories load and retry (10.4s)
+(node:34737) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  44 [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence (47.5s)
+
+
+  1) [desktop] › tests/entry.spec.ts:97:1 › session checks stay neutral and introduction failures remain retryable
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('status')
+    Expected substring: "Opening Mazi"
+    Received string:    "Mazi açılıyor…"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('status') with timeout 10000ms
+      - waiting for getByRole('status')
+        24 × locator resolved to <p role="status">Mazi açılıyor…</p>
+           - unexpected value "Mazi açılıyor…"
+
+
+      140 |   });
+      141 |   await page.goto("/welcome");
+    > 142 |   await expect(page.getByRole("status")).toContainText("Opening Mazi");
+          |                                          ^
+      143 |   await expect(page.getByLabel("Shared code")).toHaveCount(0);
+      144 |   release();
+      145 |   await expect(
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/entry.spec.ts:142:42
+
+    Error Context: work/poteto/unified-app/browser-results/entry-session-checks-stay--a31d8-n-failures-remain-retryable-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-session-checks-stay--a31d8-n-failures-remain-retryable-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-session-checks-stay--a31d8-n-failures-remain-retryable-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/entry.spec.ts:151:1 › archive access denial clears the authenticated shell ──
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByLabel('Shared code')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByLabel('Shared code') with timeout 10000ms
+      - waiting for getByLabel('Shared code')
+
+
+      168 |     );
+      169 |     await page.goto("/");
+    > 170 |     await expect(page.getByLabel("Shared code")).toBeVisible();
+          |                                                  ^
+      171 |     await expect(page.getByRole("navigation")).toHaveCount(0);
+      172 |     await expect(page.getByRole("link", { name: /sample Atlas/i })).toHaveCount(
+      173 |       0,
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/entry.spec.ts:170:50
+
+    Error Context: work/poteto/unified-app/browser-results/entry-archive-access-denial-clears-the-authenticated-shell-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-archive-access-denial-clears-the-authenticated-shell-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-archive-access-denial-clears-the-authenticated-shell-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › tests/entry.spec.ts:179:1 › an old Atlas denial cannot clear a newer authorized load
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Select Our summer', exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Select Our summer', exact: true }) with timeout 10000ms
+      - waiting for getByRole('button', { name: 'Select Our summer', exact: true })
+
+
+      217 |   await expect(
+      218 |     page.getByRole("button", { name: "Select Our summer", exact: true }),
+    > 219 |   ).toBeVisible();
+          |     ^
+      220 |   release();
+      221 |   await delivery;
+      222 |   await expect(
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/entry.spec.ts:219:5
+
+    Error Context: work/poteto/unified-app/browser-results/entry-an-old-Atlas-denial--beb83-ear-a-newer-authorized-load-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-an-old-Atlas-denial--beb83-ear-a-newer-authorized-load-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-an-old-Atlas-denial--beb83-ear-a-newer-authorized-load-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [desktop] › tests/event-notebook.spec.ts:368:1 › event title links open notes alongside imported excerpts and use event IDs
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.mem-moment-head').filter({ has: locator('.mem-moment-title').filter({ hasText: 'Our summer' }) }).getByRole('link', { name: 'View notes', exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.mem-moment-head').filter({ has: locator('.mem-moment-title').filter({ hasText: 'Our summer' }) }).getByRole('link', { name: 'View notes', exact: true }) with timeout 10000ms
+      - waiting for locator('.mem-moment-head').filter({ has: locator('.mem-moment-title').filter({ hasText: 'Our summer' }) }).getByRole('link', { name: 'View notes', exact: true })
+
+
+      424 |       .filter({ has: galleryTitle })
+      425 |       .getByRole("link", { name: "View notes", exact: true }),
+    > 426 |   ).toBeVisible();
+          |     ^
+      427 |   await galleryTitle.click();
+      428 |   await page.evaluate(() => document.fonts.ready);
+      429 |   await expect(page.locator("#notebook-heading")).toBeFocused();
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/event-notebook.spec.ts:426:5
+
+    Error Context: work/poteto/unified-app/browser-results/event-notebook-event-title-2d79a--excerpts-and-use-event-IDs-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/event-notebook-event-title-2d79a--excerpts-and-use-event-IDs-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/event-notebook-event-title-2d79a--excerpts-and-use-event-IDs-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [desktop] › tests/features-redesign.spec.ts:300:1 › Search photographs stay usable while included categories load and retry
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('#result-total')
+    Expected: "1 photograph"
+    Received: "1 fotoğraf"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveText" locator('#result-total') with timeout 10000ms
+      - waiting for locator('#result-total')
+        24 × locator resolved to <span id="result-total" class="search-count">1 fotoğraf</span>
+           - unexpected value "1 fotoğraf"
+
+
+      351 |   await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+      352 |   await expect(page.locator("#results article")).toHaveCount(1);
+    > 353 |   await expect(page.locator("#result-total")).toHaveText("1 photograph");
+          |                                               ^
+      354 |   const include = page.getByRole("button", {
+      355 |     name: "Include memories, chats, places and people",
+      356 |   });
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/features-redesign.spec.ts:353:47
+
+    Error Context: work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/features-redesign-Search-p-9bfd1-d-categories-load-and-retry-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+
+    Test was interrupted.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('button', { name: 'Select Our summer', exact: true })
+
+
+      68 |   await page
+      69 |     .getByRole("button", { name: "Select Our summer", exact: true })
+    > 70 |     .click();
+         |      ^
+      71 |   await openFullMemory(page);
+      72 |   await expect(
+      73 |     page.getByRole("heading", { name: "Our summer", exact: true }),
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/unified.spec.ts:70:6
+
+    Error Context: work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/unified-one-authenticated--44707-ries-discovery-and-evidence-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    [desktop] › tests/entry.spec.ts:97:1 › session checks stay neutral and introduction failures remain retryable
+    [desktop] › tests/entry.spec.ts:151:1 › archive access denial clears the authenticated shell ───
+    [desktop] › tests/entry.spec.ts:179:1 › an old Atlas denial cannot clear a newer authorized load
+    [desktop] › tests/event-notebook.spec.ts:368:1 › event title links open notes alongside imported excerpts and use event IDs
+    [desktop] › tests/features-redesign.spec.ts:300:1 › Search photographs stay usable while included categories load and retry
+  1 interrupted
+    [desktop] › tests/unified.spec.ts:26:1 › one authenticated shell connects real Atlas, stories, discovery and evidence
+  48 did not run
+  38 passed (2.6m)

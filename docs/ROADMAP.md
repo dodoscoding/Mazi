@@ -1,18 +1,28 @@
 # Mazi roadmap
 
-Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization now has a local Phase 4 implementation; production native release and conversational AI remain later gates.
+Build a private archive that a small team can operate in production. Deliver automatic group sharing, post-import correction, and rediscovery on the website. Native synchronization has a local Phase 4 implementation; production native release remains separately gated. D28 retires conversational answers and new story/capsule writing from the active application.
 
 Status on 14 October 2026: M0 is complete for the narrowed manual pilot. [M0 acceptance](M0_ACCEPTANCE.md) links the real local provider and browser evidence. [D13-D15](DECISIONS.md) confirm one 8-10-person group, the initial website-only scope, immediate group sharing, and the design experiment. A separate [local memory-loop experiment](history/identity/README.md) exercises some M1 mechanics but follows the superseded private-staging policy; it is not M1 acceptance evidence. The [Phase 2 import engine](history/imports/README.md) implements local historical ingestion with automatic group availability, adapters, durable jobs and reports. M1/M2 production acceptance remains open. Local Phase 3, Phase 4 and Phase 5 implementations are recorded below; M3-M6 production acceptance and M7 remain open. The [specification](SPEC.md) owns release scope, and the [test plan](TEST_PLAN.md) owns test definitions.
 
-## Evolve toward the private social space
+## Current delivery: Globe and Photos
+
+[D28](DECISIONS.md#app-simplification-14-november-2026) and the [approved simplification specification](APP_SIMPLIFICATION_SPEC.md) define Globe and Photos as the primary views, supported by Add and Settings. Search belongs in Photos; individual photographs are grouped by month/year with Undated. Source conversations remain secondary search results and optional viewer context. Annual recap uses reliable capture years; Past creations retains eligible existing content, server capsule locks, exports and authorized deletion only.
+
+[PR #161](https://github.com/dodoscoding/Mazi/pull/161), [the ticket plan](APP_SIMPLIFICATION_TICKETS_DRAFT.md) and [slice evidence](APP_SIMPLIFICATION.md#implementation-status) track local implementation. Final navigation/old-link acceptance remains a separate gate; this record does not close M1-M7, approve deployment or change archive storage. Older release estimates and the retired M6/M7 proposals below remain historical traceability, not authorization to restore answer/story/capsule creation APIs.
+
+## Historical private-social-space increment
 
 On 1 November 2026 the owner selected a private group experience with shared memories, comments, reactions and events under [D25](DECISIONS.md#private-social-space-direction-1-november-2026). The [feasibility investigation](PRODUCT_EVOLUTION_INVESTIGATION.md) proposes four increments: simplify Home/navigation and feature discovery (2/5), reconcile date/place visibility and Search semantics (3/5), add independent People/screenshot/AI filters (3/5), then deliver social interactions in small slices (4/5 overall).
 
 These increments reuse M3 correction, M4 places, M5 People/filtering and M7 stories without declaring those milestones accepted. Native social reactions, comments/activity and future events extend the existing archive scope and need explicit domain and acceptance contracts before implementation. The original M0-M7 program and release gates below remain intact; there is no new production or scheduling commitment in this investigation.
 
+The owner requested the clarity increment first under [D26](DECISIONS.md#interface-clarity-1-november-2026). It separates Home from Atlas, shares Home/Keşfet/Grubumuz navigation across screen sizes and gives existing capabilities named destinations. [Clarity verification](../work/poteto/interface-clarity/VERIFICATION.md) distinguishes local implementation from production and physical-device acceptance. Metadata semantics, content labels and social domains remain separate increments.
+
+The 3 November plan starts with photo-level metadata and navigation on the merged D26 interface. Group plans and attendance can reach a circle with an empty archive while work on content filters proceeds. Comments, reactions and the social Home each have a separate acceptance gate. [Implementation sequence and owners](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Baseline measurements](../work/poteto/social-space-plan/BASELINE.md)
+
 ## Plan Parallel You beside the archive
 
-On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, under [D26](DECISIONS.md#parallel-you-experiment-1-november-2026). [The plan](PARALLEL_YOU.md) proposes six slices, PY-S1 to PY-S6, of about 13 working days for one developer: the story core and fixture screens first, then a flagged story endpoint, live generation, the game layer, and a story evaluation before release. Its acceptance IDs, PY-A1 to PY-A12, are local to Parallel You.
+On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, under [PY-D1](DECISIONS.md#parallel-you-experiment-1-november-2026). [The plan](PARALLEL_YOU.md) proposes six slices, PY-S1 to PY-S6, of about 13 working days for one developer: the story core and fixture screens first, then a flagged story endpoint, live generation, the game layer, and a story evaluation before release. Its acceptance IDs, PY-A1 to PY-A12, are local to Parallel You.
 
 Parallel You sits outside the M0-M7 program. It does not change those gates and adds no production or scheduling commitment.
 
@@ -26,7 +36,7 @@ Treat durations as elapsed working-week ranges for that squad, including integra
 
 After M0, plan M1 at 6-8 working weeks, M2 at 4-6, and M3 at 4-6. Reserve 3-5 weeks for compatibility, security findings, and stabilization. The remaining two-developer envelope is 17-25 working weeks. This is a rough planning range, not a launch date.
 
-## Follow the dependencies
+## Historical program dependencies
 
 ```mermaid
 flowchart LR
@@ -40,7 +50,7 @@ flowchart LR
     M6 --> M7
 ```
 
-Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Manual-format research starts in M0; promised chat-export support requires representative M2 fixtures. The 13 October Phase 4 request authorizes the local macOS implementation below; native production delivery and iOS remain conditional and are not website launch gates.
+This graph preserves the original M0-M7 program; its M6 answer and M7 creation dependencies are superseded by D28. It is not the current implementation queue. Run any retained M4 and M5 production work in parallel only with separate capacity. Otherwise finish M4 before M5, or prioritize M5 if beta demand favors discovery. Manual-format research starts in M0; promised chat-export support requires representative M2 fixtures. The 13 October Phase 4 request authorizes the local macOS implementation below; native production delivery and iOS remain conditional and are not website launch gates.
 
 ## Deliver each milestone
 
@@ -52,8 +62,8 @@ Run M4 and M5 in parallel only with separate capacity. Otherwise finish M4 befor
 | M3 | Production launch with useful discovery, safe suggestions, recovery, and measured scale. | M2 | 4 to 6 weeks | Technical lead with QA |
 | M4 | Selective Apple synchronization, authorized Discord server intake, and map exploration. | M3; source-specific feasibility | 5 to 8 weeks | Native/integration lead |
 | M5 | Authorized multimodal retrieval and People; recognition only if consent gates pass. | M3 | 4 to 7 weeks | Retrieval lead |
-| M6 | Memory AI gives evidence-backed answers with uncertainty. | M5 | 3 to 5 weeks | Retrieval lead with product lead |
-| M7 | Recaps, stories, capsules, and media generation shipped as separate increments. | M4 and M6 program exits; individual features use only actual dependencies | Re-estimate per feature | Product lead |
+| M6 | Historical Memory AI proposal, retired from the active app under D28. | M5 | 3 to 5 weeks | Retrieval lead with product lead |
+| M7 | Simple capture-year recap and retained Past creations; new stories/capsules and generated media are retired under D28. | M4 and M6 program exits; individual features use only actual dependencies | Re-estimate per feature | Product lead |
 
 ### M0. Resolve the expensive unknowns
 
@@ -74,7 +84,7 @@ M1 uses the manual pilot's hard limits from [M0 acceptance](M0_ACCEPTANCE.md). M
 - [ ] Implement private object storage and resumable manual JPEG/PNG upload with per-item validation and progress.
 - [ ] Preserve originals, source appearances, capture-time evidence, and exact duplicate identity within the permitted scope.
 - [ ] Deliver immediate per-item group sharing, clear import progress, post-import correction, contribution withdrawal/deletion, and membership revocation. Individual audience controls and private staging are deferred.
-- [ ] Deliver manual memories and sub-events, rediscovery Home, paged Timeline, media detail, and keyword search over titles and captions.
+- [ ] Deliver the retained memory structure, Globe/Photos browsing, shared photo detail, and keyword search over titles and captions; D28 retires story sub-event editing.
 - [ ] Add core audit events, migration checks, minimal export, error monitoring, object backups, and a database/object recovery drill.
 
 Exit when two members and one outsider pass tests T01 through T06, T08, and T09 in [Test plan](TEST_PLAN.md). Demonstrate a ten-photo memory with one duplicate, one rejected file, imported group-visible context/location, and revoked membership access. Keep M1 restricted to an internal pilot.
@@ -128,7 +138,9 @@ Local implementation, 13 October 2026: [Phase 5](history/discovery/README.md) ad
 
 Exit when T11 passes, T01/T02/T09 remain green for retrieval, and the proposed retrieval target in the test plan is met. Face recognition may remain disabled while semantic search ships.
 
-### M6. Answer with archive evidence
+### M6. Historical answer-generation proposal
+
+**Superseded by D28:** the following original proposal and evidence are retained for traceability. App answer/answer-consent writes now return 410; exact authorized source evidence remains readable without answer consent. These unchecked items are not an active delivery mandate.
 
 Local implementation, 14 October 2026: [Phase 6](history/answers/README.md) adds local extractive Memory answers with attributed metadata, live evidence links, incomplete-archive language, date-conflict handling, explicit opt-in, permission/consent rechecks, and durable daily usage limits. No external provider or tool dispatch is enabled. [Verification](history/answers/VERIFICATION.md) records synthetic boundary tests and a 150-question templated regression set; it does not establish independent real-archive T13 quality. Production integration and the release gates below remain open.
 
@@ -139,11 +151,11 @@ Local implementation, 14 October 2026: [Phase 6](history/answers/README.md) adds
 
 Exit when T13 passes on the held-out questions and adversarial cases. Every factual answer is supported by evidence the requesting member can still access. An incomplete archive never supports an absolute claim about the group's entire past.
 
-### M7. Ship advanced memories separately
+### M7. Retain recap and Past creations
 
 Local implementation, 14 October 2026: [Phase 7](history/memories/README.md) delivers the first separate increment: annual recaps from approved, fully visible memories and collaborative stories with member-owned recollections, revision conflicts, departure cleanup, and current-access JSON export. [Verification](history/memories/VERIFICATION.md) records synthetic API and browser checks. The continuation adds isolated server-time capsules, ordered sub-events, authorized manual slideshows, bounded local MJPEG AVI montage export, and opt-in in-app capsule notices. The local author/edit and format controls are recorded in Decisions; these are separate local increments, not production releases. M4/M6 production dependencies and M7 acceptance remain open.
 
-Prioritize annual recaps and collaborative stories using approved memories. Follow with server-enforced time capsules, richer sub-events, slideshows, and generated video as separate scoped releases. Run T15 before any capsule launch. Define quality, processing cost, and export controls for each generated format before implementation. Notifications are a separate opt-in increment.
+D28 supersedes the authoring/generated-format program above. The retained Annual recap is a capture-year photo collection, oldest first by month, without narration, ranking, editing or video. Past creations preserves eligible stored stories/capsules, export and authorized deletion, including own-recollection withdrawal; server opening times still apply to authors and every media/export path. New story/capsule writes and generated-story media app operations return 410. T15 continues to guard retained capsule access rather than authorizing a new creation release. Production acceptance stays open.
 
 ## Apply the production gate
 

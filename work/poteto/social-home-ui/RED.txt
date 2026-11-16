@@ -1,0 +1,33 @@
+2:11:00 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✖ Home and selected-memory routes never request the full Atlas (85.411958ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 318.439458
+
+✖ failing tests:
+
+test at tests/dom/archive-hook.test.mjs:317:1
+✖ Home and selected-memory routes never request the full Atlas (85.411958ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+      '/api/groups',
+  +   '/api/atlas?group=circle'
+    ]
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-home-ui/tests/dom/archive-hook.test.mjs:325:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '/api/groups', '/api/atlas?group=circle' ],
+    expected: [ '/api/groups' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

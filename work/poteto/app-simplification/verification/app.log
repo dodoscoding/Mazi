@@ -1,0 +1,387 @@
+
+> mazi@0.1.0 test:app
+> playwright test --config playwright.unified.config.ts && playwright test --config playwright.conversations.config.ts && playwright test --config playwright.add-sources.config.ts && playwright test --config playwright.add-queues.config.ts && playwright test --config playwright.photos.config.ts && playwright test --config playwright.recap.config.ts && playwright test --config playwright.past-creations.config.ts
+
+[WebServer] (node:2590) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 110 tests using 1 worker
+
+(node:2613) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓    1 [desktop] › tests/clarity-workspaces.spec.ts:14:1 › historical story and capsule links reach Past creations without authoring (159ms)
+  ✓    2 [desktop] › tests/clarity-workspaces.spec.ts:32:1 › old People links reach their retained Settings home without unrelated records (916ms)
+  ✓    3 [desktop] › tests/clarity-workspaces.spec.ts:46:1 › unknown section names keep the normal workspace available (154ms)
+  ✓    4 [desktop] › tests/clarity-workspaces.spec.ts:59:1 › old recap year links open the ordinary year in Photos without authoring (134ms)
+  ✓    5 [desktop] › tests/clarity-workspaces.spec.ts:74:3 › /people preserves Back and reaches Settings people (972ms)
+  ✓    6 [desktop] › tests/clarity-workspaces.spec.ts:86:3 › /settings opens account and membership controls and keeps Back usable (226ms)
+  ✓    7 [desktop] › tests/clarity-workspaces.spec.ts:74:3 › /#/people preserves Back and reaches Settings people (920ms)
+  ✓    8 [desktop] › tests/clarity-workspaces.spec.ts:86:3 › /#/settings opens account and membership controls and keeps Back usable (929ms)
+  ✓    9 [desktop] › tests/clarity-workspaces.spec.ts:106:1 › source management has its own section, focus and parent destination (149ms)
+
+  ✓   10 [desktop] › tests/clarity-workspaces.spec.ts:133:1 › date bases find an imported sharing-only photo while old bookmarks retain capture (2.6s)
+  ✓   11 [desktop] › tests/clarity-workspaces.spec.ts:235:1 › selected child corrections refresh facts and leave its sibling untouched (2.2s)
+  ✓   12 [desktop] › tests/clarity-workspaces.spec.ts:323:1 › photo label editing and atomic Gallery selection show honest badges at phone width (3.0s)
+  ✓   13 [desktop] › tests/clarity-workspaces.spec.ts:462:1 › same-photo filters survive reload and keep original child links at narrow width (746ms)
+  ✓   14 [desktop] › tests/clarity-workspaces.spec.ts:664:1 › Gallery presentation controls retain failed matching authority until retry succeeds (684ms)
+  ✓   15 [desktop] › tests/entry.spec.ts:5:1 › every signed-out route is gated and named profiles resume across browsers (2.2s)
+  ✓   16 [desktop] › tests/entry.spec.ts:100:1 › session checks stay neutral and introduction failures remain retryable (488ms)
+  ✓   17 [desktop] › tests/entry.spec.ts:154:1 › archive access denial clears the authenticated shell (134ms)
+  ✓   18 [desktop] › tests/entry.spec.ts:185:1 › a denied Globe reload clears private content and returns to entry (158ms)
+  ✓   19 [desktop] › tests/entry.spec.ts:203:1 › an old Atlas denial cannot clear a newer authorized load (171ms)
+  ✓   20 [desktop] › tests/entry.spec.ts:255:1 › Settings retains membership, account, About and introduction replay (1.2s)
+  ✓   21 [desktop] › tests/entry.spec.ts:312:1 › Settings keeps administrator controls and clears members after session loss (1.3s)
+  ✓   22 [desktop] › tests/entry.spec.ts:377:1 › Settings explicitly exports the current circle and recovers failed exports (1.2s)
+  ✓   23 [desktop] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (3.2s)
+  ✓   24 [desktop] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (2.1s)
+
+  ✓   25 [desktop] › tests/entry.spec.ts:605:1 › Settings withdraws only the current member’s source record (4.7s)
+  ✓   26 [desktop] › tests/entry.spec.ts:679:1 › Settings cancels exports and clears controls when an export is denied (317ms)
+  ✓   27 [desktop] › tests/entry.spec.ts:717:1 › Settings omits Past creations when no eligible saved content exists (930ms)
+  ✓   28 [desktop] › tests/entry.spec.ts:740:1 › Settings preserves draft and open controls through saved preferences and reload failure (1.2s)
+  ✓   29 [desktop] › tests/event-notebook.spec.ts:63:1 › legacy notebook notes remain readable without story writing controls (1.7s)
+  ✓   30 [desktop] › tests/event-notebook.spec.ts:89:1 › notebook read failures retry and denial clears retained notes (1.8s)
+  ✓   31 [desktop] › tests/event-notebook.spec.ts:120:1 › event title links open notes alongside imported excerpts and use event IDs (1.9s)
+  ✓   32 [desktop] › tests/event-notebook.spec.ts:184:1 › standalone photographs and sample mode never load private recollections (1.8s)
+  ✓   33 [desktop] › tests/event-notebook.spec.ts:217:1 › event notes are discoverable before the photograph viewer (1.0s)
+  ✓   34 [desktop] › tests/features-redesign.spec.ts:12:1 › About states the privacy promises and replays the introduction (577ms)
+  ✓   35 [desktop] › tests/features-redesign.spec.ts:43:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.4s)
+  ✓   36 [desktop] › tests/features-redesign.spec.ts:83:1 › My Imports always says imports are shared at once and offers no publish step (214ms)
+
+  ✓   37 [desktop] › tests/features-redesign.spec.ts:110:1 › an import report has one technical confirm step and no publish gate (3.3s)
+  ✓   38 [desktop] › tests/features-redesign.spec.ts:160:1 › Our circle lists members without public or social counts (909ms)
+  ✓   39 [desktop] › tests/features-redesign.spec.ts:175:1 › PR 6 screens have no axe violations (8.7s)
+  ✓   40 [desktop] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (3.3s)
+  ✓   41 [desktop] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.7s)
+  ✓   42 [desktop] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (945ms)
+  ✓   43 [desktop] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓   44 [desktop] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.2s)
+  ✓   45 [desktop] › tests/unified.spec.ts:27:1 › one authenticated shell connects real Atlas, retained memories, discovery and evidence (2.9s)
+
+  ✓   46 [desktop] › tests/unified.spec.ts:112:1 › named profile imports and logout discard delayed private Atlas responses (4.4s)
+  ✓   47 [desktop] › tests/unified.spec.ts:258:1 › access loss clears retained archive controls and supporting records (1.9s)
+  ✓   48 [desktop] › tests/unified.spec.ts:289:1 › shared viewer opens directly and restores Globe and browse state (2.0s)
+  ✓   49 [desktop] › tests/unified.spec.ts:341:1 › shared viewer preserves individual-photo selection and closes to filtered gallery (1.1s)
+  ✓   50 [desktop] › tests/unified.spec.ts:370:1 › shared viewer keeps Conversation context optional and supports keyboard photos (1.2s)
+  ✓   51 [desktop] › tests/unified.spec.ts:413:1 › shared viewer clears retained private media when the session is lost (983ms)
+
+  ✓   52 [desktop] › tests/unified.spec.ts:443:1 › Add imports, recovers failures and shares successful photographs automatically (5.0s)
+
+  ✓   53 [desktop] › tests/unified.spec.ts:537:1 › Add preserves inventory cancellation, history and session-loss clearing (3.3s)
+
+  ✓   54 [desktop] › tests/unified.spec.ts:585:1 › viewer corrects one photograph and withdraws only its owned contribution (8.9s)
+  ✓   55 [desktop] › tests/unified.spec.ts:817:1 › viewer contribution controls recover a failed read and clear on session loss (1.8s)
+(node:3098) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   56 [phone] › tests/clarity-workspaces.spec.ts:14:1 › historical story and capsule links reach Past creations without authoring (131ms)
+  ✓   57 [phone] › tests/clarity-workspaces.spec.ts:32:1 › old People links reach their retained Settings home without unrelated records (898ms)
+  ✓   58 [phone] › tests/clarity-workspaces.spec.ts:46:1 › unknown section names keep the normal workspace available (139ms)
+  ✓   59 [phone] › tests/clarity-workspaces.spec.ts:59:1 › old recap year links open the ordinary year in Photos without authoring (118ms)
+  ✓   60 [phone] › tests/clarity-workspaces.spec.ts:74:3 › /people preserves Back and reaches Settings people (964ms)
+[WebServer] ----------------------------------------
+[WebServer] Exception occurred during processing of request from ('127.0.0.1', 53505)
+[WebServer] Traceback (most recent call last):
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 697, in process_request_thread
+[WebServer]     self.finish_request(request, client_address)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 362, in finish_request
+[WebServer]     self.RequestHandlerClass(request, client_address, self)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 766, in __init__
+[WebServer]     self.handle()
+[WebServer]     ~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 500, in handle
+[WebServer]     self.handle_one_request()
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 488, in handle_one_request
+[WebServer]     method()
+[WebServer]     ~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/server.py", line 34, in do_GET
+[WebServer]     return super().do_GET()
+[WebServer]            ~~~~~~~~~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/server.py", line 181, in do_GET
+[WebServer]     return self.send(200, target.read_bytes(), mime)
+[WebServer]            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/identity/server.py", line 38, in send
+[WebServer]     self.wfile.write(body)
+[WebServer]     ~~~~~~~~~~~~~~~~^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 845, in write
+[WebServer]     self._sock.sendall(b)
+[WebServer]     ~~~~~~~~~~~~~~~~~~^^^
+[WebServer] BrokenPipeError: [Errno 32] Broken pipe
+[WebServer] ----------------------------------------
+  ✓   61 [phone] › tests/clarity-workspaces.spec.ts:86:3 › /settings opens account and membership controls and keeps Back usable (970ms)
+  ✓   62 [phone] › tests/clarity-workspaces.spec.ts:74:3 › /#/people preserves Back and reaches Settings people (926ms)
+  ✓   63 [phone] › tests/clarity-workspaces.spec.ts:86:3 › /#/settings opens account and membership controls and keeps Back usable (431ms)
+  ✓   64 [phone] › tests/clarity-workspaces.spec.ts:106:1 › source management has its own section, focus and parent destination (146ms)
+
+  ✓   65 [phone] › tests/clarity-workspaces.spec.ts:133:1 › date bases find an imported sharing-only photo while old bookmarks retain capture (1.9s)
+  ✓   66 [phone] › tests/clarity-workspaces.spec.ts:235:1 › selected child corrections refresh facts and leave its sibling untouched (2.3s)
+  ✓   67 [phone] › tests/clarity-workspaces.spec.ts:323:1 › photo label editing and atomic Gallery selection show honest badges at phone width (3.2s)
+  ✓   68 [phone] › tests/clarity-workspaces.spec.ts:462:1 › same-photo filters survive reload and keep original child links at narrow width (2.3s)
+  ✓   69 [phone] › tests/clarity-workspaces.spec.ts:664:1 › Gallery presentation controls retain failed matching authority until retry succeeds (702ms)
+[WebServer] ----------------------------------------
+[WebServer] Exception occurred during processing of request from ('127.0.0.1', 54835)
+[WebServer] Traceback (most recent call last):
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 697, in process_request_thread
+[WebServer]     self.finish_request(request, client_address)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 362, in finish_request
+[WebServer]     self.RequestHandlerClass(request, client_address, self)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 766, in __init__
+[WebServer]     self.handle()
+[WebServer]     ~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 500, in handle
+[WebServer]     self.handle_one_request()
+[WebServer]     ~~~~~~~~~~~~~~~~~~~~~~~^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 488, in handle_one_request
+[WebServer]     method()
+[WebServer]     ~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/server.py", line 34, in do_GET
+[WebServer]     return super().do_GET()
+[WebServer]            ~~~~~~~~~~~~~~^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/server.py", line 181, in do_GET
+[WebServer]     return self.send(200, target.read_bytes(), mime)
+[WebServer]            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "/private/tmp/mazi-simplification-integration/mazi/identity/server.py", line 38, in send
+[WebServer]     self.wfile.write(body)
+[WebServer]     ~~~~~~~~~~~~~~~~^^^^^^
+[WebServer]   File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 845, in write
+[WebServer]     self._sock.sendall(b)
+[WebServer]     ~~~~~~~~~~~~~~~~~~^^^
+[WebServer] ConnectionResetError: [Errno 54] Connection reset by peer
+[WebServer] ----------------------------------------
+  ✓   70 [phone] › tests/entry.spec.ts:5:1 › every signed-out route is gated and named profiles resume across browsers (2.4s)
+  ✓   71 [phone] › tests/entry.spec.ts:100:1 › session checks stay neutral and introduction failures remain retryable (473ms)
+  ✓   72 [phone] › tests/entry.spec.ts:154:1 › archive access denial clears the authenticated shell (113ms)
+  ✓   73 [phone] › tests/entry.spec.ts:185:1 › a denied Globe reload clears private content and returns to entry (140ms)
+  ✓   74 [phone] › tests/entry.spec.ts:203:1 › an old Atlas denial cannot clear a newer authorized load (160ms)
+  ✓   75 [phone] › tests/entry.spec.ts:255:1 › Settings retains membership, account, About and introduction replay (1.3s)
+  ✓   76 [phone] › tests/entry.spec.ts:312:1 › Settings keeps administrator controls and clears members after session loss (1.4s)
+  ✓   77 [phone] › tests/entry.spec.ts:377:1 › Settings explicitly exports the current circle and recovers failed exports (1.2s)
+  ✓   78 [phone] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (2.5s)
+  ✓   79 [phone] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (2.0s)
+
+  ✓   80 [phone] › tests/entry.spec.ts:605:1 › Settings withdraws only the current member’s source record (4.9s)
+  ✓   81 [phone] › tests/entry.spec.ts:679:1 › Settings cancels exports and clears controls when an export is denied (1.0s)
+  ✓   82 [phone] › tests/entry.spec.ts:717:1 › Settings omits Past creations when no eligible saved content exists (953ms)
+  ✓   83 [phone] › tests/entry.spec.ts:740:1 › Settings preserves draft and open controls through saved preferences and reload failure (1.2s)
+  ✓   84 [phone] › tests/event-notebook.spec.ts:63:1 › legacy notebook notes remain readable without story writing controls (1.7s)
+  ✓   85 [phone] › tests/event-notebook.spec.ts:89:1 › notebook read failures retry and denial clears retained notes (1.7s)
+  ✓   86 [phone] › tests/event-notebook.spec.ts:120:1 › event title links open notes alongside imported excerpts and use event IDs (1.9s)
+  ✓   87 [phone] › tests/event-notebook.spec.ts:184:1 › standalone photographs and sample mode never load private recollections (1.8s)
+  ✓   88 [phone] › tests/event-notebook.spec.ts:217:1 › event notes are discoverable before the photograph viewer (1.0s)
+  ✓   89 [phone] › tests/features-redesign.spec.ts:12:1 › About states the privacy promises and replays the introduction (198ms)
+  ✓   90 [phone] › tests/features-redesign.spec.ts:43:1 › Sign out on About asks first; Stay keeps the session and confirming ends it (1.5s)
+  ✓   91 [phone] › tests/features-redesign.spec.ts:83:1 › My Imports always says imports are shared at once and offers no publish step (226ms)
+
+  ✓   92 [phone] › tests/features-redesign.spec.ts:110:1 › an import report has one technical confirm step and no publish gate (3.3s)
+  ✓   93 [phone] › tests/features-redesign.spec.ts:160:1 › Our circle lists members without public or social counts (940ms)
+  ✓   94 [phone] › tests/features-redesign.spec.ts:175:1 › PR 6 screens have no axe violations (9.6s)
+  ✓   95 [phone] › tests/final-navigation.spec.ts:3:1 › returning member uses Globe and Photos with retained old links (2.8s)
+  ✓   96 [phone] › tests/final-navigation.spec.ts:62:1 › explicit sample Photos shares fictional photographs without live archive requests (1.7s)
+  ✓   97 [phone] › tests/final-navigation.spec.ts:85:1 › invalid explicit memory and photograph selections never open another photograph (942ms)
+  ✓   98 [phone] › tests/final-navigation.spec.ts:106:1 › document Settings links can navigate to Add without retaining the old surface mode (1.0s)
+  ✓   99 [phone] › tests/final-navigation.spec.ts:131:1 › Settings hide and restore refresh the previously visited Globe (1.3s)
+  ✓  100 [phone] › tests/unified.spec.ts:27:1 › one authenticated shell connects real Atlas, retained memories, discovery and evidence (2.9s)
+
+  ✓  101 [phone] › tests/unified.spec.ts:112:1 › named profile imports and logout discard delayed private Atlas responses (4.4s)
+  ✓  102 [phone] › tests/unified.spec.ts:258:1 › access loss clears retained archive controls and supporting records (1.9s)
+  ✓  103 [phone] › tests/unified.spec.ts:289:1 › shared viewer opens directly and restores Globe and browse state (2.1s)
+  ✓  104 [phone] › tests/unified.spec.ts:341:1 › shared viewer preserves individual-photo selection and closes to filtered gallery (1.1s)
+  ✓  105 [phone] › tests/unified.spec.ts:370:1 › shared viewer keeps Conversation context optional and supports keyboard photos (1.2s)
+  ✓  106 [phone] › tests/unified.spec.ts:413:1 › shared viewer clears retained private media when the session is lost (984ms)
+
+  ✓  107 [phone] › tests/unified.spec.ts:443:1 › Add imports, recovers failures and shares successful photographs automatically (5.4s)
+
+  ✓  108 [phone] › tests/unified.spec.ts:537:1 › Add preserves inventory cancellation, history and session-loss clearing (2.5s)
+
+  ✓  109 [phone] › tests/unified.spec.ts:585:1 › viewer corrects one photograph and withdraws only its owned contribution (9.3s)
+  ✓  110 [phone] › tests/unified.spec.ts:817:1 › viewer contribution controls recover a failed read and clear on session loss (1.8s)
+
+  110 passed (3.4m)
+[WebServer] (node:3579) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 22 tests using 1 worker
+
+(node:3581) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/conversations.spec.ts:70:1 › two sessions keep multiple photo messages separate from memory and sibling conversations (3.4s)
+  ✓   2 [desktop] › tests/conversations.spec.ts:154:1 › lost comment responses retry exact keys and stale edits retain drafts (1.2s)
+  ✓   3 [desktop] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel (1.3s)
+  ✓   4 [desktop] › tests/conversations.spec.ts:264:1 › pagination batches only the visible page and works at 320 pixels with keyboard and axe (1.4s)
+  ✓   5 [desktop] › tests/conversations.spec.ts:323:1 › session disposal ignores a committed write's late result (954ms)
+  ✓   6 [desktop] › tests/conversations.spec.ts:361:1 › uncertain reactions replay the same desired state and can then be turned off (1.1s)
+  ✓   7 [desktop] › tests/conversations.spec.ts:397:1 › configured-circle replacement clears the draft and denies old-target reads and writes (1.0s)
+  ✓   8 [desktop] › tests/conversations.spec.ts:433:3 › created comments beyond the current page are confirmed immediately (1.1s)
+  ✓   9 [desktop] › tests/conversations.spec.ts:433:3 › created comments beyond the current page are confirmed immediately after an exact replay (1.2s)
+  ✓  10 [desktop] › tests/conversations.spec.ts:499:3 › deleting a different saved comment preserves the unrelated composer through exact retry (1.0s)
+  ✓  11 [desktop] › tests/conversations.spec.ts:499:3 › deleting a different saved comment preserves the unrelated edit draft through exact retry (1.0s)
+(node:3610) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  12 [phone] › tests/conversations.spec.ts:70:1 › two sessions keep multiple photo messages separate from memory and sibling conversations
+  ✓  13 [phone] › tests/conversations.spec.ts:154:1 › lost comment responses retry exact keys and stale edits retain drafts (1.3s)
+  ✓  14 [phone] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel (1.3s)
+  ✓  15 [phone] › tests/conversations.spec.ts:264:1 › pagination batches only the visible page and works at 320 pixels with keyboard and axe (1.5s)
+  ✓  16 [phone] › tests/conversations.spec.ts:323:1 › session disposal ignores a committed write's late result (952ms)
+  ✓  17 [phone] › tests/conversations.spec.ts:361:1 › uncertain reactions replay the same desired state and can then be turned off (1.1s)
+  ✓  18 [phone] › tests/conversations.spec.ts:397:1 › configured-circle replacement clears the draft and denies old-target reads and writes (1.0s)
+  ✓  19 [phone] › tests/conversations.spec.ts:433:3 › created comments beyond the current page are confirmed immediately (1.1s)
+  ✓  20 [phone] › tests/conversations.spec.ts:433:3 › created comments beyond the current page are confirmed immediately after an exact replay (1.3s)
+  ✓  21 [phone] › tests/conversations.spec.ts:499:3 › deleting a different saved comment preserves the unrelated composer through exact retry (1.0s)
+  ✓  22 [phone] › tests/conversations.spec.ts:499:3 › deleting a different saved comment preserves the unrelated edit draft through exact retry (1.0s)
+
+  1 skipped
+  21 passed (28.0s)
+[WebServer] (node:3675) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 6 tests using 1 worker
+
+(node:3677) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/add-sources.spec.ts:3:1 › Add manages source connections and retained transfer outcomes without a map (623ms)
+  ✓  2 [desktop] › tests/add-sources.spec.ts:79:1 › Add retries failed source reads and clears controls when access is lost (245ms)
+  ✓  3 [desktop] › tests/add-sources.spec.ts:114:1 › Add consumes the retained Discord return and creates a scoped paused source (517ms)
+(node:3686) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 [phone] › tests/add-sources.spec.ts:3:1 › Add manages source connections and retained transfer outcomes without a map (739ms)
+  ✓  5 [phone] › tests/add-sources.spec.ts:79:1 › Add retries failed source reads and clears controls when access is lost (262ms)
+  ✓  6 [phone] › tests/add-sources.spec.ts:114:1 › Add consumes the retained Discord return and creates a scoped paused source (453ms)
+
+  6 passed (4.3s)
+[WebServer] (node:3715) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 6 tests using 1 worker
+
+(node:3718) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/add-queues.spec.ts:4:1 › Add resolves duplicate and event suggestions with evidence and retained undo (4.2s)
+  ✓  2 [desktop] › tests/add-queues.spec.ts:118:1 › Add suggestion queues explain loading, retry failures and clear denied access (213ms)
+  ✓  3 [desktop] › tests/add-queues.spec.ts:171:1 › Add explains an empty suggestion queue without a publication step (132ms)
+(node:3762) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  4 [phone] › tests/add-queues.spec.ts:4:1 › Add resolves duplicate and event suggestions with evidence and retained undo (4.4s)
+  ✓  5 [phone] › tests/add-queues.spec.ts:118:1 › Add suggestion queues explain loading, retry failures and clear denied access (211ms)
+  ✓  6 [phone] › tests/add-queues.spec.ts:171:1 › Add explains an empty suggestion queue without a publication step (131ms)
+
+  6 passed (10.8s)
+[WebServer] (node:3803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 26 tests using 1 worker
+
+(node:3806) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/ai-retirement.spec.ts:3:1 › old Ask links retain their query in Photos with an honest retirement notice (985ms)
+  ✓   2 [desktop] › tests/ai-retirement.spec.ts:45:1 › old exact photo evidence links retain accessible evidence and reject ambiguous or foreign identifiers (899ms)
+  ✓   3 [desktop] › tests/ai-retirement.spec.ts:93:1 › legacy discovery search has no generated-answer fallback or prompt (131ms)
+  ✓   4 [desktop] › tests/photos-search.spec.ts:3:1 › Globe search opens Photos and preserves keyword filters and the selected photograph (1.4s)
+  ✓   5 [desktop] › tests/photos-search.spec.ts:59:1 › Photos searches photographs first and opens actual text-only Conversation context (391ms)
+
+  ✓   6 [desktop] › tests/photos-search.spec.ts:114:1 › Photos clears an open text-only context immediately when its contribution is withdrawn (1.5s)
+  ✓   7 [desktop] › tests/photos-search.spec.ts:212:1 › Photos conversation search explains loading, retry, filter scope and empty results (339ms)
+  ✓   8 [desktop] › tests/photos-search.spec.ts:286:1 › Photos removes all retained conversation context when the session is lost (330ms)
+
+  ✓   9 [desktop] › tests/photos-search.spec.ts:317:1 › Photos offers honest continuation before reporting no conversation matches (1.5s)
+  ✓  10 [desktop] › tests/photos.spec.ts:3:1 › Photos opens from Globe as individual photographs grouped by newest month (1.9s)
+  ✓  11 [desktop] › tests/photos.spec.ts:69:1 › Photos preserves year and compact filters across the viewer and keeps uncertain dates explicit (1.5s)
+  ✓  12 [desktop] › tests/photos.spec.ts:127:1 › Photos explains loading, failed loads and empty filters with recovery (319ms)
+
+  ✓  13 [desktop] › tests/photos.spec.ts:175:1 › Photos and Globe remove withdrawn contributions and clear media on session loss (2.0s)
+(node:3855) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  14 [phone] › tests/ai-retirement.spec.ts:3:1 › old Ask links retain their query in Photos with an honest retirement notice (518ms)
+  ✓  15 [phone] › tests/ai-retirement.spec.ts:45:1 › old exact photo evidence links retain accessible evidence and reject ambiguous or foreign identifiers (906ms)
+  ✓  16 [phone] › tests/ai-retirement.spec.ts:93:1 › legacy discovery search has no generated-answer fallback or prompt (115ms)
+  ✓  17 [phone] › tests/photos-search.spec.ts:3:1 › Globe search opens Photos and preserves keyword filters and the selected photograph (1.4s)
+  ✓  18 [phone] › tests/photos-search.spec.ts:59:1 › Photos searches photographs first and opens actual text-only Conversation context (439ms)
+
+  ✓  19 [phone] › tests/photos-search.spec.ts:114:1 › Photos clears an open text-only context immediately when its contribution is withdrawn (1.5s)
+  ✓  20 [phone] › tests/photos-search.spec.ts:212:1 › Photos conversation search explains loading, retry, filter scope and empty results (342ms)
+  ✓  21 [phone] › tests/photos-search.spec.ts:286:1 › Photos removes all retained conversation context when the session is lost (324ms)
+
+  ✓  22 [phone] › tests/photos-search.spec.ts:317:1 › Photos offers honest continuation before reporting no conversation matches (1.5s)
+  ✓  23 [phone] › tests/photos.spec.ts:3:1 › Photos opens from Globe as individual photographs grouped by newest month (1.9s)
+  ✓  24 [phone] › tests/photos.spec.ts:69:1 › Photos preserves year and compact filters across the viewer and keeps uncertain dates explicit (1.5s)
+  ✓  25 [phone] › tests/photos.spec.ts:127:1 › Photos explains loading, failed loads and empty filters with recovery (305ms)
+
+  ✓  26 [phone] › tests/photos.spec.ts:175:1 › Photos and Globe remove withdrawn contributions and clear media on session loss (1.5s)
+
+  26 passed (27.2s)
+[WebServer] (node:3935) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 8 tests using 1 worker
+
+(node:3942) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/annual-recap.spec.ts:5:1 › Annual recap opens from a Photos year card in capture order and restores its viewer origin (1.2s)
+  ✓  2 [desktop] › tests/annual-recap.spec.ts:72:1 › Annual recap excludes uncertain and sharing-only chronology without hiding it from Photos (244ms)
+  ✓  3 [desktop] › tests/annual-recap.spec.ts:125:1 › Annual recap covers the whole capture year and returns to the prior Photos filters (695ms)
+
+  ✓  4 [desktop] › tests/annual-recap.spec.ts:169:1 › Annual recap rechecks withdrawn photographs and session access (1.2s)
+(node:3960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  5 [phone] › tests/annual-recap.spec.ts:5:1 › Annual recap opens from a Photos year card in capture order and restores its viewer origin (1.2s)
+  ✓  6 [phone] › tests/annual-recap.spec.ts:72:1 › Annual recap excludes uncertain and sharing-only chronology without hiding it from Photos (260ms)
+  ✓  7 [phone] › tests/annual-recap.spec.ts:125:1 › Annual recap covers the whole capture year and returns to the prior Photos filters (943ms)
+
+  ✓  8 [phone] › tests/annual-recap.spec.ts:169:1 › Annual recap rechecks withdrawn photographs and session access (671ms)
+
+  8 passed (7.9s)
+[WebServer] (node:4004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 4 tests using 1 worker
+
+(node:4006) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/past-creations.spec.ts:3:1 › Past creations retains historical reads and only authorized deletion (1.6s)
+  ✓  2 [desktop] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (247ms)
+(node:4014) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [phone] › tests/past-creations.spec.ts:3:1 › Past creations retains historical reads and only authorized deletion (1.7s)
+  ✓  4 [phone] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (221ms)
+
+  4 passed (5.3s)

@@ -45,7 +45,7 @@ def handler_for(store):
                 if path == "/api/review/reviewed-pairs":
                     return self.json(200, store.reviewed_pairs(user, group))
                 if path == "/api/review/my-contributions":
-                    return self.json(200, store.owned_origins(user, group))
+                    return self.json(200, store.owned_origins(user, group, query.get("asset", [None])[0]))
                 if path == "/api/review/metrics":
                     return self.json(200, store.group_metrics(user, group))
                 if path == "/api/review/events":

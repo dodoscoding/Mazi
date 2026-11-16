@@ -1,0 +1,16 @@
+[WebServer] (node:17131) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 1 test using 1 worker
+
+(node:17138) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+SYNTHETIC_QUERY_TIMINGS [{"path":"/api/social/home","ms":0.621,"queries":15},{"path":"/api/social/home","ms":0.502,"queries":14},{"path":"/api/social/home","ms":0.394,"queries":14},{"path":"/api/social/home","ms":0.399,"queries":14},{"path":"/api/atlas/memory","ms":0.713,"queries":21},{"path":"/api/atlas/memory","ms":0.437,"queries":21},{"path":"/api/social/home","ms":0.497,"queries":18},{"path":"/api/social/home","ms":0.934,"queries":31},{"path":"/api/social/home","ms":1.065,"queries":31},{"path":"/api/atlas/memory","ms":0.48,"queries":21},{"path":"/api/atlas/memory","ms":0.761,"queries":22}]
+  ✓  1 [desktop] › tests/social-home.spec.ts:79:1 › two sessions go from an empty Home through planning, a real photo upload, conversation and next-day return (9.3s)
+
+  1 passed (10.5s)

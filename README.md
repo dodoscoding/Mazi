@@ -2,23 +2,24 @@
 
 <img src="public/mazi-logo.png" alt="Mazi logo" width="160">
 
-Mazi is a private memory archive for one small circle of friends. Bring your photographs and conversations together, then revisit them through a visual Atlas, a timeline, and shared stories.
+Mazi is a private memory archive for one small circle of friends. Its current product contract is **Globe** and **Photos**, supported by **Add** and **Settings**: relive shared history in a simple but fun way.
 
-Everyone in the circle uses a shared entry code. Imported content becomes available to the signed-in circle automatically; archive review lets you correct it later.
-
-The next product direction is a private social space with shared memories, comments, reactions and events. The [improvement investigation](docs/PRODUCT_EVOLUTION_INVESTIGATION.md) groups the six requested changes by difficulty and distinguishes existing features from proposed work.
+Everyone in the circle uses a shared entry code and a visible name. Imported content becomes available to the signed-in circle automatically as it is ingested. Review and correction remain optional afterward.
 
 Parallel You, a proposed AI alternative-life simulator for circle members, is planned beside the archive. [The Parallel You plan](docs/PARALLEL_YOU.md) keeps its fiction apart from real memories. None of it is implemented yet.
 
 ## What you can do
 
-- Import photographs and supported conversation archives from ZIP files.
-- Browse memories in Atlas and Timeline, with links to people, places, and sources.
-- Correct metadata and approve memories in Archive review.
-- Search the archive and ask questions with links back to the evidence.
-- Create recaps, stories, slideshows, and sealed time capsules.
+- Explore the archive in Globe or browse individual photographs by month in Photos, with year navigation, compact filters and an explicit Undated collection.
+- Search photographs and secondary source conversations in Photos. Read exact recorded conversation context without requiring a photograph or an AI answer.
+- Open the same full-photo viewer from either primary view and return to the originating selection, filters and position.
+- Import, connect sources, follow progress, recover failures and review suggestions through Add. Correct individual date/place facts and manage eligible source contributions contextually.
+- Use Settings for membership, account/sign-out, export, departure, About/introduction replay and applicable discovery preferences.
+- Revisit a simple capture-year Annual recap. Read eligible historical stories/capsules in Settings / Past creations, with existing time locks and authorized deletion.
 
-This is a local prototype with synthetic regression checks. Public production deployment and milestone acceptance remain separate work. See the [roadmap](docs/ROADMAP.md) for release gates and the [privacy contract](docs/PRIVACY.md) for requirements and limits.
+AI answers, story/capsule writing and generated-story media workflows are retired from the application API and interface. Original media, existing creations, source context, independent live conversations, ownership and access restrictions remain preserved.
+
+The [D28 specification](docs/APP_SIMPLIFICATION_SPEC.md), [ticket plan](docs/APP_SIMPLIFICATION_TICKETS_DRAFT.md) and [PR #161](https://github.com/dodoscoding/Mazi/pull/161) track the simplification. Per-slice synthetic evidence is linked from the [delivery record](docs/APP_SIMPLIFICATION.md). Final navigation integration and its acceptance gate are tracked separately from public deployment and production milestone acceptance. See the [roadmap](docs/ROADMAP.md) and [privacy contract](docs/PRIVACY.md) for release gates and limits.
 
 ## Run locally
 

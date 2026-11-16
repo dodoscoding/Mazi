@@ -1,0 +1,20 @@
+[
+  {
+    "screen": "desktop",
+    "url": "http://127.0.0.1:8196/?demo=1#/photos",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "sampleMode": true
+  },
+  {
+    "screen": "phone",
+    "url": "http://127.0.0.1:8196/?demo=1#/photos",
+    "viewport": {
+      "width": 412,
+      "height": 839
+    },
+    "sampleMode": true
+  }
+]

@@ -1,0 +1,20 @@
+9:47:09 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+✔ independent feature routes load circle context without requesting Atlas (109.555875ms)
+✔ Atlas routes still load current memories and demo search remains local (56.659083ms)
+✔ leaving Atlas aborts and ignores late data; returning fetches again (69.917666ms)
+✔ a reload that is denied clears the circle and reports lost access (61.749125ms)
+✔ without an authenticated profile no archive requests are made (58.691333ms)
+✔ superseded loads abort and lost access cancels private work (46.987916ms)
+✔ backgrounding keeps the loaded atlas and makes no requests (46.560583ms)
+✔ moving between Atlas and feature pages keeps the loaded atlas (59.391291ms)
+✔ choosing another circle sticks and loads that circle (41.326792ms)
+✔ a saved photo correction rereads authoritative Atlas facts (58.078667ms)
+✔ selected-memory routes never request the full Atlas (52.394875ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1080.635125

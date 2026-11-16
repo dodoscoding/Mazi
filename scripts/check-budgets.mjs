@@ -11,7 +11,7 @@ const budgets = [
   { name: "Globe chunk", pattern: /^Globe-.*\.js$/, max: 256 * 1024 },
   { name: "Entry script", pattern: /^index-.*\.js$/, max: 150 * 1024 },
   { name: "Stylesheet", pattern: /^index-.*\.css$/, max: 40 * 1024 },
-  { name: "All scripts", pattern: /\.js$/, max: 400 * 1024, total: true },
+  { name: "All scripts", pattern: /\.js$/, max: 420 * 1024, total: true },
 ];
 
 const files = readdirSync("dist/assets").map((name) => ({

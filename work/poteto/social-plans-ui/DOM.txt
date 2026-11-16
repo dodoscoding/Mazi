@@ -1,0 +1,31 @@
+✔ Discord return completes once across the React effect lifecycle (220.198833ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (47.598125ms)
+✔ a memory opened from inside the app can go back, across photo changes (23.329ms)
+✔ a plain hash link from a feature page counts as an in-app entry (18.572709ms)
+✔ Home and Atlas have separate canonical routes (14.264708ms)
+✔ legacy root selection links retain their Atlas state (14.739167ms)
+✔ /people replaces the legacy entry without adding history (12.614708ms)
+✔ /#/people replaces the legacy entry without adding history (12.963791ms)
+✔ /settings replaces the legacy entry without adding history (11.979917ms)
+✔ /#/settings replaces the legacy entry without adding history (13.732666ms)
+✔ aliases reached inside the app preserve the previous destination (14.625542ms)
+✔ a People alias preserves search and sample parameters but owns its section (10.939375ms)
+✔ Ekle exposes separate photo and meeting actions without changing the three destinations (99.921416ms)
+✔ empty plans work under StrictMode without loading Atlas (41.281833ms)
+✔ demo and another group's plan never request private social data (35.721666ms)
+✔ a deep link for another group is denied before reading (31.000709ms)
+✔ an uncertain save retains the draft and retries exactly the same command (50.723ms)
+✔ a stale edit can reload the current revision without replacing its draft (44.873ms)
+✔ late plan reads cannot restore content after access loss (28.788375ms)
+✔ plan wall times distinguish gaps, repeated hours and quarter-hour offsets (5.213708ms)
+✔ profile changes clear a pending write draft and discard its late response (33.637375ms)
+✔ a failed next page retains the list and retries its exact cursor (32.02575ms)
+✔ a denied write prevents an already-running read from restoring private content (36.167917ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 669.573417

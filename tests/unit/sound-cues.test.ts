@@ -51,4 +51,12 @@ test("the archive arriving and other screens stay silent", () => {
     [],
   );
   assert.deepEqual(cuesFor(atlas({ path: "" }), atlas(), false), []);
+  assert.deepEqual(
+    cuesFor(
+      atlas({ path: "/" }),
+      atlas({ path: "/photos", portal: true }),
+      false,
+    ),
+    [],
+  );
 });

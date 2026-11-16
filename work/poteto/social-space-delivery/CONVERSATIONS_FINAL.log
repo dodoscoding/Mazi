@@ -1,0 +1,113 @@
+[WebServer] (node:37385) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 22 tests using 1 worker
+
+(node:37391) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/conversations.spec.ts:70:1 › two sessions keep multiple photo messages separate from memory and sibling conversations (3.5s)
+  ✓   2 [desktop] › tests/conversations.spec.ts:154:1 › lost comment responses retry exact keys and stale edits retain drafts (1.3s)
+  ✘   3 [desktop] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel (11.3s)
+(node:37763) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 [desktop] › tests/conversations.spec.ts:259:1 › pagination batches only the visible page and works at 320 pixels with keyboard and axe (1.4s)
+  ✓   5 [desktop] › tests/conversations.spec.ts:318:1 › session disposal ignores a committed write's late result (972ms)
+  ✓   6 [desktop] › tests/conversations.spec.ts:356:1 › uncertain reactions replay the same desired state and can then be turned off (1.1s)
+  ✓   7 [desktop] › tests/conversations.spec.ts:392:1 › configured-circle replacement clears the draft and denies old-target reads and writes (1.0s)
+  ✓   8 [desktop] › tests/conversations.spec.ts:428:3 › created comments beyond the current page are confirmed immediately (1.1s)
+  ✓   9 [desktop] › tests/conversations.spec.ts:428:3 › created comments beyond the current page are confirmed immediately after an exact replay (1.1s)
+  ✓  10 [desktop] › tests/conversations.spec.ts:494:3 › deleting a different saved comment preserves the unrelated composer through exact retry (1.0s)
+  ✓  11 [desktop] › tests/conversations.spec.ts:494:3 › deleting a different saved comment preserves the unrelated edit draft through exact retry (1.0s)
+(node:37887) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  12 [phone] › tests/conversations.spec.ts:70:1 › two sessions keep multiple photo messages separate from memory and sibling conversations
+  ✓  13 [phone] › tests/conversations.spec.ts:154:1 › lost comment responses retry exact keys and stale edits retain drafts (1.2s)
+  ✘  14 [phone] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel (11.3s)
+(node:38089) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [phone] › tests/conversations.spec.ts:259:1 › pagination batches only the visible page and works at 320 pixels with keyboard and axe (1.5s)
+  ✓  16 [phone] › tests/conversations.spec.ts:318:1 › session disposal ignores a committed write's late result (955ms)
+  ✓  17 [phone] › tests/conversations.spec.ts:356:1 › uncertain reactions replay the same desired state and can then be turned off (1.1s)
+  ✓  18 [phone] › tests/conversations.spec.ts:392:1 › configured-circle replacement clears the draft and denies old-target reads and writes (1.0s)
+  ✓  19 [phone] › tests/conversations.spec.ts:428:3 › created comments beyond the current page are confirmed immediately (1.1s)
+  ✓  20 [phone] › tests/conversations.spec.ts:428:3 › created comments beyond the current page are confirmed immediately after an exact replay (1.2s)
+  ✓  21 [phone] › tests/conversations.spec.ts:494:3 › deleting a different saved comment preserves the unrelated composer through exact retry (1.0s)
+  ✓  22 [phone] › tests/conversations.spec.ts:494:3 › deleting a different saved comment preserves the unrelated edit draft through exact retry (1.1s)
+
+
+  1) [desktop] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.native-conversation')
+    Expected substring: "Bu sohbet kullanılamıyor"
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" locator('.native-conversation') with timeout 10000ms
+      - waiting for locator('.native-conversation')
+
+
+      247 |   expect((await page.request.post("/__test__/withdraw")).ok()).toBe(true);
+      248 |   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+    > 249 |   await expect(page.locator(".native-conversation")).toContainText(
+          |                                                      ^
+      250 |     "Bu sohbet kullanılamıyor",
+      251 |   );
+      252 |   await expect(page.locator(".native-comments article")).toHaveCount(0);
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/conversations.spec.ts:249:54
+
+    Error Context: test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [phone] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.native-conversation')
+    Expected substring: "Bu sohbet kullanılamıyor"
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" locator('.native-conversation') with timeout 10000ms
+      - waiting for locator('.native-conversation')
+
+
+      247 |   expect((await page.request.post("/__test__/withdraw")).ok()).toBe(true);
+      248 |   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+    > 249 |   await expect(page.locator(".native-conversation")).toContainText(
+          |                                                      ^
+      250 |     "Bu sohbet kullanılamıyor",
+      251 |   );
+      252 |   await expect(page.locator(".native-comments article")).toHaveCount(0);
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/conversations.spec.ts:249:54
+
+    Error Context: test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/conversations/conversations-deletion-rem-d438e-withdrawal-clears-the-panel-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel
+    [phone] › tests/conversations.spec.ts:226:1 › deletion removes reactions and source withdrawal clears the panel
+  1 skipped
+  19 passed (48.5s)

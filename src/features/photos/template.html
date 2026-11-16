@@ -1,0 +1,146 @@
+<div class="memories-page photos-page">
+  <p id="retired-answers" role="status" hidden>
+    AI yanıtları kaldırıldı. Mevcut grubunuzun fotoğraf ve konuşmalarında arama
+    yapabilirsiniz.
+  </p>
+  <div class="mem-layout">
+    <div id="filters-scrim" class="mem-scrim" hidden></div>
+    <aside id="memory-filters" class="mem-filters" aria-label="Filtreler">
+      <span class="mem-sheet-handle" aria-hidden="true"></span>
+      <div class="mem-filters-head">
+        <h2 id="filters-title" class="mem-filters-title">Filtreler</h2>
+        <button id="filters-reset" type="button" class="mem-text-button">
+          Temizle
+        </button>
+      </div>
+      <fieldset class="mem-fieldset" hidden>
+        <legend>Yıl</legend>
+        <div id="filter-years" class="mem-chips"></div>
+      </fieldset>
+      <fieldset id="place-filter" class="mem-fieldset">
+        <legend>Yer</legend>
+        <div id="filter-places" class="mem-checks"></div>
+      </fieldset>
+      <fieldset id="person-filter" class="mem-fieldset">
+        <legend>Paylaşan</legend>
+        <div id="filter-people" class="mem-chips mem-people"></div>
+      </fieldset>
+      <fieldset id="source-filter" class="mem-fieldset">
+        <legend>Kaynak</legend>
+        <div id="filter-sources" class="mem-checks"></div>
+      </fieldset>
+      <div class="mem-switch-row">
+        <span id="uncertain-label">Yalnız belirsiz tarihler</span>
+        <button
+          id="filter-uncertain"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-labelledby="uncertain-label"
+          class="mem-switch"
+        >
+          <i></i>
+        </button>
+      </div>
+      <div class="mem-sheet-foot">
+        <button id="filters-apply" type="button" class="mem-apply">
+          Fotoğrafları göster
+        </button>
+      </div>
+    </aside>
+    <div class="mem-main">
+      <header class="mem-head">
+        <div class="mem-heading">
+          <h1 class="mem-title">Fotoğraflar</h1>
+          <p id="grid-summary" class="mem-summary"></p>
+          <p id="recap-scope" class="mem-summary" hidden>
+            Seçili yılın güvenilir çekim tarihli tüm fotoğrafları. Normal
+            Fotoğraflar filtreleri bu özette uygulanmaz.
+          </p>
+        </div>
+        <div class="mem-controls">
+          <a id="recap-back" class="mem-pill" hidden>Fotoğraflara dön</a>
+          <label
+            >Yıl<select id="photos-year">
+              <option value="">Tüm yıllar</option>
+            </select></label
+          >
+          <button
+            id="filters-open"
+            type="button"
+            class="mem-pill mem-filters-button"
+            aria-expanded="false"
+            aria-controls="memory-filters"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M4 6h16M7 12h10M10 18h4" /></svg
+            ><span>Filtreler</span><span id="filters-count"></span>
+          </button>
+        </div>
+      </header>
+      <form id="photos-search" role="search">
+        <label
+          >Fotoğraf ve konuşmalarda ara<input
+            id="photos-query"
+            type="search"
+            name="q"
+        /></label>
+        <div class="photos-search-actions">
+          <button type="submit">Arşivde ara</button>
+          <button id="photos-clear-query" type="button">Aramayı temizle</button>
+        </div>
+      </form>
+      <div
+        id="year-chips"
+        class="mem-chips mem-year-row"
+        hidden
+        role="group"
+        aria-label="Yıllar"
+      ></div>
+      <div
+        id="active-filters"
+        class="mem-active"
+        role="group"
+        aria-label="Etkin filtreler"
+      ></div>
+      <section
+        id="annual-recap"
+        class="annual-recap-card"
+        aria-label="Annual recap"
+        hidden
+      ></section>
+      <div id="grid" class="mem-grid"></div>
+      <section id="conversation-results" aria-label="Konuşma sonuçları" hidden>
+        <h2>Konuşmalar</h2>
+        <p id="conversation-scope"></p>
+        <p id="conversation-status" role="status"></p>
+        <div id="conversation-list"></div>
+        <button id="conversation-more" type="button" hidden>
+          Diğer konuşma sonuçlarını getir
+        </button>
+        <button id="conversation-retry" type="button" hidden>
+          Konuşmaları yeniden dene
+        </button>
+      </section>
+      <section
+        id="source-context"
+        class="photos-source-context"
+        aria-label="Kaynak konuşma bağlamı"
+        tabindex="-1"
+        hidden
+      >
+        <button id="source-close" type="button">Bağlamı kapat</button>
+        <div id="source-content"></div>
+      </section>
+    </div>
+  </div>
+</div>

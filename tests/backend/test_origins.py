@@ -68,7 +68,7 @@ class OriginTests(unittest.TestCase):
                                                'albums': [], 'types': ['image']}}, 201),
             ('/api/places', {}, 400),
             ('/api/discovery/person', {'group': self.group, 'name': 'Synthetic person'}, 201),
-            ('/api/answers/processing', {'group': self.group, 'enabled': False}, 200),
+            ('/api/answers/processing', {'group': self.group, 'enabled': False}, 410),
             ('/api/memories/notifications', {'group': self.group, 'enabled': False}, 200),
         )
         for origin in ('http://' + self.host, 'https://' + self.host, None):

@@ -15,7 +15,11 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route("**/api/groups", (r) => r.fulfill({ json: [] }));
+  await page.route("**/api/groups", (r) =>
+    r.fulfill({
+      json: [{ id: "circle", name: "Synthetic circle", role: "member" }],
+    }),
+  );
   await page.route("**/api/parallel/config", (r) =>
     r.fulfill({
       json: {
@@ -252,96 +256,6 @@ test("loading, refusal, invalid output and quota errors preserve the branch", as
   }
 });
 
-test("Explore keeps archive retrieval and Parallel You in one new section", async ({
-  page,
-}, testInfo) => {
-  await page.route("**/api/groups", (r) =>
-    r.fulfill({
-      json: [{ id: "circle", name: "Synthetic circle", role: "member" }],
-    }),
-  );
-  await page.route("**/api/discovery/state?*", (r) =>
-    r.fulfill({
-      json: {
-        people: [],
-        memories: [],
-        hidden_memories: [],
-        hidden: [],
-        suppressed: [],
-        identities: [],
-        settings: {
-          model_ready: false,
-          group_enabled: false,
-          contribution_enabled: false,
-        },
-      },
-    }),
-  );
-  await page.route("**/api/atlas?*", (r) =>
-    r.fulfill({ json: { memories: [] } }),
-  );
-  await page.route("**/api/discovery/search?*", (r) =>
-    r.fulfill({
-      json: {
-        items: [],
-        total: 0,
-        next_offset: null,
-        facets: { sources: [], shared_by: [] },
-        mode: "keyword",
-        unindexed: 0,
-      },
-    }),
-  );
-  await page.goto("/explore?demo=1");
-  await expect(
-    page.getByRole("heading", { name: "Explore", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Find photos and conversations" }),
-  ).toBeVisible();
-  const sections = page.getByRole("navigation", { name: "Explore sections" });
-  await expect(
-    sections.getByRole("link", { name: "Photos & conversations" }),
-  ).toHaveAttribute("aria-current", "page");
-  await sections.getByRole("link", { name: "Parallel You" }).click();
-  await expect(
-    page.getByRole("heading", { name: "What if you chose differently?" }),
-  ).toBeVisible();
-  await sections.getByRole("link", { name: "Photos & conversations" }).click();
-  await expect(
-    page.getByRole("heading", { name: "What if you chose differently?" }),
-  ).toHaveCount(0);
-  await expect(
-    sections.getByRole("link", { name: "Photos & conversations" }),
-  ).toHaveAttribute("aria-current", "page");
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await page.screenshot({
-    path: testInfo.outputPath("explore.png"),
-    fullPage: true,
-  });
-  await page.goto("/?demo=1");
-  await expect(
-    page.getByRole("navigation", { name: "Explore sections" }),
-  ).toHaveCount(0);
-});
-test("Explore moves focus to the loading heading while Parallel You checks availability", async ({
-  page,
-}) => {
-  await page.route("**/api/parallel/config", () => {});
-  await page.goto("/explore/parallel");
-  const sections = page.getByRole("navigation", { name: "Explore sections" });
-  await sections.getByRole("link", { name: "Photos & conversations" }).click();
-  await sections.getByRole("link", { name: "Parallel You" }).click();
-  await expect(page.getByText("Checking availability…")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Checking availability…" }),
-  ).toBeFocused();
-  await expect(page.locator("h1")).toHaveCount(1);
-});
 async function seedStory(page: import("@playwright/test").Page) {
   await page.goto("/parallel?demo=1");
   await page.getByRole("button", { name: "Begin a universe" }).click();
@@ -481,3 +395,30 @@ for (const enabled of [true, false]) {
     ).toBeFocused();
   });
 }
+
+test("Studio preserves Photos and switches to Parallel You", async ({
+  page,
+}) => {
+  await page.goto("/studio?demo=1");
+  await expect(
+    page.getByRole("heading", { name: "Studio", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true }),
+  ).toBeVisible();
+  const query = page.locator("#photos-query");
+  await query.fill("lake");
+  await query.press("Enter");
+  await expect(page).toHaveURL(/#\/studio\?.*q=lake/);
+  const studio = page.getByRole("navigation", { name: "Studio sections" });
+  await studio.getByRole("link", { name: "Parallel You" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What if you chose differently?" }),
+  ).toBeVisible();
+  await studio.getByRole("link", { name: "Photos & conversations" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true }),
+  ).toBeVisible();
+  await page.goto("/explore?demo=1");
+  await expect(page).toHaveURL(/#\/photos/);
+});
