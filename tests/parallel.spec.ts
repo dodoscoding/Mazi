@@ -328,6 +328,17 @@ test("Explore keeps archive retrieval and Parallel You in one new section", asyn
     page.getByRole("navigation", { name: "Explore sections" }),
   ).toHaveCount(0);
 });
+test("Explore moves focus to its title while Parallel You checks availability", async ({
+  page,
+}) => {
+  await page.route("**/api/parallel/config", () => {});
+  await page.goto("/explore/parallel");
+  const sections = page.getByRole("navigation", { name: "Explore sections" });
+  await sections.getByRole("link", { name: "Photos & conversations" }).click();
+  await sections.getByRole("link", { name: "Parallel You" }).click();
+  await expect(page.getByText("Checking availability…")).toBeVisible();
+  await expect(page.locator(".explore-title")).toBeFocused();
+});
 async function seedStory(page: import("@playwright/test").Page) {
   await page.goto("/parallel?demo=1");
   await page.getByRole("button", { name: "Begin a universe" }).click();

@@ -78,6 +78,7 @@ export default function App() {
   const selected = memoryById(route.selected) || memories[0];
   const [query, setQuery] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
+  const exploreTitle = useRef<HTMLParagraphElement>(null);
   const openLink = useRef<HTMLAnchorElement>(null);
   const previousPath = useRef(route.path);
   const homeScroll = useRef(0);
@@ -107,7 +108,7 @@ export default function App() {
       openLink.current?.focus({ preventScroll: true });
     } else if (route.path !== "/") {
       window.scrollTo(0, 0);
-      heading.current?.focus({ preventScroll: true });
+      (heading.current ?? exploreTitle.current)?.focus({ preventScroll: true });
     }
   }, [route.path, memory?.id]);
   const chooseMemory = (id: string) =>
@@ -145,7 +146,9 @@ export default function App() {
               Explore
             </h1>
           ) : (
-            <p className="explore-title">Explore</p>
+            <p ref={exploreTitle} className="explore-title" tabIndex={-1}>
+              Explore
+            </p>
           )}
           <p>
             Find photographs and conversations from your archive, or explore a
