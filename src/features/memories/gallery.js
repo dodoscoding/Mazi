@@ -74,7 +74,7 @@ export function createGallery(
       ? previousPhotos
       : "/photos";
   if (recap) {
-    root.querySelector("h1").textContent = recapYear
+    root.querySelector(".mem-title").textContent = recapYear
       ? `Annual recap ${recapYear}`
       : "Annual recap";
     $("photos-year").closest("label").hidden = true;

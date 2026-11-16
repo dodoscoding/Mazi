@@ -404,7 +404,7 @@ test("Studio preserves Photos and switches to Parallel You", async ({
     page.getByRole("heading", { name: "Studio", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Fotoğraflar", exact: true }),
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true, level: 2 }),
   ).toBeVisible();
   const query = page.locator("#photos-query");
   await query.fill("lake");
@@ -417,7 +417,7 @@ test("Studio preserves Photos and switches to Parallel You", async ({
   ).toBeVisible();
   await studio.getByRole("link", { name: "Photos & conversations" }).click();
   await expect(
-    page.getByRole("heading", { name: "Fotoğraflar", exact: true }),
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true, level: 2 }),
   ).toBeVisible();
   await page.goto("/explore?demo=1");
   await expect(page).toHaveURL(/#\/photos/);

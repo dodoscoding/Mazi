@@ -16,7 +16,13 @@ import "./workspace.css";
 import "./imports/imports.css";
 
 export const featureRegistry = {
-  "/studio": { template: photosTemplate, mount: photosMount },
+  "/studio": {
+    template: photosTemplate.replace(
+      '<h1 class="mem-title">Fotoğraflar</h1>',
+      '<h2 class="mem-title">Fotoğraflar</h2>',
+    ),
+    mount: photosMount,
+  },
   "/photos": { template: photosTemplate, mount: photosMount },
   "/add": { template: importsTemplate, mount: importsMount },
   "/settings": { template: importsTemplate, mount: importsMount },
