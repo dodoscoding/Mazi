@@ -104,6 +104,10 @@ test("account controls are keyboard operable and Escape returns focus", async ({
   await expect(about).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(
+    menu.getByRole("link", { name: /^(Parallel You|Studio)$/ }),
+  ).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(
     menu.getByRole("button", { name: "Sound", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("End");
