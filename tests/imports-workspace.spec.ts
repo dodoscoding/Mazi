@@ -266,7 +266,9 @@ test("working pages fit narrow and zoomed viewports in both themes", async ({
           `${route} ${width} ${theme}`,
         ).toEqual([]);
         await page.screenshot({
-          path: info.outputPath(`${route.replace("?section=", "-")}-${width}-${theme}.png`),
+          path: info.outputPath(
+            `${route.replace("?section=", "-")}-${width}-${theme}.png`,
+          ),
           fullPage: true,
         });
       }
