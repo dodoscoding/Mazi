@@ -36,7 +36,8 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(BadOutput): generate(request(),bad)
         self.assertEqual(len(calls),2)
     def test_sensitive_input_does_not_generate(self):
-        for text in ('I want to kill myself', 'intihar etmek', 'suicide'):
+        for text in ('I want to kill myself', 'intihar etmek', 'suicide', 'kill\nmyself', 'kill\tmyself',
+                     'end\nmy life', 'kendimi\nöldür', 'sui\u200bcide'):
             r=request();r['origin']['whatIf']=text
             with self.assertRaises(Declined): validate_request(r)
 

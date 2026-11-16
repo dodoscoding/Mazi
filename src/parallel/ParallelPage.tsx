@@ -137,7 +137,8 @@ export default function ParallelPage({
     index: number | null,
     replaceId?: string,
   ) {
-    if (controller.current && !controller.current.signal.aborted) return;
+    if (declined || (controller.current && !controller.current.signal.aborted))
+      return;
     const current = dataRef.current;
     const existing =
       parentId !== null && index !== null
@@ -174,6 +175,12 @@ export default function ParallelPage({
         ? fixtureChapter(request)
         : await chapter(request, abort.signal);
       if (abort.signal.aborted) return;
+      const latest = dataRef.current;
+      if (
+        (replaceId && !latest.nodes[replaceId]) ||
+        (parentId && !latest.nodes[parentId])
+      )
+        return;
       const id = parentId ? crypto.randomUUID() : u.rootNodeId;
       const nextNode: StoryNode = {
         ...result,
@@ -186,14 +193,14 @@ export default function ParallelPage({
       if (!isNode(nextNode))
         throw Error("The story response was invalid. Please retry.");
       const nodes = addChild(
-        replaceId ? removeBranch(current.nodes, replaceId) : current.nodes,
+        replaceId ? removeBranch(latest.nodes, replaceId) : latest.nodes,
         nextNode,
       );
       commit({
-        ...current,
-        universes: current.universes.some((item) => item.id === u.id)
-          ? current.universes
-          : [...current.universes, u],
+        ...latest,
+        universes: latest.universes.some((item) => item.id === u.id)
+          ? latest.universes
+          : [...latest.universes, u],
         nodes,
       });
       setUniverseId(u.id);
@@ -274,6 +281,39 @@ export default function ParallelPage({
             : warning}
         </div>
       )}
+      <p className="py-hint">
+        Your stories stay in this browser after sign-out. Other people using
+        this browser profile may be able to read them. Delete your stories
+        before leaving a shared device. This removes only the signed-in member’s
+        stories.
+      </p>
+      <button
+        onClick={() => {
+          if (
+            confirm(
+              "Delete your Parallel You stories from this browser? Stories saved by other members will remain.",
+            )
+          ) {
+            try {
+              controller.current?.abort();
+              retry.current = null;
+              clear(localStorage, memberId);
+              setScreen("home");
+              setNodeId(null);
+              setUniverseId(null);
+              setData(emptyData());
+              dataRef.current = emptyData();
+              setWarning(null);
+            } catch {
+              setWarning(
+                "Stories could not be deleted. Check browser storage permissions.",
+              );
+            }
+          }
+        }}
+      >
+        Delete your stories
+      </button>
       {enabled === null ? (
         <p role="status">Checking availability…</p>
       ) : !enabled ? (
@@ -289,6 +329,7 @@ export default function ParallelPage({
                 onClick={() => {
                   setScreen("home");
                   setError("");
+                  setDeclined(false);
                 }}
               >
                 Your universes
@@ -316,6 +357,7 @@ export default function ParallelPage({
               <button
                 className="py-primary"
                 onClick={() => {
+                  setDeclined(false);
                   setScreen("origin");
                   setUniverseId(null);
                   setNodeId(null);
@@ -324,11 +366,6 @@ export default function ParallelPage({
               >
                 Begin a universe
               </button>
-              <p className="py-hint">
-                Stories stay in this browser, including after sign-out. Other
-                people using this browser profile may be able to read them.
-                Delete them here before leaving a shared device.
-              </p>
               <div className="py-universes">
                 {data.universes.map((u) => (
                   <article key={u.id}>
@@ -357,30 +394,6 @@ export default function ParallelPage({
                   </article>
                 ))}
               </div>
-              {data.universes.length > 0 && (
-                <button
-                  onClick={() => {
-                    if (
-                      confirm(
-                        "Delete all Parallel You stories from this browser?",
-                      )
-                    ) {
-                      try {
-                        clear(localStorage, memberId);
-                        setData(emptyData());
-                        dataRef.current = emptyData();
-                        setWarning(null);
-                      } catch {
-                        setWarning(
-                          "Stories could not be deleted. Check browser storage permissions.",
-                        );
-                      }
-                    }
-                  }}
-                >
-                  Delete all stories
-                </button>
-              )}
             </>
           )}
           {screen === "origin" && (
@@ -475,7 +488,9 @@ export default function ParallelPage({
                   </p>
                   <button
                     className="py-primary"
-                    disabled={!origin.about.trim() || !origin.whatIf.trim()}
+                    disabled={
+                      declined || !origin.about.trim() || !origin.whatIf.trim()
+                    }
                   >
                     Begin story
                   </button>
@@ -520,7 +535,7 @@ export default function ParallelPage({
                   {node.choices.map((c, i) => (
                     <button
                       key={i}
-                      disabled={pending}
+                      disabled={pending || declined}
                       onClick={() => choose(node.id, i)}
                     >
                       <strong>{c.label}</strong>
@@ -546,7 +561,7 @@ export default function ParallelPage({
                     or delete it. Either action also removes its descendants.
                   </p>
                   <button
-                    disabled={pending}
+                    disabled={pending || declined}
                     onClick={() => {
                       if (
                         universe &&

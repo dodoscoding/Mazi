@@ -64,3 +64,11 @@ npm run test:parallel
 - [Build](evidence/build.log) and [format check](evidence/lint.log): passed.
 
 Final screenshot recapture also reran the branching/compare/delete scenario on desktop and phone: both passed. The fixed phone navigation is captured at the first viewport boundary in full-page images; the page remains scrollable underneath it.
+
+## Review corrections, 16 November 2026
+
+Addressed the five review findings on PR #162: merge generation into current state and discard responses for deleted nodes; provide accurately scoped member deletion even when configuration is unavailable; pause opening, choice and regeneration submissions after refusal; require session completion before releasing a blocked provider in the bridge test; inspect normalized raw input before stripping controls.
+
+Validation on macOS with Node 24.22.1 and installed Chrome: build passed; 18 desktop/phone Parallel You browser tests passed; 29 focused Python contract/HTTP/bridge tests passed; formatting, document checker, whitespace and script budgets passed (394.6 KiB gzip total). The new sensitive-input regression failed before the fix. Temporarily retaining the bridge request lock made the strengthened concurrency test fail with `Session blocked behind generation`; the production implementation was restored and the suite passed. No archive data or external provider was used.
+
+GitHub Actions on PRs #162 and #164 did not start due to the account payment/spending-limit error. PR #110's previous backend failure was the floating-point GPS assertion already corrected on main; that existing correction is being propagated through this PR chain. Local checks do not establish hosted or production acceptance.
