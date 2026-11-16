@@ -16,13 +16,21 @@ export function useEntry() {
   const generation = useRef(0);
   const accessLost = useRef(false);
   const profile = useRef<Profile | null>(null);
-  const controller = useRef<AbortController | null>(null);
+  const active = useRef<{ path: string; controller: AbortController } | null>(
+    null,
+  );
   const request = useCallback(
     async (path: string, body?: object, retainReady = false) => {
+      if (
+        retainReady &&
+        active.current &&
+        active.current.path !== "/api/session"
+      )
+        return;
       const current = ++generation.current;
-      controller.current?.abort();
+      active.current?.controller.abort();
       const abort = new AbortController();
-      controller.current = abort;
+      active.current = { path, controller: abort };
       // A quiet revalidation keeps what is on screen unless access is lost.
       const unavailable = (error: string) =>
         setState((previous) =>
@@ -54,6 +62,16 @@ export function useEntry() {
               }
             : {}),
         });
+        if (current !== generation.current || abort.signal.aborted) return;
+        if (
+          path === "/api/session" &&
+          (response.status === 401 || response.status === 403)
+        ) {
+          if (profile.current)
+            window.dispatchEvent(new Event("mazi:access-lost"));
+          else signedOut("");
+          return false;
+        }
         const value = await response.json();
         if (current !== generation.current || abort.signal.aborted) return;
         if (!response.ok) {
@@ -106,6 +124,8 @@ export function useEntry() {
           else unavailable("Mazi could not connect. Please retry.");
         }
         return false;
+      } finally {
+        if (active.current?.controller === abort) active.current = null;
       }
     },
     [],
@@ -126,8 +146,10 @@ export function useEntry() {
     };
     const lost = () => {
       accessLost.current = true;
+      profile.current = null;
+      sessionStorage.removeItem("mazi.group");
       generation.current++;
-      controller.current?.abort();
+      active.current?.controller.abort();
       setState({
         status: "signed-out",
         error: "Your access changed. Enter again to check your circle.",
@@ -139,7 +161,7 @@ export function useEntry() {
     document.addEventListener("visibilitychange", visibility);
     return () => {
       generation.current++;
-      controller.current?.abort();
+      active.current?.controller.abort();
       window.removeEventListener("pageshow", pageShow);
       window.removeEventListener("mazi:session", refresh);
       window.removeEventListener("mazi:access-lost", lost);

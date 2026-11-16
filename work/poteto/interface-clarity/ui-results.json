@@ -1,0 +1,33 @@
+{
+  "base": "http://127.0.0.1:18273",
+  "sourceHead": "c08b1c627921745429098c6fb5d8a0b291be9277",
+  "browser": "153.0.8010.12",
+  "report": [
+    {
+      "screen": "desktop",
+      "mainLabels": [
+        "Home",
+        "Keşfet",
+        "Grubumuz"
+      ],
+      "directoryEntries": 12,
+      "focusedSections": 4,
+      "axeViolations": 0,
+      "narrowWidth": 320,
+      "pageErrors": []
+    },
+    {
+      "screen": "phone",
+      "mainLabels": [
+        "Home",
+        "Keşfet",
+        "Grubumuz"
+      ],
+      "directoryEntries": 12,
+      "focusedSections": 4,
+      "axeViolations": 0,
+      "narrowWidth": 320,
+      "pageErrors": []
+    }
+  ]
+}

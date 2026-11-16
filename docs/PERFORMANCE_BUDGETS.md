@@ -11,9 +11,11 @@ These budgets gate a release of the current app. The bundle budgets run in CI. T
 | Globe chunk        | 256 KiB        | 242.9 KiB                |
 | Entry script       | 150 KiB        | 135.8 KiB                |
 | Stylesheet         | 40 KiB         | 34.9 KiB                 |
-| All scripts        | 400 KiB        | 378.7 KiB                |
+| All scripts        | 420 KiB        | 378.7 KiB                |
 
-The ceilings sit just above the current build, so any growth is a visible choice. Lowering the Globe ceiling needs the code-splitting work that the build warning names.
+D27 allocates 20 KiB of additional total-script budget for the accepted social features. The entry script, stylesheet and Globe ceilings remain unchanged. The combined plans and labels build measured 401.8 KiB total, 149.1 KiB entry and 36.9 KiB CSS on 4 November 2026. The labels editor is still a pending feature PR at this measurement. [Decision and release gates](DECISIONS.md#social-feature-bundle-budget-4-november-2026) and [measurement evidence](../work/poteto/social-bundle-budget/VERIFICATION.md) record the scope. The final combined build must pass every ceiling before deployment.
+
+The ceilings make growth a visible choice. Lowering the Globe ceiling needs the code-splitting work that the build warning names.
 
 ## Hosted latency budgets
 
@@ -46,6 +48,22 @@ The run found two defects, both now fixed. Times written as `21.07.45` left ever
 
 At the measured rate, learned indexing of 10,000 distinct photographs would take about 13 minutes on this Mac. That is an extrapolation, not a measurement. Retrieval quality on real photographs is not measured: English keyword and related queries on this mostly non-English chat returned no keyword matches, related search ranked all 300 photos, and the English answer abstained. A labeled query set from the owner is needed to score quality.
 
+## Reaction-page authorization
+
+A synthetic hosted page with one visible photograph and 20 native comments required 127 SQL calls per reaction batch. Repeating the same fixture before and after batch authorization produced 127 to 7 calls. Two warm reads changed from 3.805 and 3.624 seconds to 0.208 and 0.234 seconds. These measurements include current permission checks and PostgreSQL transaction time, and exclude browser/Vercel HTTP overhead. They are not a production latency guarantee.
+
+The batch now loads eligible comment targets once, deduplicates their original photo/memory targets, and shares bounded photo authorization with the existing label and conversation readers. Every requested target remains mandatory. Hidden, withdrawn, departed-author and deletion-tombstoned targets still deny the whole batch. Memory authorization retains the current all-original-children policy.
+
+A query-count regression caps the 21-target fixture at 15 statements instead of using a flaky wall-clock threshold. The [measurement and verification](../work/poteto/reaction-batch-performance/VERIFICATION.md) includes guarded reproduction and raw samples. The performance correction changes no storage schema or audience rule.
+
+## Bounded Home and selected detail
+
+The H1 backend uses indexed native-action candidates and a selected-assets Atlas projector. A guarded synthetic hosted profile measured two serial warm reads for each state after compact label summaries were integrated. Archive-only Home took 0.662/0.593 seconds with 22 SQL calls; conversation Home took 0.735/0.579 seconds with 21 calls; upcoming-plan Home took 0.310/0.299 seconds with 10 calls. A selected photo took 0.373/0.615 seconds with 12 calls. Serialized responses were 1,090, 1,674, 2,524 and 935 bytes respectively.
+
+These samples exclude fixture creation, browser and Vercel HTTP overhead. They do not establish p95 or production concurrency performance. A separate profile overlapped hosted verification and is retained as additional evidence, including a 1.036-second selected read. The [H1 verification and guarded profile](../work/poteto/social-home-api/VERIFICATION.md) records both runs.
+
+The candidate boundary is 33 rows per source query, 32 merged rows per chunk and 512 examined candidates per page. A 10,000-comment synthetic local fixture proves Home does not download or project the full archive; the hosted 2,000-row fixture verifies the action-time indexes and bounded candidate batches. [Browser adoption evidence](../work/poteto/social-home-ui/VERIFICATION.md) now proves zero initial full Atlas/notebook requests for real Home and permanent photo detail. Local loopback SQL/response samples and production-build chunk sizes are recorded separately from hosted backend measurements.
+
 ## Parallel You sample route
 
-The `/parallel` route loads `ParallelPage` and its stylesheet lazily. Its dedicated script ceiling is 24 KiB gzip, within the unchanged 400 KiB total script ceiling; no increase to the total budget is taken. The sample implementation measured 7.8 KiB for this chunk and 394.5 KiB for all scripts using `scripts/check-budgets.mjs` (gzip level 9). This is local build evidence, not a production performance result. No frontend dependency or font was added.
+The `/parallel` route loads `ParallelPage` and its stylesheet lazily. Its dedicated script ceiling is 24 KiB gzip, within the current main-branch 420 KiB total script ceiling; this integration takes no further increase. The sample implementation measured 7.8 KiB for this chunk and 394.5 KiB for all scripts using `scripts/check-budgets.mjs` (gzip level 9). This is local build evidence, not a production performance result. No frontend dependency or font was added.

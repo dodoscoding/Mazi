@@ -1,0 +1,11 @@
+
+Running 2 tests using 1 worker
+
+(node:36990) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback (1.6s)
+(node:37047) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback (2.8s)
+
+  2 passed (10.7s)

@@ -62,6 +62,23 @@ async function harness(t, boundary) {
   };
 }
 const groups = [{ id: "circle", name: "Our circle", role: "admin" }];
+const archivePhoto = (id) => ({
+  id,
+  kind: "photo",
+  shortTitle: "Synthetic photograph",
+  title: "Synthetic photograph",
+  date: "Date not recorded",
+  year: null,
+  approximate: true,
+  by: "Our circle",
+  description: "A synthetic archive photograph.",
+  source: "manual",
+  photos: [{ src: "/synthetic.jpg", alt: "Synthetic", caption: "Synthetic" }],
+  messages: [],
+  place: null,
+  people: { shared: [], conversation: [] },
+  dateBasis: "undated",
+});
 
 test("independent feature routes load circle context without requesting Atlas", async (t) => {
   const calls = [];
@@ -69,17 +86,7 @@ test("independent feature routes load circle context without requesting Atlas", 
     calls.push(String(path));
     return Response.json(path === "/api/groups" ? groups : { memories: [] });
   });
-  for (const path of [
-    "/imports",
-    "/circle",
-    "/review",
-    "/places",
-    "/discover",
-    "/ask",
-    "/answer-evidence",
-    "/memories",
-    "/search",
-  ]) {
+  for (const path of ["/photos", "/add", "/settings", "/answer-evidence"]) {
     await h.render(path);
     assert.equal(h.current.group, "circle");
     assert.deepEqual(h.current.groups, groups);
@@ -95,16 +102,16 @@ test("Atlas routes still load current memories and demo search remains local", a
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
-  for (const path of ["/", "/timeline", "/memory/photo"]) {
+  for (const path of ["/atlas", "/"]) {
     await h.render(path);
     assert.equal(h.current.memories[0].id, "photo");
   }
   assert.equal(calls.filter((path) => path.startsWith("/api/atlas")).length, 1);
   const before = calls.length;
-  await h.render("/search", true);
+  await h.render("/photos", true);
   assert.equal(calls.length, before);
   assert.ok(h.current.memories.length);
 });
@@ -120,17 +127,17 @@ test("leaving Atlas aborts and ignores late data; returning fetches again", asyn
       signal = options.signal;
       return pending.promise;
     }
-    return Response.json({ memories: [{ id: "fresh" }] });
+    return Response.json({ memories: [archivePhoto("fresh")] });
   });
-  await h.render("/");
-  await h.render("/imports");
+  await h.render("/atlas");
+  await h.render("/add");
   assert.equal(signal.aborted, true);
   await act(async () =>
-    pending.resolve(Response.json({ memories: [{ id: "stale" }] })),
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
   );
   assert.deepEqual(h.current.memories, []);
   assert.equal(calls, 1);
-  await h.render("/timeline");
+  await h.render("/");
   assert.equal(calls, 2);
   assert.equal(h.current.memories[0].id, "fresh");
 });
@@ -144,7 +151,7 @@ test("a reload that is denied clears the circle and reports lost access", async 
       : Response.json(groups),
   );
   h.window.addEventListener("mazi:access-lost", () => accessLost++);
-  await h.render("/imports");
+  await h.render("/add");
   assert.deepEqual(h.current.groups, groups);
   denied = true;
   await act(async () =>
@@ -163,7 +170,7 @@ test("without an authenticated profile no archive requests are made", async (t) 
     calls.push(path);
     return Response.json(groups);
   });
-  await h.render("/imports", false, null);
+  await h.render("/add", false, null);
   assert.deepEqual(calls, []);
   assert.deepEqual(h.current.groups, []);
   await h.render("/", false, null);
@@ -178,10 +185,10 @@ test("superseded loads abort and lost access cancels private work", async (t) =>
     signals.push(options.signal);
     if (++calls === 1) return pending.promise;
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "fresh" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("fresh")] },
     );
   });
-  await h.render("/");
+  await h.render("/atlas");
   await act(async () =>
     h.window.dispatchEvent(new h.window.Event("mazi:session")),
   );
@@ -196,15 +203,15 @@ test("superseded loads abort and lost access cancels private work", async (t) =>
   assert.deepEqual(h.current.groups, []);
 });
 
-test("backgrounding keeps the loaded atlas and makes no requests", async (t) => {
+test("backgrounding keeps the loaded atlas and revalidates on return", async (t) => {
   const calls = [];
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
-  await h.render("/");
+  await h.render("/atlas");
   const before = calls.length;
   for (const hidden of [true, false]) {
     await act(async () => {
@@ -221,7 +228,7 @@ test("backgrounding keeps the loaded atlas and makes no requests", async (t) => 
     await act(async () => h.window.dispatchEvent(new h.window.Event(type)));
     assert.equal(h.current.memories[0].id, "photo");
   }
-  assert.equal(calls.length, before);
+  assert.equal(calls.length, before + 2);
 });
 
 test("moving between Atlas and feature pages keeps the loaded atlas", async (t) => {
@@ -229,12 +236,12 @@ test("moving between Atlas and feature pages keeps the loaded atlas", async (t) 
   const h = await harness(t, async (path) => {
     calls.push(String(path));
     return Response.json(
-      path === "/api/groups" ? groups : { memories: [{ id: "photo" }] },
+      path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
     );
   });
-  await h.render("/");
+  await h.render("/atlas");
   const seen = [];
-  for (const path of ["/imports", "/", "/review", "/timeline"]) {
+  for (const path of ["/add", "/atlas", "/review", "/"]) {
     await h.render(path);
     seen.push(h.current.status, h.current.memories[0]?.id);
   }
@@ -258,16 +265,355 @@ test("choosing another circle sticks and loads that circle", async (t) => {
     calls.push(String(path));
     if (path === "/api/groups") return Response.json(circles);
     const group = new URL(path, "http://localhost").searchParams.get("group");
-    return Response.json({ memories: [{ id: `${group}-photo` }] });
+    return Response.json({ memories: [archivePhoto(`${group}-photo`)] });
   });
-  await h.render("/");
+  await h.render("/atlas");
   assert.equal(h.current.group, "circle");
   await act(async () => h.current.chooseGroup("other"));
   assert.equal(h.current.group, "other");
   assert.equal(h.current.memories[0].id, "other-photo");
   assert.equal(h.window.sessionStorage.getItem("mazi.group"), "other");
-  await h.render("/imports");
-  await h.render("/");
+  await h.render("/add");
+  await h.render("/atlas");
   assert.equal(h.current.group, "other");
   assert.equal(calls.at(-1), "/api/atlas?group=other");
+});
+
+test("a saved photo correction rereads authoritative Atlas facts", async (t) => {
+  let reads = 0;
+  const h = await harness(t, async (path) =>
+    Response.json(
+      path === "/api/groups"
+        ? groups
+        : {
+            memories: [
+              {
+                ...archivePhoto("photo"),
+                title: ++reads === 1 ? "Before" : "Corrected",
+              },
+            ],
+          },
+    ),
+  );
+  await h.render("/atlas");
+  assert.equal(h.current.memories[0].title, "Before");
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.memories[0].title, "Corrected");
+  assert.equal(reads, 2);
+});
+
+test("selected-memory routes never request the full Atlas", async (t) => {
+  const calls = [];
+  const h = await harness(t, async (path) => {
+    calls.push(String(path));
+    return Response.json(path === "/api/groups" ? groups : { memories: [] });
+  });
+  await h.render("/memory/photo-selected");
+  assert.deepEqual(calls, ["/api/groups"]);
+  assert.equal(h.current.status, "ready");
+});
+
+test("archive changes keep feature circle context and refresh cached Atlas on return", async (t) => {
+  let title = "Before";
+  const h = await harness(t, async (path) =>
+    Response.json(
+      path === "/api/groups"
+        ? groups
+        : { memories: [{ ...archivePhoto("photo"), title }] },
+    ),
+  );
+  await h.render("/atlas");
+  await h.render("/settings");
+  const circleContext = h.current.groups;
+  title = "After";
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.group, "circle");
+  assert.equal(h.current.groups, circleContext);
+  assert.deepEqual(h.current.memories, []);
+  await h.render("/atlas");
+  assert.equal(h.current.memories[0].title, "After");
+});
+
+test("archive invalidation aborts pending Atlas and denial clears private context", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  let signal;
+  let denied = false;
+  const h = await harness(t, async (path, options) => {
+    if (path === "/api/groups") return Response.json(groups);
+    calls++;
+    if (calls === 1) {
+      signal = options.signal;
+      return pending.promise;
+    }
+    return denied
+      ? Response.json({ error: "Denied" }, { status: 403 })
+      : Response.json({ memories: [archivePhoto("fresh")] });
+  });
+  await h.render("/atlas");
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.equal(signal.aborted, true);
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () =>
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
+  );
+  assert.equal(h.current.memories[0].id, "fresh");
+  denied = true;
+  await act(async () =>
+    window.dispatchEvent(new Event("mazi:archive-changed")),
+  );
+  assert.deepEqual(h.current.memories, []);
+  assert.deepEqual(h.current.groups, []);
+  assert.equal(h.current.group, "");
+});
+
+async function visibility(h, hidden) {
+  await act(async () => {
+    Object.defineProperty(h.window.document, "hidden", {
+      value: hidden,
+      configurable: true,
+    });
+    h.window.document.dispatchEvent(new h.window.Event("visibilitychange"));
+  });
+}
+
+test("hide retains ready archive and foreground refresh stays ready while pending", async (t) => {
+  const pending = deferred();
+  let groupCalls = 0;
+  const h = await harness(t, async (path) => {
+    if (path === "/api/groups")
+      return ++groupCalls === 1 ? Response.json(groups) : pending.promise;
+    return Response.json({ memories: [archivePhoto("photo")] });
+  });
+  await h.render("/");
+  await visibility(h, true);
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "photo");
+  await visibility(h, false);
+  assert.equal(h.current.status, "ready");
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.equal(h.current.memories[0].id, "photo");
+});
+
+for (const failure of ["network", "503"]) {
+  test(`quiet archive ${failure} failure retains ready data`, async (t) => {
+    let fail = false;
+    const h = await harness(t, async (path) => {
+      if (fail) {
+        if (failure === "network") throw Error("offline");
+        return Response.json({ error: "Unavailable" }, { status: 503 });
+      }
+      return Response.json(
+        path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
+      );
+    });
+    await h.render("/");
+    fail = true;
+    await visibility(h, false);
+    assert.equal(h.current.status, "ready");
+    assert.equal(h.current.memories[0].id, "photo");
+  });
+}
+
+for (const denial of ["401", "403", "removed-group"]) {
+  test(`foreground archive ${denial} clears data and broadcasts access loss`, async (t) => {
+    let deny = false,
+      lost = 0;
+    const h = await harness(t, async (path) => {
+      if (deny)
+        return denial === "removed-group"
+          ? Response.json([])
+          : Response.json({ error: "Denied" }, { status: Number(denial) });
+      return Response.json(
+        path === "/api/groups" ? groups : { memories: [archivePhoto("photo")] },
+      );
+    });
+    h.window.addEventListener("mazi:access-lost", () => lost++);
+    await h.render("/");
+    deny = true;
+    await visibility(h, false);
+    assert.equal(lost, 1);
+    assert.deepEqual(h.current.memories, []);
+    assert.equal(h.window.sessionStorage.getItem("mazi.group"), null);
+    assert.notEqual(h.current.status, "ready");
+  });
+}
+
+test("hide aborts in-flight archive validation and ignores late success", async (t) => {
+  const pending = deferred();
+  let calls = 0,
+    signal;
+  const h = await harness(t, async (path, options) => {
+    if (path !== "/api/groups")
+      return Response.json({ memories: [archivePhoto("photo")] });
+    if (++calls === 1) return Response.json(groups);
+    signal = options.signal;
+    return pending.promise;
+  });
+  await h.render("/");
+  await visibility(h, false);
+  await visibility(h, true);
+  assert.equal(signal.aborted, true);
+  await act(async () => pending.resolve(Response.json([])));
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "photo");
+});
+
+test("late archive success cannot restore data after access loss", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  const h = await harness(t, async (path) => {
+    if (path === "/api/groups")
+      return ++calls === 1 ? Response.json(groups) : pending.promise;
+    return Response.json({ memories: [archivePhoto("photo")] });
+  });
+  await h.render("/");
+  await visibility(h, false);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:access-lost")),
+  );
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.deepEqual(h.current.memories, []);
+  assert.notEqual(h.current.status, "ready");
+});
+
+test("group change aborts old read and cannot accept its late success", async (t) => {
+  const pending = deferred();
+  let calls = 0,
+    signal;
+  const h = await harness(t, async (path, options) => {
+    if (path !== "/api/groups")
+      return Response.json({ memories: [archivePhoto("photo")] });
+    if (++calls === 2) {
+      signal = options.signal;
+      return pending.promise;
+    }
+    return Response.json([
+      ...groups,
+      { id: "other", name: "Other", role: "member" },
+    ]);
+  });
+  await h.render("/");
+  await visibility(h, false);
+  h.window.sessionStorage.setItem("mazi.group", "other");
+  await h.render("/", false, "other");
+  assert.equal(signal.aborted, true);
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.equal(h.current.group, "other");
+});
+
+for (const failure of ["network", "401", "403"]) {
+  test(`quiet Atlas ${failure} preserves data only for transient failure`, async (t) => {
+    let fail = false,
+      lost = 0;
+    const h = await harness(t, async (path) => {
+      if (path === "/api/groups") return Response.json(groups);
+      if (fail) {
+        if (failure === "network") throw Error("offline");
+        return new Response("Denied", { status: Number(failure) });
+      }
+      return Response.json({ memories: [archivePhoto("photo")] });
+    });
+    h.window.addEventListener("mazi:access-lost", () => lost++);
+    await h.render("/");
+    fail = true;
+    await visibility(h, false);
+    if (failure === "network") {
+      assert.equal(h.current.status, "ready");
+      assert.equal(h.current.memories[0].id, "photo");
+      assert.equal(lost, 0);
+    } else {
+      assert.notEqual(h.current.status, "ready");
+      assert.deepEqual(h.current.memories, []);
+      assert.equal(lost, 1);
+      assert.equal(h.window.sessionStorage.getItem("mazi.group"), null);
+    }
+  });
+}
+
+test("newer denial wins over an overlapping quiet archive success", async (t) => {
+  const pending = deferred();
+  let calls = 0;
+  const h = await harness(t, async (path) => {
+    if (path !== "/api/groups")
+      return Response.json({ memories: [archivePhoto("photo")] });
+    if (++calls === 1) return Response.json(groups);
+    if (calls === 2) return pending.promise;
+    return new Response("Denied", { status: 403 });
+  });
+  await h.render("/");
+  await visibility(h, false);
+  await visibility(h, false);
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.deepEqual(h.current.memories, []);
+  assert.notEqual(h.current.status, "ready");
+});
+
+test("archive invalidation rejects an older quiet Atlas response", async (t) => {
+  const pending = deferred();
+  let atlasCalls = 0;
+  const h = await harness(t, async (path) => {
+    if (path === "/api/groups") return Response.json(groups);
+    atlasCalls++;
+    if (atlasCalls === 2) return pending.promise;
+    return Response.json({
+      memories: [archivePhoto(atlasCalls === 1 ? "initial" : "fresh")],
+    });
+  });
+  await h.render("/");
+  await visibility(h, false);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:archive-changed")),
+  );
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () =>
+    pending.resolve(Response.json({ memories: [archivePhoto("stale")] })),
+  );
+  assert.equal(h.current.memories[0].id, "fresh");
+});
+
+test("archive invalidation during initial groups read still finishes loading", async (t) => {
+  const pending = deferred();
+  const h = await harness(t, async (path) =>
+    path === "/api/groups"
+      ? pending.promise
+      : Response.json({ memories: [archivePhoto("fresh")] }),
+  );
+  await h.render("/");
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:archive-changed")),
+  );
+  await act(async () => pending.resolve(Response.json(groups)));
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "fresh");
+});
+
+test("foreground recheck during initial loading survives archive invalidation", async (t) => {
+  const initial = deferred();
+  const foreground = deferred();
+  let groupsCalls = 0;
+  const h = await harness(t, async (path) =>
+    path === "/api/groups"
+      ? ++groupsCalls === 1
+        ? initial.promise
+        : foreground.promise
+      : Response.json({ memories: [archivePhoto("fresh")] }),
+  );
+  await h.render("/");
+  await visibility(h, false);
+  await act(async () =>
+    h.window.dispatchEvent(new h.window.Event("mazi:archive-changed")),
+  );
+  await act(async () => foreground.resolve(Response.json(groups)));
+  assert.equal(h.current.status, "ready");
+  assert.equal(h.current.memories[0].id, "fresh");
+  await act(async () => initial.resolve(Response.json([])));
+  assert.equal(h.current.status, "ready");
 });

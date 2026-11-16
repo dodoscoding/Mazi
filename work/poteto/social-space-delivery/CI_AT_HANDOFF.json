@@ -1,0 +1,35 @@
+{
+  "conclusion": "",
+  "headSha": "f69f605d5933bda1884784ba03646536a9fdc617",
+  "jobs": [
+    {
+      "name": "macos-companion",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unified-app",
+      "status": "in_progress",
+      "conclusion": ""
+    },
+    {
+      "name": "learned-retrieval",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "import-workspace",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "m0-access",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "in_progress",
+  "url": "https://github.com/dodoscoding/Mazi/actions/runs/41856935667",
+  "recorded_at": "2026-11-04T15:41:30.633204+00:00",
+  "note": "Remote workflow remains separate from the completed local release matrix. Backend, DOM, lint, build, budgets, docs and evaluations succeeded; learned retrieval, imports and M0 jobs succeeded. macOS job was cancelled; unchanged native companion passed at the earlier reviewed runtime. No full remote CI pass is claimed."
+}

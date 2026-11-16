@@ -1,86 +1,124 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { photoMatches } from "../helpers/photo-match";
 
-test("People, combined retrieval, hiding and consent work without recognition", async ({
+test("retained People, personal hiding, subject removal and consent work through Settings and the viewer", async ({
   page,
-}, testInfo) => {
+  browser,
+}, info) => {
   const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
-  await page.request.post("/api/entry", {
-    data: { name: "Alice", code: "synthetic-shared-code" },
+  page.on("pageerror", (error) => errors.push(error.message));
+  const profile = await (
+    await page.request.post("/api/entry", {
+      data: { name: "Alice", code: "synthetic-shared-code" },
+    })
+  ).json();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/settings");
+  const processing = page.getByRole("checkbox", {
+    name: "Allow local related-search processing of my contributions",
+    exact: true,
   });
-  await page.goto("/#/discover");
-  await expect(page.locator("#results article")).toHaveCount(3);
-  const groupAlreadyOn = await page
-    .getByLabel("Enable optional local processing")
-    .isChecked();
-  await page.getByLabel("Search mode").selectOption("semantic");
-  const searched = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/discovery/search") &&
-      response.request().method() === "GET",
-  );
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await searched;
+  const groupProcessing = page.getByRole("checkbox", {
+    name: "Enable optional local processing for this group (admin)",
+    exact: true,
+  });
+  await groupProcessing.check();
+  await processing.check();
   await expect(
-    page.getByRole("button", { name: "Find similar colors" }),
-  ).toHaveCount(groupAlreadyOn ? 3 : 0);
-  await page.getByLabel("Search mode").selectOption("keyword");
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Person’s name", exact: true }),
+  ).toBeVisible();
+  const personName = `<img src=x onerror=alert(1)> ${info.project.name}`;
   await page
-    .getByText("My visibility & processing choices", { exact: true })
-    .click();
-  await page.getByLabel("Enable optional local processing").check();
-  await expect(page.locator("#processing-status")).toContainText(
-    "Group processing on",
-  );
-  await page.getByLabel("Allow local related-search processing").check();
-  await expect(page.locator("#notice")).toHaveText("Changes saved.");
-  await page.getByLabel("Search mode").selectOption("semantic");
-  await page.getByLabel("Search", { exact: true }).fill("bike");
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#results")).toContainText(
-    "Bicycle beside the sea",
-  );
-  await expect(
-    page.getByRole("button", { name: "Find similar colors" }),
-  ).toHaveCount(1);
-  await page.getByRole("button", { name: "Hide from my discovery" }).click();
-  await expect(page.locator("#results article")).toHaveCount(0);
-  await page.getByRole("button", { name: "Restore hidden photograph" }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await page.getByLabel("Allow local related-search processing").uncheck();
-  await expect(page.locator("#results article")).toHaveCount(0);
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await page.getByLabel("Person’s name").fill("<img src=x onerror=alert(1)>");
+    .getByRole("textbox", { name: "Person’s name", exact: true })
+    .fill(personName);
   await page
     .getByRole("button", { name: "Create person", exact: true })
     .click();
-  await expect(page.locator("#people")).toContainText(
-    "<img src=x onerror=alert(1)>",
+  await expect(page.locator("#settings-people")).toContainText(personName);
+  await expect(
+    page.locator("#settings-people img, #settings-people script"),
+  ).toHaveCount(0);
+  await page.goto("/#/photos?q=bicycle");
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
+  await page.locator(".mem-tile").click();
+  await expect(
+    page.getByRole("button", {
+      name: "Remove my Ben association",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const discovery = await (
+    await page.request.get(`/api/discovery/state?group=${profile.group_id}`)
+  ).json();
+  const subject = discovery.people.find(
+    (person: { name: string }) => person.name === "Ben",
   );
-  await expect(page.locator("#people img")).toHaveCount(0);
-  await page.getByLabel("Search", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#results article")).toHaveCount(3);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await page.screenshot({
-    path: testInfo.outputPath("discovery.png"),
-    fullPage: true,
+    (
+      await page.request.post("/api/discovery/disassociate", {
+        data: { person: subject.id, asset: subject.assets[0] },
+      })
+    ).status(),
+  ).toBe(403);
+
+  await page
+    .getByRole("button", {
+      name: "Hide this photograph from my discovery",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator(".viewer-track img")).toHaveCount(0);
+  expect((await page.request.get("/api/session")).status()).toBe(200);
+  const hiddenState = await (
+    await page.request.get(`/api/discovery/state?group=${profile.group_id}`)
+  ).json();
+  const hidden = hiddenState.hidden.find(
+    (item: { title: string }) => item.title === "Bicycle beside the sea",
+  );
+  const other = await browser.newContext({
+    baseURL: String(info.project.use.baseURL),
   });
-  const group = await page.locator("#groups").inputValue();
+  try {
+    await other.request.post("/api/entry", {
+      data: { name: "Ben", code: "synthetic-shared-code" },
+    });
+    expect(
+      (await other.request.get(`/api/archive/${hidden.id}/original`)).status(),
+    ).toBe(200);
+  } finally {
+    await other.close();
+  }
+  await page.goto("/#/photos?q=bicycle");
+  await expect(page.locator(".mem-tile")).toHaveCount(0);
+  await page.goto("/#/settings");
+  await page
+    .getByRole("button", {
+      name: "Restore hidden photograph: Bicycle beside the sea",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Restore hidden photograph: Bicycle beside the sea",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await processing.uncheck();
+  await expect(
+    page.getByText("Preference saved.", { exact: true }),
+  ).toBeVisible();
+  await page.goto("/#/photos?q=bicycle");
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(
     (
       await page.request.post("/api/discovery/person", {
         headers: { Origin: "https://elsewhere.test" },
-        data: { group, name: "No" },
+        data: { group: profile.group_id, name: "No" },
       })
     ).status(),
   ).toBe(403);
@@ -89,21 +127,38 @@ test("People, combined retrieval, hiding and consent work without recognition", 
     data: { name: "Ben", code: "synthetic-shared-code" },
   });
   await page.reload();
+  await page.locator(".mem-tile").click();
   await page
-    .locator("#results article")
-    .first()
-    .getByRole("button", { name: "Remove my association" })
+    .getByRole("button", { name: "Remove my Ben association", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Remove my Ben association",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.goto("/#/settings");
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Enable optional local processing for this group (admin)",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page
-    .getByText("My visibility & processing choices", { exact: true })
+    .getByRole("button", { name: "Restore my association: Ben", exact: true })
     .click();
-  await expect(page.locator("#suppressed")).toContainText(
-    "Restore my Ben association",
-  );
-  await page
-    .getByRole("button", { name: "Restore my Ben association" })
-    .click();
-  await expect(page.locator("#suppressed")).toBeEmpty();
+  await expect(
+    page.getByRole("button", {
+      name: "Restore my association: Ben",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.goto("/#/photos?q=bicycle");
+  await expect(page.locator(".mem-tile")).toHaveCount(1);
+  await page.screenshot({
+    path: info.outputPath("retained-discovery.png"),
+    fullPage: true,
+  });
   await page.request.post("/api/logout", { data: {} });
   await page.context().addCookies([
     {
@@ -112,146 +167,109 @@ test("People, combined retrieval, hiding and consent work without recognition", 
       url: new URL(page.url()).origin,
     },
   ]);
-  const denied = await page.request.get("/api/discovery/search?group=" + group);
+  const denied = await page.request.get(
+    `/api/discovery/search?group=${profile.group_id}`,
+  );
   expect(denied.status()).toBe(403);
   expect(await denied.text()).not.toContain("Amsterdam");
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#results article")).toHaveCount(0);
-  await expect(page.locator("#private")).toBeHidden();
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(page.getByLabel("Shared code")).toBeVisible();
+  await expect(page.locator(".mem-tile, .viewer-track img")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
-test("HTTP-boundary fixture supports explicit keyword recovery, 1,001 results and budget failure", async ({
+test("Photos preserves 1,001 authorized match identities and recovers atomic match-budget failure", async ({
   page,
-}, testInfo) => {
-  test.setTimeout(90000);
+}, info) => {
   await page.request.post("/api/entry", {
     data: { name: "Alice", code: "synthetic-shared-code" },
   });
-  await page.goto("/#/search");
-  await expect(page.locator("#results article")).toHaveCount(3);
-  await page
-    .getByRole("button", { name: "Include memories, chats, places and people" })
-    .click();
-  await expect(page.locator("#person")).toBeEnabled();
-  const requests: Record<string, string>[] = [];
-  let budgetExceeded = false;
+  const profile = await (await page.request.get("/api/session")).json();
+  const map = await (
+    await page.request.get(`/api/atlas?group=${profile.group_id}`)
+  ).json();
+  const base = map.memories[0];
+  const ids = Array.from(
+    { length: 1001 },
+    (_, index) => `keyword-fixture-${index}`,
+  );
+  const cards = ids.map((id, index) => ({
+    ...base,
+    id,
+    kind: "photo",
+    title: `Keyword photograph ${index + 1}`,
+    shortTitle: `Keyword photograph ${index + 1}`,
+    photos: [
+      {
+        ...base.photos[0],
+        assetId: id,
+        src: `/api/archive/${id}/preview`,
+        caption: `Keyword photograph ${index + 1}`,
+      },
+    ],
+  }));
+  await page.route("**/api/atlas?*", (route) =>
+    route.fulfill({ json: { memories: cards } }),
+  );
   await page.route("**/api/archive/keyword-fixture-*/preview", (route) =>
     route.fulfill({
       contentType: "image/svg+xml",
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
     }),
   );
-  await page.route("**/api/discovery/search?*", async (route) => {
-    const params = new URL(route.request().url()).searchParams;
-    requests.push(Object.fromEntries(params));
-    if (params.get("mode") === "semantic" || budgetExceeded) {
-      await route.fulfill({
-        status: 400,
-        json: {
-          code: "capacity_exceeded",
-          error: budgetExceeded
-            ? "Keyword search exceeded its metadata-work budget"
-            : "Local search limit is 10,000 items",
-        },
-      });
-      return;
-    }
-    const offset = Number(params.get("offset"));
-    const end = Math.min(offset + 30, 1001);
-    await route.fulfill({
-      json: {
-        items: Array.from({ length: end - offset }, (_, index) => ({
-          id: `keyword-fixture-${offset + index}`,
-          title: `Keyword photograph ${offset + index + 1}`,
-          date: "2024-06-01",
-          place: "Amsterdam",
-          people: [],
-          basis: "keyword",
-          score: 1,
-        })),
-        total: 1001,
-        next_offset: end < 1001 ? end : null,
-        mode: "keyword",
-        unindexed: 0,
-      },
-    });
-  });
-  await page
-    .getByLabel("Search", { exact: true })
-    .fill("scaling-keyword-fixture");
-  await page.getByLabel("Search mode").selectOption("semantic");
-  await page.getByText("Refine by place, person or date").click();
-  await page.locator("#person").selectOption({ label: "Ben" });
-  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
-  await page.getByLabel("Country code").fill("NL");
-  await page.getByLabel("Object or concept in text").fill("bicycle");
-  await page.getByLabel("From", { exact: true }).fill("2024-01-01");
-  await page.getByLabel("Through", { exact: true }).fill("2024-12-31");
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#search-recovery")).toBeVisible();
-  await expect(page.locator("#search-recovery")).toContainText(
-    "10,000 visible photographs",
-  );
-  await expect(page.locator("#mode")).toHaveValue("semantic");
-  expect(requests.map((request) => request.mode)).toEqual(["semantic"]);
-  const failedSearch = requests[0];
-  await page.getByRole("button", { name: "Use Words & filters" }).click();
-  await expect(page.locator("#query")).toBeFocused();
-  await expect(page.locator("#count")).toHaveText("1001 photographs · keyword");
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
-  await expect(page.locator("#search-recovery")).toBeHidden();
-  await expect(page.locator("#mode")).toHaveValue("keyword");
-  expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
-  for (let offset = 30; offset < 1001; offset += 30) {
-    await page.getByRole("button", { name: "Next page" }).click();
-    await expect(page.locator("#results h3").first()).toHaveText(
-      `Keyword photograph ${offset + 1}`,
+  let budgetExceeded = false;
+  const requests: Record<string, string>[] = [];
+  await page.route("**/api/discovery/matches?*", (route) => {
+    requests.push(
+      Object.fromEntries(new URL(route.request().url()).searchParams),
     );
-    await expect(page.locator("#count")).toHaveText(
-      "1001 photographs · keyword",
+    return route.fulfill(
+      budgetExceeded
+        ? {
+            status: 400,
+            json: {
+              code: "capacity_exceeded",
+              error: "Keyword search exceeded its metadata-work budget",
+            },
+          }
+        : { json: photoMatches(ids) },
     );
-  }
-  await expect(page.locator("#results article")).toHaveCount(11);
-  await expect(page.locator("#results h3").last()).toHaveText(
-    "Keyword photograph 1001",
-  );
-  await expect(page.getByRole("button", { name: "Next page" })).toBeHidden();
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
-  expect(requests.at(-1)).toEqual({
-    ...failedSearch,
-    mode: "keyword",
-    offset: "990",
   });
-  budgetExceeded = true;
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#search-recovery")).toBeVisible();
-  await expect(page.locator("#search-recovery")).toContainText(
-    "Complete results are unavailable",
-  );
-  await expect(page.locator("#search-recovery")).toContainText(
-    "metadata-work budget",
-  );
-  await expect(page.locator("#search-recovery")).toContainText(
-    "No partial results",
-  );
+  await page.goto("/#/photos?q=scaling-keyword-fixture&years=2024");
+  await expect(page.locator(".mem-tile")).toHaveCount(1001);
   await expect(
-    page.getByRole("button", { name: "Use Words & filters" }),
-  ).toBeHidden();
-  await expect(page.locator("#results article")).toHaveCount(0);
-  await expect(page.locator("#result-total")).toBeEmpty();
-  await expect(page.locator("#result-types")).toBeHidden();
-  await expect(page.locator("#search-none")).toBeHidden();
-  await expect(page.locator("#mode")).toHaveValue("keyword");
-  await expect(page.locator("#query")).toHaveValue("scaling-keyword-fixture");
-  await expect(page.locator("#place")).toHaveValue("Amsterdam");
-  await page.screenshot({
-    path: testInfo.outputPath("keyword-budget-recovery.png"),
-    fullPage: true,
-  });
+    page.locator('.mem-tile[href*="keyword-fixture-1000"]'),
+  ).toHaveCount(1);
+  budgetExceeded = true;
+  await page.getByRole("button", { name: "Arşivde ara", exact: true }).click();
+  await expect(
+    page.getByText(
+      "İşleme sınırı aşıldı. Kısmi sonuç gösterilmez; filtreleri gözden geçirin.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator(".mem-tile")).toHaveCount(0);
+  await expect(
+    page.getByRole("searchbox", {
+      name: "Fotoğraf ve konuşmalarda ara",
+      exact: true,
+    }),
+  ).toHaveValue("scaling-keyword-fixture");
+  await expect(
+    page.getByRole("combobox", { name: "Yıl", exact: true }),
+  ).toHaveValue("2024");
   budgetExceeded = false;
-  await page.getByRole("button", { name: "Search archive" }).click();
-  await expect(page.locator("#result-total")).toHaveText("1001 results");
-  await expect(page.locator("#search-recovery")).toBeHidden();
-  expect(requests.at(-1)).toEqual({ ...failedSearch, mode: "keyword" });
+  await page.getByRole("button", { name: "Yeniden dene", exact: true }).click();
+  await expect(page.locator(".mem-tile")).toHaveCount(1001);
+  expect(requests.length).toBeGreaterThanOrEqual(3);
+  expect(
+    requests.every(
+      (params) =>
+        params.query === "scaling-keyword-fixture" && params.years === "2024",
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: info.outputPath("match-budget-recovery.png"),
+    fullPage: false,
+  });
 });

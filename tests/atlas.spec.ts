@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { mkdirSync } from "node:fs";
 
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) <= 600;
 
@@ -18,19 +17,19 @@ async function skipIntro(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem("mazi.intro", "seen"));
 }
 
-async function openAtlas(page: Page, url = "/?demo=1") {
+async function openAtlas(page: Page, url = "/?demo=1#/atlas") {
   await page.goto(url);
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
   await expect(page.locator(".featured .photo-frame")).toHaveClass(/is-loaded/);
 }
 
 const places = (page: Page) =>
-  page.getByRole("navigation", { name: "Places and moments" });
+  page.getByRole("navigation", { name: "Yerler ve anılar" });
 
 async function showSheet(page: Page) {
   if (!isPhone(page)) return;
   await page
-    .getByRole("button", { name: "Show more places and memories" })
+    .getByRole("button", { name: "Daha fazla yer ve anı göster" })
     .click();
 }
 
@@ -56,7 +55,7 @@ test("choosing a place in the index selects its memory, year and URL", async ({
     places(page).getByRole("button", { name: /^Bohinj/ }),
   ).toHaveAttribute("aria-current", "true");
   await expect(
-    page.getByRole("button", { name: "Select Lake days" }),
+    page.getByRole("button", { name: "Lake days anısını seç" }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -65,15 +64,12 @@ test("arrow keys on the year scrubber step through the years", async ({
 }) => {
   await skipIntro(page);
   await openAtlas(page);
-  const year = page.getByRole("slider", { name: "Year" });
+  const year = page.getByRole("slider", { name: "Yıl" });
   await expect(year).toHaveAttribute("aria-valuenow", "2024");
   await year.focus();
   await page.keyboard.press("ArrowLeft");
   await expect(year).toHaveAttribute("aria-valuenow", "2023");
-  await expect(year).toHaveAttribute(
-    "aria-valuetext",
-    "2023, 1 place, 1 memory",
-  );
+  await expect(year).toHaveAttribute("aria-valuetext", "2023, 1 yer, 1 anı");
   await expect(page).toHaveURL(/selected=lake-days/);
   await page.keyboard.press("ArrowLeft");
   await expect(year).toHaveAttribute("aria-valuenow", "2022");
@@ -83,56 +79,53 @@ test("arrow keys on the year scrubber step through the years", async ({
   await expect(year).toBeFocused();
 });
 
-test("the portal opens with the dossier, Esc closes it and focus returns", async ({
+test("Globe opens the shared viewer directly and Escape restores its opener", async ({
   page,
 }) => {
   await skipIntro(page);
   await openAtlas(page);
-  const open = page.getByRole("link", { name: "Open memory", exact: true });
+  const open = page.getByRole("link", { name: "Anıyı aç", exact: true });
   await open.click();
-  await expect(page).toHaveURL(/selected=last-ferry&view=portal/);
+  await expect(page).toHaveURL(/#\/memory\/last-ferry/);
   const title = page.getByRole("heading", {
     name: "The night we missed the last ferry",
-    level: 2,
+    level: 1,
   });
   await expect(title).toBeFocused();
-  const dossier = page.getByRole("region", {
-    name: "The night we missed the last ferry",
-  });
-  await expect(dossier).toContainText("About Summer 2024");
-  await expect(dossier).toContainText("Naxos, Greece");
-  await expect(dossier).toContainText("37.10° N · 25.38° E");
-  await expect(dossier).toContainText("Shared by Deniz");
-  await expect(dossier).toContainText(
-    "In the conversation: Alex, Deniz, and Maya",
-  );
+  await expect(
+    page.getByRole("region", { name: "Ne zaman", exact: true }),
+  ).toContainText("About Summer 2024");
+  await expect(
+    page.getByRole("region", { name: "Nerede", exact: true }),
+  ).toContainText("Naxos, Greece");
   await page.keyboard.press("Escape");
-  await expect(page).not.toHaveURL(/view=portal/);
-  await expect(dossier).toHaveCount(0);
+  await expect(page.locator(".memory-detail")).toHaveCount(0);
   await expect(open).toBeFocused();
-
-  // Enter on the current index row dives too, and Back returns to that row.
   await showSheet(page);
   const row = places(page).getByRole("button", { name: /^Naxos/ });
   await row.focus();
   await page.keyboard.press("Enter");
   await expect(title).toBeVisible();
   await page.goBack();
-  await expect(dossier).toHaveCount(0);
+  await expect(page.locator(".memory-detail")).toHaveCount(0);
   await expect(row).toBeFocused();
 });
 
-test("Open memory in the dossier reaches the full memory", async ({ page }) => {
+test("a legacy dossier link retains access to the shared viewer", async ({
+  page,
+}) => {
   await skipIntro(page);
-  await openAtlas(page);
-  await page.getByRole("link", { name: "Open memory", exact: true }).click();
+  await openAtlas(page, "/?demo=1#/?selected=last-ferry&view=portal");
   await page
-    .getByRole("region", { name: "The night we missed the last ferry" })
-    .getByRole("link", { name: "Open memory", exact: true })
+    .locator(".dossier")
+    .getByRole("link", { name: "Anıyı aç", exact: true })
     .click();
   await expect(page).toHaveURL(/#\/memory\/last-ferry/);
   await expect(
-    page.getByRole("heading", { name: "The night we missed the last ferry" }),
+    page.getByRole("heading", {
+      name: "The night we missed the last ferry",
+      level: 1,
+    }),
   ).toBeVisible();
 });
 
@@ -141,20 +134,23 @@ test("scene=off shows the flat map with the same selection", async ({
 }) => {
   await skipIntro(page);
   await openAtlas(page, "/?demo=1&scene=off#/?selected=lake-days");
-  await expect(page.getByText("The atlas is in flat view.")).toBeVisible();
+  await expect(
+    page.getByText("Atlas düz haritada gösteriliyor."),
+  ).toBeVisible();
   await expect(
     page.getByRole("img", { name: /Flat map .* Bohinj 2023 selected/ }),
   ).toBeVisible();
   await expect(page.locator("canvas")).toHaveCount(0);
-  const view = page.getByRole("group", { name: "View" });
-  await expect(view.getByRole("button", { name: "Flat map" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  const view = page.getByRole("group", { name: "Görünüm" });
+  await expect(
+    view.getByRole("button", { name: "Düz harita" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".readout-year")).toHaveText("2023");
-  await page.getByRole("button", { name: "Retry 3D view" }).click();
-  await expect(page.getByText("The atlas is in flat view.")).toHaveCount(0);
-  await expect(view.getByRole("button", { name: "Globe" })).toHaveAttribute(
+  await page.getByRole("button", { name: "3D görünümü yeniden dene" }).click();
+  await expect(page.getByText("Atlas düz haritada gösteriliyor.")).toHaveCount(
+    0,
+  );
+  await expect(view.getByRole("button", { name: "Küre" })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -162,8 +158,8 @@ test("scene=off shows the flat map with the same selection", async ({
 
 test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
   // The intro runs on a clock from mount, so look for it before waiting on the globe.
-  await page.goto("/?demo=1");
-  const skip = page.getByRole("button", { name: "Skip intro" });
+  await page.goto("/?demo=1#/atlas");
+  const skip = page.getByRole("button", { name: "Tanıtımı atla" });
   await expect(skip).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(skip).toHaveCount(0);
@@ -176,11 +172,13 @@ test("the first visit plays the intro once; Esc skips it", async ({ page }) => {
 test("leaving the atlas during the intro counts as seeing it", async ({
   page,
 }) => {
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   const home = page.locator(".atlas-home");
   await expect(home).toHaveAttribute("data-phase", "intro");
-  await page.goto("/?demo=1#/memory/lake-days");
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.evaluate(() => {
+    location.hash = "#/memory/lake-days";
+  });
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await expect(home).toBeVisible();
   // A replayed intro would end in "done"; a returning visit opens in "return".
   await expect(home).toHaveAttribute("data-phase", "return");
@@ -190,9 +188,11 @@ test("reduced motion holds the title briefly instead of the cinematic intro", as
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?demo=1");
-  await expect(page.getByRole("button", { name: "Skip intro" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Skip intro" })).toHaveCount(
+  await page.goto("/?demo=1#/atlas");
+  await expect(
+    page.getByRole("button", { name: "Tanıtımı atla" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tanıtımı atla" })).toHaveCount(
     0,
     { timeout: 4000 },
   );
@@ -203,24 +203,30 @@ test("the phone sheet opens to show the index and memories", async ({
   page,
 }) => {
   test.skip(!isPhone(page), "The bottom sheet is the phone layout.");
+  await page.setViewportSize({ width: 320, height: 740 });
   await skipIntro(page);
-  await openAtlas(page);
-  const sheet = page.getByRole("region", { name: "Places and memories" });
+  await openAtlas(page, "/?demo=1&scene=off#/atlas");
+  const sheet = page.getByRole("region", { name: "Yerler ve anılar" });
   await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(page.locator(".flat-note")).toBeVisible();
   await page
-    .getByRole("button", { name: "Show more places and memories" })
+    .getByRole("button", { name: "Daha fazla yer ve anı göster" })
     .click();
   await expect(sheet).toHaveAttribute("data-snap", "1");
+  await expect(page.locator(".flat-note")).toBeHidden();
   await expect(
     places(page).getByRole("button", { name: /^Nicosia/ }),
   ).toBeInViewport();
   await page
-    .getByRole("button", { name: "Show more places and memories" })
+    .getByRole("button", { name: "Daha fazla yer ve anı göster" })
     .click();
   await expect(sheet).toHaveAttribute("data-snap", "2");
   await expect(
-    page.getByRole("button", { name: "Select Birthday weekend" }),
+    page.getByRole("button", { name: "Birthday weekend anısını seç" }),
   ).toBeInViewport();
+  await page.getByRole("button", { name: "Paneli küçült" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(page.locator(".flat-note")).toBeVisible();
 });
 
 test("slash opens search and arrow keys walk places from the page", async ({
@@ -235,7 +241,7 @@ test("slash opens search and arrow keys walk places from the page", async ({
   await page.keyboard.press("ArrowRight");
   await expect(page).toHaveURL(/selected=last-ferry/);
   await page.keyboard.press("/");
-  await expect(page).toHaveURL(/#\/search/);
+  await expect(page).toHaveURL(/#\/photos/);
 });
 
 test("the atlas, flat map and portal have no axe violations", async ({
@@ -267,18 +273,18 @@ test("the atlas, flat map and portal have no axe violations", async ({
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} globe`,
     ).toEqual([]);
-    await page.getByRole("button", { name: "Flat map" }).click();
+    await page.getByRole("button", { name: "Düz harita" }).click();
     await expect(page.getByRole("img", { name: /Flat map/ })).toBeVisible();
     await settleAnimations();
     expect(
       (await new AxeBuilder({ page }).analyze()).violations,
       `${theme} flat map`,
     ).toEqual([]);
-    await page.getByRole("link", { name: "Open memory", exact: true }).click();
+    await page.getByRole("link", { name: "Anıyı aç", exact: true }).click();
     await expect(
       page.getByRole("heading", {
         name: "The night we missed the last ferry",
-        level: 2,
+        level: 1,
       }),
     ).toBeFocused();
     await settleAnimations();
@@ -289,60 +295,39 @@ test("the atlas, flat map and portal have no axe violations", async ({
   }
 });
 
-test("the Timeline shows the globe for the year in view, flat when 3D is off", async ({
+test("legacy Timeline links reach Photos without rebuilding a second globe", async ({
   page,
 }) => {
   await skipIntro(page);
   await page.goto("/?demo=1#/timeline");
-  const panel = page.locator(".timeline-globe");
-  // Headless Firefox on CI has no WebGL2; there the panel must lay flat instead.
-  const webgl2 = await page.evaluate(
-    () => !!document.createElement("canvas").getContext("webgl2"),
-  );
-  const expectScene = async () => {
-    if (webgl2) await expect(panel.locator("canvas")).toHaveCount(1);
-    else
-      await expect(
-        panel.getByText("3D isn't available here; same timeline, flat map."),
-      ).toBeVisible();
-  };
-  await expectScene();
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await expect(panel).toHaveAttribute("data-year", "2022");
-  await expect(panel).toContainText("Nicosia, Cyprus");
-  if (isPhone(page))
-    await page.getByRole("button", { name: "Next year, 2023" }).click();
-  else {
-    await page.getByRole("slider", { name: "Year" }).focus();
-    await page.keyboard.press("ArrowRight");
-  }
-  await expect(panel).toHaveAttribute("data-year", "2023");
-  await expect(panel).toContainText("Nicosia → Bohinj");
-  await expectScene();
-
-  await page.goto("/?demo=1&scene=off#/timeline");
+  await expect(page).toHaveURL(/#\/photos/);
   await expect(
-    page.getByRole("img", { name: /Flat map .* Nicosia 2022 selected/ }),
+    page.getByRole("heading", { name: "Fotoğraflar", level: 1 }),
   ).toBeVisible();
+  await expect(page.locator(".mem-tile").first()).toBeVisible();
+  await expect(page.locator(".timeline-globe, .atlas-stage")).toHaveCount(0);
+  await page.goto("/?demo=1&scene=off#/");
   await expect(
-    page.getByText("3D isn't available here; same timeline, flat map."),
+    page.getByRole("img", { name: /Flat map .* Naxos 2024 selected/ }),
   ).toBeVisible();
 });
 
-test("reduced motion keeps the still year card in the Timeline", async ({
+test("reduced-motion Photos keeps sample chronology explicitly undated", async ({
   page,
 }) => {
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1#/timeline");
-  const panel = page.locator(".timeline-globe");
-  await expect(panel).toContainText("Nicosia, Cyprus");
-  await expect(panel.locator("canvas")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Undated", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await expect(page.locator(".mem-tile").first()).toBeVisible();
 });
 
 test("sharing-only same-year memories replay independently with explicit date basis", async ({
   page,
-}) => {
+}, testInfo) => {
   await skipIntro(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.clock.install();
@@ -389,19 +374,21 @@ test("sharing-only same-year memories replay independently with explicit date ba
   await page.goto("/#/?selected=shared-3");
   await expect(page.locator(".readout-year")).toHaveText("2025");
   await expect(page.locator(".readout-summary")).toContainText("Shared on");
-  await expect(page.getByText("Drawing your atlas…")).toHaveCount(0);
-  await page.getByRole("button", { name: "Flat map", exact: true }).click();
-  mkdirSync("work/poteto/four-fixes/evidence", { recursive: true });
+  await expect(page.getByText("Atlas hazırlanıyor…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Düz harita", exact: true }).click();
   await page.screenshot({
-    path: `work/poteto/four-fixes/evidence/sharing-chronology-${isPhone(page) ? "phone" : "desktop"}.png`,
+    path: testInfo.outputPath("sharing-chronology.png"),
   });
-  const replay = page.getByRole("button", { name: "Replay", exact: true });
+  const replay = page.getByRole("button", {
+    name: "Yeniden oynat",
+    exact: true,
+  });
   await expect(replay).toBeEnabled();
   await replay.click();
   await expect(page).toHaveURL(/selected=shared-1/);
   await page.clock.runFor(1500);
   await expect(page).toHaveURL(/selected=shared-2/);
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.getByRole("button", { name: "Duraklat", exact: true }).click();
   await page.clock.runFor(1600);
   await expect(page).toHaveURL(/selected=shared-2/);
   await replay.click();

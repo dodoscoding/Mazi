@@ -1,0 +1,8 @@
+
+> mazi@0.1.0 check:budgets
+> node scripts/check-budgets.mjs
+
+ok   Globe chunk: 243.0 KiB gzip / 256 KiB
+ok   Entry script: 92.6 KiB gzip / 150 KiB
+ok   Stylesheet: 19.7 KiB gzip / 40 KiB
+ok   All scripts: 417.3 KiB gzip / 420 KiB

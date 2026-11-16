@@ -15,27 +15,29 @@ test.beforeEach(async ({ page }) => {
 test("select, open, explore photos and context; Back restores selection and focus", async ({
   page,
 }) => {
-  await page.goto("/?demo=1");
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await page.goto("/?demo=1#/atlas");
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   await expect(
     page.getByRole("heading", { name: "Lake days", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Select The last ferry" }).click();
+  await page
+    .getByRole("button", { name: "The last ferry anısını seç" })
+    .click();
   await openFullMemory(page);
   await expect(page).toHaveURL(/memory\/last-ferry/);
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeFocused();
-  await page.getByRole("button", { name: "Next photo" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
   await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Show conversation" }).click();
+  await page.getByRole("button", { name: "Konuşmayı göster" }).click();
   await expect(
     page.getByText("Worth missing the ferry for.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
-  await expect(page.getByRole("link", { name: "Open memory" })).toBeFocused();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Anıyı aç" })).toBeFocused();
   await expect(
-    page.getByRole("button", { name: "Select The last ferry" }),
+    page.getByRole("button", { name: "The last ferry anısını seç" }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -44,36 +46,38 @@ test("deep links, photo boundaries, browser history and unknown IDs", async ({
 }) => {
   await page.goto("/?demo=1#/memory/last-ferry");
   await expect(
-    page.getByRole("button", { name: "Previous photo" }),
+    page.getByRole("button", { name: "Önceki fotoğraf" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Next photo" }).click();
-  await page.getByRole("button", { name: "Next photo" }).click();
-  await expect(page.getByRole("button", { name: "Next photo" })).toBeDisabled();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await expect(
+    page.getByRole("button", { name: "Sonraki fotoğraf" }),
+  ).toBeDisabled();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "The night we missed the last ferry" }),
   ).toBeVisible();
   await page.goto("/?demo=1#/memory/missing");
   await expect(
-    page.getByRole("heading", { name: "Memory not found" }),
+    page.getByRole("heading", { name: "Anı bulunamadı" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
-  await expect(
-    page.getByRole("heading", { name: "The Atlas of Us" }),
-  ).toBeVisible();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Atlas" })).toBeVisible();
 });
 
 test("reduced motion, fast reversals, no overflow and basic accessibility", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?demo=1");
+  await page.goto("/?demo=1#/atlas");
   for (let i = 0; i < 3; i++) {
-    await page.getByRole("button", { name: "Select Lake days" }).click();
-    await page.getByRole("button", { name: "Select The last ferry" }).click();
+    await page.getByRole("button", { name: "Lake days anısını seç" }).click();
+    await page
+      .getByRole("button", { name: "The last ferry anısını seç" })
+      .click();
     await openFullMemory(page);
-    await page.getByRole("link", { name: "Back to atlas" }).click();
+    await page.getByRole("link", { name: "Geri", exact: true }).click();
   }
   expect(
     await page.evaluate(
@@ -91,14 +95,21 @@ test("failed images are recoverable and renderer failure preserves the journey",
   page,
 }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
-  await page.goto("/?demo=1&scene=off#/memory/last-ferry");
-  await expect(page.getByText("This photo could not load.")).toBeVisible();
+  await page.goto("/?demo=1&scene=off#/atlas");
+  await openFullMemory(page);
+  await expect(
+    page
+      .locator(".memory-detail")
+      .getByText("This photo could not load.", { exact: true }),
+  ).toBeVisible();
   await page.unroute("**/media/ferry.webp");
   await page.getByRole("button", { name: "Retry photo" }).click();
-  await expect(page.locator(".photo-frame img")).toBeVisible();
-  await page.getByRole("link", { name: "Back to atlas" }).click();
-  await expect(page.getByText("The atlas is in flat view.")).toBeVisible();
-  await page.getByRole("button", { name: "Select Lake days" }).click();
+  await expect(page.locator(".viewer-track .photo-frame img")).toBeVisible();
+  await page.getByRole("link", { name: "Geri", exact: true }).click();
+  await expect(
+    page.getByText("Atlas düz haritada gösteriliyor."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Lake days anısını seç" }).click();
   await openFullMemory(page);
   await expect(page).toHaveURL(/memory\/lake-days/);
   await expect(
@@ -106,7 +117,7 @@ test("failed images are recoverable and renderer failure preserves the journey",
   ).toBeVisible();
 });
 
-test("retrying the Home photograph stays on Home", async ({ page }) => {
+test("retrying the Globe photograph stays on Globe", async ({ page }) => {
   await page.route("**/media/ferry.webp", (route) => route.abort());
   await page.goto("/?demo=1");
   await expect(page.getByText("This photo could not load.")).toBeVisible();

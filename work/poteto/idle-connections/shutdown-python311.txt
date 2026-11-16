@@ -1,0 +1,14 @@
+test_all_app_routes_share_atlas_and_missing_build_is_actionable (tests.backend.test_server.AppServerTests.test_all_app_routes_share_atlas_and_missing_build_is_actionable) ... ok
+test_api_authentication_origin_and_reopened_identity (tests.backend.test_server.AppServerTests.test_api_authentication_origin_and_reopened_identity) ... ok
+test_assets_and_traversal_never_fall_back_to_html (tests.backend.test_server.AppServerTests.test_assets_and_traversal_never_fall_back_to_html) ... ok
+test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected (tests.backend.test_server.AppServerTests.test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected) ... ok
+test_close_waits_for_active_dispatch_and_rejects_queued_dispatch (tests.backend.test_server.AppServerTests.test_close_waits_for_active_dispatch_and_rejects_queued_dispatch) ... ok
+test_explore_direct_link_serves_application (tests.backend.test_server.AppServerTests.test_explore_direct_link_serves_application) ... ok
+test_get_and_post_serialize_store_dispatch (tests.backend.test_server.AppServerTests.test_get_and_post_serialize_store_dispatch) ... ok
+test_idle_accepted_connection_does_not_block_health (tests.backend.test_server.AppServerTests.test_idle_accepted_connection_does_not_block_health) ... ok
+test_shared_entry_cookie_and_raw_api_gate (tests.backend.test_server.AppServerTests.test_shared_entry_cookie_and_raw_api_gate) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 4.501s
+
+OK

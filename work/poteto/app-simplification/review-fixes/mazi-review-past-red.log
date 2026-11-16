@@ -1,0 +1,87 @@
+[WebServer] (node:98212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 2 tests using 1 worker
+
+(node:98215) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (10.1s)
+(node:98241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [phone] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links (10.1s)
+
+
+  1) [desktop] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('This creation is unavailable.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('This creation is unavailable.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('This creation is unavailable.', { exact: true })
+
+
+      201 |       await expect(
+      202 |         page.getByText("This creation is unavailable.", { exact: true }),
+    > 203 |       ).toBeVisible();
+          |         ^
+      204 |       await expect(page.locator(".past-card")).toHaveCount(0);
+      205 |     }
+      206 |   }
+        at /private/tmp/mazi-simplification-review-fixes/tests/past-creations.spec.ts:203:9
+
+    Error Context: work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [phone] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('This creation is unavailable.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('This creation is unavailable.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('This creation is unavailable.', { exact: true })
+
+
+      201 |       await expect(
+      202 |         page.getByText("This creation is unavailable.", { exact: true }),
+    > 203 |       ).toBeVisible();
+          |         ^
+      204 |       await expect(page.locator(".past-card")).toHaveCount(0);
+      205 |     }
+      206 |   }
+        at /private/tmp/mazi-simplification-review-fixes/tests/past-creations.spec.ts:203:9
+
+    Error Context: work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/app-simplification/issue-157-browser-results/past-creations-Past-creati-f11a8--on-direct-and-legacy-links-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links 
+    [phone] › tests/past-creations.spec.ts:180:1 › Past creations rejects empty and conflicting explicit selections on direct and legacy links 

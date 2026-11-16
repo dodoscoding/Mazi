@@ -1,0 +1,25 @@
+test_close_waits_for_active_dispatch_and_rejects_queued_dispatch (tests.backend.test_server.AppServerTests.test_close_waits_for_active_dispatch_and_rejects_queued_dispatch) ... FAIL
+test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected (tests.backend.test_server.AppServerTests.test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected) ... FAIL
+
+======================================================================
+FAIL: test_close_waits_for_active_dispatch_and_rejects_queued_dispatch (tests.backend.test_server.AppServerTests.test_close_waits_for_active_dispatch_and_rejects_queued_dispatch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/idle-connections/tests/backend/test_server.py", line 190, in test_close_waits_for_active_dispatch_and_rejects_queued_dispatch
+    self.assertFalse(close_returned.wait(0.2), 'Server close passed an active store request')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : Server close passed an active store request
+
+======================================================================
+FAIL: test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected (tests.backend.test_server.AppServerTests.test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/idle-connections/tests/backend/test_server.py", line 231, in test_close_does_not_wait_for_idle_headers_and_late_request_is_rejected
+    self.assertFalse(accessed.is_set(), 'Late request reached the closed store')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : Late request reached the closed store
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.653s
+
+FAILED (failures=2)

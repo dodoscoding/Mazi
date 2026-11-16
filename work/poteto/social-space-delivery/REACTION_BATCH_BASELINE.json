@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-11-04T12:06:01Z",
+  "revision": "f859ecfc90ebd3a57ef93a20cc2373d5410413f8",
+  "schema": "mazi_social_20261104_test",
+  "bucket": "mazi-social-test",
+  "fixture": "One synthetic visible photograph and twenty synthetic comments, with current member access",
+  "operation": "reactions.batch_reactions",
+  "targets": 21,
+  "measurements": [
+    { "seconds": 3.629, "sql_calls": 127 },
+    { "seconds": 3.163, "sql_calls": 127 }
+  ],
+  "includes": "Warm PostgreSQL transactions and current target authorization",
+  "excludes": "Browser and Vercel HTTP overhead",
+  "reproducer": "profile_reaction_batch.py",
+  "result": "A focused performance correction is required before conversation UI acceptance."
+}

@@ -7,6 +7,7 @@ from mazi.http_origin import validate_origin
 
 import base64
 import json
+import io
 import os
 from http import HTTPStatus
 from http.cookies import SimpleCookie
@@ -37,7 +38,10 @@ def handler_for(store: Store):
             self.wfile.write(body)
 
         def json(self, status: int, value, cookie: str | None = None):
-            self.send(status, json.dumps(value).encode(), cookie=cookie)
+            body = io.BytesIO()
+            for fragment in json.JSONEncoder().iterencode(value):
+                body.write(fragment.encode())
+            self.send(status, body.getvalue(), cookie=cookie)
 
         def token(self):
             cookie = SimpleCookie()

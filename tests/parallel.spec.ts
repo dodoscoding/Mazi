@@ -15,7 +15,11 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route("**/api/groups", (r) => r.fulfill({ json: [] }));
+  await page.route("**/api/groups", (r) =>
+    r.fulfill({
+      json: [{ id: "circle", name: "Synthetic circle", role: "member" }],
+    }),
+  );
   await page.route("**/api/parallel/config", (r) =>
     r.fulfill({
       json: {

@@ -58,6 +58,18 @@ Contradictory offsets, ambiguous locale dates, implausible EXIF, or conflicts be
 
 Timestamp, location, identity, duplicate, and cluster confidence are separate values. Each includes evidence, method/model version, and a reason. A score is not called a probability until calibrated against labeled fixtures.
 
+### Photo facts in the Atlas read model
+
+`GET /api/atlas` adds `assetId` and `evidence` to every authorized photo. `assetId` is the stored archive asset ID, independent of its rendition URL. Existing card fields, provenance, stored payloads and fingerprints keep their meanings. This read model adds no audience, schema or processing consent.
+
+`evidence` contains `capture`, per-source `shared`, `chronology` and `place`. A date has `basis` (`capture`, `shared` or `unknown`), `status` (`exact`, `approximate`, `range`, `conflict`, `ambiguous` or `unknown`), sorted evidence `days`, `start`, `through` and `timezone`. Unknown bounds are null. Current capture producers emit precise EXIF timestamps, selected-source calendar days and precise Review corrections; they do not encode approximate dates or asserted intervals. The read model reserves those states and the renderer distinguishes them, but it does not invent such evidence. Multiple exact capture days remain a conflict with their original days, not an asserted interval. A correction takes precedence over capture assertions. Without valid capture evidence, chronology uses the earliest reliable sharing day. An unresolved chat day/month remains ambiguous. No import/upload timestamp supplies a capture fallback.
+
+Calendar days remain in their recorded local date. Discord's UTC sharing day is labelled UTC. Viewing the same photo from another timezone does not change that day. Each source's raw sharing evidence remains in `provenance`; the display does not rewrite it.
+
+A photo's `place` has `status` (`known`, `unmapped`, `conflict` or `unknown`), display `text` and a nullable canonical city-centre `pin`. Pins preserve `region` when a name occurs in several regions of one country. Display text retains that region, and the canonical coordinates identify the city independently of its short name. Authorized source centroids disambiguate those names. Nonempty Review text overrides source places, including text that cannot be mapped. Conflicting source cities receive no pin. Photo facts never borrow a sibling's place. New interface readers pin a grouped memory only when every child has the same known city; its legacy card `place` field remains compatible. Atlas nodes keep distinct same-name cities separate. Summary text identifies multiple places and missing child dates/places.
+
+Both gallery layouts show the photo's own date and place beneath its thumbnail. The selected Viewer photo uses the same labels. Home, memory detail, Atlas/list and Timeline use the child-based summary. Selected-photo date/place corrections, explicit Search date bases, manual content-label editing and shared same-photo filters across Gallery and Search are implemented as specified in the [social-space implementation plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md).
+
 ## Normalized import boundary
 
 An adapter emits a versioned NormalizedImportItem and a capability/coverage report. The minimum logical fields are below.
@@ -105,7 +117,25 @@ Counters reconcile discovered items into pending, active, ready, missing, unsupp
 
 Jobs use import_item_id, stage, input version, and algorithm version as their idempotency identity. Leases include expiry and ownership. A completion transaction accepts output only from the current lease and consent version. Retry cannot repeat side effects after a completed stage. Exponential backoff and capped attempts lead to a reviewable failure.
 
+## Interface navigation
+
+[D26](DECISIONS.md#interface-clarity-1-november-2026) defines one navigation table for the desktop and phone primary links. Exactly Ana sayfa, Keşfet and Grubumuz appear in that order. Ekle remains a separate visible menu button. Fotoğraf veya arşiv opens `/imports`; Buluşma planla opens `/circle?section=plans&new=1`. A route derives its parent section without a second stored navigation state. Archive detail belongs to Keşfet even when opened from Home.
+
+Bare `/` renders the Home landing. `/explore` renders the capability directory grouped by Bul, Gez and Birlikte hatırla and `/atlas` renders the existing globe/flat-map experience. Root URLs with explicit `selected` or `view=portal` parameters retain their Atlas meaning without adding a history entry. Existing `/timeline`, `/search`, `/discover`, `/places`, `/ask`, `/answer-evidence`, `/review`, `/imports`, `/circle`, `/about`, `/introduction` and `/memory/:id` entries remain valid. Photo and notebook parameters retain their meaning. Outer sample-mode and Discord OAuth parameters are not consumed by section navigation.
+
+`/memories?section=stories`, `section=recap` and `section=capsules` reach their actual named sections. `/discover?section=people` reaches the existing People controls. These links do not infer identity from sender names, enable optional processing, or unlock capsule content. A section focuses its heading once on intentional entry; polling and background revalidation do not steal focus. Unknown section values use the workspace default. `/places?section=sources` focuses Kaynak bağlantıları and selects Grubumuz; ordinary `/places` selects Keşfet. Discord callback parameters are handled once before source-section focus. `/people` and `/#/people` replace their history entry with `/discover?section=people`. `/settings` and `/#/settings` replace it with `/circle?section=settings`, which focuses the visible Grup ayarları heading. A missing memory keeps its unavailable state.
+
+Home reads the existing authorized archive projection and shows one featured memory. Its photo, title and primary action share one detail target. Event notes remain a secondary action and the directory link opens the rest of the archive. Archive ordering is not an activity timestamp. Cards retain available date/place evidence and distinguish event notes from photographs. Empty groups expose contribution or group setup. Loading, retry and denial use the existing archive/session lifecycle without cached private fallback data.
+
+Browser Back returns to the originating browsing page, with usable scroll and focus. Direct memory loads have an explicit fallback. Atlas selection, portal navigation, keyboard controls, manual places and optional sound use the Atlas route consistently. D24 background retention and current-access clearing remain unchanged. This increment adds no API, schema, audience or processing-consent contract.
+
 ## Search and AI boundary
+
+`GET /api/discovery/search` accepts optional `date_basis=capture|shared|chronology` alongside inclusive `start` and `end` days. With no basis, existing clients retain their capture-only single-day behavior. Explicit capture matches the photo's capture evidence, sharing matches any reliable sharing origin, and chronology matches the same displayed date evidence as Atlas. Conflicting exact capture days match only those evidenced days, not the gap between them. Represented approximate/range states use their actual interval. Naive local days and Discord UTC days do not move with the viewing device's timezone.
+
+Each photo result adds its stored `assetId` and the same `evidence` object used by Atlas. Legacy `id`, `date`, `place`, content fingerprints and source payloads retain their meanings. Both the live and streamed Search document paths resolve evidence before matching. Vector-only reference and index reads omit sharing chronology entirely; only a user-facing Search read requests its explicit sharing context. A legacy raw chat timestamp can use date-order proof only from current permitted origins in its own import and conversation. This context loads lazily without Atlas and counts its parsed bytes/origins against the streamed request budget; the existing per-origin, per-photo and time limits remain. Hidden-memory children remain absent from Search results and facets, and hidden photos cannot supply date-order proof.
+
+Fresh Search selects `Gösterilen tarih` and sends `date_basis=chronology`. An existing dated URL with `from`/`through` but no basis retains the legacy capture choice until a member selects a basis. New dated bookmarks serialize the explicit basis; refresh and pagination preserve it. Photo cards use the shared photo date/place formatter. Date filtering currently covers server-authorized photo results; other result categories are excluded while a date interval is active, with an explicit scope message. The first photo page still loads without Atlas or People management.
 
 Search takes an authenticated member, one group, filters, a bounded page size, and a stable cursor. It returns authorized results, accessible evidence identifiers, date uncertainty, and a continuation cursor. Counts and facets use the same authorization filter as results.
 
@@ -115,7 +145,11 @@ Model-bound retrieval additionally requires current processing consent for each 
 
 An answer carries cited evidence, observed archive coverage, and uncertainty. "Earliest imported Copenhagen memory" is supportable; "first trip ever" requires evidence beyond a partial archive. Revocation rechecks before dispatch and answer delivery prevent stale results from becoming new disclosures. Already-sent provider requests follow the disclosed provider retention policy.
 
-The local Phase 6 implementation uses a fixed extractive engine over eligible photo metadata. It returns at most five cited records, labels metadata as recorded assertions, and abstains on unsupported question forms or indeterminate date ordering. Before retrieval, local dispatch and delivery, it rechecks membership, processing switches, every contributor and annotation author's opt-in, and a fingerprint of current evidence. For larger archives, complete bounded scans retain exact matching totals and date-ordering abstention while keeping at most five citations. Every check fingerprints all eligible evidence, including unshown and nonmatching records; budget exhaustion returns no partial answer. Questions and answers are not persisted or cached. Evidence URLs require fresh authorization and consent. Corrections, hides, withdrawals and deletion invalidate in-flight output; already delivered text cannot be recalled. No external provider or tool-capable model is configured. See [Phase 6](history/answers/README.md) for the bounded question contract.
+D28 retires active AI answers. Authenticated, current-group `POST /api/answers/ask` and `POST /api/answers/processing` return 410 before generation, usage or consent mutation. Origin, JSON validation and authentication remain enforced. No active Ask page, answer prompt, fallback card or application generation dispatch remains. Existing answer-consent and usage data and the historical offline extractive engine are retained; no archive evidence is purged.
+
+`GET /api/answers/state` remains an authorized historical settings read, not a generation control. `GET /api/answers/evidence?group=...&asset=...` now reads the ordinary selected photograph under current membership, live-contributor/origin and personal photo/event-hide rules, independently of answer-processing consent. It retains the exact asset identity and recorded capture/date/place evidence and adds the ordinary `photo` and bounded imported `messages`; source sharing dates never become capture facts. Hidden, withdrawn or inaccessible photographs remain denied.
+
+Old `/ask` links become Photos search with an explicit retired notice. Existing `q`, or otherwise literal `question`, and meaningful photograph filters are preserved without generating or reinterpreting an answer. An old `/answer-evidence` link maps to the shared viewer only when its explicit group matches the validated current circle and its exact asset can be read as that photograph. Missing, ambiguous, foreign-circle or inaccessible identities produce an honest unavailable state. An answer/citation identifier is never guessed to be a normalized conversation record. Recorded conversation retrieval remains under the independent source-read contract below.
 
 ## Capsule boundary
 
@@ -133,6 +167,203 @@ Before admitting an archive download, the server compares the metadata and polic
 
 The browser archive download is prepared in a private temporary file before response headers. Its exact length is sent only after complete construction and policy admission. Interrupted delivery closes the connection, allowing the client to detect truncation; it does not append a JSON error to ZIP bytes. The temporary artifact is not a persistent download capability and is cleaned up when the request ends.
 
+## Group plans and attendance API
+
+The P1 backend implements the [social-space plan](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) with independent plans. A plan requires no archive photo. The P1 interface implements the list, detail, organizer forms and attendance controls. Social Home remains a separate delivery slice.
+
+`GET /api/social/plans` accepts `group`, `scope=upcoming|all`, `limit` from 1 to 50 and an opaque cursor. Results sort by UTC start and stable ID. Upcoming means active plans whose start has not passed the server clock. `GET /api/social/plan` reads one plan with current organizer and active-member attendance.
+
+Authenticated JSON writes use the following routes. Every write checks the request origin and current group membership inside its transaction.
+
+| Route | Fields beyond group and request_key | Contract |
+| --- | --- | --- |
+| `/api/social/plans/create` | title, start_local, timezone; optional start_offset, end_local, end_offset, place, description, memory | Creates one plan and preserves its stable ID on exact retry. |
+| `/api/social/plans/update` | plan, revision, patch | Organizer-only allowlisted patch. Omitted fields remain unchanged. |
+| `/api/social/plans/cancel` | plan, revision | Organizer-only cancellation closes attendance writes. |
+| `/api/social/plans/delete` | plan, revision | Organizer-only removal also removes attendance. |
+| `/api/social/attendance` | plan, state | Desired state is yes, maybe, no or null. Repeating a state does not increase its revision or count. |
+
+Plan local times use ISO calendar values without an offset and an IANA timezone. A nonexistent wall time is rejected. A repeated wall time requires a valid explicit `start_offset` or `end_offset`, such as `+01:00`. UTC instants and original local values are retained separately. An end must follow its start. A plan's optional approved-memory link is returned only while every original child remains visible to the reader. Linking never changes archive capture or sharing dates.
+
+Plan edits, cancellation and deletion require the expected positive integer revision and return HTTP 409 on stale state. Attendance and cancellation serialize in the same write boundary. Group-and-actor-scoped request receipts retain the operation, canonical payload hash and result ID. Exact replay reads the surviving result without another write. A newer attendance state is preserved when an older request is replayed. A removed result returns `{id, deleted: true}`. Reusing a key with different content conflicts. Receipts retain no comment text, plan description or member name.
+
+SQLite schema initialization and the hosted migration create the same plan, attendance and receipt relationships. PostgreSQL epoch columns use double precision. Membership-delete triggers withdraw the departed organizer's plans and dependent attendance, and remove the departed attendee's responses even when removal uses the identity store. Current-member joins also exclude departed actors on reads. The archive ZIP adds `social.json` when the exporting member has authored plans or current attendance. It contains only those contributions. It participates in both export assembly and final admission fingerprints.
+
+
+### Plan interface
+
+`/circle?section=plans` opens the bounded upcoming list. `scope=all` includes past and cancelled plans. A detail link includes both `group` and `plan`; the current group must match before the page reads that plan. The existing group/session gate still verifies membership. The Plans route fetches no Atlas or per-card notebook data. Its create action and the Ekle menu require no existing photograph.
+
+The form asks for local start, optional end and an IANA timezone. A nonexistent local time cannot be submitted. A repeated time exposes a required UTC-offset choice. The server validates every value again. The optional memory field accepts an existing approved-memory identifier or detail link, and linking preserves archive chronology. Editing another field preserves start-time seconds already present in the plan. Updates contain only fields changed from the opened draft. An unavailable memory projection is not an unlink: an unchanged association is omitted, while clearing a visible link sends explicit null. Reloading a stale revision retains the original edit baseline and draft. Saving an untouched draft closes it without a write.
+
+A draft and an uncertain write command stay in component memory. An uncertain response offers retry of the exact payload and request key; another save stays blocked until that command resolves. HTTP 409 offers the current plan for comparison without replacing the draft. Group, profile or access loss clears both and aborts requests. Late reads and writes cannot restore them. The app does not write private plan text or drafts to browser storage. Demo Plans never reads or writes the real group's social API.
+
+The organizer can edit, cancel or delete. Cancellation disables attendance controls; deletion removes the detail. Attendance displays server-authorized counts and active participant names, with distinct yes, maybe, no and clear actions. API failures, loading, an empty list and denied access have separate states. New controls and errors use Turkish. Shared confirmation sheets remain above mobile navigation and return keyboard focus through the existing Sheet behavior.
+
+## Photo and approved-memory comments API
+
+The C1 comments backend implements flat conversations separately from notebook recollections. The first targets are `{kind: "photo", id: archive_assets.id}` and `{kind: "memory", id: review_events.id}`. A member may write multiple comments on either target. Grouping a photo into an approved memory does not move or duplicate the photo's conversation. The reaction backend is specified below. The lazy conversation interface is specified below.
+
+`GET /api/social/comments` accepts `group`, `kind`, `target`, a limit from 1 to 50 and an opaque cursor. It returns `items`, the currently visible `total` and `next_cursor`. Ordering uses the immutable server creation timestamp and stable comment ID. Active authors and deletion tombstones are filtered in SQL before the limit. Equal timestamps and invisible rows cannot create duplicate pages or skip an eligible row. Each item contains its target, current author ID/name, plain text, creation/update timestamps, revision and whether the reader may edit it.
+
+| JSON write route | Fields beyond group and request_key | Contract |
+| --- | --- | --- |
+| `/api/social/comments/create` | target, text | Creates one comment with immutable identity and server creation time. |
+| `/api/social/comments/update` | comment, revision, text | Only the author can edit. A successful edit increments the revision and preserves creation time. |
+| `/api/social/comments/delete` | comment, revision | Only the author can remove. The deletion retains a text-free tombstone. |
+
+Every command uses the existing session, origin and transactional membership checks. Text is nonempty plain text of at most 4,000 characters. Edit and deletion require a positive expected revision and return HTTP 409 for a stale version. Group-and-actor request receipts return the surviving current result on an exact replay, conflict on different content, and never write again. A deleted result returns `{id, deleted: true}` while its target remains accessible. A target that is now hidden or unavailable is denied even on replay.
+
+Photo access requires a current eligible source and excludes the reader's hidden photo and every child of a hidden memory. Memory access requires an accepted event and all original children still visible, including children masked by another overlapping hidden event. The same resolver gates lists, counts, writes, replay and exports. A departed author is excluded by current-member joins even if a stale comment row exists. SQLite and hosted composite foreign keys reject cross-group authors and photo/memory targets at the database boundary.
+
+Membership removal cascades authored comments through the identity database boundary. A comment-delete trigger records its group, author, target IDs and deletion timestamp without retaining its text. The deletion ledger survives row removal and membership changes. Hosted runtime access to this ledger is read/insert only. Reintroducing a stale row while retaining the current ledger cannot make it readable or editable. Restoring a full snapshot from before deletion requires reconciliation with the current deletion ledger before serving traffic; that snapshot cannot know future deletions by itself.
+
+Archive export adds `comments.json` only when the member has authored comments whose targets remain visible. Other authors' comments and hidden or withdrawn target text are excluded. The same projection participates in ZIP assembly and the final admission fingerprint. A change during export preparation causes the existing retryable conflict.
+
+## Native reactions API
+
+The C1 reactions backend accepts only permanent photos, approved memories and native comments. A comment target resolves its original photo or memory under the existing conversation visibility rules. Notebook note keys and imported chat reactions are separate data. The closed emoji set is `👍`, `❤️`, `😂`, `🎉`.
+
+`GET /api/social/reactions` accepts `group`, `kind=photo|memory|comment` and `target`. It returns the target, `allowed_emojis`, a total and four `reactions` entries. Each entry contains `emoji`, exact current `count`, the reader's `mine` state, up to 50 current member IDs/names and `members_truncated`. Names never include account email addresses. Counts exclude inactive, departed and deletion-tombstoned reactions.
+
+`GET /api/social/reactions/batch` accepts `group` and a JSON `targets` array of 1 to 50 unique closed targets. Its `items` preserve input order and use the single-target response shape. Every target is authorized before returning any item. One grouped-count query and one window-ranked member query project the whole batch. The name query returns at most 51 rows per target and emoji to detect truncation. Comment pages can use this batch read without one HTTP request per comment.
+
+`POST /api/social/reactions/set` accepts `group`, `target: {kind, id}`, `emoji`, boolean `active` and `request_key`. It sets the desired current state and returns the current aggregate. Repeating enable cannot increase the count. Repeating disable is harmless. Exact receipt replay returns the current aggregate without another write, so retrying an earlier enable cannot overwrite a later disable. Reusing a group-and-actor key for a different payload conflicts.
+
+SQLite and hosted storage enforce one member/emoji per target with partial unique indexes for each target type. Composite foreign keys enforce the group for the member and photo, memory or comment. Member removal and comment deletion cascade the affected reactions through the database boundary. Reads independently require active reactor membership and current target access. Hiding or withdrawing a target denies its counts and writes, including receipt replay. A removed comment's retained tombstone continues to deny its reactions if stale rows are reintroduced.
+
+Reaction cascade deletion retains only reaction, group and member IDs plus deletion time. These text-free tombstones exclude a restored stale reaction even after a member rejoins. An older request receipt cannot re-enable it. A fresh member action may create a new reaction identity. Hosted runtime access to the ledger is read/insert only. Restoring a historical snapshot still requires current-ledger reconciliation before serving traffic; the ledger is deletion metadata, not retained content.
+
+Archive export adds `reactions.json` only for the member's active reactions on currently visible targets. It contains the member's own target, emoji and timestamps, without other reactors or counts. The same projection participates in ZIP assembly and final admission fingerprints. Imported chat reaction evidence remains unchanged. The reaction controls share the conversation interface below. Social Home remains a separate delivery slice.
+
+## Conversation interface
+
+The detail route accepts `discussion=photo` for the selected permanent photo asset and `discussion=memory` for the accepted memory. Scope actions are separate from `notebook=1`; native comments never become notebook notes or imported source excerpts. The selected photo's asset ID, current group and profile key the lazy panel. Viewer selection preserves the discussion query and replaces the target, disposing the previous private draft and pending command. Sample mode never mounts the real conversation controls.
+
+Each visible page contains at most 20 flat comments, with current author labels and immutable server creation time. A single reaction batch reads the archive target plus that page's comment targets (at most 21), without per-comment HTTP requests. Pagination replaces the visible page. A confirmed new comment outside that page appears once in a separate saved-result receipt, with no second conversation row or extra reaction request. That receipt is omitted if the page already contains its ID and is cleared on pagination, refresh or scope disposal. Four emoji toggles expose exact confirmed counts, pressed state and bounded expandable current member names. A write specifies desired on/off state; pending or uncertain commands block conflicting controls while retaining keyboard focus. Comment text renders as plain text through React escaping.
+
+A single draft and an exact uncertain write command exist only in component memory. Retrying a lost response uses the same body and request key. Stale edits offer current comments without discarding the draft and use the loaded current revision only when the author retries. Deletion requires inline confirmation, removes the displayed comment and reaction state while pending, then refreshes counts. It preserves an unrelated new composer or another comment's edit draft, including after exact deletion replay. Only saving that draft or deleting its own edited comment clears the editor. Group/session/access loss aborts requests, clears private text and commands and rejects late results. A denied page or reaction batch clears the entire projection; source withdrawal is rechecked on page visibility/return and on every server operation. There are no sockets, notifications or private social caches.
+
+## Selected-photo metadata corrections
+
+`GET /api/atlas/photo?group=…&asset=…` returns the stable `assetId`, current `annotation` (`title`, `capture_date`, `place`, `anniversary`) and opaque `snapshot`. The snapshot hashes canonical annotation values and the current authorized origin IDs/fingerprints, rather than a second-resolution timestamp. Optional `place` returns city candidates from the existing offline gazetteer without writing.
+
+`POST /api/atlas/photo` accepts `group`, `asset`, `expected_snapshot` and a nonempty `changes` object containing only `capture_date` and/or `place`. Membership, photograph visibility (including personal and memory hiding), current origins and snapshot comparison occur inside the archive write transaction. A stale snapshot returns 409; missing access returns 403. SQLite uses its existing immediate transaction; hosted storage uses the existing exclusive archive advisory transaction lock. No schema migration is required. The legacy `/api/review/correct` replacement contract is preserved.
+
+A patch preserves title, anniversary and every omitted field and sibling. A null capture date or empty place clears the correction, exposing remaining authorized source evidence. A date needed by an approved anniversary cannot be cleared through this patch: validation fails without changing either field; the existing full Review editor owns the explicit anniversary decision. Place text can remain unmapped or ambiguous; only a canonical city match supplies a centroid. The detail editor targets the selected photo, retains drafts on transient failure and 409, rereads the conflict snapshot before explicit retry, and aborts/clears on selection, group, session or access changes. A successful write triggers a fresh Atlas read; Search and Places read current authority when mounted. Whole-memory placing remains a separate flow with an explicit photograph count.
+
+`places.json` replaces source locations for a photograph with its authorized reviewed city, using `origin: review:<assetId>`, `source: manual review` and `method: reviewed city centroid`. Unmapped reviewed text is preserved in `manifest.json` annotations and suppresses source pins rather than inventing coordinates. Clear restores any remaining shared source pin. Manual locations participate in both export capture and final metadata admission. The existing per-record, archive-byte and scan-time budgets apply. Origin payloads/fingerprints are never rewritten by corrections, and clearing a review does not remove contributor pin-removal decisions.
+## Photo declarations API
+
+The F1 backend records independent member declarations for `people_present` and `screenshot` with `yes`, `no` or `unknown`, and `ai` with `generated`, `edited`, `none-declared` or `unknown`. These are manual declarations. Filenames, image proportions and image contents do not assign them automatically. A photograph without a stored dimension reads `unknown` at revision zero.
+
+`GET /api/social/labels` accepts `group` and a JSON `assets` array of 1 to 50 unique permanent photo IDs. Each returned item has `assetId`, currently permitted confirmed `people` and a `labels` entry for each dimension. An entry separates effective `value` from `declared`, plus revision, method, current actor ID/name and update time. Method `member` means a member declaration. `none-declared` is a statement about AI use, not a detection result. Source sharers and conversation participants are never depicted-person evidence.
+
+Effective human presence becomes `yes` when a currently permitted confirmed person association exists. Names require an active tagger, a current verified subject when linked to an account, and no suppression. Suppressed associations produce no names or derived presence. A `people_present=no` write conflicts if any active approved association exists, including an association hidden by suppression. That error includes no identity. Existing explicit confirmation, subject disassociation and no-retag controls remain authoritative.
+
+`POST /api/social/labels/set` accepts `group`, `request_key` and 1 to 50 unique `items`. Each item contains `asset`, `changes` and `expected`. The changed dimensions and expected-version keys must match exactly. Every current target, version and presence contradiction is checked before any write in the same transaction. Any denial or conflict applies nothing. A successful change increments each affected dimension independently, including a clear to `unknown`. It preserves every other dimension and photograph.
+
+Any active member who can currently access the photograph may correct its declarations. Group, current eligible source, hidden photo and overlapping hidden-event children are checked for the entire batch before read, write or receipt replay. Group-and-actor request receipts use canonical content with asset order normalized. Exact replay reads current results without another write. A different payload conflicts, and replay cannot restore an older value over a later change or departure cleanup.
+
+SQLite and hosted schemas retain a per-photo/dimension revision ledger separately from the current declaration. Composite foreign keys enforce the photo group and declaration actor. Removing a member through the identity database boundary clears only declarations still authored by that member and advances their revisions. It does not clear a different member's later declaration. Cleared ledger versions persist, and the database rejects revision rollback. A stale declaration whose revision differs from the current ledger reads unknown without its former actor. Current approved-person associations may still derive presence.
+
+Label, tag and suppression mutations advance the existing discovery generation so later filter/facet reads can invalidate cached state. Hosted ledger access permits reads, inserts and monotonic updates but not deletion. The ledger contains dimension versions, not old declaration values. Restoring historical data still requires reconciliation with current revisions and deletion decisions before serving traffic.
+
+Archive export adds `labels.json` only for the requesting member's current-version declarations on visible photographs. Each record contains the asset, dimension, declared value, member method, actor, revision and timestamp. Other members' declarations, stale rows and hidden targets are excluded. The same projection participates in ZIP assembly and final metadata admission. F1 includes the manual label editor described below. Automatic classification and combined Search/gallery predicates remain separate slices.
+
+## Photo declaration presentation
+
+Authorized Atlas photos and paged Search items may include compact `labels` entries with the effective `people_present`, `screenshot` and `ai` values. Unknown dimensions and wholly unknown objects are omitted. The existing caller owns photo authorization; the label module projects only the supplied IDs (at most 10,000), with two grouped queries selecting small enum/ID columns. The declaration query joins the current revision ledger and active actor; the presence query applies current approved-person, account-membership and suppression rules. No per-photo API request loads these summaries, and the full revision/actor metadata remains confined to the 50-photo labels API. Base archive/discovery stores without the social schema have an empty presentation hook.
+
+Detail offers **Etiketleri düzenle** for the currently selected stable `assetId`. All dimensions include **Bilinmiyor**, and **Değiştirme** preserves an omitted dimension. The editor separates effective from declared people presence, identifies manual method/current author in Turkish and links approved people to the existing person Search predicate. It links existing confirmation, disassociation and no-retag management rather than deriving depicted people from sharers. Known screenshot/AI creation or editing facts supply Gallery and Search badges; Unknown supplies no badge. These remain member declarations, not detection results.
+
+Gallery offers explicit selection, affected count and a 50-photo cap. One bounded editor read fetches current revisions for the selected IDs. A single atomic write contains only chosen dimensions and their versions for every selected photo. Selection changes dispose the editor. Lost-response retries retain the identical request key/body; draft changes get a new command. A 409 rereads every selected photo and retains the chosen draft before an explicit retry. Access denial rereads the selection, clears private drafts and reports access loss. Group/session changes and disposal abort pending work and discard late responses. Successful edits reread Gallery/Atlas authority; newly mounted Search reads current facts. Photo indices and links are preserved. No filename inference or new label filter predicate is introduced here.
+
+## Bounded social Home and activity reads
+
+The H1 backend adds `GET /api/social/home?group=…` and `GET /api/social/activity?group=…&limit=20&cursor=…`. These are private current-member reads. The lazy Home and activity routes adopt these reads without an initial Atlas or notebook request.
+
+Home returns `featured`, an `activity` page of at most three rows, `server_time` and `can_plan`. It highlights the nearest current active plan, otherwise the latest visible native conversation, otherwise one visible photo, otherwise null. An empty archive can still create its first plan. Plan summaries include current attendance but omit participant lists and do not resolve an optional memory link. Conversation features include an activity row and a compact one-photo `preview`; archive-only features contain `memory`. These previews retain real date/place evidence and compact labels, omit source-provenance/chat lists, and have a 64 KiB response budget.
+
+Each activity row has stable `id`, `kind`, `action`, `occurred_at`, current actor, and canonical target. Comment/reaction rows also have a representative `asset_id`, authorized thumbnail and `memory_id`. Native comments include `text` and `comment_id`; reactions include the emoji and optional native comment ID. Plans contain a compact plan. Actions distinguish created/edited comments, created/updated/cancelled plans and current reactions. Photo discussion links use `/memory/photo-ASSET?discussion=photo`; memory discussion links use `/memory/EVENT?discussion=memory`. Notebook links remain separate.
+
+The source record's server update time orders the live feed. A photo's capture/share chronology remains in its preview evidence. This is a current-state view, not an immutable action log. Deleted or inactive contributions disappear. Editing an item may move it to a newer position, visible on refresh. Descending keyset cursors use action time and stable global identity across comments, plans and reactions. Newer concurrent actions do not shift unchanged older rows out of their keyset positions. Per-source row-value seeks retain the group/time/ID index path for same-second pages.
+
+Candidate queries use indexed source tables, active-member joins and deletion-ledger exclusion, with at most 33 rows per source before a 32-row merged chunk. Current photo/memory visibility is resolved for each bounded chunk. A page examines at most 512 candidates. If that window contains fewer visible rows, `partial` and `next_cursor` allow continuation across the filtered region without skipping eligible older records. Home does not invent an empty conversation or fallback when its feature cannot be established within that budget; it returns an explicit capacity error. Featured targets are excluded from Home activity in the source queries, and featured actions do not appear twice.
+
+Hidden photos, overlapping hidden-memory children, withdrawn last sources, departed actors, deleted comments and removed reactions are excluded from text, thumbnails and feed rows. Memory targets require every original child to remain visible. The feed stores no copied text, thumbnail or materialized activity row. Existing authored export uses the corresponding source-domain visibility; these reads introduce no new export bypass.
+
+`GET /api/atlas/memory?group=…&memory=…` returns one authorized `memory` using the shared Atlas card projector. A `photo-ASSET` route remains valid when the photo belongs to an approved memory. An event route admits at most 100 original children and requires all of them. The selected path never calls full Atlas, timeline or approved-event enumeration. It pages only selected origins in groups of 256, with 64 KiB per-origin, 8 MiB/8,192-origin per-photo, 64 MiB/65,536-origin request and two-second metadata scan limits. Legacy raw chat date order uses the existing bounded, current-access run context. The shared label hook preserves additive compact labels. Source payloads and correction fingerprints are unchanged.
+
+## Same-photo filter read API
+
+Search accepts `people_present`, `screenshot` and `ai` as comma-separated closed declaration values; `person` accepts comma-separated permanent person IDs. Multiple values within one dimension are OR; different dimensions are AND. Unknown matches the absent/current-unknown declaration, and approved unsuppressed people derive effective presence. `source` accepts one code or comma-separated codes. `shared_by` preserves a plain name (including a comma); multiple names use a JSON string array. `years` selects chronology calendar years and `places` is an exact JSON array of the same-photo city assertions used by existing Search. `uncertain=true` selects non-exact chronology. Existing `place`, `country`, query, date-basis and source/sharer behavior stays compatible.
+
+`GET /api/discovery/matches` accepts the same keyword photo predicates and returns all authorized `asset_ids`, exact filtered `total`, existing `facets` and `photo_facets`. It is not a paged Atlas or a People-management endpoint. Search uses the identical normalized predicate before result pagination/ranking; Gallery projects only these matched IDs and preserves their original memory photo indices. A label on one child cannot satisfy a condition on its sibling. Keyword and semantic Search use the same attribute predicate; semantic relevance remains mode-specific.
+
+`photo_facets.denominator` is the count of all currently visible photographs before query or selected filters, with `denominator_basis` explicitly recording that meaning. Per-dimension counts use that same full-visible denominator; the filtered total is separate. Person names/counters exclude suppressed associations and departed accounts/actors. Existing source/sharer full-visible counters remain unchanged under D24. Hiding a memory hides its children from both predicates and counters; withdrawn or denied targets never contribute. Queries use the existing shared photo evidence and retain legacy omitted capture-basis date bookmarks.
+
+Keyword Search and Gallery matching retain the existing metadata byte/time/origin budgets and exact readable pages beyond 10,000 photographs; the existing 10,000-photo cap applies to semantic related-search mode. Capacity exhaustion raises the existing error and never returns truncated IDs, fake totals or a partial page. Compact label and approved-person facts are grouped in internal batches of at most 10,000 authorized IDs, not loaded with one API call per photograph. No new persistence schema, automatic inference or vector fingerprint change is introduced.
+
+## Shared photo filter controls
+
+Gallery and Search expose the declaration/person filters, with OR choices within each dimension and the same server predicate. Search also restores chronology year, exact place-array and uncertainty selections; its source controls support multiple codes and its sharer list supports multiple names without splitting commas inside a name. URL chips are removable, mode and all selected predicates survive refresh/pagination, and reset clears the complete filter selection. Legacy dated URLs without a basis retain capture semantics; fresh date controls use explicit chronology.
+
+Gallery fetches authorized match IDs before rendering thumbnails, keeps each child's original detail index and excludes siblings that did not match. Its filtered count is separate from the full-visible denominator. View/order choices persist in the URL. Pending and failed queries clear prior thumbnails and filtered totals, retain the draft, and offer a retry without partial-result claims. View, order and selection-mode changes preserve that unavailable authority and recovery state; only a successful matches read can replace it with counts or a genuine empty result. A dedicated refresh rereads current Atlas metadata and matching authority. The F1 50-photo selection and lazy-editor cancellation guards remain intact.
+
+Photo-only Search predicates explicitly exclude memory/chat/place/person result categories until those types have a corresponding server match relation. Optional context loading does not fetch these unrelated categories while that scope is active. First Search results still require neither Atlas nor People management. Search/Gallery controls, loading, empty and recovery states use Turkish; stored titles and source-provided names are preserved.
+
+## Social landing and selected-detail interface
+
+Real Home reads only `/api/social/home` after the shared session and circle context. It renders the server-selected upcoming plan, recent conversation, archive fallback or explicit empty state in that order. The empty state leads with **Buluşma planla** and keeps photo/archive intake secondary. At most three real actions link to their canonical plan or discussion detail. Social action time is rendered separately from photo evidence. `/circle?section=activity` reads one page of 20 actions and replaces it on continuation, retaining an explicit next action across a filtered partial page. It does not fetch per-row plans, reactions or notebooks. The opaque cursor and group are retained in the activity URL, with the current profile/group scope bound to that browser history entry. Detail return and refresh reread that exact bounded page. A retained opener restores focus and scroll; a removed opener falls back to the heading at the top. Unbound or superseded cursor scope is discarded without reading the old page.
+
+Every real `/memory/ID` route uses `/api/atlas/memory`, including permanent `photo-ASSET` links when the photo belongs to an approved memory. A cached Atlas never substitutes for current selected-target authorization. Group, profile or access replacement aborts and clears selected and social projections, and late responses cannot restore them. Visibility/return rereads current authority. A retryable selected revalidation failure preserves the existing page and its private editor until the user retries; a denied read removes it. Discussion and notebook query/focus behavior remains separate. Full Atlas remains available on Atlas/timeline routes and existing Gallery/Search feature owners retain their own scoped readers.
+
+Optional Home, feature-page and full-detail modules load through route boundaries. Failed chunks show a Turkish reload action. Shared photo and Atlas note-link styles load with their actual consumers, before optional detail code. Lazy Home restores the heading on entry and the original card's focus/scroll on return. Detail controls and new landing states use Turkish while titles, comments and imported source content retain their supplied text. Sample mode remains local and never mounts real social authoring controls.
+
+## Retained source conversation reads
+
+The local D28 Photos composition retrieves recorded Conversation context without
+AI answer generation or answer-processing consent. This is a read of retained
+normalized import data, not a new message/memory schema or a complete transcript.
+The media-processing outcome `SKIPPED / NO_MEDIA` remains unchanged: after the
+owner confirms group sharing, its retained source message can be searched without
+inventing a photograph. Inventoried but unconfirmed source text remains private.
+
+| Read | Parameters | Response |
+| --- | --- | --- |
+| `GET /api/discovery/conversations` | Current `group`; keyword `query` (up to 500 characters); optional `source`, `shared_by`, `cursor`, `limit` (1 to 50). | `items`, `next_cursor`, `complete`. Each result retains its normalized record ID, source/conversation, historical sender label, raw source share time, recorded text and `hasPhoto`; no photo association is inferred. |
+| `GET /api/discovery/context` | Current `group`, exact result `record` ID. | The accessible source record plus `sourceRef` and its bounded normalized `messages` window. Unavailable or cross-circle records return 404; denied group membership returns 403. |
+
+Both reads require current reader and contributor membership, an unwithdrawn
+source/import run, and existing source availability. Attached-photo records also
+require their live origin and respect the reader's photo/event hides. Independent
+text-only records keep their own source dependency rather than borrowing a photo's
+visibility. Run withdrawal, contributor departure and membership removal suppress
+both results and subsequent context reads, including imports containing no media.
+The owner retains the existing Add import-withdrawal control for confirmed
+text-only imports. Sender display labels are historical assertions, not verified
+account identities. Displayed message times are sharing evidence, never capture
+dates.
+
+The scan reads at most 256 authorized candidate records per request, with a
+64 KiB stored-record limit and a two-second scan budget. Pages can contain no
+matches while `complete` is false: clients must offer continuation with the same
+query/filters and `next_cursor`, and must not describe an unsearched tail as an
+exhaustive absence. A capacity failure returns the existing `capacity_exceeded`
+error rather than partial context. Each continuation and context open rechecks
+current access; continuation is not an immutable archive snapshot. Refresh starts
+a new scan after archive changes. No index, model, provider call or background job
+is introduced.
+
+Photos presents photographs first and source messages second. Conversation search
+uses keyword, recorded source and historical sender filters. Year, capture-date,
+place and photograph-label filters apply only to photographs; when present, the
+interface explicitly states that scope instead of claiming those properties for
+text-only results. Unsupported conversation API filter parameters return 400. Opening context stays within Photos, is dismissible, and restores
+the query/filter/scroll position. Reload, withdrawal or access/session loss clears
+old context before a new read; delayed responses cannot repopulate closed context.
+
 ## Parallel You sample endpoint
 
 Parallel You is off unless `MAZI_PARALLEL_ENABLED=1` and `MAZI_PARALLEL_PROVIDER=fake` (the default provider). Any other provider disables these routes. The signed-in member may use `GET /api/parallel/config`, `POST /api/parallel/notice` with `{ "version": "sample-v1" }`, and `POST /api/parallel/chapter` with the bounded request in [the Parallel You plan](PARALLEL_YOU.md). No archive identifiers or evidence are part of the chapter contract.
@@ -141,4 +372,4 @@ The feature-off response is 404, access loss is 403, unaccepted notice is 403 `p
 
 Admission counts generation attempts, including failed attempts; explicit retries consume another attempt. Member and circle limits default to 30 and 150 per UTC day. Reservations are transactional across database connections. The hosted bridge releases its request lock only around story generation, then revalidates the session before returning content. Local HTTP remains single-threaded. Story text is not persisted server-side. Usage counters remain after membership departure to prevent rejoining from resetting the day's cap; notice acceptance is removed.
 
-`?demo=1` explicitly selects browser fixtures for signed-in members and bypasses sample endpoint availability and quotas. It cannot enable external generation. Normal navigation is hidden when the endpoint is off. Stored fiction is never imported into archive modules.
+`?demo=1` explicitly selects browser fixtures for signed-in members and bypasses sample endpoint availability and quotas. It cannot enable external generation. The account-menu link remains reachable when the endpoint is off so members can delete local stories. Stored fiction is never imported into archive modules.

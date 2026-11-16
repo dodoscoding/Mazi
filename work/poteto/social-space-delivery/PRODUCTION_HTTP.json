@@ -1,0 +1,137 @@
+{
+  "time": "2026-11-04T15:39:16.672916+00:00",
+  "base": "https://mazi-three.vercel.app",
+  "checks": [
+    {
+      "path": "/health",
+      "status": 200,
+      "seconds": 0.186,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/session",
+      "status": 403,
+      "seconds": 0.12,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/groups",
+      "status": 403,
+      "seconds": 0.128,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/social/home?group=release-probe",
+      "status": 403,
+      "seconds": 0.124,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/social/activity?group=release-probe",
+      "status": 403,
+      "seconds": 0.118,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/social/plans?group=release-probe",
+      "status": 403,
+      "seconds": 0.122,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/social/comments?group=release-probe&kind=photo&target=release-probe",
+      "status": 403,
+      "seconds": 0.127,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/social/reactions?group=release-probe&kind=photo&target=release-probe",
+      "status": 403,
+      "seconds": 0.129,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/atlas/memory?group=release-probe&memory=release-probe",
+      "status": 403,
+      "seconds": 0.128,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/api/discovery/matches?group=release-probe",
+      "status": 403,
+      "seconds": 0.136,
+      "content_type": "application/json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "seconds": 0.181,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate",
+      "entry_scripts": [
+        "/theme.js",
+        "/assets/index-CsCdu5n1.js"
+      ]
+    },
+    {
+      "path": "/explore",
+      "status": 200,
+      "seconds": 0.079,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/circle",
+      "status": 200,
+      "seconds": 0.089,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/memories",
+      "status": 200,
+      "seconds": 0.085,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/search",
+      "status": 200,
+      "seconds": 0.082,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/memory/release-probe",
+      "status": 200,
+      "seconds": 0.103,
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/theme.js",
+      "status": 200,
+      "seconds": 0.082,
+      "content_type": "application/javascript; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/assets/index-CsCdu5n1.js",
+      "status": 200,
+      "seconds": 0.162,
+      "content_type": "application/javascript; charset=utf-8",
+      "cache_control": "public, max-age=0, must-revalidate"
+    }
+  ],
+  "result": "PASS"
+}

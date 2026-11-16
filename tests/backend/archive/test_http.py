@@ -58,6 +58,30 @@ class ReviewHttpTests(unittest.TestCase):
         connection.close()
         return result
 
+    def test_selected_photo_contributions_are_scoped_and_owner_only(self):
+        path = f"/api/review/my-contributions?group={self.group}"
+        status, body = self.request(path + "&asset=" + self.asset)
+        self.assertEqual(status, 200)
+        owned = json.loads(body)
+        self.assertEqual(len(owned), 1)
+        self.assertEqual(owned[0]["asset"], self.asset)
+        self.assertEqual(len(json.loads(self.request(path)[1])), 1)
+        ben = self.store.register("ben-owner-test@example.test", "correct horse battery")
+        self.store.accept(ben, self.store.invite(self.alice, self.group))
+        ben_token = self.store.login("ben-owner-test@example.test", "correct horse battery")
+        self.assertEqual(json.loads(self.request(path + "&asset=" + self.asset, token=ben_token)[1]), [])
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
+                                      token=ben_token)[0], 403)
+        self.assertEqual(json.loads(self.request(path + "&asset=unavailable-photo")[1]), [])
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201)[0], 400)
+        self.assertEqual(self.request(path + "&asset=" + "x" * 201, token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request(path + "&asset=" + self.asset, token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]},
+                                      token=self.outsider_token)[0], 403)
+        self.assertEqual(self.request("/api/review/delete-contribution", {"origin": owned[0]["id"]})[0], 200)
+        self.assertEqual(json.loads(self.request(path + "&asset=" + self.asset)[1]), [])
+        self.assertEqual(self.request(f"/api/review/rendition/{self.asset}")[0], 403)
+
     def test_review_place_reports_how_it_matched_the_map(self):
         ben = self.store.register("ben@example.test", "correct horse battery")
         self.store.accept(ben, self.store.invite(self.alice, self.group))
@@ -72,6 +96,23 @@ class ReviewHttpTests(unittest.TestCase):
         self.assertEqual(correct("Nowhereville"), {"ok": True, "place_match": "missing", "place": None, "candidates": []})
         self.assertEqual(json.loads(self.request(f"/api/review/timeline?group={self.group}", token=token)[1])["items"][0]["place"], "nowhereville")
         self.assertEqual(correct(""), {"ok": True, "place_match": "empty", "place": None, "candidates": []})
+
+    def test_suggestion_reads_and_decisions_require_circle_membership(self):
+        for queue in ("duplicates", "reviewed-pairs", "events", "reviewed-events"):
+            with self.subTest(queue=queue):
+                self.assertEqual(self.request(f"/api/review/{queue}?group={self.group}",
+                                              token=self.outsider_token)[0], 403)
+        for action in ("merge", "dismiss", "undo"):
+            with self.subTest(pair_action=action):
+                self.assertEqual(self.request("/api/review/pair", {
+                    "group": self.group, "left": self.asset, "right": "unavailable-asset", "action": action,
+                }, token=self.outsider_token)[0], 403)
+        for decision in ("accept", "reject", "undo"):
+            with self.subTest(event_decision=decision):
+                self.assertEqual(self.request("/api/review/event", {
+                    "group": self.group, "assets": [self.asset, "unavailable-asset"],
+                    "title": "Unavailable event", "decision": decision,
+                }, token=self.outsider_token)[0], 403)
 
     def test_review_endpoints_authorization_and_withdrawal(self):
         timeline = f"/api/review/timeline?group={self.group}"

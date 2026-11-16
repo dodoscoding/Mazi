@@ -1,34 +1,16 @@
-import { initials } from "./ui/initials";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { SoundToggle } from "./sound/SoundToggle";
-import { IconButton } from "./ui/Button";
+import { primaryDestinations, sectionFor } from "./navigation";
 import { Icon } from "./ui/icons";
-import type { IconName } from "./ui/icons";
 import { Menu } from "./ui/Menu";
-import { Sheet } from "./ui/Sheet";
 import { ToastProvider } from "./ui/Toast";
 import type { useArchive } from "./useArchive";
 import type { LinkFor } from "./useRoute";
 import "./styles/shell.css";
 
 type Archive = ReturnType<typeof useArchive>;
-const tools: [string, string][] = [
-  ["/memories", "Memories"],
-  ["/discover", "Discover"],
-  ["/ask", "Ask your archive"],
-  ["/review", "Archive review"],
-  ["/places", "Places & sources"],
-];
-const tabs: [string, string, IconName][] = [
-  ["/", "Home", "home"],
-  ["/timeline", "Timeline", "timeline"],
-  ["/search", "Search", "search"],
-  ["/imports", "Imports", "imports"],
-];
-
 export function Shell({
-  parallelEnabled = false,
   path,
   demo,
   archive,
@@ -37,7 +19,6 @@ export function Shell({
   onSignOut,
   children,
 }: {
-  parallelEnabled?: boolean;
   path: string;
   demo: boolean;
   archive: Archive;
@@ -46,27 +27,16 @@ export function Shell({
   onSignOut: () => void;
   children: ReactNode;
 }) {
-  const [moreOpen, setMoreOpen] = useState(false);
-  const closeMore = () => setMoreOpen(false);
-  useEffect(() => {
-    const phone = matchMedia("(max-width: 600px)");
-    const close = () => {
-      if (!phone.matches) setMoreOpen(false);
-    };
-    phone.addEventListener("change", close);
-    return () => phone.removeEventListener("change", close);
-  }, []);
   const main = useRef<HTMLElement>(null);
-  const lastPath = useRef(path);
+  const routePath = path.split("?")[0];
+  const lastPath = useRef(routePath);
   useLayoutEffect(() => {
     const previous = lastPath.current;
-    lastPath.current = path;
-    setMoreOpen(false);
-    // Memory routes have their own photo morph; other screen changes rise 8px and fade in.
+    lastPath.current = routePath;
     if (
-      previous === path ||
+      previous === routePath ||
       previous.startsWith("/memory/") ||
-      path.startsWith("/memory/") ||
+      routePath.startsWith("/memory/") ||
       typeof main.current?.animate !== "function"
     )
       return;
@@ -83,62 +53,28 @@ export function Shell({
         easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     );
-  }, [path]);
-  const section = path === "/" ? "home" : path.split("/")[1];
+  }, [routePath]);
+  const section = sectionFor(path);
   const circle = demo
     ? "Sample Atlas"
     : archive.groups.find((group) => group.id === archive.group)?.name;
-  const navLink = (
-    url: string,
-    label: string,
-    className = "",
-    after?: () => void,
-  ) => (
+  const primaryLinks = primaryDestinations.map((entry) => (
     <a
-      key={url + label}
-      className={className || undefined}
-      href={`#${url}`}
-      onClick={(event) => {
-        link(url)(event);
-        after?.();
-      }}
-      aria-current={path === url ? "page" : undefined}
+      key={entry.path}
+      href={`#${entry.path}`}
+      onClick={link(entry.path)}
+      aria-current={section === entry.section ? "page" : undefined}
     >
-      {label}
+      <Icon name={entry.icon} size={22} />
+      <span>{entry.label}</span>
     </a>
-  );
-  const circlePicker = !demo && archive.groups.length > 0 && (
-    <label className="circle-picker">
-      Current circle
-      <select
-        aria-label="Current circle"
-        value={archive.group}
-        onChange={(event) => archive.chooseGroup(event.target.value)}
-      >
-        {archive.groups.map((group) => (
-          <option key={group.id} value={group.id}>
-            {group.name}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-  const moreActive =
-    moreOpen ||
-    [
-      "/parallel",
-      "/circle",
-      "/about",
-      "/introduction",
-      "/answer-evidence",
-      ...tools.map(([url]) => url),
-    ].includes(path);
-  const activeTab = (url: string) =>
-    !moreOpen &&
-    (url === "/" ? path === "/" || path.startsWith("/memory/") : path === url);
+  ));
   return (
     <ToastProvider>
-      <div className="shell" data-section={section}>
+      <div
+        className="shell"
+        data-section={routePath === "/" ? "atlas" : routePath.split("/")[1]}
+      >
         <a
           className="skip-link"
           href="#main-content"
@@ -147,7 +83,7 @@ export function Shell({
             document.getElementById("main-content")?.focus();
           }}
         >
-          Skip to content
+          İçeriğe geç
         </a>
         <header className="site-header">
           <div className="header-start">
@@ -155,60 +91,68 @@ export function Shell({
               className="wordmark"
               href="#/"
               onClick={link("/")}
-              aria-label="Mazi home"
+              aria-label="Mazi ana sayfa"
             >
               Mazi
             </a>
             <nav aria-label="Main navigation" className="primary-nav">
-              {navLink("/", "Home")}
-              {navLink("/timeline", "Timeline")}
-              {navLink("/search", "Search")}
-              {navLink("/imports", "My Imports", "nav-wide")}
-              {navLink("/circle", "Our circle", "nav-wide")}
+              {primaryLinks}
             </nav>
-            <Menu label="Archive tools" className="tools-menu">
+          </div>
+          <div className="header-end">
+            {circle && <span className="hud-label circle-name">{circle}</span>}
+            <a
+              className="shell-search"
+              href="#/photos?search=1"
+              onClick={link("/photos?search=1")}
+              aria-label="Anı ara"
+            >
+              <Icon name="search" size={20} />
+              <span>Anı ara</span>
+            </a>
+            <Menu label="Hesap" className="account-menu">
               {(close) => (
-                <nav aria-label="Archive tools" className="menu-list">
-                  <div className="menu-narrow">
-                    {navLink("/imports", "My Imports", "menu-item", close)}
-                    {navLink("/circle", "Our circle", "menu-item", close)}
-                    <div className="menu-separator" />
-                  </div>
-                  {tools.map(([url, label]) =>
-                    navLink(url, label, "menu-item", close),
+                <nav aria-label="Hesap araçları" className="menu-list">
+                  <p className="account-name">{profileName}</p>
+                  <a
+                    className="menu-item"
+                    href="#/settings"
+                    onClick={(event) => {
+                      link("/settings")(event);
+                      close();
+                    }}
+                  >
+                    Settings
+                  </a>
+                  <a
+                    className="menu-item"
+                    href="#/parallel"
+                    onClick={(event) => {
+                      link("/parallel")(event);
+                      close();
+                    }}
+                  >
+                    Parallel You
+                  </a>
+                  <SoundToggle
+                    variant="pill"
+                    className="button button--secondary account-sound"
+                  />
+                  {demo && (
+                    <a className="menu-item" href="/">
+                      Örnek arşivden çık
+                    </a>
                   )}
-                  {parallelEnabled &&
-                    navLink("/parallel", "Parallel You", "menu-item", close)}
-                  <div className="menu-separator" />
-                  {navLink("/about", "About", "menu-item menu-quiet", close)}
-                  <div className="menu-separator" />
-                  {circlePicker}
                   <button
                     type="button"
                     className="menu-item menu-sign-out"
                     onClick={onSignOut}
                   >
-                    Sign out
+                    Çıkış yap
                   </button>
                 </nav>
               )}
             </Menu>
-          </div>
-          <div className="header-end">
-            {circle && <span className="hud-label circle-name">{circle}</span>}
-            {demo && (
-              <a className="leave-demo" href="/">
-                Leave sample Atlas
-              </a>
-            )}
-            <SoundToggle className="hud-button" />
-            <span
-              className="avatar"
-              role="img"
-              aria-label={`Signed in as ${profileName}`}
-            >
-              {initials(profileName)}
-            </span>
           </div>
         </header>
         <main id="main-content" tabIndex={-1} ref={main}>
@@ -225,69 +169,8 @@ export function Shell({
           </span>
         </footer>
         <nav aria-label="Main navigation" className="tab-bar">
-          {tabs.map(([url, label, icon]) => (
-            <a
-              key={url}
-              href={`#${url}`}
-              onClick={link(url)}
-              aria-current={activeTab(url) ? "page" : undefined}
-              aria-label={url === "/imports" ? "My Imports" : undefined}
-            >
-              <Icon name={icon} size={22} />
-              {label}
-            </a>
-          ))}
-          <button
-            type="button"
-            aria-expanded={moreOpen}
-            aria-haspopup="dialog"
-            className={moreActive ? "is-active" : undefined}
-            onClick={() => setMoreOpen((open) => !open)}
-          >
-            <Icon name="more" size={22} />
-            More
-          </button>
+          {primaryLinks}
         </nav>
-        <Sheet
-          open={moreOpen}
-          onClose={closeMore}
-          label="More"
-          className="more-sheet"
-        >
-          <div className="sheet-header">
-            <h2 className="sheet-title">More</h2>
-            <div className="sheet-controls">
-              <SoundToggle
-                variant="pill"
-                className="button button--secondary theme-pill"
-              />
-            </div>
-          </div>
-          <nav aria-label="Archive tools" className="more-list">
-            {tools.map(([url, label]) => navLink(url, label, "", closeMore))}
-            {parallelEnabled &&
-              navLink("/parallel", "Parallel You", "", closeMore)}
-            {navLink("/circle", "Our circle", "", closeMore)}
-            {navLink("/about", "About", "more-quiet", closeMore)}
-          </nav>
-          {circlePicker}
-          <div className="more-footer">
-            {navLink(
-              "/introduction",
-              "Replay introduction",
-              "replay-link",
-              closeMore,
-            )}
-            {demo && <a href="/">Leave sample Atlas</a>}
-            <button
-              type="button"
-              className="button button--danger"
-              onClick={onSignOut}
-            >
-              Sign out
-            </button>
-          </div>
-        </Sheet>
       </div>
     </ToastProvider>
   );

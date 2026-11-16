@@ -1,0 +1,161 @@
+[WebServer] (node:1517) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 4 tests using 1 worker
+
+(node:1520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (11.1s)
+(node:1537) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [desktop] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (11.1s)
+(node:1578) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  3 [phone] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure (11.0s)
+(node:1597) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  4 [phone] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped (11.1s)
+
+
+  1) [desktop] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Preference saved.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Preference saved.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('Preference saved.', { exact: true })
+
+
+      489 |   await expect(
+      490 |     page.getByText("Preference saved.", { exact: true }),
+    > 491 |   ).toBeVisible();
+          |     ^
+      492 |   await page.reload();
+      493 |   await expect(personal).toBeChecked();
+      494 |   await personal.uncheck();
+        at /private/tmp/mazi-simplification-review-fixes/tests/entry.spec.ts:491:5
+
+    Error Context: work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Preference saved.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Preference saved.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('Preference saved.', { exact: true })
+
+
+      581 |     await expect(
+      582 |       page.getByText("Preference saved.", { exact: true }),
+    > 583 |     ).toBeVisible();
+          |       ^
+      584 |     const second = await visitor.newPage();
+      585 |     await second.goto("/#/settings");
+      586 |     await second
+        at /private/tmp/mazi-simplification-review-fixes/tests/entry.spec.ts:583:7
+
+    Error Context: work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [phone] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Preference saved.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Preference saved.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('Preference saved.', { exact: true })
+
+
+      489 |   await expect(
+      490 |     page.getByText("Preference saved.", { exact: true }),
+    > 491 |   ).toBeVisible();
+          |     ^
+      492 |   await page.reload();
+      493 |   await expect(personal).toBeChecked();
+      494 |   await personal.uncheck();
+        at /private/tmp/mazi-simplification-review-fixes/tests/entry.spec.ts:491:5
+
+    Error Context: work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-Settings-retains-per-d9e25-onsent-and-member-departure-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [phone] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Preference saved.', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Preference saved.', { exact: true }) with timeout 10000ms
+      - waiting for getByText('Preference saved.', { exact: true })
+
+
+      581 |     await expect(
+      582 |       page.getByText("Preference saved.", { exact: true }),
+    > 583 |     ).toBeVisible();
+          |       ^
+      584 |     const second = await visitor.newPage();
+      585 |     await second.goto("/#/settings");
+      586 |     await second
+        at /private/tmp/mazi-simplification-review-fixes/tests/entry.spec.ts:583:7
+
+    Error Context: work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/entry-Settings-keeps-ident-5f975-ministrator-controls-scoped-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [desktop] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure 
+    [desktop] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped 
+    [phone] › tests/entry.spec.ts:459:1 › Settings retains personal discovery consent and member departure 
+    [phone] › tests/entry.spec.ts:525:1 › Settings keeps identity confirmation private and administrator controls scoped 

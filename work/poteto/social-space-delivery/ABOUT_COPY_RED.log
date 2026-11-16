@@ -1,0 +1,52 @@
+[WebServer] (node:41072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 1 test using 1 worker
+
+(node:41104) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction (10.2s)
+
+
+  1) [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('main')
+    Expected substring: "There is no public feed, no public profile"
+    Received string:    "A private atlas for one circle of friendsMazi means “together”. It gathers the photographs and conversations a circle already has, places each memory where and when it happened, and helps the circle find its way back through them. There is no feed, no public profile and nothing to like.Our promises1Only the circle can see itEvery reader enters with the circle’s shared code and belongs to the circle. Nothing is published to the internet: no public links, profiles or feed.2What you add is shared at onceImports reach every member as each item is processed. There is no private stage and no publish step, so check an export before adding it.3No email, no passwordA visible name and the shared code open Mazi. A name is not proof of who is using it: anyone with the code can enter under any name.4You can take things backWithdraw a contribution and it stops being shared for everyone at once. Files someone already downloaded cannot be recalled.5Answers cite their sourcesAsk your archive answers only from recorded archive metadata and links each claim to the record it came from.6Optional AI stays offFace recognition and external AI providers are off. Memory answers run locally, and no question, photograph or message goes to a provider.Replay introductionAccountBEBen in Our small circleSigned in on this deviceSign outYou’ll need the circle’s shared code to come back. Nothing you added is removed.Music: “Monkeys Spinning Monkeys” by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.Sign out of Our small circle?The atlas closes on this device. You’ll need the circle’s shared code and your name to come back. Nothing you added is removed.Sign outStay signed in"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('main') with timeout 10000ms
+      - waiting for getByRole('main')
+        24 × locator resolved to <main tabindex="-1" id="main-content">…</main>
+           - unexpected value "A private atlas for one circle of friendsMazi means “together”. It gathers the photographs and conversations a circle already has, places each memory where and when it happened, and helps the circle find its way back through them. There is no feed, no public profile and nothing to like.Our promises1Only the circle can see itEvery reader enters with the circle’s shared code and belongs to the circle. Nothing is published to the internet: no public links, profiles or feed.2What you add is shared at onceImports reach every member as each item is processed. There is no private stage and no publish step, so check an export before adding it.3No email, no passwordA visible name and the shared code open Mazi. A name is not proof of who is using it: anyone with the code can enter under any name.4You can take things backWithdraw a contribution and it stops being shared for everyone at once. Files someone already downloaded cannot be recalled.5Answers cite their sourcesAsk your archive answers only from recorded archive metadata and links each claim to the record it came from.6Optional AI stays offFace recognition and external AI providers are off. Memory answers run locally, and no question, photograph or message goes to a provider.Replay introductionAccountBEBen in Our small circleSigned in on this deviceSign outYou’ll need the circle’s shared code to come back. Nothing you added is removed.Music: “Monkeys Spinning Monkeys” by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.Sign out of Our small circle?The atlas closes on this device. You’ll need the circle’s shared code and your name to come back. Nothing you added is removed.Sign outStay signed in"
+
+
+      39 |   ])
+      40 |     await expect(promises).toContainText(promise);
+    > 41 |   await expect(main).toContainText("There is no public feed, no public profile");
+         |                      ^
+      42 |   await main.getByRole("link", { name: "Replay introduction" }).click();
+      43 |   await expect(page).toHaveURL(/#\/introduction/);
+      44 |   await page.getByRole("button", { name: "Open the Atlas" }).click();
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-about-copy/tests/features-redesign.spec.ts:41:22
+
+    Error Context: work/poteto/unified-app/browser-results/features-redesign-About-st-156c9-nd-replays-the-introduction-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    work/poteto/unified-app/browser-results/features-redesign-About-st-156c9-nd-replays-the-introduction-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace work/poteto/unified-app/browser-results/features-redesign-About-st-156c9-nd-replays-the-introduction-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [desktop] › tests/features-redesign.spec.ts:20:1 › About states the privacy promises and replays the introduction

@@ -56,7 +56,7 @@ export function SoundController({
     }
   }, [live, ready]);
 
-  const atlas = route.path === "/";
+  const atlas = route.path === "/" || route.path === "/atlas";
   useEffect(() => {
     if (live) ambient(atlas);
   }, [live, atlas]);

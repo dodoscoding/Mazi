@@ -1,0 +1,100 @@
+
+> mazi@0.1.0 test:domains
+> playwright test --config tests/browser/playwright.config.ts
+
+
+Running 42 tests using 1 worker
+
+(node:35708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   1 [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (45.0s)
+(node:36353) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   2 [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal (45.0s)
+(node:36919) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   3 [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw (2.0s)
+
+
+  1) [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal
+
+    Test timeout of 45000ms exceeded.
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/tmp/mazi-domain-results/.playwright-artifacts-0/traces/c9d84957164db689fbd2-61dc0bcb93651a3d3048-recording1.network' -> '/tmp/mazi-domain-results/.playwright-artifacts-0/traces/c9d84957164db689fbd2-61dc0bcb93651a3d3048-recording1-pwnetcopy-1.network'
+
+    Error: browserContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/tmp/mazi-domain-results/.playwright-artifacts-0/traces/c9d84957164db689fbd2-61dc0bcb93651a3d3048.network' -> '/tmp/mazi-domain-results/.playwright-artifacts-0/traces/c9d84957164db689fbd2-61dc0bcb93651a3d3048-pwnetcopy-1.network'
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('link', { name: 'My Imports', exact: true }).first()
+
+
+      19 |     .getByRole("link", { name: "My Imports", exact: true })
+      20 |     .first()
+    > 21 |     .click();
+         |      ^
+      22 |   const fixture = execFileSync(process.env.MAZI_PYTHON || "python3", [
+      23 |     "-c",
+      24 |     `
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/browser/imports.spec.ts:21:6
+
+    Error: ENOENT: no such file or directory, open '/tmp/mazi-domain-results/.playwright-artifacts-0/14f2e9026235ebedf0cf2d4d180567d9.zip'
+
+  2) [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal
+
+    Test timeout of 45000ms exceeded.
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/tmp/mazi-domain-results/.playwright-artifacts-1/traces/c9d84957164db689fbd2-57e8fc65f7342d928a8c-recording1.network' -> '/tmp/mazi-domain-results/.playwright-artifacts-1/traces/c9d84957164db689fbd2-57e8fc65f7342d928a8c-recording1-pwnetcopy-1.network'
+
+    Error: browserContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/tmp/mazi-domain-results/.playwright-artifacts-1/traces/c9d84957164db689fbd2-57e8fc65f7342d928a8c.network' -> '/tmp/mazi-domain-results/.playwright-artifacts-1/traces/c9d84957164db689fbd2-57e8fc65f7342d928a8c-pwnetcopy-1.network'
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('link', { name: 'My Imports', exact: true }).first()
+
+
+      19 |     .getByRole("link", { name: "My Imports", exact: true })
+      20 |     .first()
+    > 21 |     .click();
+         |      ^
+      22 |   const fixture = execFileSync(process.env.MAZI_PYTHON || "python3", [
+      23 |     "-c",
+      24 |     `
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/browser/imports.spec.ts:21:6
+
+    Error: ENOENT: no such file or directory, open '/tmp/mazi-domain-results/.playwright-artifacts-1/ee27c25252e683a6e79a1dc55e6efd0a.zip'
+
+  3) [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw
+
+    Test was interrupted.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('link', { name: 'My Imports', exact: true }).first()
+
+
+      19 |     .getByRole("link", { name: "My Imports", exact: true })
+      20 |     .first()
+    > 21 |     .click();
+         |      ^
+      22 |   const fixture = execFileSync(process.env.MAZI_PYTHON || "python3", [
+      23 |     "-c",
+      24 |     `
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-space-delivery/tests/browser/archive.spec.ts:21:6
+
+    Error Context: ../../../../../../tmp/mazi-domain-results/archive-import-correct-review-export-and-withdraw-archive-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/mazi-domain-results/archive-import-correct-review-export-and-withdraw-archive-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../../../tmp/mazi-domain-results/archive-import-correct-review-export-and-withdraw-archive-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [imports-desktop] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal
+    [imports-phone] › tests/browser/imports.spec.ts:5:1 › import inventory, automatic sharing, report, replay and withdrawal
+  1 interrupted
+    [archive-desktop] › tests/browser/archive.spec.ts:5:1 › import, correct, review, export, and withdraw
+  39 did not run

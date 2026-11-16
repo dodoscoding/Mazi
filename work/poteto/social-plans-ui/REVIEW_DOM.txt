@@ -1,0 +1,37 @@
+✔ Discord return completes once across the React effect lifecycle (273.963209ms)
+✔ a memory opened by a direct link has no in-app entry to go back to (60.742042ms)
+✔ a memory opened from inside the app can go back, across photo changes (46.785333ms)
+✔ a plain hash link from a feature page counts as an in-app entry (26.841709ms)
+✔ Home and Atlas have separate canonical routes (23.12225ms)
+✔ legacy root selection links retain their Atlas state (29.22525ms)
+✔ /people replaces the legacy entry without adding history (19.538541ms)
+✔ /#/people replaces the legacy entry without adding history (13.61225ms)
+✔ /settings replaces the legacy entry without adding history (13.603458ms)
+✔ /#/settings replaces the legacy entry without adding history (14.379084ms)
+✔ aliases reached inside the app preserve the previous destination (14.582875ms)
+✔ a People alias preserves search and sample parameters but owns its section (13.910583ms)
+✔ Ekle exposes separate photo and meeting actions without changing the three destinations (143.638083ms)
+✔ empty plans work under StrictMode without loading Atlas (74.927291ms)
+✔ demo and another group's plan never request private social data (35.062667ms)
+✔ a deep link for another group is denied before reading (31.599959ms)
+✔ an uncertain save retains the draft and retries exactly the same command (51.373042ms)
+✔ a stale edit can reload the current revision without replacing its draft (46.590625ms)
+✔ late plan reads cannot restore content after access loss (25.869667ms)
+✔ plan wall times distinguish gaps, repeated hours and quarter-hour offsets (7.239542ms)
+✔ profile changes clear a pending write draft and discard its late response (36.066291ms)
+✔ a failed next page retains the list and retries its exact cursor (32.960292ms)
+✔ a denied write prevents an already-running read from restoring private content (33.09825ms)
+✔ title edits preserve a hidden memory projection (34.566917ms)
+▶ actual archive hide/edit/unhide preserves the link and a visible explicit unlink removes it
+  ✔ hidden projection title edit (39.994084ms)
+  ✔ visible explicit unlink (35.831333ms)
+✔ actual archive hide/edit/unhide preserves the link and a visible explicit unlink removes it (276.312792ms)
+✔ saving an untouched edit closes the form without a write (35.493125ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1077.301167

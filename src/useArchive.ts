@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { memories as samples } from "./memories";
 import { isFeaturePath } from "./featureRoutes";
 import type { Memory } from "./memories";
+import { evidencePin } from "./memory/evidence";
 
 type Circle = { id: string; name: string; role: string };
 type ArchiveState = {
@@ -27,9 +28,23 @@ const failure = (error: unknown): ArchiveState => ({
   error: error instanceof Error ? error.message : "Archive unavailable",
 });
 export function useArchive(path: string, demo: boolean, groupId?: string) {
+  const archiveEpoch = useRef(0);
+  const currentPath = useRef(path);
+  currentPath.current = path;
   const [state, setState] = useState<ArchiveState>(empty);
   const [version, setVersion] = useState(0);
+  const [archiveVersion, setArchiveVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
+  useEffect(() => {
+    const invalidate = () => {
+      if (demo) return;
+      archiveEpoch.current++;
+      setState((previous) => ({ ...previous, memories: [], atlas: false }));
+      setArchiveVersion((value) => value + 1);
+    };
+    window.addEventListener("mazi:archive-changed", invalidate);
+    return () => window.removeEventListener("mazi:archive-changed", invalidate);
+  }, [demo]);
   useEffect(() => {
     if (!groupId) {
       setState(empty);
@@ -40,18 +55,27 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       return;
     }
     let controller: AbortController | undefined;
-    async function load() {
+    let accessDenied = false;
+    const lost = () => {
+      accessDenied = true;
+      controller?.abort();
+      sessionStorage.removeItem("mazi.group");
+      setState({ ...empty, status: "signed-out" });
+    };
+    async function load(quiet = false) {
+      if (accessDenied) return;
       controller?.abort();
       const request = new AbortController();
       controller = request;
-      setState(empty);
+
+      if (!quiet) setState(empty);
       try {
         const response = await fetch("/api/groups", {
           signal: request.signal,
         });
         if (request.signal.aborted) return;
         if (response.status === 403 || response.status === 401) {
-          sessionStorage.removeItem("mazi.group");
+          lost();
           window.dispatchEvent(new Event("mazi:access-lost"));
           setState({ ...empty, status: "signed-out" });
           return;
@@ -64,29 +88,75 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
           [sessionStorage.getItem("mazi.group"), groupId].find((id) =>
             groups.some((item) => item.id === id),
           ) || "";
+        if (!group) {
+          lost();
+          window.dispatchEvent(new Event("mazi:access-lost"));
+          return;
+        }
         if (group) sessionStorage.setItem("mazi.group", group);
-        setState({ ...empty, status: "ready", groups, group });
+        let refreshed: Memory[] | undefined;
+        const epoch = archiveEpoch.current;
+        if (
+          quiet &&
+          !currentPath.current.startsWith("/memory/") &&
+          !isFeaturePath(currentPath.current, demo)
+        ) {
+          const result = await fetch(
+            "/api/atlas?" + new URLSearchParams({ group }),
+            { signal: request.signal },
+          );
+          if (request.signal.aborted) return;
+          if (result.status === 401 || result.status === 403) {
+            lost();
+            window.dispatchEvent(new Event("mazi:access-lost"));
+            return;
+          }
+          if (!result.ok) throw Error("Archive unavailable");
+          refreshed = ((await result.json()).memories as Memory[]).map(
+            (memory) => ({ ...memory, place: evidencePin(memory) }),
+          );
+          if (request.signal.aborted) return;
+        }
+        if (epoch !== archiveEpoch.current) refreshed = undefined;
+        setState((previous) =>
+          quiet && previous.status === "ready" && previous.group === group
+            ? {
+                ...previous,
+                groups,
+                ...(refreshed ? { memories: refreshed, atlas: true } : {}),
+              }
+            : { ...empty, status: "ready", groups, group },
+        );
       } catch (error) {
-        if (!request.signal.aborted) setState(failure(error));
+        if (!request.signal.aborted && !quiet) setState(failure(error));
       }
     }
     void load();
-    const clear = () => {
-      controller?.abort();
-      setState(empty);
+    const reload = () => void load();
+    const visibility = () => {
+      if (document.hidden) controller?.abort();
+      else void load(true);
     };
-    window.addEventListener("mazi:session", load);
-    window.addEventListener("mazi:group", load);
-    window.addEventListener("mazi:access-lost", clear);
+    const pageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) visibility();
+    };
+    document.addEventListener("visibilitychange", visibility);
+    window.addEventListener("pageshow", pageShow);
+    window.addEventListener("mazi:session", reload);
+    window.addEventListener("mazi:group", reload);
+    window.addEventListener("mazi:access-lost", lost);
     return () => {
       controller?.abort();
-      window.removeEventListener("mazi:session", load);
-      window.removeEventListener("mazi:group", load);
-      window.removeEventListener("mazi:access-lost", clear);
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pageshow", pageShow);
+      window.removeEventListener("mazi:session", reload);
+      window.removeEventListener("mazi:group", reload);
+      window.removeEventListener("mazi:access-lost", lost);
     };
   }, [demo, groupId, version]);
   const loadAtlas =
     path !== "/parallel" &&
+    !path.startsWith("/memory/") &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&
     !!state.group &&
@@ -110,7 +180,11 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
           throw Error(
             "Your archive changed or is unavailable. Refresh to check access.",
           );
-        const { memories } = await result.json();
+        const { memories: received } = await result.json();
+        const memories = (received as Memory[]).map((memory) => ({
+          ...memory,
+          place: evidencePin(memory),
+        }));
         if (!request.signal.aborted)
           setState((previous) => ({ ...previous, memories, atlas: true }));
       } catch (error) {
@@ -118,7 +192,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
       }
     })();
     return () => request.abort();
-  }, [loadAtlas, group]);
+  }, [loadAtlas, group, archiveVersion]);
   const chooseGroup = (id: string) => {
     sessionStorage.setItem("mazi.group", id);
     window.dispatchEvent(new Event("mazi:group"));

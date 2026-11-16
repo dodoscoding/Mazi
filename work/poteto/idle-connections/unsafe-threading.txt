@@ -1,0 +1,16 @@
+test_get_and_post_serialize_store_dispatch (tests.backend.test_server.AppServerTests.test_get_and_post_serialize_store_dispatch) ... FAIL
+
+======================================================================
+FAIL: test_get_and_post_serialize_store_dispatch (tests.backend.test_server.AppServerTests.test_get_and_post_serialize_store_dispatch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/altanesmer/Desktop/Ales/Mazi-wt/idle-connections/tests/backend/test_server.py", line 133, in test_get_and_post_serialize_store_dispatch
+    self.assertFalse(write_entered.wait(0.2), 'POST overlapped the active store read')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : POST overlapped the active store read
+
+----------------------------------------------------------------------
+Ran 1 test in 0.568s
+
+FAILED (failures=1)
+Rejected unguarded threading because store dispatch overlapped.

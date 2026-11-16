@@ -9,14 +9,6 @@ async function enter(page: Page, name = "Ben") {
   expect(response.ok()).toBe(true);
 }
 
-async function ask(page: Page, question: string) {
-  await page.goto("/#/ask");
-  await page.getByLabel("Ask the archive").fill(question);
-  await page
-    .getByRole("button", { name: "Find evidence", exact: true })
-    .click();
-}
-
 test("About states the privacy promises and replays the introduction", async ({
   page,
 }) => {
@@ -25,24 +17,27 @@ test("About states the privacy promises and replays the introduction", async ({
   const main = page.getByRole("main");
   await expect(
     main.getByRole("heading", {
-      name: "A private atlas for one circle of friends",
+      name: "About",
+      exact: true,
     }),
   ).toBeVisible();
-  const promises = main.getByRole("list").first();
+  const promises = main.locator(".about-promises");
   for (const promise of [
     "Only the circle can see it",
     "What you add is shared at once",
     "No email, no password",
     "You can take things back",
-    "Answers cite their sources",
+    "Sources stay inspectable",
     "Optional AI stays off",
   ])
     await expect(promises).toContainText(promise);
-  await expect(main).toContainText("There is no feed, no public profile");
+  await expect(main).toContainText(
+    "There is no public feed or public profile.",
+  );
   await main.getByRole("link", { name: "Replay introduction" }).click();
   await expect(page).toHaveURL(/#\/introduction/);
   await page.getByRole("button", { name: "Open the Atlas" }).click();
-  await expect(page).toHaveURL(/#\/$/);
+  await expect(page).toHaveURL(/#\/settings$/);
 });
 
 test("Sign out on About asks first; Stay keeps the session and confirming ends it", async ({
@@ -63,9 +58,17 @@ test("Sign out on About asks first; Stay keeps the session and confirming ends i
   // A late press on Sign out while the dialog fades away must not sign out.
   await page.locator(".about-dialog .button--primary").dispatchEvent("click");
   await expect(dialog).toBeHidden();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(500);
+  await page.evaluate(async () => {
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => {})),
+    );
+  });
   await expect(page.getByLabel("Shared code")).toHaveCount(0);
-  await expect(page).toHaveURL(/#\/about/);
+  await expect(page).toHaveURL(/#\/settings/);
   expect((await page.request.get("/api/groups")).status()).toBe(200);
   await main.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.keyboard.press("Escape");
@@ -97,7 +100,7 @@ test("My Imports always says imports are shared at once and offers no publish st
   );
   await expect(page.getByLabel("Source account label")).toBeFocused();
   await expect(
-    page.getByRole("link", { name: "Connect in Places & sources" }),
+    page.getByRole("link", { name: "Connect in Add" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /publish|approve/i }),
@@ -160,98 +163,13 @@ test("Our circle lists members without public or social counts", async ({
   await enter(page);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Our circle", level: 1 }),
+    page.getByRole("heading", { name: "Settings", level: 1 }),
   ).toBeVisible();
   const members = page.getByRole("list", { name: "Members" });
   await expect(members.getByRole("listitem")).not.toHaveCount(0);
   await expect(members).toContainText("Alice");
   await expect(members).toContainText("Ben");
   await expect(page.getByRole("main")).not.toContainText(/follower|share on/i);
-});
-
-test("Ask streams the answer word by word, then cites its evidence", async ({
-  page,
-}) => {
-  await enter(page);
-  const reply = page.waitForResponse("**/api/answers/ask");
-  await ask(page, "When was bicycle?");
-  const result = await (await reply).json();
-  await expect(page.locator("#notice")).toHaveText("Evidence found.");
-  const answer = page.locator("#answer");
-  await expect(answer).toHaveAttribute("aria-busy", "true");
-  expect(
-    await answer.locator(".answer-coverage span[hidden]").count(),
-  ).toBeGreaterThan(10);
-  await expect(answer.locator(".answer-coverage")).not.toContainText(
-    "incomplete",
-    { useInnerText: true },
-  );
-  await expect(answer).not.toHaveAttribute("aria-busy", "true");
-  // Once revealed, the visible text is exactly what the server answered.
-  const visible = (selector: string) =>
-    answer
-      .locator(selector)
-      .evaluateAll((nodes) =>
-        nodes.map((node) =>
-          (node as HTMLElement).innerText.replace(/\s+/g, " ").trim(),
-        ),
-      );
-  expect(await visible(".answer-lede")).toEqual([result.message]);
-  expect(await visible(".answer-text > p:not(.answer-lede)")).toEqual(
-    result.claims.map(
-      (claim: { text: string; evidence_ids: string[] }) =>
-        `${claim.text} ${claim.evidence_ids.map((_, i) => i + 1).join(" ")}`,
-    ),
-  );
-  expect(await visible(".answer-coverage")).toEqual([result.coverage]);
-  await expect(answer).toContainText("2024-01-02");
-  const cite = answer.getByRole("link", {
-    name: "View supporting record",
-    exact: true,
-  });
-  await expect(cite).toHaveText("1");
-  if ((page.viewportSize()?.width ?? 1440) > 800) {
-    const evidence = page.getByRole("complementary", { name: "Evidence" });
-    await expect(evidence).toContainText("Bicycle beside the sea");
-  } else {
-    await answer.getByRole("button", { name: /Evidence · 1 source/ }).click();
-    const sheet = page.getByRole("dialog", {
-      name: "Evidence for this answer",
-    });
-    await expect(sheet).toContainText("Bicycle beside the sea");
-    await page.keyboard.press("Escape");
-    await expect(sheet).toBeHidden();
-  }
-  await cite.click();
-  await expect(page.locator("#record")).toContainText("Bicycle beside the sea");
-});
-
-test("Under reduced motion the answer appears complete", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await enter(page);
-  await ask(page, "When was bicycle?");
-  await expect(page.locator("#notice")).toHaveText("Evidence found.");
-  const answer = page.locator("#answer");
-  await expect(answer.locator("span[hidden], a[hidden]")).toHaveCount(0);
-  expect(await answer.getAttribute("aria-busy")).toBeNull();
-  await expect(answer).toContainText("2024-01-02");
-  await expect(
-    answer.getByRole("link", { name: "View supporting record", exact: true }),
-  ).toBeVisible();
-});
-
-test("Ask says when the archive has no evidence and links nothing", async ({
-  page,
-}) => {
-  await enter(page);
-  await ask(page, "Was bicycle our first trip ever?");
-  await expect(page.locator("#notice")).toHaveText("Not enough evidence.");
-  const answer = page.locator("#answer");
-  await expect(answer).toContainText("No evidence found");
-  await expect(answer).toContainText("so Mazi won’t guess");
-  await expect(answer.locator("a")).toHaveCount(0);
-  await answer.getByRole("button", { name: "Check My Imports" }).click();
-  await expect(page).toHaveURL(/#\/imports/);
 });
 
 test("PR 6 screens have no axe violations", async ({ page }) => {
@@ -262,10 +180,10 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
   const screens: [string, string][] = [
     ["/imports", "#imports"],
     ["/circle", "#members li"],
-    ["/review", "#timeline article"],
-    ["/places", "#origin-counts"],
-    ["/ask", "#private:not([hidden])"],
-    ["/about", ".about-page"],
+    ["/add?section=suggestions", "#events"],
+    ["/add?section=sources", "#source-form"],
+    ["/photos", ".mem-tile"],
+    ["/settings", "#members li"],
   ];
   for (const theme of ["night"]) {
     await page.evaluate(
@@ -277,140 +195,33 @@ test("PR 6 screens have no axe violations", async ({ page }) => {
       await page.reload();
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await page.locator(ready).first().waitFor();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
+      await page.evaluate(async () => {
+        await Promise.all(
+          document
+            .getAnimations()
+            .filter(
+              (a) => a.effect?.getComputedTiming().iterations !== Infinity,
+            )
+            .map((a) => a.finished.catch(() => {})),
+        );
+      });
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations, `${route} in ${theme}`).toEqual([]);
     }
-    await ask(page, "When was bicycle?");
-    await expect(page.locator("#notice")).toHaveText("Evidence found.");
-    await page.waitForTimeout(300);
-    const answered = await new AxeBuilder({ page }).analyze();
-    expect(answered.violations, `answer in ${theme}`).toEqual([]);
-    await page
-      .locator("#answer")
-      .getByRole("link", { name: "View supporting record", exact: true })
-      .click();
-    await expect(page.locator("#record")).toContainText("Bicycle");
-    await page.waitForTimeout(300);
-    const record = await new AxeBuilder({ page }).analyze();
-    expect(record.violations, `evidence in ${theme}`).toEqual([]);
-  }
-});
-
-test("Search photographs stay usable while included categories load and retry", async ({
-  page,
-}, info) => {
-  await enter(page, "Alice");
-  const session = await (await page.request.get("/api/session")).json();
-  const snapshotResponse = await page.request.get(
-    `/api/discovery/search?group=${encodeURIComponent(session.group_id)}&mode=keyword`,
-  );
-  expect(snapshotResponse.ok()).toBe(true);
-  const snapshot = await snapshotResponse.json();
-  expect(snapshot.next_offset).toBeNull();
-  expect(snapshot.items).toHaveLength(snapshot.total);
-  const tagName = `Startup tag ${info.project.name}`;
-  const personResponse = await page.request.post("/api/discovery/person", {
-    data: { group: session.group_id, name: tagName },
-  });
-  expect(personResponse.ok()).toBe(true);
-  const person = await personResponse.json();
-  let requested = false;
-  let fail = true;
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route("**/api/discovery/state?**", async (route) => {
-    requested = true;
-    await gate;
-    if (fail)
-      await route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "Synthetic context failure" }),
-      });
-    else await route.continue();
-  });
-  await page.goto("/#/search");
-  await expect(page.locator("#results article")).toHaveCount(snapshot.total);
-  const shownIds = await page
-    .locator("#results article img")
-    .evaluateAll((images) =>
-      images
-        .map((image) =>
-          new URL((image as HTMLImageElement).src).pathname.split("/").at(-2),
-        )
-        .sort(),
+    const profile = await (await page.request.get("/api/session")).json();
+    const atlas = await (
+      await page.request.get(`/api/atlas?group=${profile.group_id}`)
+    ).json();
+    const asset = atlas.memories[0].photos[0].assetId;
+    await page.goto(
+      `/#/answer-evidence?group=${profile.group_id}&asset=${asset}`,
     );
-  expect(shownIds).toEqual(
-    snapshot.items.map((item: { id: string }) => item.id).sort(),
-  );
-  expect(requested).toBe(false);
-  await page.getByLabel("Search", { exact: true }).fill("bicycle");
-  await page
-    .getByRole("button", { name: "Search archive", exact: true })
-    .click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#result-total")).toHaveText("1 photograph");
-  const include = page.getByRole("button", {
-    name: "Include memories, chats, places and people",
-  });
-  await page.screenshot({
-    path: info.outputPath("search-photographs-ready.png"),
-    fullPage: true,
-  });
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await include.click();
-  await expect.poll(() => requested).toBe(true);
-  await expect(include).toBeDisabled();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#person")).toBeDisabled();
-  await page
-    .getByText("Refine by place, person or date", { exact: true })
-    .click();
-  await page.getByLabel("Place", { exact: true }).fill("Amsterdam");
-  await page
-    .getByRole("button", { name: "Search archive", exact: true })
-    .click();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  release();
-  await expect(page.locator("#context-status")).toContainText("unavailable");
-  await expect(include).toBeEnabled();
-  await expect(page.locator("#results article")).toHaveCount(1);
-  fail = false;
-  await include.click();
-  await expect(page.locator("#person")).toBeEnabled();
-  await expect(page.getByLabel("Search", { exact: true })).toHaveValue(
-    "bicycle",
-  );
-  await expect(page.getByLabel("Place", { exact: true })).toHaveValue(
-    "Amsterdam",
-  );
-  await expect(page.locator("#results article")).toHaveCount(1);
-  await expect(page.locator("#people")).toContainText("Ben");
-  await expect(page.locator(".disc-tag select")).toBeEnabled();
-  await expect(page.locator(".disc-tag select option")).not.toHaveCount(1);
-  const confirm = page.getByRole("button", {
-    name: "Confirm tag",
-    exact: true,
-  });
-  await expect(confirm).toBeEnabled();
-  await page.locator(".disc-tag select").selectOption(person.id);
-  const tagged = page.waitForResponse("**/api/discovery/tag");
-  await confirm.click();
-  expect((await tagged).ok()).toBe(true);
-  await expect(page.locator("#notice")).toHaveText("Changes saved.");
-  await expect(page.locator("#results .disc-person")).toContainText([
-    "Ben",
-    tagName,
-  ]);
-  await page.screenshot({
-    path: info.outputPath("search-context-ready.png"),
-    fullPage: true,
-  });
+    await expect(page.locator(".viewer")).toBeVisible();
+    const record = await new AxeBuilder({ page }).analyze();
+    expect(
+      record.violations,
+      `retained photograph evidence in ${theme}`,
+    ).toEqual([]);
+  }
 });
