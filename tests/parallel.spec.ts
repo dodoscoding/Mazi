@@ -364,3 +364,30 @@ for (const failed of [false, true]) {
     ).not.toBeNull();
   });
 }
+
+for (const enabled of [true, false]) {
+  test(`standalone Parallel You focuses deferred availability ${enabled}`, async ({
+    page,
+  }) => {
+    let release!: () => void;
+    const waiting = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/api/parallel/config", async (r) => {
+      await waiting;
+      await r.fulfill({ json: { enabled, accepted: true } });
+    });
+    await page.goto("/parallel");
+    await expect(
+      page.getByRole("heading", { name: "Checking availability…" }),
+    ).toBeFocused();
+    release();
+    await expect(
+      page.getByRole("heading", {
+        name: enabled
+          ? "What if you chose differently?"
+          : "Parallel You is not enabled",
+      }),
+    ).toBeFocused();
+  });
+}
