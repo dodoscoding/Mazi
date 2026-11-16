@@ -6,6 +6,7 @@ const firefoxLaunchOptions = process.env.MAZI_FIREFOX_EXECUTABLE
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "interface-clarity.spec.ts",
     "journey.spec.ts",
     "resilience.spec.ts",
     "evidence.spec.ts",
@@ -15,6 +16,7 @@ export default defineConfig({
     "browse.spec.ts",
     "entry-redesign.spec.ts",
     "sound.spec.ts",
+    "visibility.spec.ts",
   ],
   fullyParallel: true,
   timeout: 30000,

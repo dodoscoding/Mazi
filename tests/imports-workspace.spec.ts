@@ -12,7 +12,7 @@ test("import workspace exposes source and file controls in both themes", async (
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/imports");
   await expect(
-    page.getByRole("heading", { name: "My Imports", level: 1 }),
+    page.getByRole("heading", { name: "İçe aktarmalar", level: 1 }),
   ).toBeVisible();
   await expect(page.getByRole("list", { name: "Import steps" })).toBeVisible();
   await page.getByRole("button", { name: "Choose Photos in a ZIP" }).click();
@@ -291,9 +291,15 @@ test("phone memories preserves view and order with reachable touch controls", as
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/#/memories");
     await page.reload();
-    const all = page.getByRole("button", { name: "All photos", exact: true });
-    const moment = page.getByRole("button", { name: "By moment", exact: true });
-    const order = page.getByRole("button", { name: "Order: Newest first" });
+    const all = page.getByRole("button", {
+      name: "Tüm fotoğraflar",
+      exact: true,
+    });
+    const moment = page.getByRole("button", {
+      name: "Anılara göre",
+      exact: true,
+    });
+    const order = page.getByRole("button", { name: "Sıra: Önce en yeni" });
     for (const control of [all, moment, order]) {
       await expect(control).toBeVisible();
       const box = await control.boundingBox();
@@ -307,11 +313,11 @@ test("phone memories preserves view and order with reachable touch controls", as
     await order.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator("#grid-order")).toBeFocused();
-    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+    await expect(page.locator("#grid-order")).toContainText("Önce en eski");
     await moment.tap();
     await expect(moment).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator(".mem-moment").first()).toBeVisible();
-    await expect(page.locator("#grid-order")).toContainText("Oldest first");
+    await expect(page.locator("#grid-order")).toContainText("Önce en eski");
   }
 });
 
@@ -562,7 +568,7 @@ test("circle retains its mounted state across visibility changes", async ({
   ).toBe(true);
   await page.goto("/#/circle");
   await expect(
-    page.getByRole("heading", { name: "Our circle", level: 1 }),
+    page.getByRole("heading", { name: "Grubumuz", level: 1 }),
   ).toBeVisible();
   await page.locator(".feature-content").evaluate((element) => {
     element.setAttribute("data-retained-probe", "original");

@@ -1,14 +1,21 @@
 """Authorized Atlas cards from the shared archive, without synthetic content."""
 import json
-import re
+import time
 from datetime import datetime, timezone
 
 from mazi.identity.core import Denied
-from mazi.imports.adapters import date_orders, settle_date_order, time_assertion
+from mazi.capacity import CapacityExceeded
+from mazi.social.visibility import authorize_photos
+from mazi.archive.photo_context import SharingContext
+from mazi.imports.adapters import date_orders, settle_date_order
 from mazi.persistence import insertion_order
 from mazi.places import fold, identify, km, label, lookup
+from mazi.archive.photo_metadata import origin_timestamps, place_evidence, resolve_photo, sharing_provenance
+from mazi.archive.photo_context import hidden_event_assets as _hidden_event_assets
 
 SAME_PLACE_KM = 50
+SELECTED_REQUEST_BYTES = 64 * 1024 * 1024
+SELECTED_REQUEST_ORIGINS = 65536
 
 
 def _place(rows):
@@ -24,30 +31,8 @@ def _place(rows):
     return dict(name=name, country=rows[0]['country'], latitude=centre[0], longitude=centre[1])
 
 
-def _shared_at(assertion, date_order):
-    """Resolve raw-only share evidence as imports do, with its export's settled date order."""
-    if assertion.get('local') or assertion.get('raw') is None:
-        return assertion
-    resolved = time_assertion(assertion['raw'], date_order)
-    return {**assertion, 'local': resolved['local'], 'precision': resolved['precision']}
-
-
 def _export(row, origin):
     return row['run_id'], (origin.get('conversation') or {}).get('id')
-
-
-def _timestamps(origin):
-    return [(origin.get('shared_at_assertion') or {}).get('raw'),
-            *(message.get('shared_at') for message in origin.get('context', []))]
-
-def _hidden_event_assets(store, user, group):
-    """Photographs of memories this member hid; they must not return as loose photographs."""
-    hidden = set()
-    for row in store.db.execute(
-        'SELECT e.asset_ids FROM review_events e JOIN discovery_hidden_events h ON h.event=e.id WHERE h."user"=? AND e.group_id=?', (user, group)
-    ):
-        hidden.update(json.loads(row[0]))
-    return hidden
 
 
 def atlas_view(store, user, group):
@@ -55,134 +40,147 @@ def atlas_view(store, user, group):
     with transaction:
         store._member(user, group)
         items = {item['id']: item for item in store._timeline_items(user, group)}
-        hidden_assets = _hidden_event_assets(store, user, group)
-        cards, grouped = [], set()
+        return _project_cards(store, user, group, items, store._approved(user, group))
 
-        consumers = {}
-        details = []
 
-        def card(identifier, title, assets, kind):
-            records = [items[asset] for asset in assets]
-            # Undated photos do not blank the others; conflicting evidence widens the range.
-            dates = sorted({day for item in records for day in item['dates']})
-            date_label = 'Date not recorded'
-            if dates:
-                date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
-            photos = [dict(src='/api/review/rendition/' + item['id'],
-                           alt=item['title'] or 'Archive photograph',
-                           caption=item['title'] or 'Untitled photograph') for item in records]
-            detail = dict(messages={}, sources=set(), places=[], shared=set(),
-                          provenance=[{} for _ in records],
-                          untitled={position for position, item in enumerate(records) if not item['title']})
-            details.append(detail)
-            for position, asset in enumerate(assets):
-                consumers.setdefault(asset, []).append((detail, position))
-            return dict(id=identifier, kind=kind, shortTitle=title, title=title,
-                        date=date_label, year=int(dates[0][:4]) if dates else None,
-                        approximate=not all(item['date'] for item in records), by='Your circle',
-                        description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
-                        source='', photos=photos, messages=[],
-                        place=None, people=dict(shared=[], conversation=[]),
-                        dateBasis=', '.join(sorted({item['date_basis'] for item in records})))
+def _project_cards(store, user, group, items, events, *, selected=False, budget=None):
+    hidden_assets = _hidden_event_assets(store, user, group)
+    cards, grouped = [], set()
 
-        for event in store._approved(user, group):
-            assets = event['assets']
-            if assets and all(asset in items and asset not in hidden_assets for asset in assets):
-                cards.append(card(event['id'], event['title'] or 'Untitled memory', assets, 'memory'))
-                grouped.update(assets)
-        for asset, item in items.items():
-            if asset not in grouped and asset not in hidden_assets:
-                cards.append(card('photo-' + asset, item['title'] or 'Untitled photograph', [asset], 'photo'))
-        joins = (' FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id AND a.group_id=o.group_id '
-                 'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
-                 'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
-        where = 'WHERE o.group_id=? AND o.withdrawn=0 '
-        origins = ('SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
-                   'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
-                   'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'))
-        # One uploaded chat writes all its dates in one order; any of its timestamps can settle it.
-        # Two streamed passes keep large payloads from accumulating.
-        proven = {}
-        for row in store.db.execute(origins, (user, group)):
-            origin = json.loads(row['payload'])
-            proven.setdefault(_export(row, origin), set()).update(date_orders(_timestamps(origin)))
-        rows = store.db.execute(origins, (user, group))
-        for origin_position, row in enumerate(rows):
-            targets = consumers.get(row['asset_id'])
-            if not targets:
+    consumers = {}
+    details = []
+
+    def card(identifier, title, assets, kind):
+        records = [items[asset] for asset in assets]
+        # Undated photos do not blank the others; conflicting evidence widens the range.
+        dates = sorted({day for item in records for day in item['dates']})
+        date_label = 'Date not recorded'
+        if dates:
+            date_label = dates[0] if len(dates) == 1 else f'{dates[0]} to {dates[-1]}'
+        photos = [dict(src='/api/review/rendition/' + item['id'],
+                       alt=item['title'] or 'Archive photograph',
+                       caption=item['title'] or 'Untitled photograph', assetId=item['id']) for item in records]
+        detail = dict(messages={}, sources=set(), places=[], shared=set(),
+                      provenance=[{} for _ in records],
+                      untitled={position for position, item in enumerate(records) if not item['title']})
+        details.append(detail)
+        for position, asset in enumerate(assets):
+            consumers.setdefault(asset, []).append((detail, position))
+        return dict(id=identifier, kind=kind, shortTitle=title, title=title,
+                    date=date_label, year=int(dates[0][:4]) if dates else None,
+                    approximate=not all(item['date'] for item in records), by='Your circle',
+                    description='An approved shared memory.' if kind == 'memory' else 'A photograph from your shared archive.',
+                    source='', photos=photos, messages=[],
+                    place=None, people=dict(shared=[], conversation=[]),
+                    dateBasis=', '.join(sorted({item['date_basis'] for item in records})))
+
+    for event in events:
+        assets = event['assets']
+        if assets and all(asset in items and asset not in hidden_assets for asset in assets):
+            cards.append(card(event['id'], event['title'] or 'Untitled memory', assets, 'memory'))
+            grouped.update(assets)
+    for asset, item in items.items():
+        if asset not in grouped and asset not in hidden_assets:
+            cards.append(card('photo-' + asset, item['title'] or 'Untitled photograph', [asset], 'photo'))
+    joins = (' FROM archive_origins o JOIN archive_assets a ON a.id=o.asset_id AND a.group_id=o.group_id '
+             'JOIN members m ON m.user_id=o.owner_id AND m.group_id=o.group_id '
+             'JOIN members reader ON reader.group_id=o.group_id AND reader.user_id=? ')
+    where = 'WHERE o.group_id=? AND o.withdrawn=0 '
+    params = (user, group)
+    if selected:
+        where += ' AND o.asset_id IN (' + ','.join('?' for _ in items) + ') '
+        params += tuple(items)
+    context = SharingContext(store, user, group, budget.started, 2, consume=budget.consume) if selected else None
+    origins = ('SELECT o.asset_id,o.run_id,o.payload,p.display_name' + joins +
+               'LEFT JOIN shared_profiles p ON p.user_id=o.owner_id ' + where +
+               'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'))
+    # One uploaded chat writes all its dates in one order; any of its timestamps can settle it.
+    # Two streamed passes keep large payloads from accumulating.
+    proven = {}
+    if not selected:
+        for row in store.db.execute(origins, params):
+            if row['asset_id'] not in items or row['asset_id'] in hidden_assets:
                 continue
             origin = json.loads(row['payload'])
-            assertion = _shared_at(origin.get('shared_at_assertion') or {},
-                                   settle_date_order(proven[_export(row, origin)]))
-            sender = (origin.get('sender') or {}).get('label') or None
-            raw = assertion.get('raw')
-            date_parts = re.match(r'^(\d{1,2})[/.](\d{1,2})[/.]\d{2,4}\b', str(raw or '').strip())
-            ambiguous = (not assertion.get('local') and 'AMBIGUOUS_DATE' in origin.get('warnings', [])
-                         and date_parts is not None and 1 <= int(date_parts[1]) <= 12
-                         and 1 <= int(date_parts[2]) <= 12 and int(date_parts[1]) != int(date_parts[2]))
-            evidence = dict(sender=sender, source=origin.get('source_type') or 'archive', sharedAt=dict(
-                local=assertion.get('local') or None, raw=str(raw) if raw is not None else None,
-                precision=assertion.get('precision') or 'unknown',
-                ambiguous=bool(ambiguous)))
-            evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
-            for detail, asset_position in targets:
-                detail['sources'].add(evidence['source'])
-                if sender or raw is not None or assertion.get('local'):
-                    detail['provenance'][asset_position].setdefault(evidence_key, evidence)
-                if row['display_name'] is not None:
-                    detail['shared'].add(row['display_name'])
-                for message_position, message in enumerate(origin.get('context', [])):
-                    value = message.get('text', '')
-                    name = message.get('sender', {}).get('label') or 'Source participant'
-                    when = str(message.get('shared_at') or '')
-                    key = (name, when, value)
-                    if value:
-                        position = (asset_position, origin_position, message_position)
-                        previous = detail['messages'].get(key)
-                        if previous is None or position < previous:
-                            detail['messages'][key] = position
-        # A city named in Review stands in for every source location of that photograph.
-        reviewed = {}
-        for row in store.db.execute("SELECT asset_id,place FROM review_annotations WHERE group_id=? AND place<>''", (group,)):
-            match = lookup(row['place']) if row['asset_id'] in consumers else {}
-            if match.get('status') == 'matched':
-                city = match['city']
-                reviewed[row['asset_id']] = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
-        for asset, row in reviewed.items():
-            for detail, asset_position in consumers[asset]:
-                detail['places'].append((asset_position, -1, row))
-        places = store.db.execute(
-            'SELECT o.asset_id,p.city,p.country,p.latitude,p.longitude' + joins +
-            'JOIN shared_places p ON p.origin=o.id ' + where +
-            'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), (user, group))
-        for place_position, row in enumerate(places):
-            if row['asset_id'] in reviewed:
-                continue
-            for detail, asset_position in consumers.get(row['asset_id'], ()):
-                detail['places'].append((asset_position, place_position, row))
-        for result, detail in zip(cards, details):
-            for position, photo in enumerate(result['photos']):
-                evidence = list(detail['provenance'][position].values())
-                if evidence:
-                    photo['provenance'] = evidence
-                names = sorted({item['sender'] for item in evidence if item['sender']})
-                if names and position in detail['untitled']:
-                    title = 'Photo shared by ' + (
-                        ' and '.join(names) if len(names) <= 2 else
-                        ', '.join(names[:2]) + f' and {len(names) - 2} more')
-                    photo['caption'] = title
-                    photo['alt'] = title
-                    if result['kind'] == 'photo':
-                        result['title'] = result['shortTitle'] = title
-            result['source'] = ', '.join(sorted(detail['sources']))
-            result['messages'] = [dict(name=key[0], time=key[1], text=key[2])
-                                  for key in sorted(detail['messages'], key=detail['messages'].get)]
-            ordered_places = [entry[2] for entry in sorted(detail['places'])]
-            result['place'] = _place(ordered_places) if ordered_places else None
-            result['people'] = dict(shared=sorted(detail['shared']), conversation=sorted(
-                {message['name'] for message in result['messages']} - {'Source participant'}))
-        cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
-        return {'memories': cards}
+            proven.setdefault(_export(row, origin), set()).update(date_orders(origin_timestamps(origin)))
+    rows = store.db.execute(origins, params)
+    for origin_position, row in enumerate(rows):
+        targets = consumers.get(row['asset_id'])
+        if not targets:
+            continue
+        origin = json.loads(row['payload'])
+        evidence = context.provenance(row['run_id'], origin) if context else sharing_provenance(origin, settle_date_order(proven[_export(row, origin)]))
+        sender, raw = evidence['sender'], evidence['sharedAt']['raw']
+        evidence_key = (sender, evidence['source'], *evidence['sharedAt'].values())
+        for detail, asset_position in targets:
+            detail['sources'].add(evidence['source'])
+            if sender or raw is not None or evidence['sharedAt']['local']:
+                detail['provenance'][asset_position].setdefault(evidence_key, evidence)
+            if row['display_name'] is not None:
+                detail['shared'].add(row['display_name'])
+            for message_position, message in enumerate(origin.get('context', [])):
+                value = message.get('text', '')
+                name = message.get('sender', {}).get('label') or 'Source participant'
+                when = str(message.get('shared_at') or '')
+                key = (name, when, value)
+                if value:
+                    position = (asset_position, origin_position, message_position)
+                    previous = detail['messages'].get(key)
+                    if previous is None or position < previous:
+                        detail['messages'][key] = position
+    # A city named in Review stands in for every source location of that photograph.
+    reviewed = {}
+    reviewed_text = {}
+    annotation_query = "SELECT asset_id,place FROM review_annotations WHERE group_id=? AND place<>''"
+    annotation_params = (group,)
+    if selected:
+        annotation_query += ' AND asset_id IN (' + ','.join('?' for _ in items) + ')'
+        annotation_params += tuple(items)
+    for row in store.db.execute(annotation_query, annotation_params):
+        reviewed_text[row['asset_id']] = row['place']
+        match = lookup(row['place']) if row['asset_id'] in consumers else {}
+        if match.get('status') == 'matched':
+            city = match['city']
+            reviewed[row['asset_id']] = dict(city=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)
+    for asset, row in reviewed.items():
+        for detail, asset_position in consumers[asset]:
+            detail['places'].append((asset_position, -1, row))
+    places = store.db.execute(
+        'SELECT o.asset_id,p.city,p.country,p.latitude,p.longitude' + joins +
+        'JOIN shared_places p ON p.origin=o.id ' + where +
+        'ORDER BY o.asset_id,' + insertion_order(store.db, 'o'), params)
+    for place_position, row in enumerate(places):
+        if row['asset_id'] in reviewed:
+            continue
+        for detail, asset_position in consumers.get(row['asset_id'], ()):
+            detail['places'].append((asset_position, place_position, row))
+    for result, detail in zip(cards, details):
+        for position, photo in enumerate(result['photos']):
+            asset = photo['assetId']
+            evidence = list(detail['provenance'][position].values())
+            if evidence:
+                photo['provenance'] = evidence
+            photo['evidence'] = resolve_photo(items[asset]['dates'], evidence, reviewed_text.get(asset),
+                [entry[2] for entry in detail['places'] if entry[0] == position])
+            names = sorted({item['sender'] for item in evidence if item['sender']})
+            if names and position in detail['untitled']:
+                title = 'Photo shared by ' + (
+                    ' and '.join(names) if len(names) <= 2 else
+                    ', '.join(names[:2]) + f' and {len(names) - 2} more')
+                photo['caption'] = title
+                photo['alt'] = title
+                if result['kind'] == 'photo':
+                    result['title'] = result['shortTitle'] = title
+        result['source'] = ', '.join(sorted(detail['sources']))
+        result['messages'] = [dict(name=key[0], time=key[1], text=key[2])
+                              for key in sorted(detail['messages'], key=detail['messages'].get)]
+        ordered_places = [entry[2] for entry in sorted(detail['places'])]
+        result['place'] = _place(ordered_places) if ordered_places else None
+        result['people'] = dict(shared=sorted(detail['shared']), conversation=sorted(
+            {message['name'] for message in result['messages']} - {'Source participant'}))
+    store._attach_photo_labels(group, [photo for card in cards for photo in card['photos']])
+    cards.sort(key=lambda item: (item['year'] or 0, item['date'], item['id']), reverse=True)
+    return {'memories': cards}
 
 
 def _memory_assets(store, user, group, memory):
@@ -227,4 +225,81 @@ def place_memory(store, user, group, memory, place):
             store._audit(user, 'atlas.place' if city else 'atlas.place.clear', memory)
     return {'place_match': match['status'], 'place': city and f'{city.name}, {city.country}',
             'candidates': [label(candidate) for candidate in match.get('candidates', [])],
-            'pin': city and dict(name=city.name, country=city.country, latitude=city.latitude, longitude=city.longitude)}
+            'pin': city and place_evidence(label(city), [])['pin']}
+
+
+class _SelectedBudget:
+    def __init__(self):
+        self.started = time.perf_counter()
+        self.bytes = self.origins = 0
+
+    def consume(self, size):
+        self.bytes += size
+        self.origins += 1
+        if size > 65536 or self.bytes > SELECTED_REQUEST_BYTES or self.origins > SELECTED_REQUEST_ORIGINS or time.perf_counter() - self.started > 2:
+            raise CapacityExceeded('Selected memory exceeds the metadata read budget')
+
+
+def _selected_items(store, user, group, assets, budget):
+    result, after = {}, ('', '')
+    size = 'octet_length(o.payload)' if getattr(store.db, 'hosted', False) else 'length(CAST(o.payload AS BLOB))'
+    while True:
+        rows = store.db.execute('SELECT a.id,o.id AS origin_id,' + size + ' AS payload_bytes,CASE WHEN ' + size + '<=65536 THEN o.payload ELSE NULL END AS payload,r.title,r.capture_date,r.place,r.anniversary '
+            'FROM archive_assets a JOIN archive_origins o ON o.asset_id=a.id AND o.group_id=a.group_id '
+            'JOIN members owner ON owner.group_id=o.group_id AND owner.user_id=o.owner_id '
+            'LEFT JOIN review_annotations r ON r.asset_id=a.id WHERE a.group_id=? AND o.withdrawn=0 AND a.id IN (' + ','.join('?' for _ in assets) + ') '
+            'AND (a.id>? OR (a.id=? AND o.id>?)) ORDER BY a.id,o.id LIMIT 256', (group, *assets, after[0], after[0], after[1])).fetchall()
+        if not rows:
+            break
+        for row in rows:
+            budget.consume(row['payload_bytes'])
+            item = result.setdefault(row['id'], dict(id=row['id'], title=row['title'] or '', dates=set(), cities=set(),
+                annotation=row, origin_count=0, metadata_bytes=0))
+            item['origin_count'] += 1
+            item['metadata_bytes'] += row['payload_bytes']
+            if item['origin_count'] > 8192 or item['metadata_bytes'] > 8 * 1024 * 1024:
+                raise CapacityExceeded('Selected photograph exceeds the metadata read budget')
+            dates, cities = store._date_place_evidence(row['id'], json.loads(row['payload']), row)
+            item['dates'].update(dates)
+            item['cities'].update(cities)
+        after = rows[-1]['id'], rows[-1]['origin_id']
+    for item in result.values():
+        dates, cities, annotation = item['dates'], item.pop('cities'), item.pop('annotation')
+        day = next(iter(dates)) if len(dates) == 1 else None
+        item.update(date=day, dates=sorted(dates), place=next(iter(cities)) if len(cities) == 1 else None,
+            date_basis='reviewed correction' if annotation['capture_date'] else 'conflicting source evidence' if len(dates) > 1 else 'source capture evidence' if day else 'undated',
+            anniversary=bool(annotation['anniversary']))
+    return result
+
+
+def _selected_memory(store, user, group, memory):
+    if not isinstance(memory, str) or not 0 < len(memory) <= 200:
+        raise ValueError('Invalid memory')
+    events = []
+    if memory.startswith('photo-'):
+        assets = [memory[6:]]
+    else:
+        row = store.db.execute("SELECT id,title,asset_ids FROM review_events WHERE id=? AND group_id=? AND status='accepted'", (memory, group)).fetchone()
+        if row is None:
+            raise Denied('Memory unavailable')
+        assets = json.loads(row['asset_ids'])
+        if not assets or len(assets) > 100:
+            raise CapacityExceeded('Selected memory supports at most 100 photographs')
+        events = [dict(id=row['id'], title=row['title'], assets=assets)]
+    authorize_photos(store, user, group, assets)
+    budget = _SelectedBudget()
+    items = _selected_items(store, user, group, assets, budget)
+    if set(items) != set(assets):
+        raise Denied('Memory unavailable')
+    cards = _project_cards(store, user, group, items, events, selected=True, budget=budget)['memories']
+    return next((card for card in cards if card['id'] == memory), None)
+
+
+def memory_view(store, user, group, memory):
+    transaction = store.db.read_transaction() if getattr(store.db, 'hosted', False) else store.transaction()
+    with transaction:
+        store._member(user, group)
+        selected = _selected_memory(store, user, group, memory)
+        if selected is None:
+            raise Denied('Memory unavailable')
+        return dict(memory=selected)

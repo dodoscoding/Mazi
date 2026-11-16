@@ -236,7 +236,7 @@ The provider is behind an adapter so tests never reach the network. `MAZI_PARALL
 
 **Files:** modify `docs/PRIVACY.md`, `docs/CONTRACTS.md`, `docs/DEPLOYMENT.md`, `docs/DECISIONS.md`.
 
-- [ ] Add a Parallel You section to PRIVACY (inputs, provider, notice, retention terms once recorded), the endpoint contract to CONTRACTS, the environment variables to DEPLOYMENT, and the owner's provider decision as a D26 follow-up.
+- [ ] Add a Parallel You section to PRIVACY (inputs, provider, notice, retention terms once recorded), the endpoint contract to CONTRACTS, the environment variables to DEPLOYMENT, and the owner's provider decision as a PY-D1 follow-up.
 - [ ] `npm run check:docs`; PASS. Commit: `docs(parallel): record the story endpoint contracts`.
 
 ## PR 4: PY-S4 live generation

@@ -1,0 +1,115 @@
+✔ a memory opened by a direct link has no in-app entry to go back to (102.707958ms)
+✔ a memory opened from inside the app can go back, across photo changes (13.406833ms)
+✔ a plain hash link from a feature page counts as an in-app entry (12.803959ms)
+✔ Home and Atlas have separate canonical routes (10.642917ms)
+✔ legacy root selection links retain their Atlas state (11.832709ms)
+✖ /people replaces the legacy entry without adding history (9.854416ms)
+✖ /#/people replaces the legacy entry without adding history (10.27125ms)
+✖ /settings replaces the legacy entry without adding history (9.261542ms)
+✖ /#/settings replaces the legacy entry without adding history (10.357209ms)
+✖ aliases reached inside the app preserve the previous destination (9.706416ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 5
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 469.250708
+
+✖ failing tests:
+
+test at tests/dom/route-history.test.mjs:114:5
+✖ /people replaces the legacy entry without adding history (9.854416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/people'
+  - '/discover'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/people',
+    expected: '/discover',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/route-history.test.mjs:114:5
+✖ /#/people replaces the legacy entry without adding history (10.27125ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/people'
+  - '/discover'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/people',
+    expected: '/discover',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/route-history.test.mjs:114:5
+✖ /settings replaces the legacy entry without adding history (9.261542ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/settings'
+  - '/circle'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/settings',
+    expected: '/circle',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/route-history.test.mjs:114:5
+✖ /#/settings replaces the legacy entry without adding history (10.357209ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/settings'
+  - '/circle'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:116:14)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/settings',
+    expected: '/circle',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/dom/route-history.test.mjs:125:1
+✖ aliases reached inside the app preserve the previous destination (9.706416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/people'
+  - '/discover'
+
+      at TestContext.<anonymous> (file:///Users/altanesmer/Desktop/Ales/Mazi-wt/social-navigation/tests/dom/route-history.test.mjs:128:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/people',
+    expected: '/discover',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

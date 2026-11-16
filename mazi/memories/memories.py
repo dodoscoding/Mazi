@@ -7,6 +7,11 @@ from mazi.identity.core import Conflict, Denied
 from mazi.discovery.discovery import text
 from mazi.answers.answers import AnswerStore
 from .advanced import AdvancedMixin, SCHEMA as ADVANCED_SCHEMA
+from mazi.social.schema import SCHEMA as SOCIAL_SCHEMA, COMMENT_SCHEMA, REACTION_SCHEMA, LABEL_SCHEMA, HOME_SCHEMA
+from mazi.social.social import export_social
+from mazi.social.conversations import export_comments
+from mazi.social.reactions import export_reactions
+from mazi.social.labels import export_labels
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS advanced_stories (
@@ -28,10 +33,33 @@ END;
 
 
 class MemoryStore(AdvancedMixin, AnswerStore):
+    def _attach_photo_labels(self, group, photos):
+        from mazi.social.labels import attach_summaries
+        attach_summaries(self, group, photos)
+
     def __init__(self, root, encoder=None):
         super().__init__(root, encoder)
         initialize_schema(self.db, SCHEMA)
         initialize_schema(self.db, ADVANCED_SCHEMA)
+        initialize_schema(self.db, SOCIAL_SCHEMA)
+        initialize_schema(self.db, COMMENT_SCHEMA)
+        initialize_schema(self.db, REACTION_SCHEMA)
+        initialize_schema(self.db, LABEL_SCHEMA)
+        initialize_schema(self.db, HOME_SCHEMA)
+
+    def _capture_export_metadata(self, user, group, ids, fingerprint):
+        super()._capture_export_metadata(user, group, ids, fingerprint)
+        export_social(self, user, group, fingerprint)
+        export_comments(self, user, group, fingerprint)
+        export_reactions(self, user, group, fingerprint)
+        export_labels(self, user, group, fingerprint)
+
+    def _write_export_archive(self, user, group, ids, fingerprint, archive, output):
+        super()._write_export_archive(user, group, ids, fingerprint, archive, output)
+        export_social(self, user, group, fingerprint, archive)
+        export_comments(self, user, group, fingerprint, archive)
+        export_reactions(self, user, group, fingerprint, archive)
+        export_labels(self, user, group, fingerprint, archive)
 
     def _approved(self, user, group):
         self._member(user, group)
@@ -161,6 +189,16 @@ class MemoryStore(AdvancedMixin, AnswerStore):
 
             self._write_contribution(user, story, content)
             return self._event_notebook(user, group, event)
+
+    def delete_recollection(self, user, group, story, revision):
+        """Withdraw only an existing own contribution; never create or edit text."""
+        with self.transaction():
+            row, _ = self._story(user, group, story)
+            self._revision(row, revision)
+            if not self.db.execute('SELECT 1 FROM story_contributions WHERE story=? AND author=?', (story, user)).fetchone():
+                raise Denied('Recollection unavailable')
+            self._write_contribution(user, story, '')
+            return self._story_view(user, group, story)
 
     def delete_story(self, user, group, story, revision):
         with self.transaction():

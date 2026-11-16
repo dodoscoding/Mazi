@@ -1,0 +1,14 @@
+{
+  "validated_candidate": "f69f605d5933bda1884784ba03646536a9fdc617",
+  "deployed_release": "41e74de875ab145f4f9d11730df341830f89ab4b",
+  "identical_trees_or_blobs": {
+    "src": "e1ed8099d44053a307a0f4a7a465bfe5e74838e9",
+    "mazi": "db5d0e3899ada680b43bdc2c3b61a60a6bc7151b",
+    "api": "eefa3bd21ec430af71ed6747a731146f6cfcb286",
+    "infra": "686747e46af111328033924a2e6b857281a581e5",
+    "scripts": "79dd94d434940842240be03913a3bc53e3b117de",
+    "package.json": "83d930937c8b7c6ed7de25a05ff26ef44ba41440",
+    "package-lock.json": "afa0395c8eea03ffbd24620f8fb2af9295e11af6"
+  },
+  "hosting_delta": "One independently reviewed direct-memory rewrite in vercel.json, verified by actual staged and production requests."
+}

@@ -76,6 +76,9 @@ class ReviewStore(ImportStore):
         super().__init__(root)
         initialize_schema(self.db, SCHEMA)
 
+    def _attach_photo_labels(self, group, photos):
+        pass
+
     def _visible_ids(self, user, group):
         self._member(user, group)
         return [row[0] for row in self.db.execute(
@@ -177,13 +180,17 @@ class ReviewStore(ImportStore):
                 for row in self.db.execute("SELECT left_id,right_id,status FROM review_pairs WHERE group_id=? ORDER BY updated_at DESC", (group,))
                 if row[0] in visible and row[1] in visible]
 
-    def owned_origins(self, user, group):
+    def owned_origins(self, user, group, asset=None):
         self._member(user, group)
+        if asset is not None and (not isinstance(asset, str) or not asset or len(asset) > 200):
+            raise ValueError("Invalid photograph")
+        selected = " AND asset_id=?" if asset is not None else ""
+        params = (user, group, asset) if asset is not None else (user, group)
         return [{"id": row["id"], "asset": row["asset_id"],
                  "filename": json.loads(row["payload"]).get("original_filename") or "Unnamed photograph"}
                 for row in self.db.execute("SELECT id,asset_id,payload FROM archive_origins "
-                                           'WHERE owner_id=? AND group_id=? AND withdrawn=0 ORDER BY ' + insertion_order(self.db, '') + ' DESC LIMIT 1000',
-                                           (user, group))]
+                                           'WHERE owner_id=? AND group_id=? AND withdrawn=0' + selected + ' ORDER BY ' + insertion_order(self.db, '') + ' DESC LIMIT 1000',
+                                           params)]
 
     def group_metrics(self, user, group):
         self._member(user, group, admin=True)
@@ -382,7 +389,47 @@ class ReviewStore(ImportStore):
                 return result
             offset = page["next_offset"]
 
+    def _correction_visible_ids(self, user, group):
+        return set(self._visible_ids(user, group))
+
+    def _photo_correction(self, user, group, asset):
+        if not all(isinstance(value, str) and 1 <= len(value) <= 36 for value in (group, asset)):
+            raise ValueError('Invalid photograph target')
+        row = self._asset(user, asset)
+        if row['group_id'] != group or asset not in self._correction_visible_ids(user, group):
+            raise Denied('Media unavailable')
+        annotation = dict(self.db.execute(
+            'SELECT title,capture_date,place,anniversary FROM review_annotations WHERE asset_id=?', (asset,)).fetchone() or
+            dict(title='', capture_date=None, place='', anniversary=0))
+        origins = [tuple(row) for row in self.db.execute(
+            'SELECT o.id,o.fingerprint FROM archive_origins o JOIN members m ON m.group_id=o.group_id AND m.user_id=o.owner_id '
+            'WHERE o.asset_id=? AND o.group_id=? AND o.withdrawn=0 ORDER BY o.id', (asset, group))]
+        snapshot = hashlib.sha256(json.dumps([group, asset, annotation, origins], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        return dict(assetId=asset, annotation=annotation, snapshot=snapshot)
+
+    def photo_correction(self, user, group, asset):
+        with self.transaction():
+            return self._photo_correction(user, group, asset)
+
+    def patch_photo(self, user, group, asset, changes, expected_snapshot):
+        if not isinstance(changes, dict) or not changes or not set(changes) <= {'capture_date', 'place'}:
+            raise ValueError('Only capture_date and place may be changed')
+        if not isinstance(expected_snapshot, str) or len(expected_snapshot) != 64:
+            raise ValueError('Expected snapshot required')
+        with self.transaction():
+            current = self._photo_correction(user, group, asset)
+            if current['snapshot'] != expected_snapshot:
+                raise Conflict('Photograph changed; refresh before retrying')
+            values = {**current['annotation'], **changes}
+            values['anniversary'] = bool(values['anniversary'])
+            self._correct_asset(user, asset, **values)
+            return self._photo_correction(user, group, asset)
+
     def correct_asset(self, user, asset, *, title, capture_date, place, anniversary=False):
+        with self.transaction():
+            return self._correct_asset(user, asset, title=title, capture_date=capture_date, place=place, anniversary=anniversary)
+
+    def _correct_asset(self, user, asset, *, title, capture_date, place, anniversary=False):
         row = self._asset(user, asset)
         if not isinstance(title, str) or len(title) > 200 or not isinstance(place, str) or len(place) > 200:
             raise ValueError("Invalid title or place")
@@ -396,14 +443,12 @@ class ReviewStore(ImportStore):
                 raise ValueError("Use a precise YYYY-MM-DD date") from None
         if type(anniversary) is not bool or (anniversary and not capture_date):
             raise ValueError("Anniversary needs an approved date")
-        with self.transaction():
-            self._asset(user, asset)
-            self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,?) "
-                            "ON CONFLICT(asset_id) DO UPDATE SET title=excluded.title,capture_date=excluded.capture_date,"
-                            "place=excluded.place,anniversary=excluded.anniversary,actor_id=excluded.actor_id,"
-                            "updated_at=excluded.updated_at",
-                            (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
-            self._audit(user, "review.correct", asset)
+        self.db.execute("INSERT INTO review_annotations VALUES(?,?,?,?,?,?,?,?) "
+                        "ON CONFLICT(asset_id) DO UPDATE SET title=excluded.title,capture_date=excluded.capture_date,"
+                        "place=excluded.place,anniversary=excluded.anniversary,actor_id=excluded.actor_id,"
+                        "updated_at=excluded.updated_at",
+                        (asset, row["group_id"], title.strip(), capture_date, place.strip(), int(anniversary), user, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")))
+        self._audit(user, "review.correct", asset)
         match = lookup(place)
         city = match.get("city")
         return {"place_match": match["status"], "place": city and f"{city.name}, {city.country}",
@@ -488,7 +533,8 @@ class ReviewStore(ImportStore):
     def reviewed_events(self, user, group):
         visible = set(self._visible_ids(user, group))
         result = []
-        for row in self.db.execute("SELECT id,asset_ids,title,status FROM review_events WHERE group_id=? ORDER BY updated_at DESC", (group,)):
+        event_order = 'id' if getattr(self.db, 'hosted', False) else insertion_order(self.db)
+        for row in self.db.execute("SELECT id,asset_ids,title,status FROM review_events WHERE group_id=? ORDER BY updated_at DESC,status," + event_order, (group,)):
             assets = [asset for asset in json.loads(row["asset_ids"]) if asset in visible]
             if len(assets) >= 2:
                 result.append({"id": row["id"], "title": row["title"], "assets": assets, "status": row["status"]})

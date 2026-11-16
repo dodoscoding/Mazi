@@ -31,6 +31,16 @@ function sourceKey(type) {
 export function mount(root, lifecycle) {
   const { fetch, setInterval, setTimeout, URL } = lifecycle;
   const $ = (selector) => root.querySelector(selector);
+  const sourcesOnly = root.dataset.surface === "add";
+  if (sourcesOnly) {
+    $(".fx-places").classList.add("sources-only");
+    $("h1").textContent = "Add";
+    $(".fx-head .fx-sub").textContent =
+      "Connect existing sources and follow their transfers to your circle.";
+    $(".places-main").hidden = true;
+    $(".places-switch").hidden = true;
+    $("#source-title").after(action("Refresh connections", refresh));
+  }
   let group = "";
   let generation = 0;
   let land;
@@ -413,10 +423,16 @@ export function mount(root, lifecycle) {
       )
         return;
       $("#sources").replaceChildren(
-        node("p", "Sources could not load. Refresh places to retry.", {
-          role: "status",
-          class: "fx-small",
-        }),
+        node(
+          "p",
+          sourcesOnly
+            ? "Sources could not load. Refresh connections to retry."
+            : "Sources could not load. Refresh places to retry.",
+          {
+            role: "status",
+            class: "fx-small",
+          },
+        ),
       );
       throw error;
     }
@@ -635,8 +651,9 @@ export function mount(root, lifecycle) {
     } catch {
       if (request === countRequest && active()) {
         $("#origin-counts").replaceChildren();
-        $("#origin-sub").textContent =
-          "Source overview could not load. Refresh places to retry.";
+        $("#origin-sub").textContent = sourcesOnly
+          ? "Source overview could not load. Refresh connections to retry."
+          : "Source overview could not load. Refresh places to retry.";
       }
     }
   }
@@ -653,8 +670,9 @@ export function mount(root, lifecycle) {
     } catch (error) {
       if (request !== guildRequest || !active() || error.name === "AbortError")
         return;
-      $("#guild-status").textContent =
-        "Connected servers could not load. Refresh places to retry.";
+      $("#guild-status").textContent = sourcesOnly
+        ? "Connected servers could not load. Refresh connections to retry."
+        : "Connected servers could not load. Refresh places to retry.";
       return;
     }
     if (request !== guildRequest || group !== selectedGroup || !active())
@@ -722,9 +740,8 @@ export function mount(root, lifecycle) {
   }
   async function refresh() {
     await Promise.allSettled([
-      map(),
+      ...(sourcesOnly ? [] : [map(), loadOrigins()]),
       loadGuilds().then(loadSources),
-      loadOrigins(),
       loadOverview(),
     ]);
   }
@@ -884,8 +901,31 @@ export function mount(root, lifecycle) {
       "",
       location.pathname + location.hash,
     );
-  loadWorkspace().then(() => {
-    if (!active() || $("#workspace").hidden || !(link || cancelled)) return;
+  loadWorkspace().then(async () => {
+    if (!active() || $("#workspace").hidden) return;
+    const focusEntry = () => {
+      if (lifecycle.mountKind === "refresh" || !active()) return;
+      const sources =
+        new URLSearchParams(lifecycle.search).get("section") === "sources";
+      const target = $(sources ? "#source-title" : "h1");
+      target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+      if (sources) {
+        root
+          .querySelectorAll("[data-jump]")
+          .forEach((jump) =>
+            jump.setAttribute(
+              "aria-current",
+              String(jump.dataset.jump === "source-title"),
+            ),
+          );
+        target.scrollIntoView({ block: "start" });
+      }
+    };
+    if (!(link || cancelled)) {
+      focusEntry();
+      return;
+    }
     $("#kind").value = "discord";
     $("#kind").onchange();
     if (cancelled) {
@@ -893,9 +933,10 @@ export function mount(root, lifecycle) {
       $("#notice").dataset.tone = "";
       $("#notice").textContent =
         "Discord connection cancelled. Nothing was changed.";
+      focusEntry();
       return;
     }
-    run(async () => {
+    await run(async () => {
       let result;
       try {
         result = lifecycle.discordReturn
@@ -910,5 +951,6 @@ export function mount(root, lifecycle) {
       const { guild } = result;
       return `${guild.name} is connected. Choose its channels to create a source.`;
     });
+    focusEntry();
   });
 }

@@ -85,3 +85,128 @@ test("a plain hash link from a feature page counts as an in-app entry", async (t
   assert.equal(h.route.path, "/memory/a");
   assert.equal(h.canGoBack(), true);
 });
+
+test("Atlas legacy links canonicalize to the opening Globe", async (t) => {
+  const home = await harness(t, "http://localhost/?demo=1#/");
+  assert.equal(home.route.path, "/");
+  await home.navigate("/atlas?selected=lake-days&view=portal");
+  assert.equal(home.route.path, "/");
+  assert.equal(home.route.selected, "lake-days");
+  assert.equal(home.route.search, "?selected=lake-days&view=portal");
+});
+
+test("legacy root selection links retain their Atlas state", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/?demo=1#/?selected=lake-days&view=portal",
+  );
+  assert.equal(h.route.path, "/");
+  assert.equal(h.route.selected, "lake-days");
+  assert.equal(h.route.search, "?selected=lake-days&view=portal");
+  assert.equal(h.canGoBack(), false);
+});
+
+for (const [alias, path, search] of [
+  ["people", "/settings", "?section=people"],
+]) {
+  for (const prefix of ["/", "/#/"]) {
+    test(`${prefix}${alias} replaces the legacy entry without adding history`, async (t) => {
+      const h = await harness(t, `http://localhost${prefix}${alias}`);
+      assert.equal(h.route.path, path);
+      assert.equal(h.route.search, search);
+      assert.equal(h.window.location.hash, `#${path}${search}`);
+      assert.equal(h.canGoBack(), false);
+      assert.equal(h.window.history.length, 1);
+    });
+  }
+}
+
+test("aliases reached inside the app preserve the previous destination", async (t) => {
+  const h = await harness(t, "http://localhost/#/explore");
+  await h.navigate("/people");
+  assert.equal(h.route.path, "/settings");
+  assert.equal(h.window.history.length, 2);
+  await act(async () => {
+    h.window.history.back();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  assert.equal(h.route.path, "/photos");
+});
+
+test("a People alias preserves search and sample parameters but owns its section", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/?demo=1#/people?q=ferry&source=discord&section=other",
+  );
+  assert.equal(h.route.path, "/settings");
+  assert.equal(h.route.search, "?q=ferry&source=discord&section=people");
+  assert.equal(h.window.location.search, "?demo=1");
+  assert.equal(h.window.history.length, 1);
+});
+
+for (const prefix of ["/", "/#/"]) {
+  test(`${prefix}settings is a real route without an alias history entry`, async (t) => {
+    const h = await harness(t, `http://localhost${prefix}settings`);
+    assert.equal(h.route.path, "/settings");
+    assert.equal(h.route.search, "");
+    assert.equal(h.window.history.length, 1);
+  });
+}
+
+for (const [old, canonical] of [
+  [
+    "/timeline?year=2024&q=two%3Fwords&places=%5B%22Doe%2C+City%22%5D&photo=2",
+    "/photos?year=2024&q=two%3Fwords&places=%5B%22Doe%2C+City%22%5D&photo=2&years=2024",
+  ],
+  [
+    "/memories?story=exact-record&group=circle",
+    "/past-creations?story=exact-record&group=circle",
+  ],
+  [
+    "/memories?section=capsules&capsule=sealed",
+    "/past-creations?capsule=sealed",
+  ],
+  [
+    "/review?section=export&asset=original",
+    "/settings?section=export&asset=original",
+  ],
+  [
+    "/review?section=events&cursor=next",
+    "/add?section=suggestions&cursor=next",
+  ],
+  [
+    "/circle?section=plans&plan=actual-plan&group=foreign",
+    "/settings?section=plans&plan=actual-plan&group=foreign&unavailable=plans",
+  ],
+])
+  test(`old ${old} preserves its retained task and exact parameters`, async (t) => {
+    const h = await harness(t, `http://localhost/#${old}`);
+    assert.equal(h.window.location.hash, `#${canonical}`);
+    assert.equal(h.canGoBack(), false);
+  });
+
+test("Discord outer query remains available to its captured controller and never enters canonical hash", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/places?code=private-code&state=private-state",
+  );
+  assert.equal(h.route.path, "/add");
+  assert.equal(h.route.search, "?section=sources");
+  assert.equal(
+    h.window.location.search,
+    "?code=private-code&state=private-state",
+  );
+  assert.equal(h.window.location.hash, "#/add?section=sources");
+  assert.equal(h.canGoBack(), false);
+});
+
+test("a literal question mark inside a query does not truncate later bookmark parameters", async (t) => {
+  const h = await harness(
+    t,
+    "http://localhost/#/photos?q=what?when&places=%5B%22Doe%2C+City%22%5D&bookmark=exact",
+  );
+  const params = new URLSearchParams(h.route.search);
+  assert.equal(params.get("q"), "what?when");
+  assert.equal(params.get("places"), '["Doe, City"]');
+  assert.equal(params.get("bookmark"), "exact");
+});

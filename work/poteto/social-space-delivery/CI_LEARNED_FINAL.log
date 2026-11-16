@@ -1,0 +1,1005 @@
+﻿2026-11-04T14:41:35.5637326Z Current runner version: '2.338.2'
+2026-11-04T14:41:35.5680210Z ##[group]Runner Image Provisioner
+2026-11-04T14:41:35.5681725Z Hosted Compute Agent
+2026-11-04T14:41:35.5682981Z Version: 20261021.618
+2026-11-04T14:41:35.5684244Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-11-04T14:41:35.5686040Z Build Date: 2026-10-21T00:45:21Z
+2026-11-04T14:41:35.5687583Z Worker ID: {06020828-4ec3-485c-ac8c-cde514e02972}
+2026-11-04T14:41:35.5688956Z Region: eastus
+2026-11-04T14:41:35.5690100Z Cloud: Azure
+2026-11-04T14:41:35.5691280Z ##[endgroup]
+2026-11-04T14:41:35.5693621Z ##[group]Operating System
+2026-11-04T14:41:35.5694985Z Ubuntu
+2026-11-04T14:41:35.5696289Z 24.04.5
+2026-11-04T14:41:35.5697370Z LTS
+2026-11-04T14:41:35.5698402Z ##[endgroup]
+2026-11-04T14:41:35.5699519Z ##[group]Runner Image
+2026-11-04T14:41:35.5700785Z Image: ubuntu-24.04
+2026-11-04T14:41:35.5701851Z Version: 20261025.353.1
+2026-11-04T14:41:35.5704190Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-04T14:41:35.5707176Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-11-04T14:41:35.5709134Z ##[endgroup]
+2026-11-04T14:41:35.5711170Z ##[group]GITHUB_TOKEN Permissions
+2026-11-04T14:41:35.5714730Z Contents: read
+2026-11-04T14:41:35.5716114Z Metadata: read
+2026-11-04T14:41:35.5717433Z ##[endgroup]
+2026-11-04T14:41:35.5720641Z Secret source: Actions
+2026-11-04T14:41:35.5722170Z Cache mode: write
+2026-11-04T14:41:35.5723654Z Prepare workflow directory
+2026-11-04T14:41:35.6249351Z Prepare all required actions
+2026-11-04T14:41:35.6326400Z Getting action download info
+2026-11-04T14:41:35.9223360Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-04T14:41:36.0814289Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-04T14:41:36.1827177Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-11-04T14:41:36.2787154Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-11-04T14:41:36.4040390Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-04T14:41:36.6807892Z Complete job name: learned-retrieval
+2026-11-04T14:41:36.7845674Z ##[group]Run actions/checkout@v4
+2026-11-04T14:41:36.7846752Z with:
+2026-11-04T14:41:36.7847326Z   repository: dodoscoding/Mazi
+2026-11-04T14:41:36.7851195Z   token: ***
+2026-11-04T14:41:36.7942001Z   ssh-strict: true
+2026-11-04T14:41:36.7943436Z   ssh-user: git
+2026-11-04T14:41:36.7944315Z   persist-credentials: true
+2026-11-04T14:41:36.7945731Z   clean: true
+2026-11-04T14:41:36.7946763Z   sparse-checkout-cone-mode: true
+2026-11-04T14:41:36.7947719Z   fetch-depth: 1
+2026-11-04T14:41:36.7948450Z   fetch-tags: false
+2026-11-04T14:41:36.7949010Z   show-progress: true
+2026-11-04T14:41:36.7949574Z   lfs: false
+2026-11-04T14:41:36.7950092Z   submodules: false
+2026-11-04T14:41:36.7950717Z   set-safe-directory: true
+2026-11-04T14:41:36.7951333Z   allow-unsafe-pr-checkout: false
+2026-11-04T14:41:36.7953655Z ##[endgroup]
+2026-11-04T14:41:37.2405860Z Syncing repository: dodoscoding/Mazi
+2026-11-04T14:41:37.2411096Z ##[group]Getting Git version info
+2026-11-04T14:41:37.2413675Z Working directory is '/home/runner/work/Mazi/Mazi'
+2026-11-04T14:41:37.2417202Z [command]/usr/bin/git version
+2026-11-04T14:41:37.2707486Z git version 2.56.0
+2026-11-04T14:41:37.2731849Z ##[endgroup]
+2026-11-04T14:41:37.2743347Z Temporarily overriding HOME='/home/runner/work/_temp/4f7d02d1-117c-41f2-8d12-fd17fe1d4356' before making global git config changes
+2026-11-04T14:41:37.2747110Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T14:41:37.2750053Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Mazi/Mazi
+2026-11-04T14:41:37.2832248Z Deleting the contents of '/home/runner/work/Mazi/Mazi'
+2026-11-04T14:41:37.2844884Z ##[group]Initializing the repository
+2026-11-04T14:41:37.2867026Z [command]/usr/bin/git init /home/runner/work/Mazi/Mazi
+2026-11-04T14:41:37.2991802Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-04T14:41:37.3001462Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-04T14:41:37.3004105Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-04T14:41:37.3007242Z hint: call:
+2026-11-04T14:41:37.3008792Z hint:
+2026-11-04T14:41:37.3011150Z hint: 	git config --global init.defaultBranch <name>
+2026-11-04T14:41:37.3013093Z hint:
+2026-11-04T14:41:37.3039555Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-04T14:41:37.3042295Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-04T14:41:37.3044289Z hint:
+2026-11-04T14:41:37.3045920Z hint: 	git branch -m <name>
+2026-11-04T14:41:37.3047577Z hint:
+2026-11-04T14:41:37.3049480Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-04T14:41:37.3052363Z Initialized empty Git repository in /home/runner/work/Mazi/Mazi/.git/
+2026-11-04T14:41:37.3057503Z [command]/usr/bin/git remote add origin https://github.com/dodoscoding/Mazi
+2026-11-04T14:41:37.3132018Z ##[endgroup]
+2026-11-04T14:41:37.3136136Z ##[group]Disabling automatic garbage collection
+2026-11-04T14:41:37.3138787Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-04T14:41:37.3208437Z ##[endgroup]
+2026-11-04T14:41:37.3210783Z ##[group]Setting up auth
+2026-11-04T14:41:37.3214292Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T14:41:37.3285910Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T14:41:37.3871539Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T14:41:37.3931860Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T14:41:37.4226390Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T14:41:37.4279780Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T14:41:37.4566982Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-04T14:41:37.4625225Z ##[endgroup]
+2026-11-04T14:41:37.4628034Z ##[group]Fetching the repository
+2026-11-04T14:41:37.4642543Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +1a0234a1a41a78e46b60723748df6d7d089be4c2:refs/remotes/origin/main
+2026-11-04T14:41:41.4863419Z From https://github.com/dodoscoding/Mazi
+2026-11-04T14:41:41.4865107Z  * [new ref]         1a0234a1a41a78e46b60723748df6d7d089be4c2 -> origin/main
+2026-11-04T14:41:41.4926437Z ##[endgroup]
+2026-11-04T14:41:41.4946626Z ##[group]Determining the checkout info
+2026-11-04T14:41:41.4947911Z ##[endgroup]
+2026-11-04T14:41:41.4956350Z [command]/usr/bin/git sparse-checkout disable
+2026-11-04T14:41:41.5067054Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-04T14:41:41.5127340Z ##[group]Checking out the ref
+2026-11-04T14:41:41.5144166Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-11-04T14:41:42.0413881Z Switched to a new branch 'main'
+2026-11-04T14:41:42.0435737Z branch 'main' set up to track 'origin/main'.
+2026-11-04T14:41:42.0466672Z ##[endgroup]
+2026-11-04T14:41:42.0562159Z [command]/usr/bin/git log -1 --format=%H
+2026-11-04T14:41:42.0606956Z 1a0234a1a41a78e46b60723748df6d7d089be4c2
+2026-11-04T14:41:42.0950465Z ##[group]Run actions/setup-python@v5
+2026-11-04T14:41:42.0950849Z with:
+2026-11-04T14:41:42.0951286Z   python-version: 3.11
+2026-11-04T14:41:42.0951531Z   check-latest: false
+2026-11-04T14:41:42.0954024Z   token: ***
+2026-11-04T14:41:42.0954275Z   update-environment: true
+2026-11-04T14:41:42.0954543Z   allow-prereleases: false
+2026-11-04T14:41:42.0954802Z   freethreaded: false
+2026-11-04T14:41:42.0955037Z ##[endgroup]
+2026-11-04T14:41:42.2545629Z ##[group]Installed versions
+2026-11-04T14:41:42.2747410Z (node:2073) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T14:41:42.2789870Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T14:41:42.2816159Z Successfully set up CPython (3.11.17)
+2026-11-04T14:41:42.2866707Z ##[endgroup]
+2026-11-04T14:41:42.3136010Z ##[group]Run actions/setup-node@v4
+2026-11-04T14:41:42.3136559Z with:
+2026-11-04T14:41:42.3136935Z   node-version: 24
+2026-11-04T14:41:42.3137293Z   cache: npm
+2026-11-04T14:41:42.3137626Z   always-auth: false
+2026-11-04T14:41:42.3138019Z   check-latest: false
+2026-11-04T14:41:42.3142828Z   token: ***
+2026-11-04T14:41:42.3143176Z env:
+2026-11-04T14:41:42.3143616Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:42.3144397Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:41:42.3145153Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:42.3146092Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:42.3146879Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:42.3147651Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:41:42.3148312Z ##[endgroup]
+2026-11-04T14:41:42.5058008Z (node:2081) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T14:41:42.5063587Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T14:41:42.5076873Z Found in cache @ /opt/hostedtoolcache/node/24.22.1/x64
+2026-11-04T14:41:42.5078620Z ##[group]Environment details
+2026-11-04T14:41:43.1866931Z node: v24.22.1
+2026-11-04T14:41:43.1873343Z npm: 11.19.1
+2026-11-04T14:41:43.1896365Z yarn: 1.22.22
+2026-11-04T14:41:43.1899564Z ##[endgroup]
+2026-11-04T14:41:43.1916861Z [command]/opt/hostedtoolcache/node/24.22.1/x64/bin/npm config get cache
+2026-11-04T14:41:43.3747077Z /home/runner/.npm
+2026-11-04T14:41:43.4983296Z Cache hit for: node-cache-Linux-x64-npm-335e60d5502b517f86cf5ea30a4e036f8451cf91c08444a8b4b414911c969c73
+2026-11-04T14:41:43.5114764Z (node:2081) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-04T14:41:44.2191667Z Received 110764659 of 110764659 (100.0%), 158.8 MBs/sec
+2026-11-04T14:41:44.2192848Z Cache Size: ~106 MB (110764659 B)
+2026-11-04T14:41:44.2224930Z [command]/usr/bin/tar -xf /home/runner/work/_temp/803f74a2-cc97-4827-8018-d9cfac126c39/cache.tzst -P -C /home/runner/work/Mazi/Mazi --use-compress-program unzstd
+2026-11-04T14:41:44.4470096Z Cache restored successfully
+2026-11-04T14:41:44.4537734Z Cache restored from key: node-cache-Linux-x64-npm-335e60d5502b517f86cf5ea30a4e036f8451cf91c08444a8b4b414911c969c73
+2026-11-04T14:41:44.4860443Z ##[group]Run npm ci
+2026-11-04T14:41:44.4860779Z [36;1mnpm ci[0m
+2026-11-04T14:41:44.4898459Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:41:44.4898746Z env:
+2026-11-04T14:41:44.4899036Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:44.4899505Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:41:44.4899972Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:44.4900384Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:44.4900787Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:44.4901195Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:41:44.4901791Z ##[endgroup]
+2026-11-04T14:41:49.3935164Z
+2026-11-04T14:41:49.3947863Z added 70 packages, and audited 71 packages in 5s
+2026-11-04T14:41:49.3950758Z
+2026-11-04T14:41:49.3951456Z 20 packages are looking for funding
+2026-11-04T14:41:49.3952405Z   run `npm fund` for details
+2026-11-04T14:41:49.4197817Z
+2026-11-04T14:41:49.4206786Z 2 high severity vulnerabilities
+2026-11-04T14:41:49.4225800Z
+2026-11-04T14:41:49.4236242Z To address all issues, run:
+2026-11-04T14:41:49.4239735Z   npm audit fix --force
+2026-11-04T14:41:49.4240383Z
+2026-11-04T14:41:49.4240913Z Run `npm audit` for details.
+2026-11-04T14:41:49.5098687Z ##[group]Run npm run setup
+2026-11-04T14:41:49.5099047Z [36;1mnpm run setup[0m
+2026-11-04T14:41:49.5121012Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:41:49.5121279Z env:
+2026-11-04T14:41:49.5121564Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:49.5122044Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:41:49.5122517Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:49.5122909Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:49.5123306Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:49.5123709Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:41:49.5124043Z ##[endgroup]
+2026-11-04T14:41:49.6272708Z
+2026-11-04T14:41:49.6273759Z > mazi@0.1.0 setup
+2026-11-04T14:41:49.6275702Z > python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
+2026-11-04T14:41:49.6276708Z
+2026-11-04T14:41:54.7457363Z Collecting Pillow==12.3.0 (from -r requirements.txt (line 1))
+2026-11-04T14:41:54.7964845Z   Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-04T14:41:54.8307395Z Collecting psycopg==3.3.6 (from psycopg[binary]==3.3.6->-r requirements.txt (line 3))
+2026-11-04T14:41:54.8407215Z   Downloading psycopg-3.3.6-py3-none-any.whl.metadata (4.4 kB)
+2026-11-04T14:41:54.9078000Z Collecting typing-extensions>=4.6 (from psycopg==3.3.6->psycopg[binary]==3.3.6->-r requirements.txt (line 3))
+2026-11-04T14:41:54.9177288Z   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-04T14:41:55.1843809Z Collecting psycopg-binary==3.3.6 (from psycopg[binary]==3.3.6->-r requirements.txt (line 3))
+2026-11-04T14:41:55.1954211Z   Downloading psycopg_binary-3.3.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.7 kB)
+2026-11-04T14:41:55.2138056Z Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-04T14:41:55.3086735Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 75.8 MB/s eta 0:00:00
+2026-11-04T14:41:55.3191109Z Downloading psycopg-3.3.6-py3-none-any.whl (215 kB)
+2026-11-04T14:41:55.3258002Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 215.5/215.5 kB 55.5 MB/s eta 0:00:00
+2026-11-04T14:41:55.3413867Z Downloading psycopg_binary-3.3.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.3 MB)
+2026-11-04T14:41:55.3830126Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.3/5.3 MB 137.1 MB/s eta 0:00:00
+2026-11-04T14:41:55.3929940Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-04T14:41:55.3984210Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 12.2 MB/s eta 0:00:00
+2026-11-04T14:41:55.4936469Z Installing collected packages: typing-extensions, psycopg-binary, Pillow, psycopg
+2026-11-04T14:41:56.0887176Z Successfully installed Pillow-12.3.0 psycopg-3.3.6 psycopg-binary-3.3.6 typing-extensions-4.16.0
+2026-11-04T14:41:56.2590668Z
+2026-11-04T14:41:56.2591803Z [notice] A new release of pip is available: 24.0 -> 26.3
+2026-11-04T14:41:56.2593242Z [notice] To update, run: python -m pip install --upgrade pip
+2026-11-04T14:41:56.4663486Z ##[group]Run .venv/bin/python -m pip install -r mazi/discovery/requirements-clip.txt
+2026-11-04T14:41:56.4664170Z [36;1m.venv/bin/python -m pip install -r mazi/discovery/requirements-clip.txt[0m
+2026-11-04T14:41:56.4686664Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:41:56.4686929Z env:
+2026-11-04T14:41:56.4687210Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:56.4687680Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:41:56.4688145Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:56.4688547Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:56.4688941Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:41:56.4689345Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:41:56.4689682Z ##[endgroup]
+2026-11-04T14:41:56.8291888Z Requirement already satisfied: Pillow==12.3.0 in ./.venv/lib/python3.11/site-packages (from -r mazi/discovery/../../requirements.txt (line 1)) (12.3.0)
+2026-11-04T14:41:56.8327352Z Requirement already satisfied: psycopg==3.3.6 in ./.venv/lib/python3.11/site-packages (from psycopg[binary]==3.3.6->-r mazi/discovery/../../requirements.txt (line 3)) (3.3.6)
+2026-11-04T14:41:57.1857058Z Collecting numpy==2.4.3 (from -r mazi/discovery/requirements-clip.txt (line 2))
+2026-11-04T14:41:57.2562400Z   Downloading numpy-2.4.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-11-04T14:41:57.3452761Z Collecting onnxruntime==1.24.3 (from -r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:41:57.3649547Z   Downloading onnxruntime-1.24.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-04T14:41:57.5879418Z Collecting tokenizers==0.22.2 (from -r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:57.6001777Z   Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-11-04T14:41:57.6507894Z Requirement already satisfied: typing-extensions>=4.6 in ./.venv/lib/python3.11/site-packages (from psycopg==3.3.6->psycopg[binary]==3.3.6->-r mazi/discovery/../../requirements.txt (line 3)) (4.16.0)
+2026-11-04T14:41:57.8537647Z Collecting flatbuffers (from onnxruntime==1.24.3->-r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:41:57.8634209Z   Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+2026-11-04T14:41:58.7027545Z Collecting packaging (from onnxruntime==1.24.3->-r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:41:58.7122304Z   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+2026-11-04T14:41:59.0696903Z Collecting protobuf (from onnxruntime==1.24.3->-r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:41:59.0806909Z   Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+2026-11-04T14:41:59.3179238Z Collecting sympy (from onnxruntime==1.24.3->-r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:41:59.3309698Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-11-04T14:41:59.4561070Z Collecting huggingface-hub<2.0,>=0.16.4 (from tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.4671928Z   Downloading huggingface_hub-1.33.0-py3-none-any.whl.metadata (16 kB)
+2026-11-04T14:41:59.5360743Z Requirement already satisfied: psycopg-binary==3.3.6 in ./.venv/lib/python3.11/site-packages (from psycopg[binary]==3.3.6->-r mazi/discovery/../../requirements.txt (line 3)) (3.3.6)
+2026-11-04T14:41:59.6358010Z Collecting click<9.0.0,>=8.4.2 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.6471224Z   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+2026-11-04T14:41:59.7104529Z Collecting filelock>=3.10.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.7240604Z   Downloading filelock-4.2.8-py3-none-any.whl.metadata (2.3 kB)
+2026-11-04T14:41:59.7657689Z Collecting fsspec>=2023.5.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.7783029Z   Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+2026-11-04T14:41:59.8500217Z Collecting hf-xet<2.0.0,>=1.6.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.8623580Z   Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-11-04T14:41:59.9007036Z Collecting httpx<1,>=0.23.0 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.9111454Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-04T14:41:59.9660558Z Collecting pyyaml>=5.1 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:41:59.9786980Z   Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-04T14:42:00.0448852Z Collecting tqdm>=4.42.1 (from huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.0727443Z   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-11-04T14:42:00.0844851Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.4/57.4 kB 5.5 MB/s eta 0:00:00
+2026-11-04T14:42:00.1195002Z Collecting mpmath<1.4,>=1.1.0 (from sympy->onnxruntime==1.24.3->-r mazi/discovery/requirements-clip.txt (line 3))
+2026-11-04T14:42:00.1304252Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-11-04T14:42:00.2444006Z Collecting anyio (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.2547960Z   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-04T14:42:00.2876110Z Collecting certifi (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.2990245Z   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-04T14:42:00.3316750Z Collecting httpcore==1.* (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.3418463Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-04T14:42:00.3669787Z Collecting idna (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.3780087Z   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-04T14:42:00.4056439Z Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.23.0->huggingface-hub<2.0,>=0.16.4->tokenizers==0.22.2->-r mazi/discovery/requirements-clip.txt (line 4))
+2026-11-04T14:42:00.4176464Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-04T14:42:00.4811795Z Downloading numpy-2.4.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+2026-11-04T14:42:00.6679660Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 82.9 MB/s eta 0:00:00
+2026-11-04T14:42:00.6847331Z Downloading onnxruntime-1.24.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (17.2 MB)
+2026-11-04T14:42:00.9300092Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 17.2/17.2 MB 65.7 MB/s eta 0:00:00
+2026-11-04T14:42:00.9409472Z Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-11-04T14:42:00.9838608Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 80.9 MB/s eta 0:00:00
+2026-11-04T14:42:00.9946833Z Downloading huggingface_hub-1.33.0-py3-none-any.whl (846 kB)
+2026-11-04T14:42:01.0099889Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 846.4/846.4 kB 65.3 MB/s eta 0:00:00
+2026-11-04T14:42:01.0204009Z Downloading packaging-26.3-py3-none-any.whl (129 kB)
+2026-11-04T14:42:01.0258904Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.0/130.0 kB 41.0 MB/s eta 0:00:00
+2026-11-04T14:42:01.0453111Z Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+2026-11-04T14:42:01.0757323Z Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+2026-11-04T14:42:01.0827938Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 343.2/343.2 kB 75.4 MB/s eta 0:00:00
+2026-11-04T14:42:01.0991195Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-11-04T14:42:01.1470977Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 138.8 MB/s eta 0:00:00
+2026-11-04T14:42:01.1578591Z Downloading click-8.5.0-py3-none-any.whl (125 kB)
+2026-11-04T14:42:01.1642179Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 42.5 MB/s eta 0:00:00
+2026-11-04T14:42:01.1736013Z Downloading filelock-4.2.8-py3-none-any.whl (164 kB)
+2026-11-04T14:42:01.1784062Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 164.6/164.6 kB 54.0 MB/s eta 0:00:00
+2026-11-04T14:42:01.1892234Z Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+2026-11-04T14:42:01.1948331Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 221.7/221.7 kB 63.6 MB/s eta 0:00:00
+2026-11-04T14:42:01.2052367Z Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+2026-11-04T14:42:01.2348817Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 157.9 MB/s eta 0:00:00
+2026-11-04T14:42:01.2467671Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-04T14:42:01.2541874Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.5/73.5 kB 12.6 MB/s eta 0:00:00
+2026-11-04T14:42:01.2650499Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-04T14:42:01.2705897Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 22.5 MB/s eta 0:00:00
+2026-11-04T14:42:01.2826520Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-11-04T14:42:01.2904999Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 94.3 MB/s eta 0:00:00
+2026-11-04T14:42:01.3012271Z Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+2026-11-04T14:42:01.3117241Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 101.7 MB/s eta 0:00:00
+2026-11-04T14:42:01.3236566Z Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-11-04T14:42:01.3307619Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 21.5 MB/s eta 0:00:00
+2026-11-04T14:42:01.3399539Z Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-04T14:42:01.3451558Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.5/134.5 kB 43.9 MB/s eta 0:00:00
+2026-11-04T14:42:01.3570188Z Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-04T14:42:01.3645806Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 69.6/69.6 kB 12.1 MB/s eta 0:00:00
+2026-11-04T14:42:01.3759502Z Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-04T14:42:01.3814803Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 135.1/135.1 kB 41.0 MB/s eta 0:00:00
+2026-11-04T14:42:01.3951944Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-04T14:42:01.8075671Z Installing collected packages: mpmath, flatbuffers, tqdm, sympy, pyyaml, protobuf, packaging, numpy, idna, hf-xet, h11, fsspec, filelock, click, certifi, onnxruntime, httpcore, anyio, httpx, huggingface-hub, tokenizers
+2026-11-04T14:42:12.3310518Z Successfully installed anyio-4.16.0 certifi-2026.10.23 click-8.5.0 filelock-4.2.8 flatbuffers-25.12.19 fsspec-2026.9.0 h11-0.16.0 hf-xet-1.8.0 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.33.0 idna-3.20 mpmath-1.3.0 numpy-2.4.3 onnxruntime-1.24.3 packaging-26.3 protobuf-7.36.2 pyyaml-6.0.3 sympy-1.14.0 tokenizers-0.22.2 tqdm-4.70.1
+2026-11-04T14:42:12.3694974Z
+2026-11-04T14:42:12.3696396Z [notice] A new release of pip is available: 24.0 -> 26.3
+2026-11-04T14:42:12.3697912Z [notice] To update, run: python -m pip install --upgrade pip
+2026-11-04T14:42:12.7205867Z ##[group]Run actions/cache@v4
+2026-11-04T14:42:12.7206202Z with:
+2026-11-04T14:42:12.7206454Z   path: .models/clip-vit-base-patch32
+2026-11-04T14:42:12.7206813Z   key: clip-b32-d15189d7028b43f1d3e65039190477f6af591c2a
+2026-11-04T14:42:12.7207174Z   enableCrossOsArchive: false
+2026-11-04T14:42:12.7207479Z   fail-on-cache-miss: false
+2026-11-04T14:42:12.7207748Z   lookup-only: false
+2026-11-04T14:42:12.7207989Z   save-always: false
+2026-11-04T14:42:12.7208233Z env:
+2026-11-04T14:42:12.7208525Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:12.7208994Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:12.7209460Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:12.7209868Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:12.7210303Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:12.7210767Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:12.7211129Z ##[endgroup]
+2026-11-04T14:42:12.8577032Z (node:2262) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T14:42:12.8596856Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T14:42:12.9551355Z Cache hit for: clip-b32-d15189d7028b43f1d3e65039190477f6af591c2a
+2026-11-04T14:42:12.9711215Z (node:2262) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-04T14:42:13.7581554Z Received 112481305 of 112481305 (100.0%), 144.2 MBs/sec
+2026-11-04T14:42:13.7582850Z Cache Size: ~107 MB (112481305 B)
+2026-11-04T14:42:13.7670281Z [command]/usr/bin/tar -xf /home/runner/work/_temp/74177a17-146e-469b-ad7f-e01b2f945c67/cache.tzst -P -C /home/runner/work/Mazi/Mazi --use-compress-program unzstd
+2026-11-04T14:42:14.1696452Z Cache restored successfully
+2026-11-04T14:42:14.1991220Z Cache restored from key: clip-b32-d15189d7028b43f1d3e65039190477f6af591c2a
+2026-11-04T14:42:14.2302889Z ##[group]Run npm run setup:discovery:model
+2026-11-04T14:42:14.2303573Z [36;1mnpm run setup:discovery:model[0m
+2026-11-04T14:42:14.2334143Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:14.2334629Z env:
+2026-11-04T14:42:14.2335056Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.2335930Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:14.2336421Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.2336836Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.2337250Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.2337661Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:14.2338013Z ##[endgroup]
+2026-11-04T14:42:14.3637896Z
+2026-11-04T14:42:14.3639048Z > mazi@0.1.0 setup:discovery:model
+2026-11-04T14:42:14.3640401Z > .venv/bin/python -m mazi.discovery.download_model
+2026-11-04T14:42:14.3641296Z
+2026-11-04T14:42:14.4576685Z Verified onnx/text_model_quantized.onnx
+2026-11-04T14:42:14.5243000Z Verified onnx/vision_model_quantized.onnx
+2026-11-04T14:42:14.5271639Z Verified tokenizer.json
+2026-11-04T14:42:14.5272617Z Verified preprocessor_config.json
+2026-11-04T14:42:14.5273674Z Verified tokenizer_config.json
+2026-11-04T14:42:14.5275356Z Verified config.json
+2026-11-04T14:42:14.5507498Z ##[group]Run .venv/bin/python -m unittest tests.backend.discovery.test_clip_runtime -v
+2026-11-04T14:42:14.5508200Z [36;1m.venv/bin/python -m unittest tests.backend.discovery.test_clip_runtime -v[0m
+2026-11-04T14:42:14.5529938Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:14.5530224Z env:
+2026-11-04T14:42:14.5530537Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.5531016Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:14.5531487Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.5531906Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.5532326Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:14.5532749Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:14.5533167Z   MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
+2026-11-04T14:42:14.5533511Z ##[endgroup]
+2026-11-04T14:42:14.9360355Z [0;93m2026-11-04 14:42:14.934462730 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+2026-11-04T14:42:15.7137312Z test_cross_modal_ranking_without_lexical_or_color_aliases (tests.backend.discovery.test_clip_runtime.CLIPRuntimeTests.test_cross_modal_ranking_without_lexical_or_color_aliases) ... ok
+2026-11-04T14:42:16.9542762Z test_long_text_windows_are_finite_and_deterministic (tests.backend.discovery.test_clip_runtime.CLIPRuntimeTests.test_long_text_windows_are_finite_and_deterministic) ... ok
+2026-11-04T14:42:16.9544420Z
+2026-11-04T14:42:16.9545108Z ----------------------------------------------------------------------
+2026-11-04T14:42:16.9546297Z Ran 2 tests in 2.240s
+2026-11-04T14:42:16.9546781Z
+2026-11-04T14:42:16.9547112Z OK
+2026-11-04T14:42:17.0314403Z ##[group]Run npm run eval:retrieval:clip
+2026-11-04T14:42:17.0314794Z [36;1mnpm run eval:retrieval:clip[0m
+2026-11-04T14:42:17.0337780Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:17.0338051Z env:
+2026-11-04T14:42:17.0338343Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:17.0338818Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:17.0339296Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:17.0339727Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:17.0340149Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:17.0340562Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:17.0340931Z ##[endgroup]
+2026-11-04T14:42:17.1580259Z
+2026-11-04T14:42:17.1581147Z > mazi@0.1.0 eval:retrieval:clip
+2026-11-04T14:42:17.1582398Z > .venv/bin/python -m mazi.discovery.evaluate_clip
+2026-11-04T14:42:17.1583430Z
+2026-11-04T14:42:17.5200122Z [0;93m2026-11-04 14:42:17.517851653 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+2026-11-04T14:42:28.7161231Z {
+2026-11-04T14:42:28.7162348Z   "model": "clip-b32-int8-d15189d7028b43f1d3e65039190477f6af591c2a-preprocess-v1",
+2026-11-04T14:42:28.7163935Z   "fixture_sha256": "88d2249a0bd57dddea9ede95b47c39c0ae59f3a65f7add8d77dbb4a916298834",
+2026-11-04T14:42:28.7164967Z   "image_sha256": {
+2026-11-04T14:42:28.7166074Z     "lake": "fa64b0da367697d6bc7054c340b2facb607cf6e182656c47fdb237b1d4aca6eb",
+2026-11-04T14:42:28.7167333Z     "birthday": "bd515dfdc9daec06b3bdee66eb3354d194270ade30f779c01a6c73311d62f291",
+2026-11-04T14:42:28.7168621Z     "harbor": "062d054b58a9d44a1ede2bd6abc5df0af838990313f63265c64bdb189027992c",
+2026-11-04T14:42:28.7170346Z     "table": "ec526af8da24e93596918e55ac241d4d4a4a8fb3a6a457fd4589462b68feb2de",
+2026-11-04T14:42:28.7171543Z     "ferry": "8c1003b2cb3583ebae9530e0e05d6645cb60ddd5490daee88bd024c14c5b481a"
+2026-11-04T14:42:28.7172399Z   },
+2026-11-04T14:42:28.7172911Z   "candidates": 25,
+2026-11-04T14:42:28.7173453Z   "questions": 100,
+2026-11-04T14:42:28.7173997Z   "recall_at_1": 0.81,
+2026-11-04T14:42:28.7174558Z   "recall_at_3": 0.91,
+2026-11-04T14:42:28.7175126Z   "recall_at_10": 0.97,
+2026-11-04T14:42:28.7175977Z   "warm_p95_seconds": 0.060071964000002254,
+2026-11-04T14:42:28.7176703Z   "cold_index_seconds": 3.9388143489999976,
+2026-11-04T14:42:28.7177350Z   "privacy": {
+2026-11-04T14:42:28.7177881Z     "personal_hide": true,
+2026-11-04T14:42:28.7178463Z     "outsider": true,
+2026-11-04T14:42:28.7179031Z     "consent_purged": true,
+2026-11-04T14:42:28.7179619Z     "keyword_survives": true
+2026-11-04T14:42:28.7180196Z   },
+2026-11-04T14:42:28.7182164Z   "limitations": "Fixed English image-retrieval smoke set. Five pre-existing AI-generated demo images, 20 prompts each, plus 20 color/shape distractors. Filenames and captions do not reveal subjects. This is not an independent representative archive benchmark.",
+2026-11-04T14:42:28.7184053Z   "misses_at_1": [
+2026-11-04T14:42:28.7184578Z     {
+2026-11-04T14:42:28.7185237Z       "query": "green water surrounded by forested hills",
+2026-11-04T14:42:28.7186196Z       "expected": "lake",
+2026-11-04T14:42:28.7186756Z       "rank": 9
+2026-11-04T14:42:28.7187269Z     },
+2026-11-04T14:42:28.7187766Z     {
+2026-11-04T14:42:28.7188372Z       "query": "a group spending time by a green lake",
+2026-11-04T14:42:28.7189077Z       "expected": "lake",
+2026-11-04T14:42:28.7189633Z       "rank": 4
+2026-11-04T14:42:28.7190150Z     },
+2026-11-04T14:42:28.7190634Z     {
+2026-11-04T14:42:28.7191250Z       "query": "a kitchen full of smiling friends",
+2026-11-04T14:42:28.7191939Z       "expected": "birthday",
+2026-11-04T14:42:28.7192539Z       "rank": 2
+2026-11-04T14:42:28.7193472Z     },
+2026-11-04T14:42:28.7194017Z     {
+2026-11-04T14:42:28.7194641Z       "query": "a cheerful gathering inside an apartment",
+2026-11-04T14:42:28.7195553Z       "expected": "birthday",
+2026-11-04T14:42:28.7196161Z       "rank": 2
+2026-11-04T14:42:28.7196683Z     },
+2026-11-04T14:42:28.7197158Z     {
+2026-11-04T14:42:28.7197715Z       "query": "a mooring rope on a quay",
+2026-11-04T14:42:28.7198344Z       "expected": "harbor",
+2026-11-04T14:42:28.7198903Z       "rank": 15
+2026-11-04T14:42:28.7199409Z     },
+2026-11-04T14:42:28.7199873Z     {
+2026-11-04T14:42:28.7200499Z       "query": "glowing windows on a coastal hillside",
+2026-11-04T14:42:28.7201196Z       "expected": "harbor",
+2026-11-04T14:42:28.7201763Z       "rank": 4
+2026-11-04T14:42:28.7202263Z     },
+2026-11-04T14:42:28.7202737Z     {
+2026-11-04T14:42:28.7203372Z       "query": "a waterfront at dusk without a dinner table",
+2026-11-04T14:42:28.7204148Z       "expected": "harbor",
+2026-11-04T14:42:28.7204740Z       "rank": 4
+2026-11-04T14:42:28.7205241Z     },
+2026-11-04T14:42:28.7205913Z     {
+2026-11-04T14:42:28.7206562Z       "query": "a close view of leftovers on a dinner table",
+2026-11-04T14:42:28.7207290Z       "expected": "table",
+2026-11-04T14:42:28.7207881Z       "rank": 2
+2026-11-04T14:42:28.7208454Z     },
+2026-11-04T14:42:28.7209146Z     {
+2026-11-04T14:42:28.7209839Z       "query": "half eaten food beside candle holders",
+2026-11-04T14:42:28.7210727Z       "expected": "table",
+2026-11-04T14:42:28.7211414Z       "rank": 2
+2026-11-04T14:42:28.7211985Z     },
+2026-11-04T14:42:28.7212484Z     {
+2026-11-04T14:42:28.7213120Z       "query": "a close up of dishes at blue hour",
+2026-11-04T14:42:28.7213833Z       "expected": "table",
+2026-11-04T14:42:28.7214437Z       "rank": 5
+2026-11-04T14:42:28.7214961Z     },
+2026-11-04T14:42:28.7215662Z     {
+2026-11-04T14:42:28.7216327Z       "query": "tableware with the sea blurred behind it",
+2026-11-04T14:42:28.7217046Z       "expected": "table",
+2026-11-04T14:42:28.7217926Z       "rank": 20
+2026-11-04T14:42:28.7218470Z     },
+2026-11-04T14:42:28.7219149Z     {
+2026-11-04T14:42:28.7223654Z       "query": "a candle in a glass holder beside plates",
+2026-11-04T14:42:28.7224432Z       "expected": "table",
+2026-11-04T14:42:28.7225034Z       "rank": 4
+2026-11-04T14:42:28.7225830Z     },
+2026-11-04T14:42:28.7226325Z     {
+2026-11-04T14:42:28.7226957Z       "query": "a table with food but no crowd posing",
+2026-11-04T14:42:28.7227701Z       "expected": "table",
+2026-11-04T14:42:28.7228368Z       "rank": 2
+2026-11-04T14:42:28.7228876Z     },
+2026-11-04T14:42:28.7229349Z     {
+2026-11-04T14:42:28.7229962Z       "query": "water being poured at a dinner table",
+2026-11-04T14:42:28.7230672Z       "expected": "table",
+2026-11-04T14:42:28.7231234Z       "rank": 2
+2026-11-04T14:42:28.7231744Z     },
+2026-11-04T14:42:28.7232224Z     {
+2026-11-04T14:42:28.7232850Z       "query": "a napkin beside half finished dishes",
+2026-11-04T14:42:28.7233552Z       "expected": "table",
+2026-11-04T14:42:28.7234137Z       "rank": 21
+2026-11-04T14:42:28.7234686Z     },
+2026-11-04T14:42:28.7235182Z     {
+2026-11-04T14:42:28.7236025Z       "query": "friends sharing a meal beside the sea",
+2026-11-04T14:42:28.7236736Z       "expected": "ferry",
+2026-11-04T14:42:28.7237296Z       "rank": 2
+2026-11-04T14:42:28.7237812Z     },
+2026-11-04T14:42:28.7238315Z     {
+2026-11-04T14:42:28.7238996Z       "query": "a wide view of a terrace dinner party",
+2026-11-04T14:42:28.7239725Z       "expected": "ferry",
+2026-11-04T14:42:28.7240362Z       "rank": 2
+2026-11-04T14:42:28.7240890Z     },
+2026-11-04T14:42:28.7241394Z     {
+2026-11-04T14:42:28.7242061Z       "query": "a candlelit group meal on a Greek island",
+2026-11-04T14:42:28.7242822Z       "expected": "ferry",
+2026-11-04T14:42:28.7243412Z       "rank": 2
+2026-11-04T14:42:28.7243934Z     },
+2026-11-04T14:42:28.7244448Z     {
+2026-11-04T14:42:28.7245092Z       "query": "an evening gathering beside the sea",
+2026-11-04T14:42:28.7246045Z       "expected": "ferry",
+2026-11-04T14:42:28.7246971Z       "rank": 2
+2026-11-04T14:42:28.7247568Z     }
+2026-11-04T14:42:28.7248085Z   ]
+2026-11-04T14:42:28.7248555Z }
+2026-11-04T14:42:28.7793780Z ##[group]Run npm run build
+2026-11-04T14:42:28.7794351Z [36;1mnpm run build[0m
+2026-11-04T14:42:28.7825260Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:28.7826107Z env:
+2026-11-04T14:42:28.7826615Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:28.7827489Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:28.7828432Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:28.7829204Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:28.7830002Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:28.7830668Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:28.7831028Z ##[endgroup]
+2026-11-04T14:42:28.8946757Z
+2026-11-04T14:42:28.8947668Z > mazi@0.1.0 build
+2026-11-04T14:42:28.8948726Z > tsc -b && vite build
+2026-11-04T14:42:28.8949282Z
+2026-11-04T14:42:30.6327651Z [36mvite v8.3.2 [32mbuilding client environment for production...[36m[39m
+2026-11-04T14:42:30.6500537Z transforming...
+2026-11-04T14:42:31.0761870Z ✓ 140 modules transformed.
+2026-11-04T14:42:31.1702725Z rendering chunks...
+2026-11-04T14:42:31.3895238Z computing gzip size...
+2026-11-04T14:42:31.4099998Z dist/index.html                                                     1.13 kB │ gzip:   0.51 kB
+2026-11-04T14:42:31.4101656Z dist/assets/geist-mono-cyrillic-ext-400-normal-XB2BPmDK.woff2       2.82 kB
+2026-11-04T14:42:31.4105006Z dist/assets/geist-mono-cyrillic-ext-500-normal-C7aYOB1D.woff2       2.89 kB
+2026-11-04T14:42:31.4106949Z dist/assets/geist-cyrillic-ext-400-normal-9PYOMWMR.woff2            3.16 kB
+2026-11-04T14:42:31.4108470Z dist/assets/geist-cyrillic-ext-600-normal-Cr7e20Aw.woff2            3.26 kB
+2026-11-04T14:42:31.4109931Z dist/assets/geist-cyrillic-ext-500-normal-UpgxCE-h.woff2            3.27 kB
+2026-11-04T14:42:31.4112233Z dist/assets/geist-mono-symbols2-500-normal-Q_ksOahU.woff2           3.32 kB
+2026-11-04T14:42:31.4113665Z dist/assets/geist-mono-symbols2-400-normal-BS9BGVxz.woff2           3.39 kB
+2026-11-04T14:42:31.4115141Z dist/assets/geist-mono-cyrillic-ext-400-normal-CkxHOdCb.woff        3.81 kB
+2026-11-04T14:42:31.4117134Z dist/assets/geist-mono-cyrillic-ext-500-normal-BY1KTvO5.woff        3.82 kB
+2026-11-04T14:42:31.4118675Z dist/assets/geist-mono-vietnamese-400-normal-CKEaXIlx.woff2         3.85 kB
+2026-11-04T14:42:31.4120178Z dist/assets/geist-mono-vietnamese-500-normal-Bs29RrUZ.woff2         3.92 kB
+2026-11-04T14:42:31.4121750Z dist/assets/geist-vietnamese-400-normal-C4gMWAkH.woff2              3.98 kB
+2026-11-04T14:42:31.4123305Z dist/assets/geist-vietnamese-500-normal-DEhtl5QD.woff2              4.08 kB
+2026-11-04T14:42:31.4124535Z [33m[plugin builtin:vite-reporter]
+2026-11-04T14:42:31.4126151Z dist/assets/geist-vietnamese-600-normal-BFUgqsz8.woff2              4.16 kB
+2026-11-04T14:42:31.4127517Z dist/assets/geist-cyrillic-ext-400-normal-ChfpGzr5.woff             4.29 kB
+2026-11-04T14:42:31.4128856Z dist/assets/geist-cyrillic-ext-600-normal-PR76dHFV.woff             4.32 kB
+2026-11-04T14:42:31.4133051Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-11-04T14:42:31.4134131Z dist/assets/geist-cyrillic-ext-500-normal-BXrH8YSv.woff             4.33 kB
+2026-11-04T14:42:31.4136206Z dist/assets/geist-mono-symbols2-500-normal-CmnCPGa0.woff            4.98 kB
+2026-11-04T14:42:31.4146908Z dist/assets/geist-mono-symbols2-400-normal-DjbiTEEA.woff            5.01 kB
+2026-11-04T14:42:31.4147902Z - Using dynamic import() to code-split the application
+2026-11-04T14:42:31.4149123Z dist/assets/geist-mono-vietnamese-400-normal-CZEPLOgu.woff          5.30 kB
+2026-11-04T14:42:31.4150460Z dist/assets/geist-mono-vietnamese-500-normal-Dx9-epDo.woff          5.39 kB
+2026-11-04T14:42:31.4151826Z dist/assets/geist-mono-cyrillic-400-normal-C51Di1Mf.woff2           5.55 kB
+2026-11-04T14:42:31.4153185Z dist/assets/geist-vietnamese-400-normal-C8xY9-dI.woff               5.66 kB
+2026-11-04T14:42:31.4155142Z dist/assets/geist-mono-cyrillic-500-normal-D2cXvDHF.woff2           5.72 kB
+2026-11-04T14:42:31.4157209Z - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+2026-11-04T14:42:31.4159164Z dist/assets/geist-vietnamese-500-normal-_b1ojCbH.woff               5.72 kB
+2026-11-04T14:42:31.4160641Z dist/assets/geist-vietnamese-600-normal-B5MZcNo4.woff               5.75 kB
+2026-11-04T14:42:31.4162064Z dist/assets/geist-cyrillic-400-normal-DXusLSnH.woff2                6.12 kB
+2026-11-04T14:42:31.4163497Z dist/assets/geist-cyrillic-500-normal-NWpm63d5.woff2                6.32 kB
+2026-11-04T14:42:31.4164920Z dist/assets/geist-cyrillic-600-normal-BeW5VFD_.woff2                6.36 kB
+2026-11-04T14:42:31.4166650Z dist/assets/geist-mono-latin-ext-400-normal-DI-rJ0UV.woff2          7.00 kB
+2026-11-04T14:42:31.4168184Z dist/assets/geist-mono-cyrillic-400-normal-CPJFfJgk.woff            7.10 kB
+2026-11-04T14:42:31.4169647Z dist/assets/geist-mono-latin-ext-500-normal-Buglb9-a.woff2          7.15 kB
+2026-11-04T14:42:31.4171089Z dist/assets/geist-mono-cyrillic-500-normal-DfuvdVgn.woff            7.30 kB
+2026-11-04T14:42:31.4172533Z dist/assets/geist-latin-ext-400-normal-CND6cjiG.woff2               7.82 kB
+2026-11-04T14:42:31.4173954Z dist/assets/geist-cyrillic-400-normal-DkrqoNl2.woff                 7.91 kB
+2026-11-04T14:42:31.4175587Z dist/assets/geist-latin-ext-500-normal-BovoTgeE.woff2               7.94 kB
+2026-11-04T14:42:31.4177061Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2026-11-04T14:42:31.4178570Z dist/assets/geist-latin-ext-600-normal-CVFbg5dS.woff2               7.99 kB
+2026-11-04T14:42:31.4179980Z dist/assets/geist-cyrillic-500-normal-BboVsk8R.woff                 8.08 kB
+2026-11-04T14:42:31.4181386Z dist/assets/geist-cyrillic-600-normal-CnEeIcMC.woff                 8.09 kB
+2026-11-04T14:42:31.4183057Z dist/assets/geist-mono-latin-ext-400-normal-CfzLURNc.woff           9.66 kB
+2026-11-04T14:42:31.4184513Z dist/assets/geist-mono-latin-ext-500-normal-CrWEgvU_.woff           9.79 kB
+2026-11-04T14:42:31.4186522Z dist/assets/instrument-serif-latin-ext-400-normal-CFCUzsTy.woff     9.86 kB
+2026-11-04T14:42:31.4188000Z dist/assets/geist-mono-latin-400-normal-DTRLJnHl.woff2              9.86 kB
+2026-11-04T14:42:31.4189399Z dist/assets/geist-mono-latin-500-normal-YINYabwD.woff2             10.11 kB
+2026-11-04T14:42:31.4190786Z dist/assets/instrument-serif-latin-ext-400-italic-D7-lnxEk.woff    10.50 kB
+2026-11-04T14:42:31.4192235Z dist/assets/geist-latin-ext-400-normal-Bz1pQMyt.woff               10.68 kB
+2026-11-04T14:42:31.4193632Z dist/assets/geist-latin-ext-500-normal-C9fx-R30.woff               10.80 kB
+2026-11-04T14:42:31.4195059Z dist/assets/geist-latin-ext-600-normal-TmIUreF9.woff               10.86 kB
+2026-11-04T14:42:31.4196935Z dist/assets/instrument-serif-latin-ext-400-normal-C2je3j2s.woff2   11.60 kB
+2026-11-04T14:42:31.4198437Z dist/assets/instrument-serif-latin-ext-400-italic-C9HzH3YL.woff2   12.38 kB
+2026-11-04T14:42:31.4199891Z dist/assets/geist-latin-400-normal-B40WzpMT.woff2                  12.95 kB
+2026-11-04T14:42:31.4201308Z dist/assets/geist-mono-latin-400-normal-B2yvC1Cq.woff              13.04 kB
+2026-11-04T14:42:31.4202779Z dist/assets/geist-latin-500-normal-CTWBw9NS.woff2                  13.29 kB
+2026-11-04T14:42:31.4204167Z dist/assets/geist-mono-latin-500-normal-D-GG86Jb.woff              13.33 kB
+2026-11-04T14:42:31.4205882Z dist/assets/geist-latin-600-normal-CSETrqM2.woff2                  13.37 kB
+2026-11-04T14:42:31.4207304Z dist/assets/geist-latin-400-normal-akEymXtG.woff                   16.76 kB
+2026-11-04T14:42:31.4208700Z dist/assets/geist-latin-500-normal-BDXIbFrL.woff                   17.10 kB
+2026-11-04T14:42:31.4210077Z dist/assets/geist-latin-600-normal-DsPlZH-9.woff                   17.14 kB
+2026-11-04T14:42:31.4211499Z dist/assets/instrument-serif-latin-400-normal-BVbkICAY.woff        18.33 kB
+2026-11-04T14:42:31.4213163Z dist/assets/instrument-serif-latin-400-italic-u__WvvIK.woff        19.26 kB
+2026-11-04T14:42:31.4214635Z dist/assets/instrument-serif-latin-400-normal-DnYpCC2O.woff2       21.03 kB
+2026-11-04T14:42:31.4216509Z dist/assets/instrument-serif-latin-400-italic-DKMiL14s.woff2       22.12 kB
+2026-11-04T14:42:31.4218316Z dist/assets/labelEditor-C3clzuGx.css                                0.39 kB │ gzip:   0.23 kB
+2026-11-04T14:42:31.4220061Z dist/assets/SocialHome-DcHQ4qKI.css                                 0.90 kB │ gzip:   0.44 kB
+2026-11-04T14:42:31.4221918Z dist/assets/ConversationPanel-BhWzEzBL.css                          1.95 kB │ gzip:   0.69 kB
+2026-11-04T14:42:31.4223640Z dist/assets/Plans-Cf4Jx6hm.css                                      2.75 kB │ gzip:   1.00 kB
+2026-11-04T14:42:31.4225666Z dist/assets/SelectedMemory-VSV_S1Rl.css                            17.75 kB │ gzip:   4.27 kB
+2026-11-04T14:42:31.4227426Z dist/assets/features-CbUW126X.css                                  95.80 kB │ gzip:  15.30 kB
+2026-11-04T14:42:31.4229074Z dist/assets/index-C9UY1SdN.css                                    109.06 kB │ gzip:  20.29 kB
+2026-11-04T14:42:31.4230741Z dist/assets/PhotoLabels-CIq6YyU5.js                                 0.39 kB │ gzip:   0.29 kB
+2026-11-04T14:42:31.4232409Z dist/assets/provenance-_aEykCBw.js                                  0.76 kB │ gzip:   0.48 kB
+2026-11-04T14:42:31.4234023Z dist/assets/time-CUDn1IqX.js                                        1.00 kB │ gzip:   0.57 kB
+2026-11-04T14:42:31.4235826Z dist/assets/Home-Bm3b18mu.js                                        3.09 kB │ gzip:   1.27 kB
+2026-11-04T14:42:31.4237593Z dist/assets/PhotoCorrection-Dz_Rh2Ir.js                             3.52 kB │ gzip:   1.49 kB
+2026-11-04T14:42:31.4239282Z dist/assets/react-dom-Cix4fOWO.js                                   3.54 kB │ gzip:   1.34 kB
+2026-11-04T14:42:31.4240969Z dist/assets/labelEditor-qx0bFSiu.js                                 4.42 kB │ gzip:   2.00 kB
+2026-11-04T14:42:31.4242901Z dist/assets/facts-CMz7u9uQ.js                                       7.32 kB │ gzip:   2.82 kB
+2026-11-04T14:42:31.4244555Z dist/assets/jsx-runtime-B-hcVAMW.js                                 8.55 kB │ gzip:   3.26 kB
+2026-11-04T14:42:31.4246478Z dist/assets/SocialHome-DFdBeeHt.js                                  8.61 kB │ gzip:   2.96 kB
+2026-11-04T14:42:31.4248230Z dist/assets/ConversationPanel-BCPQpQHS.js                           9.25 kB │ gzip:   3.44 kB
+2026-11-04T14:42:31.4249932Z dist/assets/Plans-BjcLxN6E.js                                      17.51 kB │ gzip:   5.71 kB
+2026-11-04T14:42:31.4251931Z dist/assets/SelectedMemory-DQ3tlt04.js                             27.87 kB │ gzip:   8.47 kB
+2026-11-04T14:42:31.4253658Z dist/assets/features-DybxxQUM.js                                  170.62 kB │ gzip:  50.07 kB
+2026-11-04T14:42:31.4255112Z dist/assets/index-DAZ_63L3.js                                     303.97 kB │ gzip:  95.94 kB
+2026-11-04T14:42:31.4256886Z dist/assets/Globe-BqdRppxP.js                                     942.31 kB │ gzip: 251.65 kB
+2026-11-04T14:42:31.4257817Z
+2026-11-04T14:42:31.4258621Z [32m✓ built in 777ms[39m
+2026-11-04T14:42:31.4513031Z ##[group]Run npx playwright install --with-deps chromium
+2026-11-04T14:42:31.4513521Z [36;1mnpx playwright install --with-deps chromium[0m
+2026-11-04T14:42:31.4536036Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:31.4536349Z env:
+2026-11-04T14:42:31.4536647Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:31.4537122Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:31.4537579Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:31.4537983Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:31.4538410Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:31.4538831Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:31.4539206Z ##[endgroup]
+2026-11-04T14:42:32.3463664Z Installing dependencies...
+2026-11-04T14:42:32.3564051Z Switching to root user to install dependencies...
+2026-11-04T14:42:32.5356336Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-11-04T14:42:32.5879470Z Get:3 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-11-04T14:42:32.6137293Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2026-11-04T14:42:32.6179602Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-11-04T14:42:32.6216206Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-11-04T14:42:32.6266853Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-04T14:42:32.7412195Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [652 kB]
+2026-11-04T14:42:32.7813952Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [721 kB]
+2026-11-04T14:42:32.9038384Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1408 kB]
+2026-11-04T14:42:32.9117689Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [311 kB]
+2026-11-04T14:42:32.9168012Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1707 kB]
+2026-11-04T14:42:32.9306653Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [343 kB]
+2026-11-04T14:42:32.9367069Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1813 kB]
+2026-11-04T14:42:32.9537118Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [412 kB]
+2026-11-04T14:42:32.9555829Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse Translation-en [14.3 kB]
+2026-11-04T14:42:33.1276860Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1155 kB]
+2026-11-04T14:42:33.1334318Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [233 kB]
+2026-11-04T14:42:33.1356703Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1224 kB]
+2026-11-04T14:42:33.1847961Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [247 kB]
+2026-11-04T14:42:33.1877454Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1721 kB]
+2026-11-04T14:42:33.2078281Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [394 kB]
+2026-11-04T14:42:33.2103337Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse Translation-en [12.4 kB]
+2026-11-04T14:42:37.0045924Z Fetched 12.7 MB in 2s (8049 kB/s)
+2026-11-04T14:42:38.2754844Z Reading package lists...
+2026-11-04T14:42:38.3115073Z Reading package lists...
+2026-11-04T14:42:38.6046603Z Building dependency tree...
+2026-11-04T14:42:38.6055996Z Reading state information...
+2026-11-04T14:42:38.8295163Z libasound2t64 is already the newest version (1.2.11-1ubuntu0.3).
+2026-11-04T14:42:38.8296603Z libasound2t64 set to manually installed.
+2026-11-04T14:42:38.8298538Z libatk-bridge2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-04T14:42:38.8299698Z libatk-bridge2.0-0t64 set to manually installed.
+2026-11-04T14:42:38.8300710Z libatk1.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-04T14:42:38.8301648Z libatk1.0-0t64 set to manually installed.
+2026-11-04T14:42:38.8302596Z libatspi2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-04T14:42:38.8303534Z libatspi2.0-0t64 set to manually installed.
+2026-11-04T14:42:38.8304432Z libcairo2 is already the newest version (1.18.0-3build1).
+2026-11-04T14:42:38.8305548Z libcairo2 set to manually installed.
+2026-11-04T14:42:38.8306519Z libcups2t64 is already the newest version (2.4.7-1.2ubuntu7.14).
+2026-11-04T14:42:38.8307319Z libcups2t64 set to manually installed.
+2026-11-04T14:42:38.8308322Z libdbus-1-3 is already the newest version (1.14.10-4ubuntu4.1).
+2026-11-04T14:42:38.8309129Z libdbus-1-3 set to manually installed.
+2026-11-04T14:42:38.8309933Z libdrm2 is already the newest version (2.4.125-1ubuntu0.1~24.04.2).
+2026-11-04T14:42:38.8310720Z libdrm2 set to manually installed.
+2026-11-04T14:42:38.8311491Z libgbm1 is already the newest version (25.2.8-0ubuntu0.24.04.4).
+2026-11-04T14:42:38.8312238Z libgbm1 set to manually installed.
+2026-11-04T14:42:38.8313024Z libglib2.0-0t64 is already the newest version (2.80.0-6ubuntu3.10).
+2026-11-04T14:42:38.8313831Z libglib2.0-0t64 set to manually installed.
+2026-11-04T14:42:38.8314610Z libnspr4 is already the newest version (2:4.35-1.1build1).
+2026-11-04T14:42:38.8315580Z libnspr4 set to manually installed.
+2026-11-04T14:42:38.8316208Z libnss3 is already the newest version (2:3.98-1ubuntu0.3).
+2026-11-04T14:42:38.8316613Z libnss3 set to manually installed.
+2026-11-04T14:42:38.8317047Z libpango-1.0-0 is already the newest version (1.52.1+ds-1build1).
+2026-11-04T14:42:38.8317505Z libpango-1.0-0 set to manually installed.
+2026-11-04T14:42:38.8317985Z libx11-6 is already the newest version (2:1.8.7-1ubuntu0.1).
+2026-11-04T14:42:38.8318401Z libx11-6 set to manually installed.
+2026-11-04T14:42:38.8318803Z libxcb1 is already the newest version (1.15-1ubuntu2).
+2026-11-04T14:42:38.8319184Z libxcb1 set to manually installed.
+2026-11-04T14:42:38.8319628Z libxcomposite1 is already the newest version (1:0.4.5-1build3).
+2026-11-04T14:42:38.8320066Z libxcomposite1 set to manually installed.
+2026-11-04T14:42:38.8320519Z libxdamage1 is already the newest version (1:1.1.6-1build1).
+2026-11-04T14:42:38.8320926Z libxdamage1 set to manually installed.
+2026-11-04T14:42:38.8321343Z libxext6 is already the newest version (2:1.3.4-1build2).
+2026-11-04T14:42:38.8321731Z libxext6 set to manually installed.
+2026-11-04T14:42:38.8322135Z libxfixes3 is already the newest version (1:6.0.0-2build1).
+2026-11-04T14:42:38.8322538Z libxfixes3 set to manually installed.
+2026-11-04T14:42:38.8322955Z libxkbcommon0 is already the newest version (1.6.0-1build1).
+2026-11-04T14:42:38.8323650Z libxkbcommon0 set to manually installed.
+2026-11-04T14:42:38.8324075Z libxrandr2 is already the newest version (2:1.5.2-2build1).
+2026-11-04T14:42:38.8324480Z libxrandr2 set to manually installed.
+2026-11-04T14:42:38.8324896Z xvfb is already the newest version (2:21.1.12-1ubuntu1.9).
+2026-11-04T14:42:38.8326405Z fonts-noto-color-emoji is already the newest version (2.047-0ubuntu0.24.04.1).
+2026-11-04T14:42:38.8327441Z libfontconfig1 is already the newest version (2.15.0-1.1ubuntu2).
+2026-11-04T14:42:38.8328215Z libfontconfig1 set to manually installed.
+2026-11-04T14:42:38.8329017Z libfreetype6 is already the newest version (2.13.2+dfsg-1ubuntu0.2).
+2026-11-04T14:42:38.8329846Z libfreetype6 set to manually installed.
+2026-11-04T14:42:38.8330562Z fonts-liberation is already the newest version (1:2.1.5-3).
+2026-11-04T14:42:38.8331016Z fonts-liberation set to manually installed.
+2026-11-04T14:42:38.8331462Z The following additional packages will be installed:
+2026-11-04T14:42:38.8331866Z   xfonts-encodings xfonts-utils
+2026-11-04T14:42:38.8332182Z Recommended packages:
+2026-11-04T14:42:38.8332487Z   fonts-ipafont-mincho fonts-tlwg-loma
+2026-11-04T14:42:38.8587786Z The following NEW packages will be installed:
+2026-11-04T14:42:38.8589371Z   fonts-freefont-ttf fonts-ipafont-gothic fonts-tlwg-loma-otf fonts-unifont
+2026-11-04T14:42:38.8593339Z   fonts-wqy-zenhei xfonts-cyrillic xfonts-encodings xfonts-scalable
+2026-11-04T14:42:38.8594641Z   xfonts-utils
+2026-11-04T14:42:38.8892146Z 0 upgraded, 9 newly installed, 0 to remove and 16 not upgraded.
+2026-11-04T14:42:38.8893303Z Need to get 21.1 MB of archives.
+2026-11-04T14:42:38.8894649Z After this operation, 79.5 MB of additional disk space will be used.
+2026-11-04T14:42:38.8896172Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-11-04T14:42:38.9430017Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-ipafont-gothic all 00303-21ubuntu1 [3513 kB]
+2026-11-04T14:42:38.9800449Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 fonts-freefont-ttf all 20211204+svn4273-2 [5641 kB]
+2026-11-04T14:42:39.0260030Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-tlwg-loma-otf all 1:0.7.3-1 [107 kB]
+2026-11-04T14:42:39.0411232Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-unifont all 1:15.1.01-1build1 [2993 kB]
+2026-11-04T14:42:39.0738559Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+2026-11-04T14:42:39.1333098Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-encodings all 1:1.0.5-0ubuntu2 [578 kB]
+2026-11-04T14:42:39.1504710Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-utils amd64 1:7.7+6build3 [94.4 kB]
+2026-11-04T14:42:39.1660865Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 xfonts-cyrillic all 1:1.0.5+nmu1 [384 kB]
+2026-11-04T14:42:39.1831952Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-scalable all 1:1.0.3-1.3 [304 kB]
+2026-11-04T14:42:39.5021013Z Fetched 21.1 MB in 0s (68.0 MB/s)
+2026-11-04T14:42:39.5330176Z Selecting previously unselected package fonts-ipafont-gothic.
+2026-11-04T14:42:39.5678988Z (Reading database ...
+2026-11-04T14:42:39.5679667Z (Reading database ... 5%
+2026-11-04T14:42:39.5680337Z (Reading database ... 10%
+2026-11-04T14:42:39.5680992Z (Reading database ... 15%
+2026-11-04T14:42:39.5681514Z (Reading database ... 20%
+2026-11-04T14:42:39.5682003Z (Reading database ... 25%
+2026-11-04T14:42:39.5682344Z (Reading database ... 30%
+2026-11-04T14:42:39.5682665Z (Reading database ... 35%
+2026-11-04T14:42:39.5682990Z (Reading database ... 40%
+2026-11-04T14:42:39.5683306Z (Reading database ... 45%
+2026-11-04T14:42:39.5683641Z (Reading database ... 50%
+2026-11-04T14:42:39.5747814Z (Reading database ... 55%
+2026-11-04T14:42:39.7435984Z (Reading database ... 60%
+2026-11-04T14:42:39.9246846Z (Reading database ... 65%
+2026-11-04T14:42:40.1371256Z (Reading database ... 70%
+2026-11-04T14:42:40.3447269Z (Reading database ... 75%
+2026-11-04T14:42:40.5003558Z (Reading database ... 80%
+2026-11-04T14:42:40.6433389Z (Reading database ... 85%
+2026-11-04T14:42:40.7872377Z (Reading database ... 90%
+2026-11-04T14:42:40.9457926Z (Reading database ... 95%
+2026-11-04T14:42:40.9458949Z (Reading database ... 100%
+2026-11-04T14:42:40.9460068Z (Reading database ... 215504 files and directories currently installed.)
+2026-11-04T14:42:40.9506486Z Preparing to unpack .../0-fonts-ipafont-gothic_00303-21ubuntu1_all.deb ...
+2026-11-04T14:42:40.9627679Z Unpacking fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-11-04T14:42:41.2191182Z Selecting previously unselected package fonts-freefont-ttf.
+2026-11-04T14:42:41.2344801Z Preparing to unpack .../1-fonts-freefont-ttf_20211204+svn4273-2_all.deb ...
+2026-11-04T14:42:41.2352831Z Unpacking fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-11-04T14:42:41.3403545Z Selecting previously unselected package fonts-tlwg-loma-otf.
+2026-11-04T14:42:41.3556329Z Preparing to unpack .../2-fonts-tlwg-loma-otf_1%3a0.7.3-1_all.deb ...
+2026-11-04T14:42:41.3565059Z Unpacking fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-11-04T14:42:41.3837205Z Selecting previously unselected package fonts-unifont.
+2026-11-04T14:42:41.3988845Z Preparing to unpack .../3-fonts-unifont_1%3a15.1.01-1build1_all.deb ...
+2026-11-04T14:42:41.3995156Z Unpacking fonts-unifont (1:15.1.01-1build1) ...
+2026-11-04T14:42:41.5260998Z Selecting previously unselected package fonts-wqy-zenhei.
+2026-11-04T14:42:41.5417907Z Preparing to unpack .../4-fonts-wqy-zenhei_0.9.45-8_all.deb ...
+2026-11-04T14:42:41.5548173Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+2026-11-04T14:42:42.0777727Z Selecting previously unselected package xfonts-encodings.
+2026-11-04T14:42:42.0911640Z Preparing to unpack .../5-xfonts-encodings_1%3a1.0.5-0ubuntu2_all.deb ...
+2026-11-04T14:42:42.0926386Z Unpacking xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-11-04T14:42:42.1277053Z Selecting previously unselected package xfonts-utils.
+2026-11-04T14:42:42.1429836Z Preparing to unpack .../6-xfonts-utils_1%3a7.7+6build3_amd64.deb ...
+2026-11-04T14:42:42.1451966Z Unpacking xfonts-utils (1:7.7+6build3) ...
+2026-11-04T14:42:42.1883964Z Selecting previously unselected package xfonts-cyrillic.
+2026-11-04T14:42:42.2036979Z Preparing to unpack .../7-xfonts-cyrillic_1%3a1.0.5+nmu1_all.deb ...
+2026-11-04T14:42:42.2050455Z Unpacking xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-11-04T14:42:42.2466918Z Selecting previously unselected package xfonts-scalable.
+2026-11-04T14:42:42.2621175Z Preparing to unpack .../8-xfonts-scalable_1%3a1.0.3-1.3_all.deb ...
+2026-11-04T14:42:42.2629336Z Unpacking xfonts-scalable (1:1.0.3-1.3) ...
+2026-11-04T14:42:42.3161108Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+2026-11-04T14:42:42.3301544Z Setting up fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-11-04T14:42:42.3320356Z Setting up fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-11-04T14:42:42.3339640Z Setting up xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-11-04T14:42:42.3357937Z Setting up fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-11-04T14:42:42.3428759Z update-alternatives: using /usr/share/fonts/opentype/ipafont-gothic/ipag.ttf to provide /usr/share/fonts/truetype/fonts-japanese-gothic.ttf (fonts-japanese-gothic.ttf) in auto mode
+2026-11-04T14:42:42.3443650Z Setting up fonts-unifont (1:15.1.01-1build1) ...
+2026-11-04T14:42:42.3460613Z Setting up xfonts-utils (1:7.7+6build3) ...
+2026-11-04T14:42:42.3507251Z Setting up xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-11-04T14:42:42.3850979Z Setting up xfonts-scalable (1:1.0.3-1.3) ...
+2026-11-04T14:42:42.4191349Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-11-04T14:42:42.4227255Z Not building database; man-db/auto-update is not 'true'.
+2026-11-04T14:42:42.4243616Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+2026-11-04T14:42:43.3054773Z
+2026-11-04T14:42:43.3056031Z Running kernel seems to be up-to-date.
+2026-11-04T14:42:43.3056905Z
+2026-11-04T14:42:43.3057577Z No services need to be restarted.
+2026-11-04T14:42:43.3058176Z
+2026-11-04T14:42:43.3058657Z No containers need to be restarted.
+2026-11-04T14:42:43.3059665Z
+2026-11-04T14:42:43.3060164Z No user sessions are running outdated binaries.
+2026-11-04T14:42:43.3060741Z
+2026-11-04T14:42:43.3061470Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-11-04T14:42:44.5728536Z Downloading Chrome for Testing 153.0.8010.12 (playwright chromium v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-linux64.zip
+2026-11-04T14:42:45.0024479Z |                                                                                |   0% of 186.8 MiB
+2026-11-04T14:42:45.2599046Z |■■■■■■■■                                                                        |  10% of 186.8 MiB
+2026-11-04T14:42:45.3784884Z |■■■■■■■■■■■■■■■■                                                                |  20% of 186.8 MiB
+2026-11-04T14:42:45.5284558Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 186.8 MiB
+2026-11-04T14:42:45.6184227Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 186.8 MiB
+2026-11-04T14:42:45.7396132Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 186.8 MiB
+2026-11-04T14:42:45.8599533Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 186.8 MiB
+2026-11-04T14:42:45.9741527Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 186.8 MiB
+2026-11-04T14:42:46.0917980Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 186.8 MiB
+2026-11-04T14:42:46.2571883Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 186.8 MiB
+2026-11-04T14:42:46.3559152Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 186.8 MiB
+2026-11-04T14:42:50.4912611Z Chrome for Testing 153.0.8010.12 (playwright chromium v1243) downloaded to /home/runner/.cache/ms-playwright/chromium-1243
+2026-11-04T14:42:50.4920834Z Downloading FFmpeg (playwright ffmpeg v1011) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-linux.zip
+2026-11-04T14:42:50.9037151Z |                                                                                |   0% of 2.3 MiB
+2026-11-04T14:42:50.9074913Z |■■■■■■■■                                                                        |  10% of 2.3 MiB
+2026-11-04T14:42:50.9103827Z |■■■■■■■■■■■■■■■■                                                                |  20% of 2.3 MiB
+2026-11-04T14:42:50.9127870Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 2.3 MiB
+2026-11-04T14:42:50.9151429Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 2.3 MiB
+2026-11-04T14:42:50.9166350Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 2.3 MiB
+2026-11-04T14:42:50.9186828Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 2.3 MiB
+2026-11-04T14:42:50.9206994Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 2.3 MiB
+2026-11-04T14:42:50.9242402Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 2.3 MiB
+2026-11-04T14:42:50.9254613Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 2.3 MiB
+2026-11-04T14:42:50.9273016Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 2.3 MiB
+2026-11-04T14:42:51.0019142Z FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
+2026-11-04T14:42:51.0023007Z Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
+2026-11-04T14:42:51.4382336Z |                                                                                |   0% of 114.3 MiB
+2026-11-04T14:42:51.5460934Z |■■■■■■■■                                                                        |  10% of 114.3 MiB
+2026-11-04T14:42:51.6557472Z |■■■■■■■■■■■■■■■■                                                                |  20% of 114.3 MiB
+2026-11-04T14:42:51.7252209Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 114.3 MiB
+2026-11-04T14:42:51.7986827Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 114.3 MiB
+2026-11-04T14:42:51.8940246Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 114.3 MiB
+2026-11-04T14:42:51.9454875Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 114.3 MiB
+2026-11-04T14:42:52.0380704Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 114.3 MiB
+2026-11-04T14:42:52.0892104Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 114.3 MiB
+2026-11-04T14:42:52.1394533Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 114.3 MiB
+2026-11-04T14:42:52.2238288Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 114.3 MiB
+2026-11-04T14:42:55.2416791Z Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) downloaded to /home/runner/.cache/ms-playwright/chromium_headless_shell-1243
+2026-11-04T14:42:55.2912959Z ##[group]Run npm run test:domains -- --project discovery-desktop --project discovery-phone --grep 'learned model'
+2026-11-04T14:42:55.2913859Z [36;1mnpm run test:domains -- --project discovery-desktop --project discovery-phone --grep 'learned model'[0m
+2026-11-04T14:42:55.2936019Z shell: /usr/bin/bash -e {0}
+2026-11-04T14:42:55.2936313Z env:
+2026-11-04T14:42:55.2936617Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:55.2937124Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:42:55.2937642Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:55.2938077Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:55.2938519Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:42:55.2938954Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:42:55.2939340Z   MAZI_PYTHON: .venv/bin/python
+2026-11-04T14:42:55.2939729Z   MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
+2026-11-04T14:42:55.2940222Z   MAZI_BROWSER_RESULTS_DIR: /home/runner/work/Mazi/Mazi/test-results/learned
+2026-11-04T14:42:55.2940645Z ##[endgroup]
+2026-11-04T14:42:55.4094351Z
+2026-11-04T14:42:55.4095561Z > mazi@0.1.0 test:domains
+2026-11-04T14:42:55.4097689Z > playwright test --config tests/browser/playwright.config.ts --project discovery-desktop --project discovery-phone --grep learned model
+2026-11-04T14:42:55.4099101Z
+2026-11-04T14:42:56.6289655Z [WebServer] 2026-11-04 14:42:56.624934795 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:42:58.4443697Z [WebServer] 2026-11-04 14:42:58.442234486 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:43:00.3989126Z [WebServer] 2026-11-04 14:43:00.396895116 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:43:02.1390074Z [WebServer] 2026-11-04 14:43:02.136909740 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:43:04.0519167Z [WebServer] 2026-11-04 14:43:04.049279744 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:43:06.8692351Z [WebServer] 2026-11-04 14:43:06.866996723 [W:onnxruntime:Default, device_discovery.cc:131 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename ""5620e0c7-8062-4dce-aeb7-520c7ef76171"" dit not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+
+2026-11-04T14:43:08.9326181Z
+2026-11-04T14:43:08.9336495Z Running 2 tests using 1 worker
+2026-11-04T14:43:35.5892583Z FF
+2026-11-04T14:43:35.5900942Z
+2026-11-04T14:43:35.5912684Z   1) [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+2026-11-04T14:43:35.5913957Z
+2026-11-04T14:43:35.5914482Z     Error: expect(locator).toHaveText(expected) failed
+2026-11-04T14:43:35.5915160Z
+2026-11-04T14:43:35.5916018Z     Locator:  locator('#result-total')
+2026-11-04T14:43:35.5916845Z     Expected: "0 results"
+2026-11-04T14:43:35.5917626Z     Received: "0 sonuç"
+2026-11-04T14:43:35.5918213Z     Timeout:  10000ms
+2026-11-04T14:43:35.5918617Z
+2026-11-04T14:43:35.5918908Z     Call log:
+2026-11-04T14:43:35.5919787Z       - Expect "toHaveText" locator('#result-total') with timeout 10000ms
+2026-11-04T14:43:35.5921377Z       - waiting for locator('#result-total')
+2026-11-04T14:43:35.5924718Z         24 × locator resolved to <span id="result-total" class="search-count">0 sonuç</span>
+2026-11-04T14:43:35.5936386Z            - unexpected value "0 sonuç"
+2026-11-04T14:43:35.5936938Z
+2026-11-04T14:43:35.5937068Z
+2026-11-04T14:43:35.5937792Z       39 |     await page.getByLabel("Arama türü").selectOption("keyword");
+2026-11-04T14:43:35.5939088Z       40 |     await page.getByRole("button", { name: "Arşivde ara" }).click();
+2026-11-04T14:43:35.5940228Z     > 41 |     await expect(page.locator("#result-total")).toHaveText("0 results");
+2026-11-04T14:43:35.5941178Z          |                                                 ^
+2026-11-04T14:43:35.5942430Z       42 |     await page.getByLabel("Arama türü").selectOption("semantic");
+2026-11-04T14:43:35.5943932Z       43 |     await page.getByRole("button", { name: "Arşivde ara" }).click();
+2026-11-04T14:43:35.5948578Z       44 |     await expect(page.locator("#index-progress")).toContainText(
+2026-11-04T14:43:35.5950129Z         at /home/runner/work/Mazi/Mazi/tests/browser/discovery-learned.spec.ts:41:49
+2026-11-04T14:43:35.5950963Z
+2026-11-04T14:43:35.5952106Z     Error Context: test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/error-context.md
+2026-11-04T14:43:35.5953294Z
+2026-11-04T14:43:35.5954242Z     attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-11-04T14:43:35.5956270Z     test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/trace.zip
+2026-11-04T14:43:35.5957510Z     Usage:
+2026-11-04T14:43:35.5957803Z
+2026-11-04T14:43:35.5958995Z         npx playwright show-trace test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-desktop/trace.zip
+2026-11-04T14:43:35.5960184Z
+2026-11-04T14:43:35.5960977Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-11-04T14:43:35.5961619Z
+2026-11-04T14:43:35.5962759Z   2) [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+2026-11-04T14:43:35.5963674Z
+2026-11-04T14:43:35.5964108Z     Error: expect(locator).toHaveText(expected) failed
+2026-11-04T14:43:35.5964632Z
+2026-11-04T14:43:35.5964998Z     Locator:  locator('#result-total')
+2026-11-04T14:43:35.5965993Z     Expected: "0 results"
+2026-11-04T14:43:35.5966661Z     Received: "0 sonuç"
+2026-11-04T14:43:35.5967208Z     Timeout:  10000ms
+2026-11-04T14:43:35.5967605Z
+2026-11-04T14:43:35.5967864Z     Call log:
+2026-11-04T14:43:35.5968543Z       - Expect "toHaveText" locator('#result-total') with timeout 10000ms
+2026-11-04T14:43:35.5969409Z       - waiting for locator('#result-total')
+2026-11-04T14:43:35.5970510Z         24 × locator resolved to <span id="result-total" class="search-count">0 sonuç</span>
+2026-11-04T14:43:35.5972035Z            - unexpected value "0 sonuç"
+2026-11-04T14:43:35.5972465Z
+2026-11-04T14:43:35.5972601Z
+2026-11-04T14:43:35.5973226Z       39 |     await page.getByLabel("Arama türü").selectOption("keyword");
+2026-11-04T14:43:35.5974294Z       40 |     await page.getByRole("button", { name: "Arşivde ara" }).click();
+2026-11-04T14:43:35.5975941Z     > 41 |     await expect(page.locator("#result-total")).toHaveText("0 results");
+2026-11-04T14:43:35.5976928Z          |                                                 ^
+2026-11-04T14:43:35.5978125Z       42 |     await page.getByLabel("Arama türü").selectOption("semantic");
+2026-11-04T14:43:35.5979295Z       43 |     await page.getByRole("button", { name: "Arşivde ara" }).click();
+2026-11-04T14:43:35.5988440Z       44 |     await expect(page.locator("#index-progress")).toContainText(
+2026-11-04T14:43:35.5990942Z         at /home/runner/work/Mazi/Mazi/tests/browser/discovery-learned.spec.ts:41:49
+2026-11-04T14:43:35.5991876Z
+2026-11-04T14:43:35.5994510Z     Error Context: test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/error-context.md
+2026-11-04T14:43:35.5996019Z
+2026-11-04T14:43:35.5996845Z     attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-11-04T14:43:35.5998374Z     test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/trace.zip
+2026-11-04T14:43:35.5999385Z     Usage:
+2026-11-04T14:43:35.5999572Z
+2026-11-04T14:43:35.6000583Z         npx playwright show-trace test-results/learned/discovery-learned-learned--dc09b--and-keeps-keyword-fallback-discovery-phone/trace.zip
+2026-11-04T14:43:35.6001624Z
+2026-11-04T14:43:35.6002266Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-11-04T14:43:35.6002788Z
+2026-11-04T14:43:35.6002931Z   2 failed
+2026-11-04T14:43:35.6004087Z     [discovery-desktop] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+2026-11-04T14:43:35.6006156Z     [discovery-phone] › tests/browser/discovery-learned.spec.ts:4:1 › learned model indexes locally and keeps keyword fallback
+2026-11-04T14:43:35.6280044Z ##[error]Process completed with exit code 1.
+2026-11-04T14:43:35.6361922Z ##[group]Run actions/upload-artifact@v4
+2026-11-04T14:43:35.6362382Z with:
+2026-11-04T14:43:35.6362739Z   name: learned-browser-evidence
+2026-11-04T14:43:35.6363136Z   path: test-results/
+2026-11-04T14:43:35.6363498Z   if-no-files-found: warn
+2026-11-04T14:43:35.6363870Z   compression-level: 6
+2026-11-04T14:43:35.6364224Z   overwrite: false
+2026-11-04T14:43:35.6364575Z   include-hidden-files: false
+2026-11-04T14:43:35.6364952Z env:
+2026-11-04T14:43:35.6365734Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:43:35.6366338Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib/pkgconfig
+2026-11-04T14:43:35.6366892Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:43:35.6367624Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:43:35.6368143Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.17/x64
+2026-11-04T14:43:35.6368657Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.17/x64/lib
+2026-11-04T14:43:35.6369140Z ##[endgroup]
+2026-11-04T14:43:35.8483187Z (node:3319) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T14:43:35.8515535Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T14:43:35.8961209Z With the provided path, there will be 4 files uploaded
+2026-11-04T14:43:35.8962215Z Artifact name is valid!
+2026-11-04T14:43:35.8962733Z Root directory input is valid!
+2026-11-04T14:43:36.0820134Z Beginning upload of artifact content to blob storage
+2026-11-04T14:43:36.2496777Z (node:3319) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-04T14:43:36.4029372Z Uploaded bytes 3906521
+2026-11-04T14:43:36.4226976Z Finished uploading artifact content to blob storage!
+2026-11-04T14:43:36.4228004Z SHA256 digest of uploaded artifact zip is 4263e8bec3140ccfdf41dff2b7d95b57c35778ed1a8263b22d79b629235b7f91
+2026-11-04T14:43:36.4256659Z Finalizing artifact upload
+2026-11-04T14:43:36.8894571Z Artifact learned-browser-evidence.zip successfully finalized. Artifact ID 13334150645
+2026-11-04T14:43:36.8897661Z Artifact learned-browser-evidence has been successfully uploaded! Final size is 3906521 bytes. Artifact ID is 13334150645
+2026-11-04T14:43:36.8902094Z Artifact download URL: https://github.com/dodoscoding/Mazi/actions/runs/41850083898/artifacts/13334150645
+2026-11-04T14:43:36.9179686Z Post job cleanup.
+2026-11-04T14:43:37.0242216Z [command]/usr/bin/git version
+2026-11-04T14:43:37.0343343Z git version 2.56.0
+2026-11-04T14:43:37.0451686Z Temporarily overriding HOME='/home/runner/work/_temp/a5e4608b-c101-47af-ac4d-06c6d02595aa' before making global git config changes
+2026-11-04T14:43:37.0453823Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T14:43:37.0466649Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Mazi/Mazi
+2026-11-04T14:43:37.0549473Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T14:43:37.0623665Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T14:43:37.1096878Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T14:43:37.1159035Z http.https://github.com/.extraheader
+2026-11-04T14:43:37.1210644Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-04T14:43:37.1312005Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T14:43:37.1766611Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T14:43:37.1805633Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T14:43:37.2308261Z Cleaning up orphan processes
+2026-11-04T14:43:37.2668826Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

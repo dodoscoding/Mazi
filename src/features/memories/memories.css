@@ -353,6 +353,15 @@
 .memories-page .mem-tile:hover img {
   filter: brightness(1.08);
 }
+.memories-page .mem-photo-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 2px 12px;
+  color: var(--text-primary);
+  font: 400 12px / 1.5 var(--font-ui);
+  overflow-wrap: anywhere;
+}
 .memories-page .mem-about {
   position: absolute;
   left: 6px;
@@ -760,4 +769,39 @@
   .memories-page .mem-scrim.is-closing {
     animation: fade-out 120ms linear forwards !important;
   }
+}
+
+.mem-label-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0;
+}
+.mem-label-tools > div {
+  flex-basis: 100%;
+}
+.mem-photo-cell {
+  min-width: 0;
+}
+.mem-photo-cell .mem-tile {
+  display: block;
+}
+.mem-photo-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 12px;
+}
+.mem-photo-select input {
+  width: 20px;
+  height: 20px;
+}
+
+.photo-label-badge {
+  display: inline-block;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }

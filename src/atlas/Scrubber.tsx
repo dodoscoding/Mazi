@@ -84,7 +84,7 @@ export function Scrubber({
       className={`scrubber ${playing ? "is-playing" : ""}`}
       role="slider"
       tabIndex={0}
-      aria-label="Year"
+      aria-label="Yıl"
       aria-valuemin={first}
       aria-valuemax={last}
       aria-valuenow={current}

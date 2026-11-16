@@ -1,0 +1,21 @@
+✔ independent feature routes load circle context without requesting Atlas (57.584ms)
+✔ Atlas routes still load current memories and demo search remains local (24.465459ms)
+✔ leaving Atlas aborts and ignores late data; returning fetches again (22.789958ms)
+✔ a reload that is denied clears the circle and reports lost access (22.029375ms)
+✔ without an authenticated profile no archive requests are made (20.189791ms)
+✔ superseded loads abort and lost access cancels private work (20.7345ms)
+✔ backgrounding keeps the loaded atlas and makes no requests (21.343625ms)
+✔ moving between Atlas and feature pages keeps the loaded atlas (19.788708ms)
+✔ choosing another circle sticks and loads that circle (21.968667ms)
+✔ a saved photo correction rereads authoritative Atlas facts (24.69725ms)
+✔ selected-memory routes never request the full Atlas (17.938167ms)
+✔ archive changes keep feature circle context and refresh cached Atlas on return (20.493875ms)
+✔ archive invalidation aborts pending Atlas and denial clears private context (19.912375ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 536.243334

@@ -1,0 +1,107 @@
+<div class="fx settings-controls">
+  <section class="fx-panel" aria-labelledby="settings-archive-title">
+    <h2 id="settings-archive-title" class="fx-section-title">
+      Archive and contributions
+    </h2>
+    <p id="settings-notice" role="status" aria-live="polite"></p>
+    <button id="settings-retry" class="fx-button" hidden>
+      Retry Settings controls
+    </button>
+    <div id="settings-work" hidden>
+      <p>
+        Download the originals, context and evidence currently available to you
+        within the archive’s existing export limits.
+      </p>
+      <button id="settings-export" class="fx-button">Download archive</button>
+      <button id="settings-cancel-export" class="fx-button" hidden>
+        Cancel export
+      </button>
+      <h3>My contributions</h3>
+      <p>
+        Removing your source record stops sharing it immediately. Independent
+        contributions remain available.
+      </p>
+      <div id="settings-mine" class="thumb-cards"></div>
+      <button
+        id="settings-leave"
+        class="fx-button fx-button--danger-quiet"
+        hidden
+      >
+        Leave group and withdraw my contributions
+      </button>
+      <h3>Discovery preferences</h3>
+      <p>
+        No media is sent to an external provider. Every active contributor must
+        opt in before local related search can process a photograph. Face
+        recognition remains off.
+      </p>
+      <label class="fx-check"
+        ><input id="settings-personal-processing" type="checkbox" />Allow local
+        related-search processing of my contributions</label
+      >
+      <label id="settings-group-control" class="fx-check" hidden
+        ><input id="settings-group-processing" type="checkbox" />Enable optional
+        local processing for this group (admin)</label
+      >
+      <h3>People</h3>
+      <p>
+        Manual person records do not verify an identity or enable recognition.
+      </p>
+      <form id="settings-person-create">
+        <label
+          >Person’s name<input
+            id="settings-new-person"
+            required
+            maxlength="100"
+        /></label>
+        <button class="fx-button">Create person</button>
+      </form>
+      <div
+        id="settings-people"
+        role="group"
+        aria-label="Manual person records"
+      ></div>
+      <h3>Visibility and identity</h3>
+      <p>Hiding affects your discovery views. Other members retain access.</p>
+      <div id="settings-visibility"></div>
+      <div id="settings-identities"></div>
+      <details id="settings-admin" hidden>
+        <summary>Identity and removal review (admin)</summary>
+        <p>
+          Verify mappings privately first. Members must confirm them. For a
+          nonmember request, privately verify the subject and their request.
+        </p>
+        <form id="settings-identity-form">
+          <label
+            >Person record<select id="settings-person" required></select
+          ></label>
+          <label
+            >Member account<select id="settings-account" required></select
+          ></label>
+          <button class="fx-button">Request identity confirmation</button>
+        </form>
+        <form id="settings-nonmember-form">
+          <label
+            >Nonmember person<select id="settings-nonmember" required></select
+          ></label>
+          <label
+            >Photograph<select id="settings-asset" required></select
+          ></label>
+          <label class="fx-check"
+            ><input id="settings-verified" type="checkbox" required />I
+            privately verified the subject and their request</label
+          >
+          <label
+            >Requested action<select id="settings-removal-action">
+              <option value="remove">Remove and block association</option>
+              <option value="restore">
+                Restore association (subject opt-in)
+              </option>
+            </select></label
+          >
+          <button class="fx-button">Apply verified request</button>
+        </form>
+      </details>
+    </div>
+  </section>
+</div>

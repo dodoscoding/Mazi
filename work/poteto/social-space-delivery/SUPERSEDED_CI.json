@@ -1,0 +1,21 @@
+{
+  "time": "2026-11-04T15:19:11.353248+00:00",
+  "reason": "Superseded delivery runs; keep final main candidate verification capacity",
+  "results": [
+    {
+      "run": 41854269064,
+      "exit_code": 0,
+      "result": "\u2713 Request to cancel workflow 41854269064 submitted."
+    },
+    {
+      "run": 41852047061,
+      "exit_code": 0,
+      "result": "\u2713 Request to cancel workflow 41852047061 submitted."
+    },
+    {
+      "run": 41852024854,
+      "exit_code": 0,
+      "result": "\u2713 Request to cancel workflow 41852024854 submitted."
+    }
+  ]
+}

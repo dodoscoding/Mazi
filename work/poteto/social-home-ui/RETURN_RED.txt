@@ -1,0 +1,93 @@
+[WebServer] (node:20584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 2 tests using 1 worker
+
+(node:20620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  1 [desktop] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged (16.0s)
+(node:20712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✘  2 [phone] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged (16.0s)
+
+
+  1) [desktop] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.social-activity li')
+    Expected: 2
+    Received: 20
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.social-activity li') with timeout 10000ms
+      - waiting for locator('.social-activity li')
+        24 × locator resolved to 20 elements
+           - unexpected value "20"
+
+
+      278 |     if (back === "pill") await page.locator(".back-pill").click();
+      279 |     else await page.goBack();
+    > 280 |     await expect(page.locator(".social-activity li")).toHaveCount(2);
+          |                                                       ^
+      281 |     await expect(page.locator(`[id="${openerId}"]`)).toBeFocused();
+      282 |     expect(
+      283 |       Math.abs((await page.evaluate(() => scrollY)) - scroll),
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-home-ui/tests/social-home.spec.ts:280:55
+
+    Error Context: test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [phone] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.social-activity li')
+    Expected: 2
+    Received: 20
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.social-activity li') with timeout 10000ms
+      - waiting for locator('.social-activity li')
+        24 × locator resolved to 20 elements
+           - unexpected value "20"
+
+
+      278 |     if (back === "pill") await page.locator(".back-pill").click();
+      279 |     else await page.goBack();
+    > 280 |     await expect(page.locator(".social-activity li")).toHaveCount(2);
+          |                                                       ^
+      281 |     await expect(page.locator(`[id="${openerId}"]`)).toBeFocused();
+      282 |     expect(
+      283 |       Math.abs((await page.evaluate(() => scrollY)) - scroll),
+        at /Users/altanesmer/Desktop/Ales/Mazi-wt/social-home-ui/tests/social-home.spec.ts:280:55
+
+    Error Context: test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-phone/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-phone/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/social-home/social-home-photo-only-Hom-e3667-ity-stays-bounded-and-paged-phone/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged
+    [phone] › tests/social-home.spec.ts:222:1 › photo-only Home fallback opens one selected photo and activity stays bounded and paged

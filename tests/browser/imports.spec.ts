@@ -1,3 +1,4 @@
+import { followShellLink } from "../helpers/shell";
 import { test, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
@@ -8,17 +9,14 @@ test("import inventory, automatic sharing, report, replay and withdrawal", async
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const unique = `${testInfo.project.name}-${Date.now()}`;
-  await page.goto("/#/imports");
+  await page.goto("/#/add");
   await page.getByLabel("Your name").fill(unique);
   await page.getByLabel("Shared code").fill("synthetic-shared-code");
   await page.getByRole("button", { name: "Enter Mazi", exact: true }).click();
   await page
     .getByRole("button", { name: "Open the Atlas", exact: true })
     .click();
-  await page
-    .getByRole("link", { name: "My Imports", exact: true })
-    .first()
-    .click();
+  await followShellLink(page, "My Imports");
   const fixture = execFileSync(process.env.MAZI_PYTHON || "python3", [
     "-c",
     `

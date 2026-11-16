@@ -1,0 +1,13 @@
+
+Running 2 tests using 1 worker
+
+(node:48116) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/unified.spec.ts:222:1 › named profile imports and logout discard delayed private Atlas responses (5.8s)
+(node:48159) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  2 [phone] › tests/unified.spec.ts:222:1 › named profile imports and logout discard delayed private Atlas responses (5.7s)
+
+  2 passed (12.6s)
