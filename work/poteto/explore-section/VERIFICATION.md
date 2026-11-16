@@ -39,3 +39,7 @@ On /explore/parallel the Explore title is a paragraph, so the route-change focus
 ## Shared availability heading, 16 November 2026
 
 Integrated the standalone Parallel You focus correction while preserving 3db1580's Explore route focus fallback. Once ParallelPage mounts, its loading h1 receives focus, followed by the enabled/disabled page heading. Updated the nested-route contract to require this focused loading heading and exactly one h1. Integrated build, all 26 desktop/phone browser tests, script budgets (394.8 / 400 KiB), docs and whitespace checks passed locally.
+
+## Local CI run, 16 November 2026
+
+GitHub Actions still refuses to start jobs (account payment or spending limit), so the verify.yml steps ran locally. Adding Explore as the first Archive tools entry moved first focus in that menu, which failed three theme-shell tests that expected Memories; they now expect Explore first. Passed: test:dom, test:unit, setup, lint, build, check:budgets, check:docs, test:backend, eval:retrieval, eval:answers, test:app, test:domains, the imports browser suite, the macOS companion build, and npm test on the desktop and phone projects (154 passed after rebasing on 51f061e; test:parallel 26 passed). The Firefox projects could not run on this host because headless Firefox exits on launch; m0-access (Supabase/Docker) and learned-retrieval (CLIP model) were not run.

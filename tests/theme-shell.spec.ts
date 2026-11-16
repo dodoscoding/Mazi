@@ -97,6 +97,8 @@ test("Archive tools opens, is keyboard operable and closes on Escape", async ({
   await page.keyboard.press("Enter");
   await expect(button).toHaveAttribute("aria-expanded", "true");
   const tools = page.getByRole("navigation", { name: "Archive tools" });
+  await expect(tools.getByRole("link", { name: "Explore" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
   await expect(tools.getByRole("link", { name: "Memories" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(tools.getByRole("link", { name: "Discover" })).toBeFocused();
@@ -105,11 +107,12 @@ test("Archive tools opens, is keyboard operable and closes on Escape", async ({
     tools.getByRole("button", { name: "Sign out", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(tools.getByRole("link", { name: "Memories" })).toBeFocused();
+  await expect(tools.getByRole("link", { name: "Explore" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(button).toHaveAttribute("aria-expanded", "false");
   await expect(tools).toHaveCount(0);
   await expect(button).toBeFocused();
+  await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
@@ -136,10 +139,10 @@ test("a mouse click on an Archive tools link lands even when clicks do not focus
   await openHome(page);
   await page.getByRole("button", { name: "Archive tools" }).click();
   const tools = page.getByRole("navigation", { name: "Archive tools" });
-  const memories = tools.getByRole("link", { name: "Memories" });
-  await expect(memories).toBeFocused();
+  const first = tools.getByRole("link", { name: "Explore" });
+  await expect(first).toBeFocused();
   // Safari and macOS Firefox blur the focused item without focusing the target.
-  await memories.evaluate((link) =>
+  await first.evaluate((link) =>
     link.addEventListener("mousedown", (event) => event.preventDefault()),
   );
   const places = tools.getByRole("link", { name: "Places & sources" });
@@ -159,7 +162,7 @@ test("the open Archive tools menu has no axe violations", async ({ page }) => {
   await expect(
     page
       .getByRole("navigation", { name: "Archive tools" })
-      .getByRole("link", { name: "Memories" }),
+      .getByRole("link", { name: "Explore" }),
   ).toBeFocused();
   const results = await new AxeBuilder({ page })
     .include(".menu-popover")
