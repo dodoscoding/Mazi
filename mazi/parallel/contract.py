@@ -67,8 +67,20 @@ def validate_request(value):
     clean_state.update(location=text(state.get('location'), 120), career=text(state.get('career'), 120))
     result = {'origin': clean_origin, 'path': clean_path, 'state': clean_state, 'choice': clean_choice, 'depth': depth}
     # Deliberately conservative fallback, not a claim of comprehensive safety detection.
-    import json
-    sensitive = unicodedata.normalize('NFKC', json.dumps(result, ensure_ascii=False)).casefold()
+    def raw_strings(item):
+        if isinstance(item, str):
+            yield item
+        elif isinstance(item, dict):
+            for child in item.values():
+                yield from raw_strings(child)
+        elif isinstance(item, list):
+            for child in item:
+                yield from raw_strings(child)
+    raw = unicodedata.normalize('NFKC', ' '.join(raw_strings(value))).casefold()
+    # Preserve word boundaries before removing controls; ignore invisible format marks.
+    raw = ''.join(' ' if c.isspace() else c for c in raw)
+    raw = ''.join(c for c in raw if unicodedata.category(c) not in ('Cc', 'Cf'))
+    sensitive = ' '.join(raw.split())
     if re.search(r'\b(suicid\w*|self[ -]?harm\w*|kill myself|end my life|intihar\w*|kendimi öldür\w*)\b', sensitive):
         raise Declined('This story cannot continue. If this connects to how you feel, consider reaching out to someone you trust or local emergency support if you are in immediate danger.')
     return result

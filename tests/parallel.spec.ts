@@ -236,6 +236,14 @@ test("loading, refusal, invalid output and quota errors preserve the branch", as
     await page.getByRole("button", { name: "Begin story" }).click();
     await expect(page.getByText("Writing the next possibility…")).toBeVisible();
     await expect(page.getByRole("alert")).toContainText(`Example ${code}`);
+    if (code === "parallel_declined") {
+      await expect(
+        page.getByRole("button", { name: "Begin story" }),
+      ).toBeDisabled();
+      await expect(
+        page.getByRole("button", { name: "Retry", exact: true }),
+      ).toHaveCount(0);
+    }
     expect(
       await page.evaluate(() =>
         localStorage.getItem("mazi.parallel.v1.parallel-test"),
@@ -320,3 +328,115 @@ test("Explore keeps archive retrieval and Parallel You in one new section", asyn
     page.getByRole("navigation", { name: "Explore sections" }),
   ).toHaveCount(0);
 });
+async function seedStory(page: import("@playwright/test").Page) {
+  await page.goto("/parallel?demo=1");
+  await page.getByRole("button", { name: "Begin a universe" }).click();
+  await page.getByRole("button", { name: "Study somewhere new" }).click();
+  await page.getByRole("button", { name: "Begin story" }).click();
+  await expect(
+    page.getByRole("heading", { name: "The door left open", exact: true }),
+  ).toBeVisible();
+  return page.evaluate(() =>
+    JSON.parse(localStorage.getItem("mazi.parallel.v1.parallel-test")!),
+  );
+}
+
+test("deleting a chapter while regeneration waits cannot restore it", async ({
+  page,
+}) => {
+  const saved = await seedStory(page);
+  const root = saved.nodes[saved.universes[0].rootNodeId];
+  await page.route("**/api/parallel/config", (r) =>
+    r.fulfill({ json: { enabled: true, accepted: true } }),
+  );
+  let release!: () => void;
+  const wait = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let requested = false;
+  await page.route("**/api/parallel/chapter", async (r) => {
+    requested = true;
+    await wait;
+    await r.fulfill({ json: { ...root, state: root.meters } });
+  });
+  await page.goto("/parallel");
+  await page.getByRole("button", { name: "Open universe" }).click();
+  await page.getByRole("button", { name: "This chapter feels wrong" }).click();
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Regenerate chapter" }).click();
+  await expect.poll(() => requested).toBe(true);
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Delete chapter" }).click();
+  release();
+  await expect(page.getByText("Writing the next possibility…")).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Open universe" })).toHaveCount(
+    0,
+  );
+  const final = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("mazi.parallel.v1.parallel-test")!),
+  );
+  expect(final.nodes).toEqual({});
+  expect(final.universes).toEqual([]);
+});
+
+test("refusal pauses all chapter generation controls", async ({ page }) => {
+  await seedStory(page);
+  await page.route("**/api/parallel/config", (r) =>
+    r.fulfill({ json: { enabled: true, accepted: true } }),
+  );
+  await page.route("**/api/parallel/chapter", (r) =>
+    r.fulfill({
+      status: 422,
+      json: { error: "Paused story", code: "parallel_declined" },
+    }),
+  );
+  await page.goto("/parallel");
+  await page.getByRole("button", { name: "Open universe" }).click();
+  await page.getByRole("button", { name: /Follow the opportunity/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Paused story");
+  for (const button of await page.locator(".py-choices button").all())
+    await expect(button).toBeDisabled();
+  await page.getByRole("button", { name: "This chapter feels wrong" }).click();
+  await expect(
+    page.getByRole("button", { name: "Regenerate chapter" }),
+  ).toBeDisabled();
+});
+
+for (const failed of [false, true]) {
+  test(`member can erase local stories when config ${failed ? "fails" : "is off"}`, async ({
+    page,
+  }) => {
+    const saved = await seedStory(page);
+    await page.evaluate(
+      (value) =>
+        localStorage.setItem(
+          "mazi.parallel.v1.another-member",
+          JSON.stringify(value),
+        ),
+      saved,
+    );
+    await page.route("**/api/parallel/config", (r) =>
+      r.fulfill({ status: failed ? 503 : 200, json: { enabled: false } }),
+    );
+    await page.goto("/parallel");
+    await expect(
+      page.getByRole("heading", { name: "Parallel You is not enabled" }),
+    ).toBeVisible();
+    page.once("dialog", async (d) => {
+      expect(d.message()).toContain("other members will remain");
+      await d.accept();
+    });
+    await page.getByRole("button", { name: "Delete your stories" }).click();
+    expect(
+      await page.evaluate(() =>
+        localStorage.getItem("mazi.parallel.v1.parallel-test"),
+      ),
+    ).toBeNull();
+    expect(
+      await page.evaluate(() =>
+        localStorage.getItem("mazi.parallel.v1.another-member"),
+      ),
+    ).not.toBeNull();
+  });
+}

@@ -27,3 +27,7 @@ The new Explore DOM contract failed before implementation (discover view instead
 ## Review fixes, 16 November 2026
 
 Shell marks Explore active on /explore/parallel, the parallel sub-route keeps a single h1, and the section pills use theme tokens. Rerun after the fixes: npm run build, npm run lint, npm run check:budgets (394.8 KiB / 400 KiB) and git diff --check passed; npm run test:dom 153 passed; MAZI_TEST_CHROME=1 npm run test:parallel -- -g "Explore keeps" 2 passed (desktop and phone). GitHub CI did not start because of an account billing error.
+
+## Integrated review fixes, 16 November 2026
+
+Preserved the upstream Explore theme/navigation update at 7c29a07 and merged the five PR #162 corrections plus the existing main-branch GPS test precision correction. Final integrated build and all 20 desktop/phone Parallel You + Explore browser tests passed. The focused backend/bridge/GPS suite passed 38 tests. Script budgets passed at 394.8 KiB gzip total; document and whitespace checks passed. GitHub Actions remains externally blocked by account payment/spending-limit configuration. No production deployment or schema change was performed.

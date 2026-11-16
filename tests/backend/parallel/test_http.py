@@ -45,12 +45,33 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.send('notice',{'version':'wrong'})[0],400)
     def test_slow_generation_releases_bridge_lock_and_rechecks_access(self):
         self.accept();started=threading.Event();finish=threading.Event();result=[]
-        def slow(r): started.set(); finish.wait(5);return fake_chapter(r)
+        def slow(r):
+            started.set()
+            if not finish.wait(5):
+                raise AssertionError('Generation was not explicitly released')
+            return fake_chapter(r)
         with patch('mazi.parallel.server.generate',side_effect=lambda r: __import__('mazi.parallel.provider',fromlist=['generate']).generate(r,slow)):
             worker=threading.Thread(target=lambda:result.append(self.send('chapter',request())))
-            worker.start(); self.assertTrue(started.wait(3))
-            status,_,_=call(self.app,'GET','/api/session',headers=self.headers)
-            self.assertEqual(status,200); self.assertFalse(finish.is_set())
-            call(self.app,'POST','/api/logout',{},self.headers)
-            finish.set();worker.join(5)
+            session_done=threading.Event()
+            session_result=[]
+            def read_session():
+                try:
+                    session_result.append(call(self.app,'GET','/api/session',headers=self.headers)[0])
+                finally:
+                    session_done.set()
+            session_worker=threading.Thread(target=read_session)
+            worker.start()
+            try:
+                self.assertTrue(started.wait(3))
+                session_worker.start()
+                self.assertTrue(session_done.wait(1), 'Session blocked behind generation')
+                self.assertEqual(session_result,[200])
+                self.assertFalse(finish.is_set())
+                call(self.app,'POST','/api/logout',{},self.headers)
+            finally:
+                finish.set()
+                worker.join(5)
+                if session_worker.ident is not None:
+                    session_worker.join(5)
+        self.assertFalse(worker.is_alive())
         self.assertEqual(result[0][0],403)
