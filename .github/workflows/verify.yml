@@ -105,7 +105,7 @@ jobs:
       - run: npm run eval:retrieval:clip
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:domains -- --project discovery-desktop --project discovery-phone --grep 'learned model'
+      - run: npm run test:domains -- discovery-learned.spec.ts --project discovery-desktop --project discovery-phone
         env:
           MAZI_PYTHON: .venv/bin/python
           MAZI_EMBEDDING_MODEL_DIR: .models/clip-vit-base-patch32
