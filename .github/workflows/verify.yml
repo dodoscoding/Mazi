@@ -5,42 +5,105 @@ on:
     branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
-  unified-app:
+  checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:dom
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run check:budgets
+      - run: npm run check:docs
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run setup
-      - run: npm run test:dom
-      - run: npx playwright install --with-deps chromium firefox
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run check:budgets
-      - run: npm run check:docs
       - run: npm run test:backend
       - run: npm run eval:retrieval
       - run: npm run eval:answers
-      - run: npm test
-      - run: npm run test:app
-        env:
-          MAZI_PYTHON: .venv/bin/python
-      - run: npm run test:domains
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: sample
+            browsers: chromium firefox
+            command: npx playwright test --output test-results/sample
+          - suite: unified
+            browsers: chromium
+            command: npx playwright test --config playwright.unified.config.ts --output test-results/unified
+          - suite: conversations
+            browsers: chromium
+            command: npx playwright test --config playwright.conversations.config.ts --output test-results/conversations
+          - suite: photos
+            browsers: chromium
+            command: npx playwright test --config playwright.photos.config.ts --output test-results/photos
+          - suite: workflows
+            browsers: chromium
+            command: |
+              npx playwright test --config playwright.add-sources.config.ts --output test-results/add-sources
+              npx playwright test --config playwright.add-queues.config.ts --output test-results/add-queues
+              npx playwright test --config playwright.recap.config.ts --output test-results/recap
+              npx playwright test --config playwright.past-creations.config.ts --output test-results/past-creations
+          - suite: domains
+            browsers: chromium
+            command: npm run build && npm run test:domains
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run setup
+      - run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - run: ${{ matrix.command }}
         env:
           MAZI_PYTHON: .venv/bin/python
           MAZI_BROWSER_RESULTS_DIR: ${{ github.workspace }}/test-results/domains
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: unified-browser-evidence
+          name: unified-browser-evidence-${{ matrix.suite }}
           path: test-results/
+  unified-app:
+    if: always()
+    needs: [checks, backend, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: test "$CHECKS" = success && test "$BACKEND" = success && test "$BROWSER" = success
+        env:
+          CHECKS: ${{ needs.checks.result }}
+          BACKEND: ${{ needs.backend.result }}
+          BROWSER: ${{ needs.browser.result }}
   import-workspace:
     runs-on: ubuntu-latest
     steps:
