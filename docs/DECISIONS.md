@@ -320,3 +320,11 @@ An event-scoped read and transactional note write retain current membership, ful
 ## D28 reconciliation of historical local increments
 
 The earlier Phase 6 answer engine, Phase 7 authoring/media increment and event-notebook write decisions above remain historical records. D28 retires their application generation/create/edit operations while preserving exact authorized source reads, stored creations, capsule opening-time checks and deletion-only own-recollection withdrawal. Independent native comments and source context keep their separate contracts. The retained offline engine and historical fixtures do not authorize restoring retired app endpoints.
+
+## Parallel You local implementation 14 November 2026
+
+The owner requested implementation of the Parallel You plan and selected keeping external AI disabled. Implement the browser-only per-member fiction space, recommended roles-only writing and scoped night palette, using an explicitly labelled deterministic sample provider. Keep existing total script ceilings. No paid model call, provider credential, deployment or archive-to-fiction bridge is authorized by this implementation. Provider selection, terms, spending and paid evaluation remain pending. Fiction persists on logout, with visible shared-device disclosure and delete controls, as recommended in PY-D1. Production release remains separate from synthetic verification.
+
+## Parallel You integration with the current shell, 16 November 2026
+
+The owner confirmed keeping Globe, Photos, Add and Settings while adding the new section. Parallel You remains an isolated, disabled-by-default sample fiction route; it does not restore the archive AI answers or story/capsule authoring retired by D28. Its account-menu link stays reachable for member-scoped browser deletion even when generation is disabled. The separate section will use `/studio`; legacy `/explore` links retain their Photos redirect. Photo and conversation retrieval reuses the current Photos contracts, including exact text-only source context and current authorization. No external provider, deployment or migration is enabled.

@@ -3,6 +3,11 @@ import { gzipSync } from "node:zlib";
 
 // Gzip byte ceilings for the release build; see docs/PERFORMANCE_BUDGETS.md.
 const budgets = [
+  {
+    name: "Parallel You chunk",
+    pattern: /^ParallelPage-.*\.js$/,
+    max: 24 * 1024,
+  },
   { name: "Globe chunk", pattern: /^Globe-.*\.js$/, max: 256 * 1024 },
   { name: "Entry script", pattern: /^index-.*\.js$/, max: 150 * 1024 },
   { name: "Stylesheet", pattern: /^index-.*\.css$/, max: 40 * 1024 },

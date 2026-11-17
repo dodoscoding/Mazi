@@ -363,3 +363,13 @@ interface explicitly states that scope instead of claiming those properties for
 text-only results. Unsupported conversation API filter parameters return 400. Opening context stays within Photos, is dismissible, and restores
 the query/filter/scroll position. Reload, withdrawal or access/session loss clears
 old context before a new read; delayed responses cannot repopulate closed context.
+
+## Parallel You sample endpoint
+
+Parallel You is off unless `MAZI_PARALLEL_ENABLED=1` and `MAZI_PARALLEL_PROVIDER=fake` (the default provider). Any other provider disables these routes. The signed-in member may use `GET /api/parallel/config`, `POST /api/parallel/notice` with `{ "version": "sample-v1" }`, and `POST /api/parallel/chapter` with the bounded request in [the Parallel You plan](PARALLEL_YOU.md). No archive identifiers or evidence are part of the chapter contract.
+
+The feature-off response is 404, access loss is 403, unaccepted notice is 403 `parallel_notice`, invalid input is 400 `parallel_invalid`, daily exhaustion is 400 `parallel_quota`, sensitive input is 422 `parallel_declined`, invalid output after two attempts is 502 `parallel_bad_output`, and temporary unavailability is 503 `parallel_unavailable`. Bodies are limited to 8 KiB, depth to 0-3, path length to depth, and choices to 3/2/2/0. Meters and changes are server-computed and bounded. The fixed tree has 22 chapters and 12 endings.
+
+Admission counts generation attempts, including failed attempts; explicit retries consume another attempt. Member and circle limits default to 30 and 150 per UTC day. Reservations are transactional across database connections. The hosted bridge releases its request lock only around story generation, then revalidates the session before returning content. Local HTTP remains single-threaded. Story text is not persisted server-side. Usage counters remain after membership departure to prevent rejoining from resetting the day's cap; notice acceptance is removed.
+
+`?demo=1` explicitly selects browser fixtures for signed-in members and bypasses sample endpoint availability and quotas. It cannot enable external generation. The account-menu link remains reachable when the endpoint is off so members can delete local stories. Stored fiction is never imported into archive modules.

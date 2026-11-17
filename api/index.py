@@ -141,6 +141,17 @@ def _serve(handler_class, environ, body, sink):
     handler.client_address = (environ.get('REMOTE_ADDR') or '', 0)
     handler.server = None
     handler.close_connection = False
+    def parallel_without_lock(work):
+        # Only the Parallel You chapter handler invokes this, after quota admission.
+        # No database access is permitted inside work.
+        _disconnect(getattr(handler_class, '_mazi_store', None))
+        _request_lock.release()
+        try:
+            return work()
+        finally:
+            _request_lock.acquire()
+
+    handler.parallel_without_lock = parallel_without_lock
     action = getattr(handler, 'do_' + handler.command, None)
     if action is None:
         raise NotImplementedError(handler.command)

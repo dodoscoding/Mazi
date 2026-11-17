@@ -38,6 +38,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run test:unit
       - run: npm run setup
       - run: npm run test:backend
       - run: npm run eval:retrieval

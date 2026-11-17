@@ -8,6 +8,7 @@ export default defineConfig({
   testMatch: [
     "interface-clarity.spec.ts",
     "journey.spec.ts",
+    "parallel.spec.ts",
     "resilience.spec.ts",
     "evidence.spec.ts",
     "theme-shell.spec.ts",

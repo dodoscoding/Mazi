@@ -63,3 +63,7 @@ The H1 backend uses indexed native-action candidates and a selected-assets Atlas
 These samples exclude fixture creation, browser and Vercel HTTP overhead. They do not establish p95 or production concurrency performance. A separate profile overlapped hosted verification and is retained as additional evidence, including a 1.036-second selected read. The [H1 verification and guarded profile](../work/poteto/social-home-api/VERIFICATION.md) records both runs.
 
 The candidate boundary is 33 rows per source query, 32 merged rows per chunk and 512 examined candidates per page. A 10,000-comment synthetic local fixture proves Home does not download or project the full archive; the hosted 2,000-row fixture verifies the action-time indexes and bounded candidate batches. [Browser adoption evidence](../work/poteto/social-home-ui/VERIFICATION.md) now proves zero initial full Atlas/notebook requests for real Home and permanent photo detail. Local loopback SQL/response samples and production-build chunk sizes are recorded separately from hosted backend measurements.
+
+## Parallel You sample route
+
+The `/parallel` route loads `ParallelPage` and its stylesheet lazily. Its dedicated script ceiling is 24 KiB gzip, within the current main-branch 420 KiB total script ceiling; this integration takes no further increase. The sample implementation measured 7.8 KiB for this chunk and 394.5 KiB for all scripts using `scripts/check-budgets.mjs` (gzip level 9). This is local build evidence, not a production performance result. No frontend dependency or font was added.

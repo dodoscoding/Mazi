@@ -1,0 +1,37 @@
+
+> mazi@0.1.0 test:unit
+> node --test "tests/unit/*.test.ts"
+
+✔ groups memories by place name and country with mean coordinates and per-year counts (1.405834ms)
+✔ journeys join consecutive distinct places in year order, once per ordered pair (0.296041ms)
+✔ years are the sorted distinct years of dated memories (2.679083ms)
+✔ memories without a place are returned as unplaced in API order (0.109917ms)
+✔ undated memories never form journeys (0.117792ms)
+✔ the same city name in two countries is two places (0.0905ms)
+✔ an empty archive has no places, journeys or years (0.060125ms)
+✔ scrubbing to a year selects that year's first memory in API order (0.065ms)
+✔ complete sharing evidence supplies same-year distinct replay stops without rewriting capture truth (18.317541ms)
+✔ capture wins, stable ties remain stable and invalid or ambiguous evidence is excluded (0.264375ms)
+✔ grouped photos take their sharing range from dated photos and ignore undated or ambiguous ones (0.325042ms)
+✔ conflicting capture assertions remain explicit when sharing positions Replay (0.145416ms)
+✔ tree rejects duplicates, invalid branches, cycles and mutation (3.417084ms)
+✔ full tree has 22 chapters, 12 endings and distinct layout leaves (0.623917ms)
+✔ meter changes are bounded and finite (0.0995ms)
+✔ requests contain only ancestor path and fixture endings stop (0.142459ms)
+✔ storage isolates members, validates structure and reports failures (0.472459ms)
+✔ source dates retain the source calendar day and never invent a timezone (14.309542ms)
+✔ duplicate source evidence is collapsed without conflating distinct senders (0.779958ms)
+✔ optional provenance leaves sample and legacy cards unchanged (0.164959ms)
+✔ opening and closing the portal asks for the dive and the way back (1.5775ms)
+✔ reduced motion drops the whoosh (0.150208ms)
+✔ a new memory in the same year chimes; a new year ticks once (0.15975ms)
+✔ stepping inside the portal chimes (0.136375ms)
+✔ the archive arriving and other screens stay silent (0.165583ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.251792

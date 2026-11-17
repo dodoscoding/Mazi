@@ -52,3 +52,9 @@ It reads `.env.supabase`, walks live contributions in batches of 200 and prints 
 ## Production
 
 Production runs at https://mazi-three.vercel.app against the Frankfurt Supabase project. The [live verification](../work/poteto/production-deploy/VERIFICATION.md) records a signed-in import, drain, preview, search and a 12.8 MB streamed export.
+
+## Parallel You local sample mode
+
+Parallel You is disabled by default. For a local synthetic trial, set `MAZI_PARALLEL_ENABLED=1` and `MAZI_PARALLEL_PROVIDER=fake`, start the normal application, sign in and open `/parallel`. Alternatively `/parallel?demo=1` uses browser fixtures after sign-in. `MAZI_PARALLEL_MEMBER_LIMIT` and `MAZI_PARALLEL_CIRCLE_LIMIT` default to 30 and 150 admitted attempts per UTC day. Set positive integers. No API key is read and selecting `anthropic` leaves the feature disabled.
+
+SQLite creates its two counter/notice tables when an enabled handler is initialized. Hosted operation requires `20261114090000_parallel_usage.sql` from [the migration directory](../infra/hosted/supabase/migrations/20261114090000_parallel_usage.sql) before enabling. This implementation does not apply that migration or deploy the feature. Real-provider integration, retention terms, spending approval, paid evaluation and release remain pending.

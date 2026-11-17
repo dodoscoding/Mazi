@@ -124,6 +124,16 @@ export function Shell({
                   >
                     Settings
                   </a>
+                  <a
+                    className="menu-item"
+                    href="#/parallel"
+                    onClick={(event) => {
+                      link("/parallel")(event);
+                      close();
+                    }}
+                  >
+                    Parallel You
+                  </a>
                   <SoundToggle
                     variant="pill"
                     className="button button--secondary account-sound"

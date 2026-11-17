@@ -1,0 +1,192 @@
+[WebServer] (node:62437) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:62452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] npm notice
+[WebServer] npm notice New major version of npm available! 11.6.2 -> 12.2.2
+[WebServer] npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+[WebServer] npm notice To update run: npm install -g npm@12.2.2
+[WebServer] npm notice
+
+Running 156 tests using 4 workers
+
+(node:62472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62471) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62469) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62470) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓    1 [desktop] › tests/atlas.spec.ts:125:1 › Open memory in the dossier reaches the full memory (5.2s)
+  ✓    2 [desktop] › tests/atlas.spec.ts:63:1 › arrow keys on the year scrubber step through the years (6.3s)
+  ✓    3 [desktop] › tests/atlas.spec.ts:37:1 › choosing a place in the index selects its memory, year and URL (6.5s)
+  ✓    5 [desktop] › tests/atlas.spec.ts:139:1 › scene=off shows the flat map with the same selection (2.6s)
+  ✓    4 [desktop] › tests/atlas.spec.ts:86:1 › the portal opens with the dossier, Esc closes it and focus returns (8.2s)
+  ✓    7 [desktop] › tests/atlas.spec.ts:176:1 › leaving the atlas during the intro counts as seeing it (1.9s)
+  ✓    6 [desktop] › tests/atlas.spec.ts:163:1 › the first visit plays the intro once; Esc skips it (2.1s)
+  -    9 [desktop] › tests/atlas.spec.ts:202:1 › the phone sheet opens to show the index and memories
+  ✓   10 [desktop] › tests/atlas.spec.ts:226:1 › slash opens search and arrow keys walk places from the page (1.3s)
+  ✓   13 [desktop] › tests/atlas.spec.ts:332:1 › reduced motion keeps the still year card in the Timeline (535ms)
+  ✓   12 [desktop] › tests/atlas.spec.ts:292:1 › the Timeline shows the globe for the year in view, flat when 3D is off (1.7s)
+  ✓    8 [desktop] › tests/atlas.spec.ts:189:1 › reduced motion holds the title briefly instead of the cinematic intro (2.8s)
+  ✓   14 [desktop] › tests/atlas.spec.ts:343:1 › sharing-only same-year memories replay independently with explicit date basis (2.2s)
+  ✓   15 [desktop] › tests/browse.spec.ts:28:1 › choosing a year moves the timeline scrubber, card and list together (2.1s)
+  ✓   16 [desktop] › tests/browse.spec.ts:87:1 › search finds a memory by a word from its story and shows its thumbnail (2.1s)
+  ✓   11 [desktop] › tests/atlas.spec.ts:241:1 › the atlas, flat map and portal have no axe violations (4.7s)
+  ✓   18 [desktop] › tests/browse.spec.ts:144:1 › timeline replays every sharing-only memory within one year and supports pause and restart (1.1s)
+  ✓   20 [desktop] › tests/entry-redesign.spec.ts:61:1 › a wrong code shows the designed alert and never shows a code (1.6s)
+  ✓   19 [desktop] › tests/browse.spec.ts:220:1 › manual timeline navigation resets the paused replay cursor and keeps approximate capture labels (2.0s)
+  ✓   21 [desktop] › tests/entry-redesign.spec.ts:87:1 › a removed member sees access removed and can try another code (1.1s)
+  -   23 [desktop] › tests/entry-redesign.spec.ts:169:1 › phone members swipe between beats
+  ✓   24 [desktop] › tests/entry-redesign.spec.ts:183:1 › beats slide in normal motion and crossfade under reduced motion (1.3s)
+  ✓   22 [desktop] › tests/entry-redesign.spec.ts:113:1 › the beats advance by button and keyboard and the last one opens the Atlas (1.7s)
+  ✓   26 [desktop] › tests/entry-redesign.spec.ts:227:1 › the entry offers no theme toggle (516ms)
+  -   27 [desktop] › tests/entry-redesign.spec.ts:234:1 › captures evidence screenshots
+  ✓   28 [desktop] › tests/entry-redesign.spec.ts:304:1 › replaying the introduction puts focus on its first heading (945ms)
+  ✓   17 [desktop] › tests/browse.spec.ts:127:1 › Timeline and Search have no axe violations (5.3s)
+  ✓   29 [desktop] › tests/evidence.spec.ts:14:1 › capture stable Home and memory at the required review sizes (2.2s)
+  ✓   32 [desktop] › tests/journey.spec.ts:42:1 › deep links, photo boundaries, browser history and unknown IDs (954ms)
+  ✓   31 [desktop] › tests/journey.spec.ts:15:1 › select, open, explore photos and context; Back restores selection and focus (2.6s)
+  ✓   30 [desktop] › tests/evidence.spec.ts:44:1 › resting atlas stops requesting animation frames under reduced motion (2.8s)
+  ✓   35 [desktop] › tests/journey.spec.ts:109:1 › retrying the Home photograph stays on Home (851ms)
+  ✓   25 [desktop] › tests/entry-redesign.spec.ts:203:3 › entry and introduction have no axe violations in night (6.3s)
+  ✓   34 [desktop] › tests/journey.spec.ts:90:1 › failed images are recoverable and renderer failure preserves the journey (2.0s)
+  ✓   37 [desktop] › tests/memory-detail.spec.ts:193:1 › keyboard focus stays put at the ends and after Retry (1.1s)
+  -   39 [desktop] › tests/memory-detail.spec.ts:261:1 › touch swipe tracks the finger and changes photo, also with reduced motion
+  ✓   36 [desktop] › tests/memory-detail.spec.ts:160:1 › buttons and arrow keys move between photos and keep ?photo=n (1.9s)
+  ✓   38 [desktop] › tests/memory-detail.spec.ts:219:1 › the filmstrip chooses a photo on wider screens (894ms)
+  ✓   40 [desktop] › tests/memory-detail.spec.ts:303:1 › an approximate date reads About with the uncertainty chip and basis (970ms)
+  ✓   41 [desktop] › tests/memory-detail.spec.ts:329:1 › place, people and sources show evidence in plain words (1.1s)
+  ✓   42 [desktop] › tests/memory-detail.spec.ts:365:1 › related memories put the same place first and open that memory (1.2s)
+  ✓   33 [desktop] › tests/journey.spec.ts:67:1 › reduced motion, fast reversals, no overflow and basic accessibility (5.2s)
+  ✓   43 [desktop] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and pill returns past the portal (1.4s)
+  ✓   44 [desktop] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and Escape returns past the portal (1.4s)
+  ✓   45 [desktop] › tests/memory-detail.spec.ts:422:1 › earlier and later follow the dates, with approximate memories in place (1.3s)
+  ✓   46 [desktop] › tests/memory-detail.spec.ts:483:1 › Escape goes back to the atlas with the memory selected (863ms)
+  ✓   48 [desktop] › tests/memory-detail.spec.ts:511:3 › ?photo=99 clamps to 3 / 3 (812ms)
+  ✓   47 [desktop] › tests/memory-detail.spec.ts:491:1 › a broken photo URL shows the retry state (931ms)
+  ✓   49 [desktop] › tests/memory-detail.spec.ts:511:3 › ?photo=-1 clamps to 1 / 3 (696ms)
+  ✓   50 [desktop] › tests/memory-detail.spec.ts:511:3 › ?photo=abc clamps to 1 / 3 (780ms)
+  -   53 [desktop] › tests/memory-detail.spec.ts:546:1 › capture memory evidence screenshots
+  -   54 [desktop] › tests/memory-detail.spec.ts:592:1 › capture memory evidence at the responsive widths
+  ✓   51 [desktop] › tests/memory-detail.spec.ts:511:3 › ?photo=1.7 clamps to 2 / 3 (762ms)
+  ✓   55 [desktop] › tests/memory-detail.spec.ts:620:1 › source sharing is visible on cards, portal and detail without a capture date (2.0s)
+  ✓   58 [desktop] › tests/parallel.spec.ts:115:1 › feature off is hidden and never generates (443ms)
+  ✓   52 [desktop] › tests/memory-detail.spec.ts:519:3 › memory screens pass axe in night (3.4s)
+  ✓   59 [desktop] › tests/parallel.spec.ts:127:1 › notice, timeout retry and access loss do not create chapters (913ms)
+  ✓   60 [desktop] › tests/parallel.spec.ts:166:1 › leaving during notice acceptance cannot generate or save a story (968ms)
+  ✓   56 [desktop] › tests/memory-detail.spec.ts:721:1 › opened photographs preserve portrait and panoramic edges (4.6s)
+  ✓   57 [desktop] › tests/parallel.spec.ts:30:1 › branches persist, map matches list, endings compare and delete (4.7s)
+  ✓   62 [desktop] › tests/resilience.spec.ts:14:1 › live reduced-motion change, unsupported transitions and keyboard navigation (1.9s)
+  ✓   64 [desktop] › tests/resilience.spec.ts:96:1 › narrow widths and long content do not overflow; search and empty result are usable (1.5s)
+  ✓   61 [desktop] › tests/parallel.spec.ts:206:1 › loading, refusal, invalid output and quota errors preserve the branch (4.0s)
+  ✓   63 [desktop] › tests/resilience.spec.ts:61:1 › actual WebGL context loss retains selection and allows retry (2.7s)
+  ✓   65 [desktop] › tests/sound.spec.ts:105:1 › sound is off until a member turns it on, and the choice survives a reload (2.9s)
+  ✓   66 [desktop] › tests/sound.spec.ts:125:1 › with sound off, browsing the atlas never creates an AudioContext (2.5s)
+  ✓   69 [desktop] › tests/sound.spec.ts:190:1 › Entry offers the sound toggle (1.1s)
+  ✓   67 [desktop] › tests/sound.spec.ts:143:1 › with sound on, diving into the portal schedules a whoosh (3.1s)
+  -   71 [desktop] › tests/sound.spec.ts:237:1 › captures evidence screenshots
+  ✓   68 [desktop] › tests/sound.spec.ts:167:1 › under reduced motion the whoosh is dropped but a year step still ticks (3.6s)
+  ✓   73 [desktop] › tests/theme-shell.spec.ts:43:1 › the theme renders without storage (1.5s)
+  ✓   72 [desktop] › tests/theme-shell.spec.ts:22:1 › night is the only theme and an old day choice is cleared (1.7s)
+  -   74 [desktop] › tests/theme-shell.spec.ts:58:1 › the phone tab bar reaches Imports in one tap and About in two
+  ✓   75 [desktop] › tests/theme-shell.spec.ts:120:1 › Home has no axe violations (2.2s)
+  ✓   77 [desktop] › tests/theme-shell.spec.ts:132:1 › a mouse click on an Archive tools link lands even when clicks do not focus (2.3s)
+  ✓   76 [desktop] › tests/theme-shell.spec.ts:90:1 › Archive tools opens, is keyboard operable and closes on Escape (2.6s)
+  ✓   70 [desktop] › tests/sound.spec.ts:201:1 › the headers with the sound toggle have no axe violations (5.8s)
+(node:62919) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62920) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62921) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   78 [desktop] › tests/theme-shell.spec.ts:151:1 › the open Archive tools menu has no axe violations (2.3s)
+(node:62967) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   79 [phone] › tests/atlas.spec.ts:37:1 › choosing a place in the index selects its memory, year and URL (2.0s)
+  ✓   81 [phone] › tests/atlas.spec.ts:63:1 › arrow keys on the year scrubber step through the years (2.1s)
+  ✓   84 [phone] › tests/atlas.spec.ts:163:1 › the first visit plays the intro once; Esc skips it (911ms)
+  ✓   82 [phone] › tests/atlas.spec.ts:125:1 › Open memory in the dossier reaches the full memory (1.5s)
+  ✓   85 [phone] › tests/atlas.spec.ts:176:1 › leaving the atlas during the intro counts as seeing it (577ms)
+  ✓   83 [phone] › tests/atlas.spec.ts:139:1 › scene=off shows the flat map with the same selection (1.9s)
+  -   88 [phone] › tests/atlas.spec.ts:226:1 › slash opens search and arrow keys walk places from the page
+  ✓   80 [phone] › tests/atlas.spec.ts:86:1 › the portal opens with the dossier, Esc closes it and focus returns (5.1s)
+  ✓   86 [phone] › tests/atlas.spec.ts:189:1 › reduced motion holds the title briefly instead of the cinematic intro (2.3s)
+  ✓   87 [phone] › tests/atlas.spec.ts:202:1 › the phone sheet opens to show the index and memories (1.8s)
+  ✓   91 [phone] › tests/atlas.spec.ts:332:1 › reduced motion keeps the still year card in the Timeline (483ms)
+  ✓   90 [phone] › tests/atlas.spec.ts:292:1 › the Timeline shows the globe for the year in view, flat when 3D is off (1.2s)
+  ✓   93 [phone] › tests/browse.spec.ts:28:1 › choosing a year moves the timeline scrubber, card and list together (892ms)
+  ✓   92 [phone] › tests/atlas.spec.ts:343:1 › sharing-only same-year memories replay independently with explicit date basis (2.2s)
+  ✓   89 [phone] › tests/atlas.spec.ts:241:1 › the atlas, flat map and portal have no axe violations (3.7s)
+  ✓   94 [phone] › tests/browse.spec.ts:87:1 › search finds a memory by a word from its story and shows its thumbnail (1.6s)
+  ✓   96 [phone] › tests/browse.spec.ts:144:1 › timeline replays every sharing-only memory within one year and supports pause and restart (752ms)
+  ✓   98 [phone] › tests/entry-redesign.spec.ts:61:1 › a wrong code shows the designed alert and never shows a code (926ms)
+  ✓   97 [phone] › tests/browse.spec.ts:220:1 › manual timeline navigation resets the paused replay cursor and keeps approximate capture labels (1.1s)
+  ✓   99 [phone] › tests/entry-redesign.spec.ts:87:1 › a removed member sees access removed and can try another code (855ms)
+  ✓  102 [phone] › tests/entry-redesign.spec.ts:183:1 › beats slide in normal motion and crossfade under reduced motion (785ms)
+  ✓  101 [phone] › tests/entry-redesign.spec.ts:169:1 › phone members swipe between beats (1.2s)
+  ✓  100 [phone] › tests/entry-redesign.spec.ts:113:1 › the beats advance by button and keyboard and the last one opens the Atlas (1.5s)
+  -  105 [phone] › tests/entry-redesign.spec.ts:234:1 › captures evidence screenshots
+  ✓  104 [phone] › tests/entry-redesign.spec.ts:227:1 › the entry offers no theme toggle (358ms)
+  ✓  106 [phone] › tests/entry-redesign.spec.ts:304:1 › replaying the introduction puts focus on its first heading (818ms)
+  ✓   95 [phone] › tests/browse.spec.ts:127:1 › Timeline and Search have no axe violations (4.8s)
+  ✓  107 [phone] › tests/evidence.spec.ts:14:1 › capture stable Home and memory at the required review sizes (2.9s)
+  ✓  109 [phone] › tests/journey.spec.ts:15:1 › select, open, explore photos and context; Back restores selection and focus (2.3s)
+  ✓  110 [phone] › tests/journey.spec.ts:42:1 › deep links, photo boundaries, browser history and unknown IDs (772ms)
+  ✓  108 [phone] › tests/evidence.spec.ts:44:1 › resting atlas stops requesting animation frames under reduced motion (3.1s)
+  ✓  103 [phone] › tests/entry-redesign.spec.ts:203:3 › entry and introduction have no axe violations in night (5.3s)
+  ✓  113 [phone] › tests/journey.spec.ts:109:1 › retrying the Home photograph stays on Home (948ms)
+  ✓  112 [phone] › tests/journey.spec.ts:90:1 › failed images are recoverable and renderer failure preserves the journey (1.4s)
+  -  116 [phone] › tests/memory-detail.spec.ts:219:1 › the filmstrip chooses a photo on wider screens
+  ✓  115 [phone] › tests/memory-detail.spec.ts:193:1 › keyboard focus stays put at the ends and after Retry (1.0s)
+  ✓  114 [phone] › tests/memory-detail.spec.ts:160:1 › buttons and arrow keys move between photos and keep ?photo=n (1.5s)
+  ✓  118 [phone] › tests/memory-detail.spec.ts:303:1 › an approximate date reads About with the uncertainty chip and basis (765ms)
+  ✓  119 [phone] › tests/memory-detail.spec.ts:329:1 › place, people and sources show evidence in plain words (735ms)
+  ✓  111 [phone] › tests/journey.spec.ts:67:1 › reduced motion, fast reversals, no overflow and basic accessibility (3.9s)
+  ✓  117 [phone] › tests/memory-detail.spec.ts:261:1 › touch swipe tracks the finger and changes photo, also with reduced motion (2.2s)
+  ✓  120 [phone] › tests/memory-detail.spec.ts:365:1 › related memories put the same place first and open that memory (994ms)
+  -  123 [phone] › tests/memory-detail.spec.ts:422:1 › earlier and later follow the dates, with approximate memories in place
+  ✓  121 [phone] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and pill returns past the portal (1.2s)
+  ✓  122 [phone] › tests/memory-detail.spec.ts:386:3 › portal event title opens the notebook and Escape returns past the portal (1.3s)
+  ✓  124 [phone] › tests/memory-detail.spec.ts:483:1 › Escape goes back to the atlas with the memory selected (830ms)
+  ✓  125 [phone] › tests/memory-detail.spec.ts:491:1 › a broken photo URL shows the retry state (833ms)
+  ✓  126 [phone] › tests/memory-detail.spec.ts:511:3 › ?photo=99 clamps to 3 / 3 (743ms)
+  ✓  127 [phone] › tests/memory-detail.spec.ts:511:3 › ?photo=-1 clamps to 1 / 3 (835ms)
+  ✓  128 [phone] › tests/memory-detail.spec.ts:511:3 › ?photo=abc clamps to 1 / 3 (750ms)
+  -  131 [phone] › tests/memory-detail.spec.ts:546:1 › capture memory evidence screenshots
+  -  132 [phone] › tests/memory-detail.spec.ts:592:1 › capture memory evidence at the responsive widths
+  ✓  129 [phone] › tests/memory-detail.spec.ts:511:3 › ?photo=1.7 clamps to 2 / 3 (722ms)
+  ✓  133 [phone] › tests/memory-detail.spec.ts:620:1 › source sharing is visible on cards, portal and detail without a capture date (2.4s)
+  ✓  130 [phone] › tests/memory-detail.spec.ts:519:3 › memory screens pass axe in night (3.6s)
+  ✓  136 [phone] › tests/parallel.spec.ts:115:1 › feature off is hidden and never generates (639ms)
+  ✓  137 [phone] › tests/parallel.spec.ts:127:1 › notice, timeout retry and access loss do not create chapters (915ms)
+  ✓  138 [phone] › tests/parallel.spec.ts:166:1 › leaving during notice acceptance cannot generate or save a story (1.1s)
+  ✓  135 [phone] › tests/parallel.spec.ts:30:1 › branches persist, map matches list, endings compare and delete (4.6s)
+  ✓  134 [phone] › tests/memory-detail.spec.ts:721:1 › opened photographs preserve portrait and panoramic edges (5.0s)
+  ✓  140 [phone] › tests/resilience.spec.ts:14:1 › live reduced-motion change, unsupported transitions and keyboard navigation (1.4s)
+  ✓  139 [phone] › tests/parallel.spec.ts:206:1 › loading, refusal, invalid output and quota errors preserve the branch (2.5s)
+  ✓  142 [phone] › tests/resilience.spec.ts:96:1 › narrow widths and long content do not overflow; search and empty result are usable (1.4s)
+  ✓  141 [phone] › tests/resilience.spec.ts:61:1 › actual WebGL context loss retains selection and allows retry (2.8s)
+  ✓  144 [phone] › tests/sound.spec.ts:125:1 › with sound off, browsing the atlas never creates an AudioContext (2.7s)
+  ✓  143 [phone] › tests/sound.spec.ts:105:1 › sound is off until a member turns it on, and the choice survives a reload (3.8s)
+  ✓  145 [phone] › tests/sound.spec.ts:143:1 › with sound on, diving into the portal schedules a whoosh (2.9s)
+  -  149 [phone] › tests/sound.spec.ts:237:1 › captures evidence screenshots
+  ✓  147 [phone] › tests/sound.spec.ts:190:1 › Entry offers the sound toggle (1.4s)
+  ✓  146 [phone] › tests/sound.spec.ts:167:1 › under reduced motion the whoosh is dropped but a year step still ticks (3.0s)
+  ✓  150 [phone] › tests/theme-shell.spec.ts:22:1 › night is the only theme and an old day choice is cleared (1.3s)
+  ✓  151 [phone] › tests/theme-shell.spec.ts:43:1 › the theme renders without storage (1.2s)
+  -  153 [phone] › tests/theme-shell.spec.ts:90:1 › Archive tools opens, is keyboard operable and closes on Escape
+  -  155 [phone] › tests/theme-shell.spec.ts:132:1 › a mouse click on an Archive tools link lands even when clicks do not focus
+  -  156 [phone] › tests/theme-shell.spec.ts:151:1 › the open Archive tools menu has no axe violations
+  ✓  148 [phone] › tests/sound.spec.ts:201:1 › the headers with the sound toggle have no axe violations (3.7s)
+  ✓  152 [phone] › tests/theme-shell.spec.ts:58:1 › the phone tab bar reaches Imports in one tap and About in two (2.4s)
+  ✓  154 [phone] › tests/theme-shell.spec.ts:120:1 › Home has no axe violations (1.9s)
+
+  18 skipped
+  138 passed (1.4m)

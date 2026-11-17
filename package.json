@@ -38,7 +38,9 @@
     "archive:migrate": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.migrate', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
     "archive:hosted": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.archive.hosted_ops', ...process.argv.slice(1)], {stdio:'inherit', env:process.env}).status ?? 1)\" --",
     "places:backfill": "node --env-file=.env.supabase -e \"process.exit(require('node:child_process').spawnSync('.venv/bin/python', ['-m', 'mazi.sources.backfill_places'], {stdio:'inherit', env:process.env}).status ?? 1)\"",
-    "test:dom": "node --test tests/dom/*.test.mjs"
+    "test:dom": "node --test tests/dom/*.test.mjs",
+    "test:parallel": "playwright test --config playwright.parallel.config.ts",
+    "eval:parallel": ".venv/bin/python -m mazi.parallel.evaluate"
   },
   "dependencies": {
     "@fontsource/geist": "5.3.0",

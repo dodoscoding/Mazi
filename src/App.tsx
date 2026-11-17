@@ -24,6 +24,7 @@ import { useWorkDrain } from "./useWorkDrain";
 const FeaturePage = lazy(() =>
   import("./features").then(({ FeaturePage }) => ({ default: FeaturePage })),
 );
+const ParallelPage = lazy(() => import("./parallel/ParallelPage"));
 const LegacyEvidence = lazy(() => import("./LegacyEvidence"));
 const SelectedMemory = lazy(() => import("./memory/SelectedMemory"));
 const PastCreations = lazy(() => import("./PastCreations"));
@@ -209,6 +210,16 @@ export default function App() {
           Settings
         </a>
       </section>
+    );
+  else if (route.path === "/parallel" && profile)
+    content = (
+      <Suspense fallback={<p role="status">Opening Parallel You…</p>}>
+        <ParallelPage
+          key={profile.user_id}
+          memberId={profile.user_id}
+          demo={demo}
+        />
+      </Suspense>
     );
   else if (demo && !["/", "/photos"].includes(route.path) && !memoryId)
     content = (
