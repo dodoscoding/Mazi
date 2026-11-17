@@ -16,6 +16,13 @@ import "./workspace.css";
 import "./imports/imports.css";
 
 export const featureRegistry = {
+  "/studio": {
+    template: photosTemplate.replace(
+      '<h1 class="mem-title">Fotoğraflar</h1>',
+      '<h2 class="mem-title">Fotoğraflar</h2>',
+    ),
+    mount: photosMount,
+  },
   "/photos": { template: photosTemplate, mount: photosMount },
   "/add": { template: importsTemplate, mount: importsMount },
   "/settings": { template: importsTemplate, mount: importsMount },
@@ -64,6 +71,7 @@ export function FeaturePage({
       lifecycle?.dispose();
       container.replaceChildren();
       const root = document.createElement("section");
+      root.dataset.featurePath = pathname;
       root.className = "feature-content";
       root.innerHTML = feature.template;
       if (add) {

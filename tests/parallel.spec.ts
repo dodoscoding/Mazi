@@ -395,3 +395,30 @@ for (const enabled of [true, false]) {
     ).toBeFocused();
   });
 }
+
+test("Studio preserves Photos and switches to Parallel You", async ({
+  page,
+}) => {
+  await page.goto("/studio?demo=1");
+  await expect(
+    page.getByRole("heading", { name: "Studio", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true, level: 2 }),
+  ).toBeVisible();
+  const query = page.locator("#photos-query");
+  await query.fill("lake");
+  await query.press("Enter");
+  await expect(page).toHaveURL(/#\/studio\?.*q=lake/);
+  const studio = page.getByRole("navigation", { name: "Studio sections" });
+  await studio.getByRole("link", { name: "Parallel You" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What if you chose differently?" }),
+  ).toBeVisible();
+  await studio.getByRole("link", { name: "Photos & conversations" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Fotoğraflar", exact: true, level: 2 }),
+  ).toBeVisible();
+  await page.goto("/explore?demo=1");
+  await expect(page).toHaveURL(/#\/photos/);
+});

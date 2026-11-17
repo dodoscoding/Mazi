@@ -126,13 +126,16 @@ export function Shell({
                   </a>
                   <a
                     className="menu-item"
-                    href="#/parallel"
+                    href="#/studio?search=1"
+                    aria-current={
+                      routePath.startsWith("/studio") ? "page" : undefined
+                    }
                     onClick={(event) => {
-                      link("/parallel")(event);
+                      link("/studio?search=1")(event);
                       close();
                     }}
                   >
-                    Parallel You
+                    Studio
                   </a>
                   <SoundToggle
                     variant="pill"

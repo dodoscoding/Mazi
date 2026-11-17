@@ -23,7 +23,7 @@ export function createGallery(
   root,
   lifecycle,
   api,
-  { readOnly = false, onSearch, onReset } = {},
+  { readOnly = false, onSearch, onReset, route = "/photos" } = {},
 ) {
   const $ = (id) => root.querySelector(`#${id}`);
   const sheetQuery = matchMedia("(max-width: 800px)");
@@ -74,7 +74,7 @@ export function createGallery(
       ? previousPhotos
       : "/photos";
   if (recap) {
-    root.querySelector("h1").textContent = recapYear
+    root.querySelector(".mem-title").textContent = recapYear
       ? `Annual recap ${recapYear}`
       : "Annual recap";
     $("photos-year").closest("label").hidden = true;
@@ -250,7 +250,7 @@ export function createGallery(
     window.history.replaceState(
       window.history.state,
       "",
-      "#/photos" + (query ? "?" + query : ""),
+      "#" + route + (query ? "?" + query : ""),
     );
   }
   async function refreshMatches() {

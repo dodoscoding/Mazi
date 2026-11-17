@@ -155,7 +155,7 @@ export function useArchive(path: string, demo: boolean, groupId?: string) {
     };
   }, [demo, groupId, version]);
   const loadAtlas =
-    path !== "/parallel" &&
+    !["/parallel", "/studio", "/studio/parallel"].includes(path) &&
     !path.startsWith("/memory/") &&
     !isFeaturePath(path, demo) &&
     state.status === "ready" &&

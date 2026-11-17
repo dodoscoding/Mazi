@@ -104,6 +104,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/studio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/studio/parallel",
+      "destination": "/index.html"
+    },
+    {
       "source": "/parallel",
       "destination": "/index.html"
     }

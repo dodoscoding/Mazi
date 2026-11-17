@@ -31,6 +31,7 @@ export function mount(root, lifecycle) {
   };
   const conversations = createConversationSearch(root, lifecycle, api);
   const gallery = createGallery(root, lifecycle, api, {
+    route: root.dataset.featurePath === "/studio" ? "/studio" : "/photos",
     readOnly: demo,
     onSearch: conversations.search,
     onReset: conversations.clear,

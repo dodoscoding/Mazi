@@ -1,3 +1,4 @@
+import "./styles/explore.css";
 import {
   lazy,
   Suspense,
@@ -211,9 +212,50 @@ export default function App() {
         </a>
       </section>
     );
-  else if (route.path === "/parallel" && profile)
+  else if (route.path === "/studio" && profile)
+    content = (
+      <section aria-label="Studio">
+        <header className="explore-header">
+          <h1 ref={heading} tabIndex={-1}>
+            Studio
+          </h1>
+          <nav aria-label="Studio sections">
+            <a
+              href="#/studio?search=1"
+              onClick={link("/studio?search=1")}
+              aria-current="page"
+            >
+              Photos &amp; conversations
+            </a>
+            <a href="#/studio/parallel" onClick={link("/studio/parallel")}>
+              Parallel You
+            </a>
+          </nav>
+        </header>
+        <Suspense fallback={<p role="status">Opening search…</p>}>
+          <FeaturePage key={profile.user_id} path={"/studio" + route.search} />
+        </Suspense>
+      </section>
+    );
+  else if (["/parallel", "/studio/parallel"].includes(route.path) && profile)
     content = (
       <Suspense fallback={<p role="status">Opening Parallel You…</p>}>
+        {route.path === "/studio/parallel" && (
+          <header className="explore-header">
+            <nav aria-label="Studio sections">
+              <a href="#/studio?search=1" onClick={link("/studio?search=1")}>
+                Photos &amp; conversations
+              </a>
+              <a
+                href="#/studio/parallel"
+                onClick={link("/studio/parallel")}
+                aria-current="page"
+              >
+                Parallel You
+              </a>
+            </nav>
+          </header>
+        )}
         <ParallelPage
           key={profile.user_id}
           memberId={profile.user_id}

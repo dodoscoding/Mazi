@@ -328,3 +328,5 @@ The owner requested implementation of the Parallel You plan and selected keeping
 ## Parallel You integration with the current shell, 16 November 2026
 
 The owner confirmed keeping Globe, Photos, Add and Settings while adding the new section. Parallel You remains an isolated, disabled-by-default sample fiction route; it does not restore the archive AI answers or story/capsule authoring retired by D28. Its account-menu link stays reachable for member-scoped browser deletion even when generation is disabled. The separate section will use `/studio`; legacy `/explore` links retain their Photos redirect. Photo and conversation retrieval reuses the current Photos contracts, including exact text-only source context and current authorization. No external provider, deployment or migration is enabled.
+
+Studio is available from the account menu. It combines the Photos search workspace and Parallel You in two views. Search state uses the Studio URL so submitting a query keeps the Studio navigation available.
