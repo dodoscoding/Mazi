@@ -6,6 +6,8 @@ Mazi is a private memory archive for one small circle of friends. Its current pr
 
 Everyone in the circle uses a shared entry code and a visible name. Imported content becomes available to the signed-in circle automatically as it is ingested. Review and correction remain optional afterward.
 
+Parallel You, a proposed AI alternative-life simulator for circle members, is planned beside the archive. [The Parallel You plan](docs/PARALLEL_YOU.md) keeps its fiction apart from real memories. None of it is implemented yet.
+
 ## What you can do
 
 - Explore the archive in Globe or browse individual photographs by month in Photos, with year navigation, compact filters and an explicit Undated collection.

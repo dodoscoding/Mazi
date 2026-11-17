@@ -42,6 +42,7 @@ Members can complete small-memory import, review, and browsing workflows entirel
 - Imported content is shared automatically with every active group member as ingestion makes it available. Inventory/transfer validation, processing and failure recovery remain explicit; no human Publish action gates successfully ingested items.
 - The group is the single content audience. Sign-in, active membership, ownership, personal visibility, withdrawal and existing source limits continue to govern every applicable read, export and mutation. Private staging and selected-recipient audiences remain deferred.
 - Preserve contributed originals, source conversation context, provenance and date uncertainty. Imported names do not establish a person's identity automatically. Existing storage formats and archive paths remain compatible.
+- Parallel You, a proposed alternative-life simulator ([PY-D1](docs/DECISIONS.md#parallel-you-experiment-1-november-2026)), is fiction kept apart from the archive. It never reads memories and never appears among them. It is not implemented.
 
 ## Brand Commitments
 

@@ -308,6 +308,17 @@ test("pagination batches only the visible page and works at 320 pixels with keyb
       .violations,
   ).toEqual([]);
   expect(
+    await page.locator(".photo-privacy").evaluate((section) => {
+      const tools = section.closest(".photo-tools")!;
+      const contentRight =
+        tools.getBoundingClientRect().right -
+        parseFloat(getComputedStyle(tools).paddingRight);
+      return [section, ...section.querySelectorAll("button")].every(
+        (element) => element.getBoundingClientRect().right <= contentRight,
+      );
+    }),
+  ).toBe(true);
+  expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),

@@ -20,6 +20,12 @@ The owner requested the clarity increment first under [D26](DECISIONS.md#interfa
 
 The 3 November plan starts with photo-level metadata and navigation on the merged D26 interface. Group plans and attendance can reach a circle with an empty archive while work on content filters proceeds. Comments, reactions and the social Home each have a separate acceptance gate. [Implementation sequence and owners](SOCIAL_SPACE_IMPLEMENTATION_PLAN.md) · [Baseline measurements](../work/poteto/social-space-plan/BASELINE.md)
 
+## Plan Parallel You beside the archive
+
+On 1 November 2026 the owner asked to add Parallel You, an AI alternative-life simulator, under [PY-D1](DECISIONS.md#parallel-you-experiment-1-november-2026). [The plan](PARALLEL_YOU.md) proposes six slices, PY-S1 to PY-S6, of about 13 working days for one developer: the story core and fixture screens first, then a flagged story endpoint, live generation, the game layer, and a story evaluation before release. Its acceptance IDs, PY-A1 to PY-A12, are local to Parallel You.
+
+Parallel You sits outside the M0-M7 program. It does not change those gates and adds no production or scheduling commitment.
+
 ## Use the planning assumptions
 
 Use the confirmed two-developer allocation. Dev A owns platform/access; Dev B owns experience/ingestion. Both own tests and review. Native capacity is a separate staffing decision if M4 native work is approved.

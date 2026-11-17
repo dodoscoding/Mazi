@@ -1095,6 +1095,14 @@
 .photo-tools {
   padding: 16px clamp(20px, 4vw, 56px);
 }
+.photo-privacy {
+  min-width: 0;
+  max-width: 100%;
+}
+.photo-privacy .button {
+  max-width: 100%;
+  white-space: normal;
+}
 .photo-correction {
   flex-basis: 100%;
   max-width: 36rem;
